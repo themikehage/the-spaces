@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Builds & output
+dist/
+build/
+.vite/
+*.tsbuildinfo
+
+# Lockfiles and Bun specific
+bun.lockb
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDEs & System files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+nul
+**/nul
+
+# Agent tools local state
+.atl/

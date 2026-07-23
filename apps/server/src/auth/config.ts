@@ -1,0 +1,89 @@
+import { betterAuth } from "better-auth";
+import { getDb } from "./db";
+import { SPACES_DATA_PATH } from "shared";
+import { programmaticSessionPlugin } from "./plugins/programmatic-session";
+
+export function createAuth() {
+  const secret = getOrCreateSecret();
+  const db = getDb();
+
+  return betterAuth({
+    database: db,
+    secret,
+    baseURL: process.env.BETTER_AUTH_URL || 
+             (process.env.SERVICE_FQDN_SPACES_3000
+               ? `https://${process.env.SERVICE_FQDN_SPACES_3000}`
+               : process.env.NODE_ENV === "production"
+                 ? `http://localhost:${process.env.PORT || 3000}`
+                 : "http://localhost:5173"),
+    trustedOrigins: getTrustedOrigins(),
+    emailAndPassword: {
+      enabled: true,
+      requireEmailVerification: false,
+    },
+    user: {
+      additionalFields: {
+        username: {
+          type: "string",
+          required: true,
+          unique: true,
+          input: true,
+        },
+        role: {
+          type: "string",
+          required: false,
+          defaultValue: "user",
+        },
+      },
+    },
+    session: {
+      expiresIn: 60 * 60 * 24 * 7,
+      updateAge: 60 * 60 * 24,
+      cookieCache: {
+        enabled: true,
+        maxAge: 60 * 5,
+      },
+    },
+    advanced: {
+      crossSubDomainCookies: {
+        enabled: false,
+      },
+    },
+    plugins: [programmaticSessionPlugin()],
+  });
+}
+
+function getOrCreateSecret(): string {
+  if (process.env.BETTER_AUTH_SECRET) {
+    return process.env.BETTER_AUTH_SECRET;
+  }
+
+  const { existsSync, readFileSync, writeFileSync, mkdirSync } = require("node:fs");
+  const { join } = require("node:path");
+  const { randomBytes } = require("node:crypto");
+
+  const dataPath = SPACES_DATA_PATH();
+  if (!existsSync(dataPath)) {
+    mkdirSync(dataPath, { recursive: true });
+  }
+
+  const secretPath = join(dataPath, ".auth-secret");
+  if (existsSync(secretPath)) {
+    return readFileSync(secretPath, "utf-8").trim();
+  }
+
+  const secret = randomBytes(32).toString("base64url");
+  writeFileSync(secretPath, secret, { encoding: "utf-8", mode: 0o600 });
+  console.log("[Auth] Generated new auth secret at", secretPath);
+  return secret;
+}
+
+function getTrustedOrigins(): string[] {
+  const origins: string[] = [];
+  const url = process.env.BETTER_AUTH_URL;
+  if (url) origins.push(url);
+  origins.push(`http://localhost:${process.env.PORT || 3000}`);
+  origins.push("http://localhost:5173");
+  origins.push("http://127.0.0.1:5173");
+  return origins;
+}

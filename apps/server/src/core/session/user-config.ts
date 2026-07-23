@@ -1,0 +1,213 @@
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  getUserDir,
+  getEnvPath,
+  getSettingsPath,
+  getCredentialsPath,
+  getAuthPath,
+} from "shared";
+import { AuthStorage, ModelRegistry } from "../../ai";
+import { registerQwenProvider } from "../providers/qwen-provider";
+import { registerOpenCodeGoProvider } from "../providers/opencode-go-provider";
+import { registerOpenAIProvider } from "../providers/openai-provider";
+import { registerGoogleProvider } from "../providers/google-provider";
+import { registerXAIProvider } from "../providers/xai-provider";
+import { registerDeepSeekProvider } from "../providers/deepseek-provider";
+import { registerGroqProvider } from "../providers/groq-provider";
+import { registerMistralProvider } from "../providers/mistral-provider";
+import { registerOpenRouterProvider } from "../providers/openrouter-provider";
+import { saveProviderModels } from "../providers/provider-persistence";
+import { encryptEnv, decryptEnv } from "../../lib/env-crypto";
+import { auth } from "../../auth/index";
+
+export interface UserContext {
+  authStorage: AuthStorage;
+  modelRegistry: ModelRegistry;
+}
+
+export class UserConfigManager {
+  private users = new Map<string, UserContext>();
+
+  ensureUserDir(username: string): string {
+    const dir = getUserDir(username);
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true });
+    }
+    return dir;
+  }
+
+  getUserEnv(username: string): Record<string, string> {
+    this.ensureUserDir(username);
+    const envPath = getEnvPath(username);
+    if (!existsSync(envPath)) return {};
+    const raw = readFileSync(envPath, "utf-8");
+    if (!raw.trim()) return {};
+
+    const jwtSecret = auth.options.secret;
+    try {
+      const decrypted = decryptEnv(raw, jwtSecret);
+      return JSON.parse(decrypted);
+    } catch (e) {
+      try {
+        const parsed = JSON.parse(raw);
+        this.setUserEnvMap(username, parsed);
+        return parsed;
+      } catch (err) {
+        console.error(`Failed to parse env.json for ${username}:`, err);
+        return {};
+      }
+    }
+  }
+
+  setUserEnv(username: string, key: string, value: string): void {
+    const env = this.getUserEnv(username);
+    env[key] = value;
+    this.setUserEnvMap(username, env);
+  }
+
+  setUserEnvMap(username: string, env: Record<string, string>): void {
+    this.ensureUserDir(username);
+    const envPath = getEnvPath(username);
+    const jwtSecret = auth.options.secret;
+    const encrypted = encryptEnv(JSON.stringify(env), jwtSecret);
+    writeFileSync(envPath, encrypted, "utf-8");
+  }
+
+  deleteUserEnv(username: string, key: string): void {
+    const env = this.getUserEnv(username);
+    delete env[key];
+    this.setUserEnvMap(username, env);
+  }
+
+  getUserSettings(username: string): Record<string, any> {
+    this.ensureUserDir(username);
+    const settingsPath = getSettingsPath(username);
+    if (!existsSync(settingsPath)) return {};
+    try {
+      const raw = readFileSync(settingsPath, "utf-8");
+      return JSON.parse(raw);
+    } catch (e) {
+      console.error(`Failed to parse settings.json for ${username}:`, e);
+      return {};
+    }
+  }
+
+  saveUserSettings(username: string, settings: Record<string, any>): void {
+    this.ensureUserDir(username);
+    const settingsPath = getSettingsPath(username);
+    const current = this.getUserSettings(username);
+    const updated = { ...current, ...settings };
+    writeFileSync(settingsPath, JSON.stringify(updated, null, 2), "utf-8");
+  }
+
+  getUserContext(username: string): UserContext {
+    const existing = this.users.get(username);
+    if (existing) {
+      const { authStorage, modelRegistry } = existing;
+      const ensureStale = (providerId: string) => {
+        if (!authStorage.hasAuth(providerId)) return;
+        const current = modelRegistry.getAll().filter((m) => m.provider === providerId);
+        const isStale =
+          current.length > 0 && current.every((m) => !m.contextWindow || m.contextWindow === 128000);
+        if (current.length === 0 || isStale) {
+          if (isStale) console.log(`[UserConfig] Detected stale cache for ${providerId} (all 128K), forcing refresh`);
+          modelRegistry
+            .refreshProviderModels(providerId)
+            .then((models) => {
+              if (models.length > 0) {
+                saveProviderModels(username, providerId, models);
+                console.log(`[UserConfig] Refreshed ${models.length} models for ${providerId}`);
+              }
+            })
+            .catch((err) => {
+              console.error(`[UserConfig] Failed to auto-fetch models for ${providerId}:`, err);
+            });
+        }
+      };
+      ensureStale("opencode-go");
+      ensureStale("qwen");
+      ensureStale("openrouter");
+      return existing;
+    }
+
+    this.ensureUserDir(username);
+    const authStorage = AuthStorage.create(getAuthPath(username));
+    const modelRegistry = ModelRegistry.create(authStorage, () => this.getUserEnv(username));
+
+    modelRegistry.refresh();
+    registerQwenProvider(modelRegistry, username);
+    registerOpenCodeGoProvider(modelRegistry, username);
+    registerOpenAIProvider(modelRegistry);
+    registerGoogleProvider(modelRegistry);
+    registerXAIProvider(modelRegistry);
+    registerDeepSeekProvider(modelRegistry);
+    registerGroqProvider(modelRegistry);
+    registerMistralProvider(modelRegistry);
+    registerOpenRouterProvider(modelRegistry, username);
+    modelRegistry.refresh();
+
+    const ctx: UserContext = { authStorage, modelRegistry };
+    this.users.set(username, ctx);
+
+    const ensureModelsForProvider = (providerId: string) => {
+      if (!authStorage.hasAuth(providerId)) return;
+      const current = modelRegistry.getAll().filter((m) => m.provider === providerId);
+      const isStale =
+        current.length > 0 && current.every((m) => !m.contextWindow || m.contextWindow === 128000);
+      if (current.length > 0 && !isStale) return;
+      if (isStale) {
+        console.log(`[UserConfig] Detected stale cache for ${providerId} (all 128K), forcing refresh`);
+      }
+      modelRegistry
+        .refreshProviderModels(providerId)
+        .then((models) => {
+          if (models.length > 0) {
+            saveProviderModels(username, providerId, models);
+            console.log(`[UserConfig] Refreshed ${models.length} models for ${providerId} from models.dev enriched data`);
+          }
+        })
+        .catch((err) => {
+          console.error(`[UserConfig] Failed to auto-fetch models for ${providerId}:`, err);
+        });
+    };
+
+    ensureModelsForProvider("opencode-go");
+    ensureModelsForProvider("qwen");
+    ensureModelsForProvider("openrouter");
+
+    return ctx;
+  }
+
+  clearUserContext(username: string): void {
+    this.users.delete(username);
+  }
+
+  getUserDefaultModel(username: string): string | null {
+    const { modelRegistry } = this.getUserContext(username);
+    const available = modelRegistry.getAvailable();
+    if (available.length > 0) {
+      return `${available[0].provider}/${available[0].id}`;
+    }
+    return null;
+  }
+
+  getUserPasswordHash(username: string): string | null {
+    this.ensureUserDir(username);
+    const credPath = getCredentialsPath(username);
+    if (!existsSync(credPath)) return null;
+    try {
+      const data = JSON.parse(readFileSync(credPath, "utf-8"));
+      return data.passwordHash ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  setUserPasswordHash(username: string, hashB64: string): void {
+    this.ensureUserDir(username);
+    const credPath = getCredentialsPath(username);
+    writeFileSync(credPath, JSON.stringify({ passwordHash: hashB64 }, null, 2), "utf-8");
+  }
+}
+
+export const userConfigManager = new UserConfigManager();

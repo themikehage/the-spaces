@@ -1,0 +1,342 @@
+import { apiFetch } from "@/lib/api";
+import { useCallback, useState, useEffect, useRef } from "react";
+import { resolveFileUrl } from "@/lib/file-urls";
+import { useAuth } from "@/contexts/AuthContext";
+
+interface ImageItem {
+  url: string;
+  title?: string;
+}
+
+interface Props {
+  images: ImageItem[];
+  sessionId: string | null;
+  activeProjectName?: string | null;
+  activeAgentId?: string | null;
+  activeChannelId?: string | null;
+  activeTeamId?: string | null;
+}
+
+export function resolveImageUrl(
+  url: string,
+  sessionId: string | null,
+  activeProjectName?: string | null,
+  activeAgentId?: string | null,
+  activeChannelId?: string | null,
+  activeTeamId?: string | null
+): string {
+  return resolveFileUrl(url, sessionId, {
+    project: activeProjectName,
+    agentId: activeAgentId,
+    channelId: activeChannelId,
+    teamId: activeTeamId,
+  });
+}
+
+interface AuthenticatedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+  src: string;
+}
+
+export function AuthenticatedImage({ src, alt, className, ...props }: AuthenticatedImageProps) {
+  const [inView, setInView] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { token } = useAuth();
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px" }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const imgSrc = !src.startsWith("/api/") || !token
+    ? src
+    : `${src}${src.includes("?") ? "&" : "?"}token=${token}`;
+
+  return (
+    <div ref={containerRef} className="w-full h-full">
+      {!inView ? (
+        <div className="w-full h-full flex items-center justify-center bg-card animate-pulse">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+            <circle cx="8.5" cy="8.5" r="1.5" />
+            <polyline points="21 15 16 10 5 21" />
+          </svg>
+        </div>
+      ) : (
+        <img src={imgSrc} alt={alt} className={className} loading="lazy" {...props} />
+      )}
+    </div>
+  );
+}
+
+export function ImageGrid({
+  images,
+  sessionId,
+  activeProjectName,
+  activeAgentId = null,
+  activeChannelId = null,
+  activeTeamId = null,
+}: Props) {
+  const [downloading, setDownloading] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const { token } = useAuth();
+
+  useEffect(() => {
+    if (!previewUrl) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPreviewUrl(null);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [previewUrl]);
+
+  const downloadImage = useCallback(async (resolvedUrl: string, filename?: string) => {
+    setDownloading(resolvedUrl);
+    try {
+      const res = await apiFetch(resolvedUrl, {
+        headers: resolvedUrl.startsWith("/api/") && token
+          ? { Authorization: `Bearer ${token}` }
+          : {}});
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+
+      const ext = blob.type.split("/")[1] || "png";
+      let downloadName = filename || "image";
+      const hasExt = /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(downloadName);
+      if (!hasExt) {
+        downloadName = `${downloadName}.${ext}`;
+      }
+
+      a.download = downloadName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+    } catch {
+      const a = document.createElement("a");
+      a.href = resolvedUrl;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.click();
+    } finally {
+      setDownloading(null);
+    }
+  }, [token]);
+
+  const openImageInNewTab = async (resolvedUrl: string) => {
+    try {
+      const res = await apiFetch(resolvedUrl, {
+        headers: resolvedUrl.startsWith("/api/") && token
+          ? { Authorization: `Bearer ${token}` }
+          : {}});
+      if (!res.ok) throw new Error("Failed to load image");
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, "_blank");
+    } catch (err) {
+      console.error("Failed to open image in new tab:", err);
+    }
+  };
+
+  const downloadAll = useCallback(async () => {
+    for (const img of images) {
+      const resolved = resolveImageUrl(img.url, sessionId, activeProjectName, activeAgentId, activeChannelId, activeTeamId);
+      await downloadImage(resolved, img.title);
+    }
+  }, [images, sessionId, activeProjectName, activeAgentId, activeChannelId, activeTeamId, downloadImage]);
+
+  if (images.length === 0) return null;
+
+  return (
+    <div className="my-3 font-sans">
+      {images.length > 1 && (
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            {images.length} image{images.length !== 1 ? "s" : ""}
+          </span>
+          <button
+            onClick={downloadAll}
+            disabled={downloading !== null}
+            className="flex items-center gap-1 px-2 py-0.5 rounded text-xs
+                       text-muted-foreground hover:text-foreground hover:bg-card-hover/50
+                       transition-colors disabled:opacity-50 cursor-pointer"
+          >
+            <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+            Download All
+          </button>
+        </div>
+      )}
+      {images.length === 1 ? (() => {
+        const img = images[0];
+        const resolved = resolveImageUrl(img.url, sessionId, activeProjectName, activeAgentId, activeChannelId, activeTeamId);
+        const isDownloading = downloading === resolved;
+        return (
+          <div
+            onClick={() => setPreviewUrl(resolved)}
+            className="group relative rounded-lg overflow-hidden border border-input bg-card hover:border-primary/40 shadow-sm transition-all cursor-pointer max-w-full"
+          >
+            <div className="w-full overflow-hidden bg-black/10 flex items-center justify-center">
+              <AuthenticatedImage
+                src={resolved}
+                alt={img.title || "Image content"}
+                loading="lazy"
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = "none";
+                }}
+                className="w-full h-auto object-contain max-h-[70vh] transition-transform group-hover:scale-[1.02]"
+              />
+            </div>
+
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  downloadImage(resolved, img.title);
+                }}
+                disabled={isDownloading}
+                className="p-1.5 bg-white/20 rounded-full hover:bg-white/40 transition-colors disabled:opacity-50 cursor-pointer"
+                title="Download image"
+              >
+                {isDownloading ? (
+                  <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" className="animate-spin text-white">
+                    <path fillRule="evenodd" d="M4 10a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1z" clipRule="evenodd" />
+                  </svg>
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" className="text-white">
+                    <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openImageInNewTab(resolved);
+                }}
+                className="p-1.5 bg-white/20 rounded-full hover:bg-white/40 transition-colors cursor-pointer"
+                title="Open in new tab"
+              >
+                <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" className="text-white">
+                  <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+                  <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
+                </svg>
+              </button>
+            </div>
+
+            {img.title && (
+              <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-2 py-1 text-xs text-foreground truncate">
+                {img.title}
+              </div>
+            )}
+          </div>
+        );
+      })() : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-w-full">
+          {images.map((img, i) => {
+            const resolved = resolveImageUrl(img.url, sessionId, activeProjectName, activeAgentId, activeChannelId, activeTeamId);
+            const isDownloading = downloading === resolved;
+            return (
+              <div
+                key={i}
+                onClick={() => setPreviewUrl(resolved)}
+                className="group relative rounded-lg overflow-hidden border border-input bg-card hover:border-primary/40 shadow-sm transition-all cursor-pointer"
+              >
+                <div className="aspect-square w-full overflow-hidden bg-black/10 flex items-center justify-center">
+                  <AuthenticatedImage
+                    src={resolved}
+                    alt={img.title || "Image content"}
+                    loading="lazy"
+                    onError={(e) => {
+                      (e.target as HTMLElement).style.display = "none";
+                    }}
+                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                  />
+                </div>
+
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      downloadImage(resolved, img.title);
+                    }}
+                    disabled={isDownloading}
+                    className="p-1.5 bg-white/20 rounded-full hover:bg-white/40 transition-colors disabled:opacity-50 cursor-pointer"
+                    title="Download image"
+                  >
+                    {isDownloading ? (
+                      <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" className="animate-spin text-white">
+                        <path fillRule="evenodd" d="M4 10a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1z" clipRule="evenodd" />
+                      </svg>
+                    ) : (
+                      <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" className="text-white">
+                        <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openImageInNewTab(resolved);
+                    }}
+                    className="p-1.5 bg-white/20 rounded-full hover:bg-white/40 transition-colors cursor-pointer"
+                    title="Open in new tab"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" className="text-white">
+                      <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+                      <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
+                    </svg>
+                  </button>
+                </div>
+
+                {img.title && (
+                  <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-2 py-1 text-xs text-foreground truncate">
+                    {img.title}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {previewUrl && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setPreviewUrl(null)}
+        >
+          <button
+            onClick={() => setPreviewUrl(null)}
+            className="fixed top-4 right-4 z-[60] p-2 bg-black/50 hover:bg-black/70 rounded-full transition-colors cursor-pointer"
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" className="text-white">
+              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </button>
+          <div className="relative max-w-[90vw] max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+            <AuthenticatedImage
+              src={previewUrl}
+              alt="Preview"
+              className="max-h-[90vh] max-w-[90vw] object-contain rounded-lg"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

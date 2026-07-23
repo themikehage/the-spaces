@@ -1,0 +1,38 @@
+import type { SupportedLocale } from "@/lib";
+
+export const literals: Record<SupportedLocale, Record<string, string>> = {
+  en: {
+    teamNotFound: "Team not found",
+    backToTeams: "Back to Teams",
+    chat: "Chat",
+    members: "Members",
+    addAgent: "Add Agent",
+    save: "Save",
+    tabChat: "Chat",
+    tabAnalytics: "Analytics",
+    kpiTotalSessions: "Total Sessions",
+    kpiVetoRate: "Veto Rate",
+    kpiArbitrations: "Arbitrations",
+    kpiAvgResponse: "Avg Response Time",
+    chartTurnsTitle: "Agent Turns Distribution",
+    loadingAnalytics: "Loading team analytics...",
+    noAnalytics: "No analytics data available for this team",
+  },
+  es: {
+    teamNotFound: "Equipo no encontrado",
+    backToTeams: "Volver a Equipos",
+    chat: "Chat",
+    members: "Miembros",
+    addAgent: "Añadir Agente",
+    save: "Guardar",
+    tabChat: "Chat",
+    tabAnalytics: "Analíticas",
+    kpiTotalSessions: "Sesiones Totales",
+    kpiVetoRate: "Tasa de Veto",
+    kpiArbitrations: "Arbitrajes",
+    kpiAvgResponse: "Tiempo Medio de Respuesta",
+    chartTurnsTitle: "Distribución de Turnos por Agente",
+    loadingAnalytics: "Cargando analíticas del equipo...",
+    noAnalytics: "No hay analíticas disponibles para este equipo",
+  },
+};
