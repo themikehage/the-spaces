@@ -10,10 +10,6 @@ El repositorio es un monorepo con workspaces de `pnpm`:
 - **`apps/landing`**: landing de producto en React, Vite y Tailwind CSS v4, rediseñada como una sala de control editorial que explica el flujo de delegación, ejecución y aprobación entre personas y agentes.
 - **`apps/server`**: servidor Bun + Hono. Expone API REST, autenticación, WebSocket y los servicios de ejecución del producto.
 - **`packages/shared`**: contratos, esquemas Zod, tipos y utilidades compartidos entre aplicaciones.
-- **`packages/sdk-core`**: puertos e interfaces del contrato `SpacesHost` (`WorkspaceFs`, `EnvStore`, `ModelRegistryPort`, `DelegationPort`, `WorkspaceConfigPort`).
-- **`packages/sdk-runtime`**: motor ejecutable de agentes, ciclo de vida de sesiones y hooks (`beforeToolCall`, `afterToolCall`).
-- **`packages/sdk-tools`**: registro y factories de herramientas dinámicas desacopladas.
-- **`packages/sdk-providers`**: registro y adaptadores unificados de proveedores de modelos de IA.
 
 ## Capacidades principales
 

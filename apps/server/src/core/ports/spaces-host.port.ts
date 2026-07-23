@@ -1,4 +1,6 @@
-import type { EnvelopeResult } from "shared";
+﻿import type { EnvelopeResult } from "shared";
+import type { WorkspaceConfig } from "./workspace-config.port";
+import type { ModelResolutionContext } from "./model-resolver";
 
 export interface WorkspaceFs {
   readFile(path: string): Promise<string>;
@@ -10,14 +12,6 @@ export interface WorkspaceFs {
 export interface EnvStore {
   get(key: string): string | undefined;
   set(key: string, value: string): void;
-}
-
-export interface ModelResolutionContext {
-  sessionModel?: string;
-  agentModel?: string;
-  projectModel?: string;
-  teamModel?: string;
-  userDefaultModel?: string;
 }
 
 export interface ModelRegistryPort {
@@ -53,22 +47,6 @@ export interface DelegationPort {
   }): Promise<EnvelopeResult>;
 }
 
-export interface WorkspaceConfig {
-  rules?: string[];
-  skills?: string[];
-  workflows?: string[];
-  defaultModel?: string;
-  permissionOverrides?: Record<string, "allow" | "deny" | "ask">;
-  toolOverrides?: {
-    add?: string[];
-    remove?: string[];
-  };
-}
-
-export interface WorkspaceConfigPort {
-  load(workspaceDir: string): Promise<WorkspaceConfig | null>;
-}
-
 export interface MemoryPort {
   buildContext(query: string): Promise<string | null>;
   store(key: string, content: string): Promise<void>;
@@ -98,7 +76,9 @@ export interface SpacesHost {
   events: EventBus;
   approvals: ApprovalPort;
   delegations: DelegationPort;
-  config: WorkspaceConfigPort;
+  config: {
+    load(workspaceDir: string): Promise<WorkspaceConfig | null>;
+  };
   memory?: MemoryPort;
   mcp?: McpPort;
   agents?: AgentDirectoryPort;

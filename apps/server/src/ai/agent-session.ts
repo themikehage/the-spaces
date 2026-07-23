@@ -811,10 +811,6 @@ export class AgentSession {
     };
   }
 
-  injectMemoryContext(memCtx: string): void {
-    // Disabled to avoid corrupting vendor token estimation and session history.
-  }
-
   async dispose(): Promise<void> {
     await this.abort();
     this.eventListeners.clear();

@@ -18,7 +18,7 @@ export interface DelegationRequest {
 export class DelegationService {
   constructor(private options: ManageDelegationsOptions) {}
 
-  async execute(toolCallId: string, req: DelegationRequest, parentSignal?: AbortSignal): Promise<EnvelopeResult | string> {
+  async execute(toolCallId: string, req: DelegationRequest, parentSignal?: AbortSignal): Promise<unknown> {
     // The underlying execution delegate implementation
     const { createManageDelegationsTool } = await import("./tools/manage-delegations-tool");
     const tool = createManageDelegationsTool(this.options);

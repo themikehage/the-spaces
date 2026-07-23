@@ -276,7 +276,7 @@ Use 'delegate' to delegate to a specific target.`,
 
         subSession.prompt(effectiveTask)
           .then(async () => {
-            let status = "success" as const;
+            let status: "success" | "error" | "blocked" = "success";
             const lastText = getLastAssistantText(subSession.messages);
             const envelope = parseEnvelope(lastText);
 
@@ -373,7 +373,7 @@ Use 'delegate' to delegate to a specific target.`,
         });
 
         const runPromise = async () => {
-          let status = "success" as const;
+          let status: "success" | "error" | "blocked" = "success";
           let executionResultText = "";
           let parsedEnvelope: any = null;
           let lastText = "";

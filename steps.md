@@ -22,7 +22,7 @@
 - [x] Ejecutar y registrar una verificación completa de `pnpm build`.
 - [x] Implementar desacoplamiento de Core SDK (Fases 0, 1 y 2: contratos, puertos, resolución de modelo, config por workspace `.spaces/config.json` y payloads de delegación `outputs`).
 - [x] Resolver items críticos de `03-core-sdk-next-steps.md`: desacoplar `SessionPromptBuilder` y `DelegationRegistry` de `sessionManager`, estandarizar `ToolActivationEngine` con políticas por workspace, categorizar `TOOL_GROUPS`, habilitar inyección de memoria auto-recalled y asegurar trazabilidad de tools no instaladas (`manage_pipelines`).
-- [x] Implementar la Fase 1 del Plan 04 (`04-post-next-steps.md`): estructurar los paquetes SDK `@spaces/sdk-core`, `@spaces/sdk-runtime`, `@spaces/sdk-tools` y `@spaces/sdk-providers`, y definir el contrato de integración `SpacesHost`.
+- [x] Implementar la Fase 1 del Plan 04 (`04-post-next-steps.md`): estructurar la Arquitectura Limpia interna en `apps/server/src/core/ports/` e implementar el contrato de integración `SpacesHost`.
 - [ ] Definir comandos estándar para typecheck, lint y pruebas en todos los workspaces.
 - [ ] Añadir pruebas de integración para rutas críticas: autenticación, sesiones, archivos y WebSocket.
 - [ ] Ampliar las pruebas de la orquestación de agentes, equipos y aprobaciones.

@@ -1,8 +1,7 @@
-import type { SpacesHost, WorkspaceConfig } from "@spaces/sdk-core";
+﻿import type { SpacesHost } from "./ports/spaces-host.port";
+import type { WorkspaceConfig } from "./ports/workspace-config.port";
 import { existsSync, readFileSync, writeFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
 import { workspaceConfigLoader } from "./session/workspace-config-loader";
-import { resolveDefaultModel } from "./session/model-resolver";
 import { resolveProjectDir } from "./session/workspace-resolver";
 
 export class ServerSpacesHost implements SpacesHost {

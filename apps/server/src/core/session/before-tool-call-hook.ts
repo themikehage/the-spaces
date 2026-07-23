@@ -60,7 +60,7 @@ export function createBeforeToolCallHook({ sessionId, isSubagent, parentSessionI
         toolCallId,
         toolName,
         args: args as Record<string, unknown>,
-        reason: verdict.reason || "Enforced by Propose autonomy level",
+        reason: ("reason" in verdict && typeof verdict.reason === "string") ? verdict.reason : "Enforced by Propose autonomy level",
       });
 
       const onAbort = () => {

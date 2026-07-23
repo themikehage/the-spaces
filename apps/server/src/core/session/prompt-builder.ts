@@ -180,8 +180,9 @@ export class SessionPromptBuilder {
     if (resolvedAgentId === "lab-architect") {
       if (experimentId) {
         try {
-          const { ExperimentStore } = await import("../../laboratory/experiment-store");
-          const exp = await ExperimentStore.getExperiment(username, experimentId);
+          // @ts-ignore
+          const labStore: any = await import("../../laboratory/experiment-store").catch(() => null);
+          const exp = labStore?.ExperimentStore ? await labStore.ExperimentStore.getExperiment(username, experimentId) : null;
           if (exp) {
             const agentsStr = exp.variants.multiWithLeader.agents.map((a: any) =>
               `  * **${a.name}** (id: \`${a.id}\`, role: \`${a.role}\`)${a.leader ? " [LÍDER]" : ""}\n    Prompt: ${a.systemPrompt}`

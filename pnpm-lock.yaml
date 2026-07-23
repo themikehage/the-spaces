@@ -126,18 +126,6 @@ importers:
       '@mozilla/readability':
         specifier: ^0.6.0
         version: 0.6.0
-      '@spaces/sdk-core':
-        specifier: workspace:*
-        version: link:../../packages/sdk-core
-      '@spaces/sdk-providers':
-        specifier: workspace:*
-        version: link:../../packages/sdk-providers
-      '@spaces/sdk-runtime':
-        specifier: workspace:*
-        version: link:../../packages/sdk-runtime
-      '@spaces/sdk-tools':
-        specifier: workspace:*
-        version: link:../../packages/sdk-tools
       '@types/turndown':
         specifier: ^5.0.6
         version: 5.0.6
@@ -204,79 +192,6 @@ importers:
         version: 9.0.10
       typescript:
         specifier: ^5
-        version: 5.9.3
-
-  packages/sdk-core:
-    dependencies:
-      shared:
-        specifier: workspace:*
-        version: link:../shared
-      zod:
-        specifier: ^3.24.1
-        version: 3.25.76
-    devDependencies:
-      '@types/node':
-        specifier: ^22.10.2
-        version: 22.20.1
-      typescript:
-        specifier: ^5.7.2
-        version: 5.9.3
-
-  packages/sdk-providers:
-    dependencies:
-      '@spaces/sdk-core':
-        specifier: workspace:*
-        version: link:../sdk-core
-      shared:
-        specifier: workspace:*
-        version: link:../shared
-      zod:
-        specifier: ^3.24.1
-        version: 3.25.76
-    devDependencies:
-      '@types/node':
-        specifier: ^22.10.2
-        version: 22.20.1
-      typescript:
-        specifier: ^5.7.2
-        version: 5.9.3
-
-  packages/sdk-runtime:
-    dependencies:
-      '@spaces/sdk-core':
-        specifier: workspace:*
-        version: link:../sdk-core
-      shared:
-        specifier: workspace:*
-        version: link:../shared
-      zod:
-        specifier: ^3.24.1
-        version: 3.25.76
-    devDependencies:
-      '@types/node':
-        specifier: ^22.10.2
-        version: 22.20.1
-      typescript:
-        specifier: ^5.7.2
-        version: 5.9.3
-
-  packages/sdk-tools:
-    dependencies:
-      '@spaces/sdk-core':
-        specifier: workspace:*
-        version: link:../sdk-core
-      shared:
-        specifier: workspace:*
-        version: link:../shared
-      zod:
-        specifier: ^3.24.1
-        version: 3.25.76
-    devDependencies:
-      '@types/node':
-        specifier: ^22.10.2
-        version: 22.20.1
-      typescript:
-        specifier: ^5.7.2
         version: 5.9.3
 
   packages/shared:

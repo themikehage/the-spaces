@@ -445,7 +445,6 @@ class SessionManager {
           resourceLoader,
           customTools: finalCustomTools,
           beforeToolCall,
-          afterToolCall,
         });
 
         const context = sessionManager.buildSessionContext();
@@ -453,7 +452,7 @@ class SessionManager {
         const resolvedModel = modelResolver.resolve({
           agentModel: agentDef?.model,
           projectModel: wsConfig?.defaultModel,
-          userDefaultModel: userConfigManager.getUserDefaultModel(username),
+          userDefaultModel: userConfigManager.getUserDefaultModel(username) ?? undefined,
         });
 
         if (!context.model) {

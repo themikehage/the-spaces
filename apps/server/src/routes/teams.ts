@@ -327,7 +327,7 @@ teamsRouter.get("/:id/negotiation-state", (c) => {
   const team = teamStore.getTeam(username, id);
   if (!team) return c.json({ error: "Team not found" }, 404);
 
-  const state = teamStore.getNegotiationState(username, id);
+  const state = (teamStore as any).getNegotiationState ? (teamStore as any).getNegotiationState(username, id) : null;
   return c.json({ state });
 });
 

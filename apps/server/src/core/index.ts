@@ -1,5 +1,4 @@
-﻿export * from "@spaces/sdk-core";
-export * from "@spaces/sdk-runtime";
-export * from "@spaces/sdk-tools";
-export * from "@spaces/sdk-providers";
+﻿export * from "./ports/workspace-config.port";
+export * from "./ports/model-resolver";
+export * from "./ports/spaces-host.port";
 export { serverSpacesHost, ServerSpacesHost } from "./spaces-host";
