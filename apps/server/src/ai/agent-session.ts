@@ -90,6 +90,14 @@ export class AgentSession {
     this.initializeAgent();
   }
 
+  private injectedMemoryContext: string | null = null;
+
+  injectMemoryContext(memCtx: string): void {
+    if (memCtx) {
+      this.injectedMemoryContext = memCtx;
+    }
+  }
+
   _refreshToolRegistry(): void {
     const prevActiveNames = this.activeTools?.length ? this.activeTools.map((t: any) => t.name) : null;
     this.allToolsMap.clear();
@@ -482,12 +490,17 @@ export class AgentSession {
 
       const skills = this.resourceLoader.getSkills().skills;
       const availableSkillsPrompt = formatSkillsForSystemPrompt(skills as any);
-      const systemPrompt = [
+      let systemPrompt = [
         this.resourceLoader.getSystemPrompt() || "",
         ...(this.resourceLoader.getAppendSystemPrompt() || []),
         availableSkillsPrompt,
         ...this.activeSkillPrompts,
       ].filter(Boolean).join("\n\n");
+
+      if (this.injectedMemoryContext) {
+        systemPrompt += `\n\n## Auto-Recalled Memory Context:\n${this.injectedMemoryContext}`;
+        this.injectedMemoryContext = null;
+      }
       (this.agent.state as any).systemPrompt = systemPrompt;
 
       const currentMessages = this.sessionManager.buildSessionContext().messages;

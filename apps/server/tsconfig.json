@@ -8,7 +8,11 @@
     "noEmit": true,
     "allowImportingTsExtensions": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@spaces/sdk-core": ["../../packages/sdk-core/src/index.ts"],
+      "@spaces/sdk-runtime": ["../../packages/sdk-runtime/src/index.ts"],
+      "@spaces/sdk-tools": ["../../packages/sdk-tools/src/index.ts"],
+      "@spaces/sdk-providers": ["../../packages/sdk-providers/src/index.ts"]
     }
   },
   "include": ["src"],

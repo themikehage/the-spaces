@@ -8,7 +8,17 @@ import {
 } from "shared";
 import { resolveSubagentSessionDir } from "./workspace-resolver";
 
+export interface TeamConfigReader {
+  getTeamType(username: string, teamId: string): string | null;
+}
+
 export class SessionMetadataStore {
+  private teamReader?: TeamConfigReader;
+
+  setTeamReader(reader: TeamConfigReader): void {
+    this.teamReader = reader;
+  }
+
   private getMetadataPath(username: string, sessionId: string): string {
     const sessionDir = resolveSubagentSessionDir(username, sessionId) ?? getSessionDir(username, sessionId);
     return join(sessionDir, "metadata.json");
@@ -66,9 +76,8 @@ export class SessionMetadataStore {
       const metadata = this.getSessionMetadata(username, sessionId);
       if (metadata && metadata.teamId) {
         try {
-          const { teamStore } = require("../../teams/team-store");
-          const team = teamStore.getTeam(username, metadata.teamId);
-          if (team && team.teamType === "Negotiation") {
+          const teamType = this.teamReader?.getTeamType(username, metadata.teamId);
+          if (teamType === "Negotiation") {
             return ["read", "grep", "find", "ls"];
           }
         } catch {}
@@ -102,9 +111,8 @@ export class SessionMetadataStore {
       }
       if (metadata.teamId) {
         try {
-          const { teamStore } = require("../../teams/team-store");
-          const team = teamStore.getTeam(username, metadata.teamId);
-          if (team && team.teamType === "Negotiation") {
+          const teamType = this.teamReader?.getTeamType(username, metadata.teamId);
+          if (teamType === "Negotiation") {
             return "readonly";
           }
         } catch {}

@@ -10,11 +10,16 @@ El repositorio es un monorepo con workspaces de `pnpm`:
 - **`apps/landing`**: landing de producto en React, Vite y Tailwind CSS v4, rediseñada como una sala de control editorial que explica el flujo de delegación, ejecución y aprobación entre personas y agentes.
 - **`apps/server`**: servidor Bun + Hono. Expone API REST, autenticación, WebSocket y los servicios de ejecución del producto.
 - **`packages/shared`**: contratos, esquemas Zod, tipos y utilidades compartidos entre aplicaciones.
+- **`packages/sdk-core`**: puertos e interfaces del contrato `SpacesHost` (`WorkspaceFs`, `EnvStore`, `ModelRegistryPort`, `DelegationPort`, `WorkspaceConfigPort`).
+- **`packages/sdk-runtime`**: motor ejecutable de agentes, ciclo de vida de sesiones y hooks (`beforeToolCall`, `afterToolCall`).
+- **`packages/sdk-tools`**: registro y factories de herramientas dinámicas desacopladas.
+- **`packages/sdk-providers`**: registro y adaptadores unificados de proveedores de modelos de IA.
 
 ## Capacidades principales
 
 - Gestión de proyectos, sesiones, archivos y workspaces.
-- Orquestación de agentes y equipos mediante la herramienta unificada `manage_delegations` que maneja subagentes aislados (`spawn`) y derivaciones (`delegate`), con control de cancelación (abort) desde UI y flujo de actividad en tiempo real.
+- Core SDK desacoplado en capas de contratos: `WorkspaceConfigPort` (para `.spaces/config.json` por workspace), `ModelResolver` (cascada de resolución de modelo por entidad), `ToolActivationEngine` basado en políticas (`toolOverrides` add/remove y categorización `TOOL_GROUPS`), inyección de contexto de memoria auto-recalled y hooks `afterToolCall`.
+- Orquestación de agentes y equipos mediante la herramienta unificada `manage_delegations` (con `DelegationService` aislado, registro desvinculado de singletons circulares y payloads dinámicos `outputs`), que maneja subagentes aislados (`spawn`) y derivaciones (`delegate`), con control de cancelación (abort) desde UI y flujo de actividad en tiempo real.
 - Catálogo y configuración de 9 proveedores de IA: OpenAI, Google Gemini, xAI/Grok, DeepSeek, Groq, Mistral, OpenRouter, Qwen y OpenCodeGo.
 - Motor de permisos dinámico para control granular de herramientas por usuario/sesión.
 - Generación de imágenes (`image_gen`) y videos (`generate_video`) con diagnósticos desde settings.

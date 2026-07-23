@@ -5,6 +5,11 @@ export interface ResolveActiveToolsParams {
   memoryEnabled: boolean;
   resolvedAgentId?: string;
   customToolNames?: string[];
+  extraAlwaysOnTools?: string[];
+  toolOverrides?: {
+    add?: string[];
+    remove?: string[];
+  };
 }
 
 export function resolveActiveTools({
@@ -14,6 +19,8 @@ export function resolveActiveTools({
   memoryEnabled,
   resolvedAgentId,
   customToolNames = [],
+  extraAlwaysOnTools = [],
+  toolOverrides,
 }: ResolveActiveToolsParams): string[] {
   let activeTools = persistedTools || sessionTools;
 
@@ -36,11 +43,17 @@ export function resolveActiveTools({
     "generate_image",
     "manage_factory",
     "manage_custom_tools",
+    ...extraAlwaysOnTools,
   ];
+
   if (resolvedAgentId === "lab-architect") {
     alwaysOnTools.push("create_experiment");
   } else {
     alwaysOnTools.push("manage_delegations");
+  }
+
+  if (toolOverrides?.add) {
+    alwaysOnTools.push(...toolOverrides.add);
   }
 
   const definedToolNames = new Set([
@@ -79,5 +92,9 @@ export function resolveActiveTools({
   // For strict respect of persistedTools containing custom names, we still add enabled ones.
   // If user explicitly removed from permissions, they'd need to toggle off.
 
-  return Array.from(merged).filter((tName) => definedToolNames.has(tName) || enabledCustomSet.has(tName));
+  const removeSet = new Set(toolOverrides?.remove || []);
+
+  return Array.from(merged).filter(
+    (tName) => (definedToolNames.has(tName) || enabledCustomSet.has(tName)) && !removeSet.has(tName)
+  );
 }

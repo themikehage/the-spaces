@@ -6,6 +6,7 @@ export const EnvelopeResultSchema = z.object({
   artifacts: z.string().default("none"),
   risks: z.string().default("None"),
   subagentSessionId: z.string().optional(),
+  outputs: z.record(z.unknown()).optional(),
 });
 
 export type EnvelopeResult = z.infer<typeof EnvelopeResultSchema>;

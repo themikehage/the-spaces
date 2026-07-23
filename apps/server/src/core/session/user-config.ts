@@ -211,3 +211,4 @@ export class UserConfigManager {
 }
 
 export const userConfigManager = new UserConfigManager();
+export const userConfig = userConfigManager;

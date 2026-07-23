@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { sessionManager } from "./session-manager";
+import { userConfig } from "./session/user-config";
 import type { EnvelopeResult } from "shared";
 import { broadcastToUser } from "../ws/handler";
 
@@ -22,7 +22,7 @@ class DelegationRegistry {
   private activePromises = new Map<string, { abort: () => void; parentSessionId: string; subagentSessionId: string }>();
 
   private getDelegationsDir(username: string, parentSessionId: string): string {
-    const userDir = sessionManager.userConfig.ensureUserDir(username);
+    const userDir = userConfig.ensureUserDir(username);
     const dir = join(userDir, "sessions", parentSessionId, "delegations");
     if (!existsSync(dir)) {
       mkdirSync(dir, { recursive: true });

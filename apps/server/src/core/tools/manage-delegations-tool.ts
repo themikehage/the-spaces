@@ -103,6 +103,10 @@ Use 'delegate' to delegate to a specific target.`,
           enum: ["read-only", "standard", "autonomous"],
           description: "Optional explicit autonomy mode.",
         },
+        payload: {
+          type: "object",
+          description: "Optional structured input payload or context variables for the delegation target.",
+        },
       },
       required: ["action", "task"],
     },
@@ -266,7 +270,11 @@ Use 'delegate' to delegate to a specific target.`,
           }
         );
 
-        subSession.prompt(task)
+        const effectiveTask = args.payload
+          ? `${task}\n\nInput Payload:\n\`\`\`json\n${JSON.stringify(args.payload, null, 2)}\n\`\`\``
+          : task;
+
+        subSession.prompt(effectiveTask)
           .then(async () => {
             let status = "success" as const;
             const lastText = getLastAssistantText(subSession.messages);

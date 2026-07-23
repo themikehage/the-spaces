@@ -24,10 +24,19 @@ import { factoryRouter } from "./routes/factory";
 import { approvalsRouter } from "./routes/approvals";
 import { SPACES_DATA_PATH } from "shared";
 import { memoryRegistry } from "./core/memory/registry";
+import { sessionMetadataStore } from "./core/session/metadata-store";
+import { teamStore } from "./teams/team-store";
 import { createWsContext } from "./ws/factory";
 import { ensureAuthTables } from "./auth/migrate";
 import { startPreviewServer, handleRequest as previewRequest } from "./preview-server";
 import { join } from "node:path";
+
+sessionMetadataStore.setTeamReader({
+  getTeamType(username: string, teamId: string): string | null {
+    const team = teamStore.getTeam(username, teamId);
+    return team?.teamType ?? null;
+  },
+});
 
 const PREVIEW_HOST = (process.env.PREVIEW_HOST ?? "").toLowerCase();
 

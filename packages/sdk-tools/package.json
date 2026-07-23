@@ -1,5 +1,5 @@
 {
-  "name": "shared",
+  "name": "@spaces/sdk-tools",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -12,6 +12,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@spaces/sdk-core": "workspace:*",
+    "shared": "workspace:*",
     "zod": "^3.24.1"
   },
   "devDependencies": {

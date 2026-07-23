@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { resolve, normalize, sep, extname } from "node:path";
+import { resolve, normalize, sep, extname, join } from "node:path";
 import { existsSync } from "node:fs";
 import { getUsername } from "../lib/auth-helpers";
 import { sessionMiddleware } from "../auth/middleware";
@@ -9,7 +9,8 @@ import {
   savePreviewConfig,
 } from "../core/preview-config";
 import { runBuild, abortBuild } from "../core/preview-builder";
-import { getWorkspaceDir } from "shared";
+import { getWorkspaceDir, getProjectWorkspaceDir } from "shared";
+import { resolveProjectDir } from "../core/session/workspace-resolver";
 
 export const previewRouter = new Hono();
 

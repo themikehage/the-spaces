@@ -34,6 +34,9 @@ import { resolveAgentDefinition } from "./session/agent-definition-resolver";
 import { resolveActiveTools } from "./session/tool-activation-engine";
 import { subscribeSessionEvents } from "./session/session-event-publisher";
 import { createBeforeToolCallHook } from "./session/before-tool-call-hook";
+import { createAfterToolCallHook } from "./session/after-tool-call-hook";
+import { workspaceConfigLoader } from "./session/workspace-config-loader";
+import { DefaultModelResolver } from "./session/model-resolver";
 import { enrichSessionWithMemory } from "./session/session-memory-enricher";
 import { buildSubagentRules, evaluateSubagentRules } from "./sandbox";
 
@@ -308,6 +311,8 @@ class SessionManager {
           mkdirSync(workspaceDir, { recursive: true });
         }
 
+        const wsConfig = await workspaceConfigLoader.load(workspaceDir);
+
         const { authStorage, modelRegistry } = userConfigManager.getUserContext(username);
 
         const { agentDef } = await resolveAgentDefinition({
@@ -351,6 +356,10 @@ class SessionManager {
             experimentId: updatedMeta.experimentId || (existingMeta ? (existingMeta as any).experimentId : undefined),
             projectId: resolvedProjectId,
           });
+
+          if (wsConfig?.rules && wsConfig.rules.length > 0) {
+            appendPrompts.push(`\n\n## Workspace Rules:\n${wsConfig.rules.join("\n")}`);
+          }
 
           resourceLoader = new DefaultResourceLoader({
             cwd: workspaceDir,
@@ -426,6 +435,8 @@ class SessionManager {
           executionMode: existingMeta ? (existingMeta as any).executionMode : undefined,
         });
 
+        const afterToolCall = createAfterToolCallHook({ sessionId, username });
+
         const { session } = await createAgentSession({
           cwd: workspaceDir,
           sessionManager,
@@ -434,26 +445,18 @@ class SessionManager {
           resourceLoader,
           customTools: finalCustomTools,
           beforeToolCall,
+          afterToolCall,
         });
 
         const context = sessionManager.buildSessionContext();
+        const modelResolver = new DefaultModelResolver(modelRegistry);
+        const resolvedModel = modelResolver.resolve({
+          agentModel: agentDef?.model,
+          projectModel: wsConfig?.defaultModel,
+          userDefaultModel: userConfigManager.getUserDefaultModel(username),
+        });
+
         if (!context.model) {
-          let resolvedModel: any = undefined;
-          if (agentDef?.model) {
-            const available = modelRegistry.getAvailable();
-            resolvedModel = available.find(
-              (m) => m.id === agentDef.model || `${m.provider}/${m.id}` === agentDef.model
-            );
-          }
-          if (!resolvedModel) {
-            const defaultModelId = userConfigManager.getUserDefaultModel(username);
-            if (defaultModelId) {
-              const available = modelRegistry.getAvailable();
-              resolvedModel = available.find(
-                (m) => m.id === defaultModelId || `${m.provider}/${m.id}` === defaultModelId
-              );
-            }
-          }
           if (resolvedModel) {
             try {
               await session.setModel(resolvedModel);
@@ -466,26 +469,8 @@ class SessionManager {
           const found = modelRegistry.find(context.model.provider, context.model.modelId);
           if (found) {
             session.model = found;
-          } else {
-            let resolvedModel: any = undefined;
-            if (agentDef?.model) {
-              const available = modelRegistry.getAvailable();
-              resolvedModel = available.find(
-                (m) => m.id === agentDef.model || `${m.provider}/${m.id}` === agentDef.model
-              );
-            }
-            if (!resolvedModel) {
-              const defaultModelId = userConfigManager.getUserDefaultModel(username);
-              if (defaultModelId) {
-                const available = modelRegistry.getAvailable();
-                resolvedModel = available.find(
-                  (m) => m.id === defaultModelId || `${m.provider}/${m.id}` === defaultModelId
-                );
-              }
-            }
-            if (resolvedModel) {
-              session.model = resolvedModel;
-            }
+          } else if (resolvedModel) {
+            session.model = resolvedModel;
           }
         }
 

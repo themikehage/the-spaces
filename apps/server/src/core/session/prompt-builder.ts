@@ -4,6 +4,8 @@ import { promptComposer } from "../prompts/composer";
 import { assemblePromptAppends } from "../prompts/prompt-assembly";
 import { CUSTOM_TOOL_INSTRUCTIONS } from "../custom-tools";
 import { resolveProjectDir } from "./workspace-resolver";
+import { userConfig } from "./user-config";
+import { sessionMetadataStore } from "./metadata-store";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -32,8 +34,7 @@ export class SessionPromptBuilder {
       experimentId,
     } = params;
 
-    const { sessionManager } = await import("../session-manager");
-    const settings = sessionManager.userConfig.getUserSettings(username);
+    const settings = userConfig.getUserSettings(username);
 
     const appendPrompts = assemblePromptAppends({
       mode: "standard-session",
@@ -150,7 +151,7 @@ export class SessionPromptBuilder {
     }
 
     try {
-      const meta = sessionManager.metadataStore.getSessionMetadata(username, sessionId);
+      const meta = sessionMetadataStore.getSessionMetadata(username, sessionId);
       let teamId = meta?.teamId;
       if (!teamId && sessionId.startsWith(SessionPrefix.TEAM)) {
         teamId = sessionId.slice(SessionPrefix.TEAM.length);
@@ -245,8 +246,7 @@ export class SessionPromptBuilder {
   private async resolveDeploymentContext(params: BuildPromptsParams): Promise<any> {
     const { username, sessionId } = params;
     try {
-      const { sessionManager } = await import("../session-manager");
-      const meta = sessionManager.metadataStore.getSessionMetadata(username, sessionId);
+      const meta = sessionMetadataStore.getSessionMetadata(username, sessionId);
 
       if (meta?.teamId) {
         const { teamStore } = await import("../../teams/team-store");

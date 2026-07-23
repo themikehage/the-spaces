@@ -58,6 +58,20 @@ export const AVAILABLE_TOOLS = [
 ] as const;
 export type ToolName = typeof AVAILABLE_TOOLS[number];
 
+export const TOOL_GROUPS = {
+  fs: ["read", "write", "edit", "grep", "find", "ls"],
+  execution: ["bash", "manage_preview"],
+  communication: ["request_approval", "ask_question", "share_file", "refresh_ui"],
+  ui: ["render_images", "render_chart", "render_html"],
+  delegation: ["manage_delegations"],
+  web: ["exa_search", "web_fetch"],
+  task: ["decompose_tasks", "update_task_status", "complete_task_list"],
+  memory: ["memory_store", "memory_recall", "memory_forget"],
+  media: ["vision", "generate_image"],
+  meta: ["manage_factory", "create_experiment", "manage_pipelines"],
+} as const;
+export type ToolGroup = keyof typeof TOOL_GROUPS;
+
 export const ToolPermissionsSchema = z.object({
   tools: z.array(z.string().min(1)),
   executionMode: z.enum(["readonly", "standard", "autonomous"]).optional(),
