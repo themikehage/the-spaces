@@ -1,10 +1,18 @@
 // SPDX-License-Identifier: MIT
-import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
+import { Hono } from "hono";
 import { z } from "zod";
 import { auth } from "../auth/index";
-import { sessionMiddleware, getAuthPayload } from "../auth/middleware";
-import { isFirstRun, getUserByUsername } from "../auth/onboarding";
+import { getAuthPayload, sessionMiddleware } from "../auth/middleware";
+import { getUserByUsername, isFirstRun } from "../auth/onboarding";
+import {
+  BadRequestError,
+  ConflictError,
+  ForbiddenError,
+  InternalError,
+  NotFoundError,
+  UnauthorizedError,
+} from "../core/errors";
 
 export const authRouter = new Hono();
 
@@ -45,7 +53,7 @@ authRouter.post("/register", zValidator("json", RegisterSchema), async (c) => {
 
   const needsSetup = await isFirstRun();
   if (!needsSetup) {
-    return c.json({ error: "Registration is closed. An account already exists." }, 403);
+    throw new ForbiddenError("REGISTRATION_CLOSED", "Registration is closed. An account already exists.");
   }
 
   const internalEmail = email || `${username}@spaces.internal`;
@@ -62,7 +70,7 @@ authRouter.post("/register", zValidator("json", RegisterSchema), async (c) => {
     });
 
     if (!result) {
-      return c.json({ error: "Registration failed" }, 500);
+      throw new InternalError("REGISTRATION_FAILED", "Registration failed");
     }
 
     const signIn = await auth.api.signInEmail({
@@ -81,11 +89,12 @@ authRouter.post("/register", zValidator("json", RegisterSchema), async (c) => {
 
     return c.json({ user: { username }, token });
   } catch (err: any) {
+    if (err?.statusCode) throw err;
     const message = err?.message || "Registration failed";
     if (message.toLowerCase().includes("already exists") || message.toLowerCase().includes("unique")) {
-      return c.json({ error: "Username already taken" }, 409);
+      throw new ConflictError("USERNAME_TAKEN", "Username already taken");
     }
-    return c.json({ error: message }, 500);
+    throw new InternalError("REGISTRATION_ERROR", message);
   }
 });
 
@@ -94,7 +103,7 @@ authRouter.post("/login", zValidator("json", LoginSchema), async (c) => {
 
   const user = await getUserByUsername(username);
   if (!user) {
-    return c.json({ error: "Invalid credentials" }, 401);
+    throw new UnauthorizedError("INVALID_CREDENTIALS", "Invalid credentials");
   }
 
   try {
@@ -104,7 +113,7 @@ authRouter.post("/login", zValidator("json", LoginSchema), async (c) => {
     });
 
     if (!result.ok) {
-      return c.json({ error: "Invalid credentials" }, 401);
+      throw new UnauthorizedError("INVALID_CREDENTIALS", "Invalid credentials");
     }
 
     const setCookies = result.headers.getSetCookie();
@@ -117,8 +126,9 @@ authRouter.post("/login", zValidator("json", LoginSchema), async (c) => {
     }
 
     return c.json({ user: { username }, token });
-  } catch {
-    return c.json({ error: "Invalid credentials" }, 401);
+  } catch (err: any) {
+    if (err?.statusCode) throw err;
+    throw new UnauthorizedError("INVALID_CREDENTIALS", "Invalid credentials");
   }
 });
 
@@ -138,7 +148,7 @@ authRouter.post("/password", sessionMiddleware, zValidator("json", ChangePasswor
 
   const user = await getUserByUsername(username);
   if (!user) {
-    return c.json({ error: "User not found" }, 404);
+    throw new NotFoundError("USER_NOT_FOUND", "User not found");
   }
 
   try {
@@ -148,11 +158,12 @@ authRouter.post("/password", sessionMiddleware, zValidator("json", ChangePasswor
     });
 
     if (!result) {
-      return c.json({ error: "Current password is incorrect" }, 401);
+      throw new UnauthorizedError("INCORRECT_PASSWORD", "Current password is incorrect");
     }
 
     return c.json({ ok: true, user: { username } });
   } catch (err: any) {
-    return c.json({ error: err?.message || "Failed to change password" }, 400);
+    if (err?.statusCode) throw err;
+    throw new BadRequestError("PASSWORD_CHANGE_FAILED", err?.message || "Failed to change password");
   }
 });

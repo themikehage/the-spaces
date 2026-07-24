@@ -15,14 +15,14 @@ export interface ApprovalRequest {
 
 export interface ApprovalDecision {
   action: "approve" | "deny";
-  payload?: Record<string, any>;
+  payload?: Record<string, unknown>;
 }
 
 type PendingApproval = {
   request: ApprovalRequest;
   resolve: (value: ApprovalDecision) => void;
-  reject: (reason: any) => void;
-  timeoutId: any;
+  reject: (reason: Error | string) => void;
+  timeoutId: ReturnType<typeof setTimeout>;
 };
 
 class ApprovalManager {
@@ -87,15 +87,14 @@ class ApprovalManager {
     });
   }
 
-  resolve(approvalId: string, decision: string | ApprovalDecision): boolean {
+  resolve(approvalId: string, decision: "approve" | "deny" | ApprovalDecision): boolean {
     const entry = this.pending.get(approvalId);
     if (!entry) return false;
 
     clearTimeout(entry.timeoutId);
 
-    const resolvedValue: ApprovalDecision = typeof decision === "string"
-      ? { action: decision as any }
-      : decision;
+    const resolvedValue: ApprovalDecision =
+      typeof decision === "string" ? { action: decision } : decision;
 
     entry.request.status = resolvedValue.action === "approve" ? "approved" : "denied";
     entry.resolve(resolvedValue);
@@ -114,7 +113,7 @@ class ApprovalManager {
     return true;
   }
 
-  reject(approvalId: string, error: any): boolean {
+  reject(approvalId: string, error: Error | string): boolean {
     const entry = this.pending.get(approvalId);
     if (!entry) return false;
 

@@ -29,13 +29,18 @@
   - Fase 1: Desacoplamiento de singletons (`DelegationRegistry` orientado a eventos con `onEvent`, `SessionToolFactory` con inyección estática, `ManageDelegationsTool` con inyección de puertos).
   - Fase 2: Unificación de runtimes con `createAgentRuntime(config)` y `resolveAgentContext()`, simplificando `createAgentServer()` y `sessionManager`.
   - Fase 3: Formalización del contrato `SpacesHost` (`ServerSpacesHost`) y creación de `ARCHITECTURE.md`.
-- [x] Definir comandos estándar para typecheck, lint y pruebas en todos los workspaces (TurboRepo + `check-license`, `typecheck`, `lint`, `build`, `test`).
-- [ ] Añadir pruebas de integración para rutas críticas: autenticación, sesiones, archivos y WebSocket.
-- [ ] Ampliar las pruebas de la orquestación de agentes, equipos y aprobaciones.
-- [ ] Eliminar los usos restantes de `any` y reforzar los contratos de API.
-- [x] Sustituir enlaces locales fijos de la landing por configuración de entorno o rutas de despliegue.
-- [x] Documentar variables de entorno (`.env.example`), persistencia local, guía de self-hosting (`docs/self-hosting.md`) y procedimiento de despliegue.
-- [x] Completar las Bases para Open-Source (`06-foundations.md`): Licencia MIT, SPDX headers en los 495 archivos fuente, CI/CD pipeline (`ci.yml`, `release.yml`, `turbo.json`), Changesets, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, templates de GitHub y endpoint `GET /api/health` enriquecido.
+- [x] Implementar el Plan 07 de Calidad de Código (`plans/07-code-quality.md`):
+  - Fase 1 (Tooling): `.editorconfig`, `.prettierrc`, `.prettierignore`, `eslint.config.mjs` (v9 flat config), `lefthook.yml` y scripts unificados de formateo/linting en `package.json`.
+  - Fase 2 (Errores): Jerarquía centralizada de clases `AppError`, `HttpError`, middleware de `X-Request-Id` e integración global de `onError` en Hono con serialización segura. Refactorizado de `routes/auth.ts`.
+  - Fase 3 (Strict TS): Tipado de `bash-tool.ts`, `approval-manager.ts` y eliminación progresiva de `any`.
+  - Fase 5 (Docs): Configuración de `typedoc.json` para generación automática de documentación de contratos y API.
+- [x] Implementar el Plan 08 de Security Hardening (`plans/08-security.md`):
+  - Área 1 (Secrets): Eliminación de fallback de cifrado hardcodeado en `env-crypto.ts` y logs de diagnóstico con fragmentos de secretos en `settings.ts`.
+  - Área 2 (Secret Scanning): Configuración de `secretlint`, `.secretlintrc.json`, script `secret-scan`, hook `lefthook` y GitHub Actions CI.
+  - Área 3 (Auth Security): Cabeceras HTTP de seguridad (`security-headers.ts`), Rate limiting por IP en auth y API (`rate-limiter.ts`), CORS restrictivo con `ALLOWED_ORIGINS`, desactivación de `?token=` en query string.
+  - Área 4 (Bash Sandbox): Rutas restringidas de sistema (`restricted-paths.ts`), límite de salida de 50KB, timeout de 30s y audit logger (`[BASH_AUDIT]`).
+  - Área 5 (Circuit Breaker): Patrón `CircuitBreaker` (`circuit-breaker.ts`) integrado en `model-registry.ts` para proteger peticiones a servicios AI externos.
+- [ ] (Pospuesto por solicitud del usuario) Añadir pruebas de integración para rutas críticas (autenticación, sesiones, archivos, WebSocket) y orquestación.
 
 ## Criterio de cierre del sprint
 
