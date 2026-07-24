@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-import { useEffect, useRef } from "react";
-import type { TeamMessage } from "shared";
-import type { StreamingAgentState } from "@/hooks/useTeam";
 import { RichMarkdown } from "@/components/chat/RichMarkdown";
 import { AgentAvatar } from "@/components/shared/AgentAvatar";
+import type { StreamingAgentState } from "@/hooks/useTeam";
+import { useEffect, useRef } from "react";
+import type { TeamMessage } from "shared";
 
 interface Props {
   messages: TeamMessage[];
@@ -11,11 +11,7 @@ interface Props {
   agentAvatarMap?: Record<string, string | undefined>;
 }
 
-export function TeamMessages({
-  messages,
-  streamingAgents,
-  agentAvatarMap = {},
-}: Props) {
+export function TeamMessages({ messages, streamingAgents, agentAvatarMap = {} }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -33,7 +29,9 @@ export function TeamMessages({
           </div>
           <div className="text-center">
             <p className="font-medium text-foreground text-sm">No messages in this team yet</p>
-            <p className="text-xs text-muted-foreground mt-1">Send a message below to trigger team agents</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Send a message below to trigger team agents
+            </p>
           </div>
         </div>
       )}
@@ -60,15 +58,19 @@ export function TeamMessages({
               </span>
             )}
             <span className="text-xs text-muted-foreground">
-              {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              {new Date(msg.createdAt).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
             </span>
           </div>
 
           <div
-            className={`max-w-[90%] sm:max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${msg.role === "user"
+            className={`max-w-[90%] sm:max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
+              msg.role === "user"
                 ? "bg-primary/15 text-foreground border border-primary/20 rounded-tr-none"
                 : "bg-card text-foreground border border-input rounded-tl-none shadow-sm"
-              }`}
+            }`}
           >
             <RichMarkdown content={msg.content} />
             {msg.role === "agent" && msg.toolCalls && msg.toolCalls.length > 0 && (
@@ -80,11 +82,16 @@ export function TeamMessages({
                   return (
                     <div
                       key={tcIdx}
-                      className={`p-2.5 rounded-lg border text-xs font-mono bg-bg/40 ${isError ? "border-error/30 text-error bg-error/5" : "border-border/50 text-text-secondary"
-                        }`}
+                      className={`p-2.5 rounded-lg border text-xs font-mono bg-bg/40 ${
+                        isError
+                          ? "border-error/30 text-error bg-error/5"
+                          : "border-border/50 text-text-secondary"
+                      }`}
                     >
                       <div className="flex items-center gap-2">
-                        <span className={`w-1.5 h-1.5 rounded-full ${isError ? "bg-error" : hasResult ? "bg-primary" : "bg-warning animate-pulse"}`} />
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${isError ? "bg-error" : hasResult ? "bg-primary" : "bg-warning animate-pulse"}`}
+                        />
                         <span className="font-bold text-foreground">{tc.name || tc.toolName}</span>
                         <span className="text-[10px] opacity-70">
                           {hasResult ? (isError ? "error" : "completed") : "running"}

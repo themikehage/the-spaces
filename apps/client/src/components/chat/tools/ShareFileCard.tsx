@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
+import { Button } from "@/components/ui/Button";
 import { apiFetch } from "@/lib/api";
 import { useState } from "react";
 import { resolveImageUrl } from "../ImageGrid";
-import { Button } from "@/components/ui/Button";
 
 interface Props {
   filePath: string;
@@ -41,7 +41,8 @@ const EXT_ICONS: Record<string, string> = {
   mp3: "MP3",
   wav: "WAV",
   mp4: "MP4",
-  mov: "MP4"};
+  mov: "MP4",
+};
 
 const EXT_COLORS: Record<string, string> = {
   PDF: "bg-red-500/20 text-red-400",
@@ -53,7 +54,8 @@ const EXT_COLORS: Record<string, string> = {
   IMG: "bg-purple-500/20 text-purple-400",
   SVG: "bg-pink-500/20 text-pink-400",
   JSON: "bg-cyan-500/20 text-cyan-400",
-  HTML: "bg-indigo-500/20 text-indigo-400"};
+  HTML: "bg-indigo-500/20 text-indigo-400",
+};
 
 function getExtension(filePath: string): string {
   const name = filePath.split(/[\\/]/).pop() || "";
@@ -92,7 +94,7 @@ export function ShareFileCard({
     activeProjectName,
     activeAgentId,
     activeChannelId,
-    activeTeamId
+    activeTeamId,
   );
   const fullDownloadUrl = downloadUrl.includes("?")
     ? `${downloadUrl}&download=1`
@@ -103,7 +105,8 @@ export function ShareFileCard({
     try {
       const token = "";
       const res = await apiFetch(fullDownloadUrl, {
-        headers: token ? {  } : {}});
+        headers: token ? {} : {},
+      });
       if (!res.ok) throw new Error("Download failed");
       const blob = await res.blob();
       const blobUrl = URL.createObjectURL(blob);
@@ -123,31 +126,36 @@ export function ShareFileCard({
 
   return (
     <div className="flex items-center gap-3 bg-surface border border-input/40 rounded-xl p-3 my-2 max-w-sm">
-      <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-[10px] font-bold font-mono ${colorClass}`}>
+      <div
+        className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-[10px] font-bold font-mono ${colorClass}`}
+      >
         {iconLabel}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-xs font-semibold text-foreground truncate">
-          {displayName}
-        </div>
-        <div className="text-[10px] text-muted-foreground truncate font-mono">
-          {fileName}
-        </div>
+        <div className="text-xs font-semibold text-foreground truncate">{displayName}</div>
+        <div className="text-[10px] text-muted-foreground truncate font-mono">{fileName}</div>
       </div>
-      <Button
-        variant="solid"
-        size="sm"
-        onClick={handleDownload}
-        disabled={downloading}
-      >
+      <Button variant="solid" size="sm" onClick={handleDownload} disabled={downloading}>
         {downloading ? (
-          <svg className="animate-spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg
+            className="animate-spin"
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
             <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
             <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
           </svg>
         ) : (
           <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10 3a1 1 0 011 1v10.586l3.293-3.293a1 1 0 111.414 1.414l-5 5a1 1 0 01-1.414 0l-5-5a1 1 0 111.414-1.414L9 14.586V4a1 1 0 011-1z" clipRule="evenodd" />
+            <path
+              fillRule="evenodd"
+              d="M10 3a1 1 0 011 1v10.586l3.293-3.293a1 1 0 111.414 1.414l-5 5a1 1 0 01-1.414 0l-5-5a1 1 0 111.414-1.414L9 14.586V4a1 1 0 011-1z"
+              clipRule="evenodd"
+            />
           </svg>
         )}
         {downloading ? "..." : "Download"}

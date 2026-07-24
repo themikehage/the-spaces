@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 import type { Context, Next } from "hono";
-import { auth } from "./index";
-import { resolveUsernameFromToken, getSessionTokensFromCookieHeader } from "../lib/auth-helpers";
+import { getSessionTokensFromCookieHeader, resolveUsernameFromToken } from "../lib/auth-helpers";
 import { getDb } from "./db";
+import { auth } from "./index";
 
 export interface AuthPayload {
   username: string;
@@ -14,7 +14,7 @@ function findUserByTokenSync(token: string): string | null {
     const db = getDb();
     const row = db
       .query(
-        `SELECT user.username, session.expiresAt FROM session INNER JOIN user ON session.userId = user.id WHERE session.token = ?`
+        `SELECT user.username, session.expiresAt FROM session INNER JOIN user ON session.userId = user.id WHERE session.token = ?`,
       )
       .get(token) as { username: string; expiresAt: unknown } | null;
     if (!row?.username) return null;
@@ -69,16 +69,18 @@ export async function sessionMiddleware(c: Context, next: Next) {
 
   const tokenFromQuery = c.req.query("token");
   if (tokenFromQuery) {
-    console.warn(`[Auth Middleware] Security Warning: Token via query parameter is disabled. Path: ${path}`);
+    console.warn(
+      `[Auth Middleware] Security Warning: Token via query parameter is disabled. Path: ${path}`,
+    );
   }
-
 
   const authHeader = c.req.header("Authorization") ?? c.req.header("authorization");
   if (authHeader?.startsWith("Bearer ")) {
     const raw = authHeader.slice(7).trim();
     const username = findUserByTokenSync(raw) ?? resolveUsernameFromToken(raw);
     if (username) {
-      if (isWorkspaceProjects) console.log(`[Auth Middleware] ${path} bearer auth success -> ${username}`);
+      if (isWorkspaceProjects)
+        console.log(`[Auth Middleware] ${path} bearer auth success -> ${username}`);
       c.set("user", { username } as AuthPayload);
       await next();
       return;
@@ -98,11 +100,17 @@ export async function sessionMiddleware(c: Context, next: Next) {
   }
 
   if (isWorkspaceProjects) {
-    console.log(`[Auth Middleware] ${path} cookieHeader present: ${!!cookieHeader}, length: ${cookieHeader?.length ?? 0}`);
+    console.log(
+      `[Auth Middleware] ${path} cookieHeader present: ${!!cookieHeader}, length: ${cookieHeader?.length ?? 0}`,
+    );
     if (cookieHeader) {
-      console.log(`[Auth Middleware] ${path} cookieHeader preview: ${cookieHeader.slice(0, 100)}...`);
+      console.log(
+        `[Auth Middleware] ${path} cookieHeader preview: ${cookieHeader.slice(0, 100)}...`,
+      );
       const tokens = getSessionTokensFromCookieHeader(cookieHeader);
-      console.log(`[Auth Middleware] ${path} extracted ${tokens.length} session tokens from cookie`);
+      console.log(
+        `[Auth Middleware] ${path} extracted ${tokens.length} session tokens from cookie`,
+      );
       for (const tok of tokens) {
         console.log(`[Auth Middleware] ${path} trying token prefix: ${tok.slice(0, 8)}...`);
         const username = findUserByTokenSync(tok);

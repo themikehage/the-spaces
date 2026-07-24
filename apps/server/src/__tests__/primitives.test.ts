@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { describe, expect, it } from "bun:test";
-import { parseEnvelope, getLastAssistantText, resolveModelWithFallback } from "../core/agent-utils";
+import { getLastAssistantText, parseEnvelope } from "../core/agent-utils";
 
 describe("Agent Utilities - Envelope Parser", () => {
   it("should parse a valid envelope with custom keys", () => {
@@ -31,7 +31,7 @@ describe("Agent Utilities - Last Assistant Text Extractions", () => {
   it("should extract string assistant messages", () => {
     const messages = [
       { role: "user", content: "Hola" },
-      { role: "assistant", content: "Hola, ¿en qué te puedo ayudar hoy?" }
+      { role: "assistant", content: "Hola, ¿en qué te puedo ayudar hoy?" },
     ];
     const text = getLastAssistantText(messages);
     expect(text).toBe("Hola, ¿en qué te puedo ayudar hoy?");
@@ -44,9 +44,9 @@ describe("Agent Utilities - Last Assistant Text Extractions", () => {
         role: "assistant",
         content: [
           { type: "text", text: "Procesando la tarea..." },
-          { type: "image", image: "mock" }
-        ]
-      }
+          { type: "image", image: "mock" },
+        ],
+      },
     ];
     const text = getLastAssistantText(messages);
     expect(text).toBe("Procesando la tarea...");

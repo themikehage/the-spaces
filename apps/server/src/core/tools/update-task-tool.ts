@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { join } from "node:path";
-import { sessionManager } from "../session-manager";
 import { broadcastToSession } from "../../ws/handler";
+import { sessionManager } from "../session-manager";
 import { TaskStateManager } from "./task-state-manager";
 
 export interface UpdateTaskOptions {
@@ -31,7 +31,8 @@ After marking a task as 'done', the task runner will automatically identify the 
         },
         log: {
           type: "string",
-          description: "Optional summary log explaining the outcome or findings of this task execution.",
+          description:
+            "Optional summary log explaining the outcome or findings of this task execution.",
         },
       },
       required: ["taskId", "status"],
@@ -47,7 +48,12 @@ After marking a task as 'done', the task runner will automatically identify the 
       const state = TaskStateManager.getTaskState(sessionDir);
       if (!state) {
         return {
-          content: [{ type: "text", text: "Error: No active task plan found in this session. Create one first using decompose_tasks." }],
+          content: [
+            {
+              type: "text",
+              text: "Error: No active task plan found in this session. Create one first using decompose_tasks.",
+            },
+          ],
           isError: true,
         };
       }
@@ -55,7 +61,9 @@ After marking a task as 'done', the task runner will automatically identify the 
       const task = state.tasks?.find((t: any) => t.id === taskId);
       if (!task) {
         return {
-          content: [{ type: "text", text: `Error: Task with ID '${taskId}' not found in the active plan.` }],
+          content: [
+            { type: "text", text: `Error: Task with ID '${taskId}' not found in the active plan.` },
+          ],
           isError: true,
         };
       }
@@ -68,12 +76,12 @@ After marking a task as 'done', the task runner will automatically identify the 
         state.error = `Task '${taskId}' failed: ${log}`;
       } else {
         const completedTaskIds = new Set(
-          state.tasks
-            .filter((t: any) => t.status === "done")
-            .map((t: any) => t.id)
+          state.tasks.filter((t: any) => t.status === "done").map((t: any) => t.id),
         );
 
-        const pendingTasks = state.tasks.filter((t: any) => t.status === "pending" || t.status === "running");
+        const pendingTasks = state.tasks.filter(
+          (t: any) => t.status === "pending" || t.status === "running",
+        );
 
         if (pendingTasks.length > 0) {
           const readyTasks = pendingTasks.filter((t: any) => {
@@ -86,7 +94,12 @@ After marking a task as 'done', the task runner will automatically identify the 
             readyTasks[0].status = "running";
           } else {
             return {
-              content: [{ type: "text", text: "Error: Deadlock or circular dependency detected in task plan dependencies." }],
+              content: [
+                {
+                  type: "text",
+                  text: "Error: Deadlock or circular dependency detected in task plan dependencies.",
+                },
+              ],
               isError: true,
             };
           }
@@ -112,7 +125,9 @@ After marking a task as 'done', the task runner will automatically identify the 
         : `All tasks complete! Call complete_task_list to finalize the plan.`;
 
       return {
-        content: [{ type: "text", text: `Task '${taskId}' marked as '${status}'. ${nextTaskInfo}` }],
+        content: [
+          { type: "text", text: `Task '${taskId}' marked as '${status}'. ${nextTaskInfo}` },
+        ],
         details: { taskId, status, currentTaskId: state.currentTaskId, state },
       };
     },
@@ -127,7 +142,8 @@ Use this ONLY when all tasks in the list have been marked as 'done' and you have
       properties: {
         summary: {
           type: "string",
-          description: "Final completion summary describing the final outcome, links to code files created, and deliverables.",
+          description:
+            "Final completion summary describing the final outcome, links to code files created, and deliverables.",
         },
       },
       required: ["summary"],
@@ -146,10 +162,17 @@ Use this ONLY when all tasks in the list have been marked as 'done' and you have
         };
       }
 
-      const incomplete = state.tasks.filter((t: any) => t.status !== "done" && t.status !== "failed");
+      const incomplete = state.tasks.filter(
+        (t: any) => t.status !== "done" && t.status !== "failed",
+      );
       if (incomplete.length > 0) {
         return {
-          content: [{ type: "text", text: `Error: Cannot complete. There are still incomplete tasks: ${incomplete.map((t: any) => t.id).join(", ")}` }],
+          content: [
+            {
+              type: "text",
+              text: `Error: Cannot complete. There are still incomplete tasks: ${incomplete.map((t: any) => t.id).join(", ")}`,
+            },
+          ],
           isError: true,
         };
       }
@@ -178,4 +201,3 @@ Use this ONLY when all tasks in the list have been marked as 'done' and you have
 
   return [updateTaskStatusTool, completeTaskListTool];
 }
-

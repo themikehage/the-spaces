@@ -6,11 +6,11 @@ mock.module("../ws/handler", () => {
   return {};
 });
 
-import { expect, test, describe, beforeEach, afterEach } from "bun:test";
-import { teamStore } from "../teams/team-store";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { UpdateTeamSchema, type UpdateTeam } from "shared";
+import { teamStore } from "../teams/team-store";
 
 const TMP_TEST_DIR = join(import.meta.dirname, "../../tmp-team-type-tests");
 
@@ -78,11 +78,11 @@ describe("Team Type - Schema and Store Tests", () => {
     const parsed = UpdateTeamSchema.safeParse({ teamType: "Orchestration" });
     expect(parsed.success).toBe(false);
 
-    expect(() => teamStore.updateTeam(
-      username,
-      created.id,
-      { teamType: "Orchestration" } as unknown as UpdateTeam
-    )).toThrow("immutable");
+    expect(() =>
+      teamStore.updateTeam(username, created.id, {
+        teamType: "Orchestration",
+      } as unknown as UpdateTeam),
+    ).toThrow("immutable");
 
     const fetched = teamStore.getTeam(username, created.id);
     expect(fetched!.teamType).toBe("Orchestration");

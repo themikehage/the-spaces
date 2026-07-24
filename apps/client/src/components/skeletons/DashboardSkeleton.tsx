@@ -3,7 +3,10 @@ import { Skeleton } from "@/components/ui/Skeleton";
 
 export function DashboardSkeleton() {
   return (
-    <div className="h-full flex flex-col bg-bg overflow-y-auto pb-10 scrollbar-thin" aria-label="Loading dashboard">
+    <div
+      className="h-full flex flex-col bg-bg overflow-y-auto pb-10 scrollbar-thin"
+      aria-label="Loading dashboard"
+    >
       <div className="bg-linear-to-b from-primary/10 via-bg to-bg px-5 pt-6 pb-4 sm:pt-10 sm:pb-8 border-b border-input/5">
         <div className="max-w-6xl mx-auto space-y-4">
           <div className="flex items-center justify-between">
@@ -42,7 +45,10 @@ export function DashboardSkeleton() {
         <SectionSkeleton id="sessions-sec">
           <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="flex items-center bg-surface/85 border border-input/10 rounded-xl overflow-hidden h-[58px]">
+              <div
+                key={i}
+                className="flex items-center bg-surface/85 border border-input/10 rounded-xl overflow-hidden h-[58px]"
+              >
                 <Skeleton className="w-[58px] h-full rounded-none shrink-0" />
                 <div className="flex-1 px-2.5 py-1 space-y-1.5">
                   <Skeleton className="h-3 w-3/4 rounded" />
@@ -57,7 +63,10 @@ export function DashboardSkeleton() {
         <SectionSkeleton id="projects-sec">
           <div className="flex overflow-x-auto gap-4 pb-3 -mx-5 px-5 scrollbar-none sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="w-[145px] shrink-0 bg-surface/40 border border-input/15 rounded-2xl p-3 sm:w-auto">
+              <div
+                key={i}
+                className="w-[145px] shrink-0 bg-surface/40 border border-input/15 rounded-2xl p-3 sm:w-auto"
+              >
                 <Skeleton className="w-full aspect-square rounded-xl" />
                 <div className="mt-2.5 space-y-1.5">
                   <Skeleton className="h-3 w-4/5 rounded" />
@@ -77,7 +86,10 @@ export function DashboardSkeleton() {
         <SectionSkeleton id="teams-sec">
           <div className="flex overflow-x-auto gap-4 pb-3 -mx-5 px-5 scrollbar-none sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="w-[145px] shrink-0 bg-surface/40 border border-input/15 rounded-2xl p-3 sm:w-auto">
+              <div
+                key={i}
+                className="w-[145px] shrink-0 bg-surface/40 border border-input/15 rounded-2xl p-3 sm:w-auto"
+              >
                 <Skeleton className="w-full aspect-square rounded-xl" />
                 <div className="mt-2.5 space-y-1.5">
                   <Skeleton className="h-3 w-3/4 rounded" />

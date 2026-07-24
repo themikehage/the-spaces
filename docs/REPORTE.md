@@ -60,14 +60,14 @@ Define TODO el vocabulario del protocolo IPC.
 
 **Requests (discriminadas por `type`):**
 
-| Tipo | Payload |
-|---|---|
-| `spawn` | `{ cwd, label?, provider?, model? }` |
-| `list` | `{}` |
-| `status` | `{ instanceId }` |
-| `stop` | `{ instanceId }` |
-| `rpc` | `{ instanceId, command: RpcCommand }` |
-| `rpc_stream` | `{ instanceId }` |
+| Tipo         | Payload                               |
+| ------------ | ------------------------------------- |
+| `spawn`      | `{ cwd, label?, provider?, model? }`  |
+| `list`       | `{}`                                  |
+| `status`     | `{ instanceId }`                      |
+| `stop`       | `{ instanceId }`                      |
+| `rpc`        | `{ instanceId, command: RpcCommand }` |
+| `rpc_stream` | `{ instanceId }`                      |
 
 **Sub-protocolo streaming:**
 
@@ -120,14 +120,14 @@ Define TODO el vocabulario del protocolo IPC.
 
 ### Ciclo de vida
 
-| Metodo | Funcion |
-|---|---|
-| `send(command)` | Escribe al stdin, retorna `Promise<RpcResponse>` |
-| `handleUiResponse(response)` | Escribe UI response al stdin |
-| `setUiRequestHandler(handler)` | Registra callback para UI requests entrantes |
-| `onEvent(listener)` | Suscribe a eventos de sesion, retorna unsubscribe |
-| `onExit(listener)` | Suscribe a exit del proceso, retorna unsubscribe |
-| `dispose()` | `SIGTERM` -> espera `exit` -> rejecta todo pending |
+| Metodo                         | Funcion                                            |
+| ------------------------------ | -------------------------------------------------- |
+| `send(command)`                | Escribe al stdin, retorna `Promise<RpcResponse>`   |
+| `handleUiResponse(response)`   | Escribe UI response al stdin                       |
+| `setUiRequestHandler(handler)` | Registra callback para UI requests entrantes       |
+| `onEvent(listener)`            | Suscribe a eventos de sesion, retorna unsubscribe  |
+| `onExit(listener)`             | Suscribe a exit del proceso, retorna unsubscribe   |
+| `dispose()`                    | `SIGTERM` -> espera `exit` -> rejecta todo pending |
 
 ---
 
@@ -137,19 +137,19 @@ Define TODO el vocabulario del protocolo IPC.
 
 ### Metodos publicos
 
-| Metodo | Funcion |
-|---|---|
-| `spawnInstance({cwd, label})` | UUID -> spawn child -> sync session state -> register Radius -> "online" |
-| `stopInstance(id)` | "stopping" -> cleanup -> "stopped" -> remove |
-| `handleRpc(id, command)` | Envia RPC al hijo, refresca metadata de sesion |
-| `openRpcStream(id, onEvent, onUiRequest)` | Streaming bidireccional con eventos |
-| `getInstance(id)` | De live map o persisted storage |
-| `getLiveInstance(id)` | Solo de live map |
-| `listInstances()` | Todas las persisted |
-| `listLiveInstances()` | Solo las in-memory |
-| `updateInstance(record)` | Actualiza live + persiste |
-| `recoverAfterRestart()` | Marca "online"/"starting" como "stopped", limpia Radius |
-| `shutdown()` | Detiene todas las instancias secuencialmente |
+| Metodo                                    | Funcion                                                                  |
+| ----------------------------------------- | ------------------------------------------------------------------------ |
+| `spawnInstance({cwd, label})`             | UUID -> spawn child -> sync session state -> register Radius -> "online" |
+| `stopInstance(id)`                        | "stopping" -> cleanup -> "stopped" -> remove                             |
+| `handleRpc(id, command)`                  | Envia RPC al hijo, refresca metadata de sesion                           |
+| `openRpcStream(id, onEvent, onUiRequest)` | Streaming bidireccional con eventos                                      |
+| `getInstance(id)`                         | De live map o persisted storage                                          |
+| `getLiveInstance(id)`                     | Solo de live map                                                         |
+| `listInstances()`                         | Todas las persisted                                                      |
+| `listLiveInstances()`                     | Solo las in-memory                                                       |
+| `updateInstance(record)`                  | Actualiza live + persiste                                                |
+| `recoverAfterRestart()`                   | Marca "online"/"starting" como "stopped", limpia Radius                  |
+| `shutdown()`                              | Detiene todas las instancias secuencialmente                             |
 
 ### Optimizacion: session metadata refresh
 
@@ -192,25 +192,25 @@ Operaciones sincronicas (sin locks, asume proceso unico).
 
 ### Archivos en `~/.pi/orchestrator/`
 
-| Archivo | Contenido |
-|---|---|
-| `instances.json` | `InstanceRecord[]` |
-| `machine.json` | `MachineRecord` (unico) |
-| `orchestrator.sock` | Unix socket |
-| `auth.json` | Credenciales OAuth (para Radius) |
+| Archivo             | Contenido                        |
+| ------------------- | -------------------------------- |
+| `instances.json`    | `InstanceRecord[]`               |
+| `machine.json`      | `MachineRecord` (unico)          |
+| `orchestrator.sock` | Unix socket                      |
+| `auth.json`         | Credenciales OAuth (para Radius) |
 
 ### Operaciones
 
-| Funcion | Descripcion |
-|---|---|
-| `loadMachine()` | `MachineRecord \| undefined` |
-| `saveMachine(m)` | Escribe machine.json |
-| `deleteMachine()` | Elimina machine.json |
-| `loadInstances()` | `InstanceRecord[]` |
-| `saveInstances(arr)` | Escribe instances.json |
-| `getInstance(id)` | Busqueda lineal |
-| `upsertInstance(r)` | Inserta o reemplaza por `id` |
-| `removeInstance(id)` | Filtra y re-guarda |
+| Funcion              | Descripcion                  |
+| -------------------- | ---------------------------- |
+| `loadMachine()`      | `MachineRecord \| undefined` |
+| `saveMachine(m)`     | Escribe machine.json         |
+| `deleteMachine()`    | Elimina machine.json         |
+| `loadInstances()`    | `InstanceRecord[]`           |
+| `saveInstances(arr)` | Escribe instances.json       |
+| `getInstance(id)`    | Busqueda lineal              |
+| `upsertInstance(r)`  | Inserta o reemplaza por `id` |
+| `removeInstance(id)` | Filtra y re-guarda           |
 
 ---
 
@@ -266,16 +266,16 @@ interface RadiusPresenceCoordinator {
 
 Entrypoint ejecutable (`#!/usr/bin/env node`).
 
-| Comando | Descripcion |
-|---|---|
-| `serve` | Inicia el daemon (delega a `serve()`) |
-| `list` | Lista instancias via IPC |
-| `spawn [--cwd] [--label]` | Crea nueva instancia |
-| `status <id>` | Estado de una instancia |
-| `stop <id>` | Detiene una instancia |
-| `rpc <id> <json>` | Comando RPC one-shot |
-| `rpc-stream <id>` | Streaming: stdin -> socket, socket -> stdout |
-| `--help` / `--version` | Ayuda / version |
+| Comando                   | Descripcion                                  |
+| ------------------------- | -------------------------------------------- |
+| `serve`                   | Inicia el daemon (delega a `serve()`)        |
+| `list`                    | Lista instancias via IPC                     |
+| `spawn [--cwd] [--label]` | Crea nueva instancia                         |
+| `status <id>`             | Estado de una instancia                      |
+| `stop <id>`               | Detiene una instancia                        |
+| `rpc <id> <json>`         | Comando RPC one-shot                         |
+| `rpc-stream <id>`         | Streaming: stdin -> socket, socket -> stdout |
+| `--help` / `--version`    | Ayuda / version                              |
 
 **`rpc-stream`**: modo avanzado que crea un bridge persistente entre stdin/stdout del CLI y el socket del daemon, parseando JSONL del stdin y forwardeando al socket.
 
@@ -293,12 +293,12 @@ PI_ORCHESTRATOR_DIR (env)          -> override total
 
 ### Paths
 
-| Funcion | Path |
-|---|---|
-| `getAuthPath()` | `{dir}/auth.json` |
-| `getMachinePath()` | `{dir}/machine.json` |
-| `getInstancesPath()` | `{dir}/instances.json` |
-| `getSocketPath()` | `{dir}/orchestrator.sock` |
+| Funcion              | Path                      |
+| -------------------- | ------------------------- |
+| `getAuthPath()`      | `{dir}/auth.json`         |
+| `getMachinePath()`   | `{dir}/machine.json`      |
+| `getInstancesPath()` | `{dir}/instances.json`    |
+| `getSocketPath()`    | `{dir}/orchestrator.sock` |
 
 ### Deteccion Bun binary
 

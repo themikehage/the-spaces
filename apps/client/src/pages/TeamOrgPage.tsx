@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-import { useState } from "react";
-import { useTeam } from "@/hooks/useTeam";
-import { useAgents } from "@/hooks/useAgents";
-import { TeamOrgTab } from "@/components/teams/TeamOrgTab";
 import { AddTeamMemberModal } from "@/components/teams/TeamMembersModal";
+import { TeamOrgTab } from "@/components/teams/TeamOrgTab";
+import { useAgents } from "@/hooks/useAgents";
+import { useTeam } from "@/hooks/useTeam";
+import { useState } from "react";
 
 interface Props {
   teamId: string;
@@ -11,15 +11,8 @@ interface Props {
 }
 
 export function TeamOrgPage({ teamId, onNavigate }: Props) {
-  const {
-    team,
-    streamingAgents,
-    loading,
-    error,
-    addMember,
-    updateMember,
-    removeMember,
-  } = useTeam(teamId);
+  const { team, streamingAgents, loading, error, addMember, updateMember, removeMember } =
+    useTeam(teamId);
 
   const { agents: registeredAgents } = useAgents();
 

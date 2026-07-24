@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { getDb } from "./db";
 import { randomBytes, randomUUID } from "node:crypto";
+import { getDb } from "./db";
 import { auth } from "./index";
 
 export async function isFirstRun(): Promise<boolean> {
@@ -14,11 +14,13 @@ export async function isFirstRun(): Promise<boolean> {
 }
 
 export async function getUserByUsername(
-  username: string
+  username: string,
 ): Promise<{ id: string; email: string; username: string } | null> {
   try {
     const db = getDb();
-    const row = db.query("SELECT id, email, username FROM user WHERE username = ?").get(username) as {
+    const row = db
+      .query("SELECT id, email, username FROM user WHERE username = ?")
+      .get(username) as {
       id: string;
       email: string;
       username: string;
@@ -49,13 +51,13 @@ function insertSessionRaw(
   token: string,
   expiresAt: Date | string,
   now: Date | string,
-  userId: string
+  userId: string,
 ): void {
   const db = getDb();
   const expValue = expiresAt instanceof Date ? expiresAt.toISOString() : expiresAt;
   const nowValue = now instanceof Date ? now.toISOString() : now;
   db.query(
-    "INSERT INTO session (id, token, expiresAt, createdAt, updatedAt, userId) VALUES (?, ?, ?, ?, ?, ?)"
+    "INSERT INTO session (id, token, expiresAt, createdAt, updatedAt, userId) VALUES (?, ?, ?, ?, ?, ?)",
   ).run(id, token, expValue, nowValue, nowValue, userId);
 }
 
@@ -65,7 +67,9 @@ export async function createProgrammaticSession(username: string): Promise<strin
 
   try {
     const api = (auth as any).api as {
-      createProgrammaticSession?: (opts: { body: { userId: string; expiresIn?: number } }) => Promise<{ token: string }>;
+      createProgrammaticSession?: (opts: {
+        body: { userId: string; expiresIn?: number };
+      }) => Promise<{ token: string }>;
     };
     if (api?.createProgrammaticSession) {
       const result = await api.createProgrammaticSession({

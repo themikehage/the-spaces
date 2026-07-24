@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-import { watch, existsSync, statSync } from "node:fs";
-import { resolve } from "node:path";
 import type { FSWatcher } from "node:fs";
-import { broadcastToUser } from "../ws/handler";
+import { existsSync, statSync, watch } from "node:fs";
+import { resolve } from "node:path";
 import type { PreviewState, PreviewStatus } from "shared";
-import { loadPreviewConfig, getBuildOutputDir } from "./preview-config";
+import { broadcastToUser } from "../ws/handler";
+import { getBuildOutputDir, loadPreviewConfig } from "./preview-config";
 
 interface WatcherEntry {
   watcher: FSWatcher | null;
@@ -48,7 +48,12 @@ function readPreviewState(username: string, projectName: string): PreviewState {
   };
 }
 
-function notifyStatus(username: string, projectName: string, status: PreviewStatus, error?: string) {
+function notifyStatus(
+  username: string,
+  projectName: string,
+  status: PreviewStatus,
+  error?: string,
+) {
   const state = readPreviewState(username, projectName);
   broadcastToUser(username, {
     type: "preview_status",
@@ -137,7 +142,9 @@ export function removeWatcher(username: string, projectName: string) {
     if (entry.timer) clearTimeout(entry.timer);
     if (entry.pollTimer) clearInterval(entry.pollTimer);
     if (entry.watcher) {
-      try { entry.watcher.close(); } catch {}
+      try {
+        entry.watcher.close();
+      } catch {}
     }
     watchers.delete(key);
   }

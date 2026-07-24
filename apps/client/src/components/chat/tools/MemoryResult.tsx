@@ -28,7 +28,13 @@ function ImportanceDots({ value }: { value: number }) {
   );
 }
 
-function RecallView({ details, l }: { details?: ToolResultData["details"]; l: Record<string, string> }) {
+function RecallView({
+  details,
+  l,
+}: {
+  details?: ToolResultData["details"];
+  l: Record<string, string>;
+}) {
   const memories = details?.memories ?? [];
   const count = details?.count ?? memories.length;
 
@@ -60,7 +66,10 @@ function RecallView({ details, l }: { details?: ToolResultData["details"]; l: Re
             {m.tags && m.tags.length > 0 && (
               <div className="flex items-center gap-1 px-3 py-1.5 border-t border-input/20 bg-bg">
                 {m.tags.map((tag) => (
-                  <span key={tag} className="px-1.5 py-0.5 rounded bg-surface text-text-secondary text-[10px]">
+                  <span
+                    key={tag}
+                    className="px-1.5 py-0.5 rounded bg-surface text-text-secondary text-[10px]"
+                  >
                     #{tag}
                   </span>
                 ))}
@@ -73,7 +82,15 @@ function RecallView({ details, l }: { details?: ToolResultData["details"]; l: Re
   );
 }
 
-function StoreView({ args, details, l }: { args?: Record<string, unknown>; details?: ToolResultData["details"]; l: Record<string, string> }) {
+function StoreView({
+  args,
+  details,
+  l,
+}: {
+  args?: Record<string, unknown>;
+  details?: ToolResultData["details"];
+  l: Record<string, string>;
+}) {
   const type = details?.type ?? (args?.type as string) ?? "semantic";
   const importance = details?.importance ?? (args?.importance as number) ?? 0.5;
   const tags = details?.tags ?? (args?.tags as string[]) ?? [];
@@ -97,7 +114,10 @@ function StoreView({ args, details, l }: { args?: Record<string, unknown>; detai
       {tags.length > 0 && (
         <div className="flex items-center gap-1">
           {tags.map((tag) => (
-            <span key={tag} className="px-1.5 py-0.5 rounded bg-surface text-text-secondary text-[10px]">
+            <span
+              key={tag}
+              className="px-1.5 py-0.5 rounded bg-surface text-text-secondary text-[10px]"
+            >
               #{tag}
             </span>
           ))}
@@ -107,7 +127,13 @@ function StoreView({ args, details, l }: { args?: Record<string, unknown>; detai
   );
 }
 
-function ForgetView({ details, l }: { details?: ToolResultData["details"]; l: Record<string, string> }) {
+function ForgetView({
+  details,
+  l,
+}: {
+  details?: ToolResultData["details"];
+  l: Record<string, string>;
+}) {
   const id = details?.deletedId ?? "";
   return (
     <div className="font-mono text-[11px] text-text-secondary">

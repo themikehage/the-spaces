@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-import { useState, useEffect } from "react";
-import { wsClient } from "@/lib/ws-client";
 import { useToast } from "@/contexts/ToastContext";
+import { wsClient } from "@/lib/ws-client";
+import { useEffect, useState } from "react";
 
 interface Props {
   toolCallId: string;
@@ -42,11 +42,9 @@ export function AskQuestionForm({ toolCallId, args, result, sessionId }: Props) 
   const resolvedPayload = result?.details?.payload;
 
   const [selected, setSelected] = useState<Set<string>>(
-    new Set(resolvedPayload?.selectedOptions || [])
+    new Set(resolvedPayload?.selectedOptions || []),
   );
-  const [customText, setCustomText] = useState(
-    resolvedPayload?.customAnswer || ""
-  );
+  const [customText, setCustomText] = useState(resolvedPayload?.customAnswer || "");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -95,7 +93,10 @@ export function AskQuestionForm({ toolCallId, args, result, sessionId }: Props) 
       return;
     }
     if (selected.size === 0 && (!showCustom || !customText.trim())) {
-      addToast("warning", "Por favor selecciona al menos una opción o escribe una respuesta personalizada.");
+      addToast(
+        "warning",
+        "Por favor selecciona al menos una opción o escribe una respuesta personalizada.",
+      );
       return;
     }
 
@@ -150,14 +151,16 @@ export function AskQuestionForm({ toolCallId, args, result, sessionId }: Props) 
                   <div
                     className={`w-3.5 h-3.5 shrink-0 flex items-center justify-center transition-all ${
                       isMultiSelect ? "rounded-[2px]" : "rounded-full"
-                    } ${
-                      isChecked
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-card-hover/60"
-                    }`}
+                    } ${isChecked ? "bg-primary text-primary-foreground" : "bg-card-hover/60"}`}
                   >
                     {isChecked && (
-                      <svg className="w-2 h-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                      <svg
+                        className="w-2 h-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                      >
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
                     )}

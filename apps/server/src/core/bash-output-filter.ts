@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: MIT
-export function filterSecretsFromOutput(
-  output: string,
-  secrets: string[]
-): string {
+export function filterSecretsFromOutput(output: string, secrets: string[]): string {
   if (!output || !secrets || secrets.length === 0) return output;
 
   // Filtrar duplicados, valores vacíos y secrets extremadamente cortos (menores a 4 caracteres)
   // para evitar falsos positivos con cadenas comunes.
-  const uniqueSecrets = Array.from(new Set(secrets))
-    .filter((s): s is string => typeof s === "string" && s.trim().length >= 4);
+  const uniqueSecrets = Array.from(new Set(secrets)).filter(
+    (s): s is string => typeof s === "string" && s.trim().length >= 4,
+  );
 
   if (uniqueSecrets.length === 0) return output;
 

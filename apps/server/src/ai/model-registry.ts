@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import type { AuthStorage } from "./auth-storage.ts";
 import { circuitBreakerRegistry } from "../core/circuit-breaker";
+import type { AuthStorage } from "./auth-storage.ts";
 
 type ModelsDevCache = {
   data: Record<string, any>;
@@ -36,7 +36,7 @@ async function fetchModelsDev(): Promise<Record<string, any>> {
 function findModelsDevEntry(
   modelsDev: Record<string, any>,
   providerHint: string,
-  modelId: string
+  modelId: string,
 ): any | null {
   const lowerId = modelId.toLowerCase();
 
@@ -56,7 +56,15 @@ function findModelsDevEntry(
   const opencodeGo = tryProvider("opencode-go");
   if (opencodeGo) return opencodeGo;
 
-  const secondaryHints = ["alibaba", "deepseek", "moonshotai", "zhipuai", "minimax", "xiaomi", "zai"];
+  const secondaryHints = [
+    "alibaba",
+    "deepseek",
+    "moonshotai",
+    "zhipuai",
+    "minimax",
+    "xiaomi",
+    "zai",
+  ];
   for (const hint of secondaryHints) {
     const found = tryProvider(hint);
     if (found) return found;
@@ -77,7 +85,11 @@ function findModelsDevEntry(
     for (const [key, val] of Object.entries(models)) {
       const normKey = key.toLowerCase().replace(/[^a-z0-9]/g, "");
       const normId = lowerId.replace(/[^a-z0-9]/g, "");
-      if (normKey.length >= 5 && normId.length >= 5 && (normKey === normId || normKey.includes(normId) || normId.includes(normKey))) {
+      if (
+        normKey.length >= 5 &&
+        normId.length >= 5 &&
+        (normKey === normId || normKey.includes(normId) || normId.includes(normKey))
+      ) {
         return val;
       }
     }
@@ -142,7 +154,10 @@ export class ModelRegistry {
     this.userEnvGetter = userEnvGetter;
   }
 
-  static create(authStorage: AuthStorage, userEnvGetter?: () => Record<string, string>): ModelRegistry {
+  static create(
+    authStorage: AuthStorage,
+    userEnvGetter?: () => Record<string, string>,
+  ): ModelRegistry {
     return new ModelRegistry(authStorage, userEnvGetter);
   }
 
@@ -156,9 +171,7 @@ export class ModelRegistry {
     const userEnv = this.userEnvGetter ? this.userEnvGetter() : {};
 
     for (const [providerName, config] of this.providers.entries()) {
-      const apiKeyVar = config.apiKey.startsWith("$")
-        ? config.apiKey.slice(1)
-        : config.apiKey;
+      const apiKeyVar = config.apiKey.startsWith("$") ? config.apiKey.slice(1) : config.apiKey;
 
       const storedKey = this.authStorage.getApiKey(providerName);
       const envKey = userEnv[apiKeyVar] ?? process.env[apiKeyVar];
@@ -223,9 +236,7 @@ export class ModelRegistry {
   }
 
   find(provider: string, modelId: string): AvailableModel | undefined {
-    return this.available.find(
-      (m) => m.provider === provider && m.id === modelId
-    );
+    return this.available.find((m) => m.provider === provider && m.id === modelId);
   }
 
   hasConfiguredAuth(model: AvailableModel): boolean {
@@ -233,13 +244,13 @@ export class ModelRegistry {
   }
 
   async getApiKeyAndHeaders(
-    model: AvailableModel
-  ): Promise<{ ok: true; apiKey: string; headers?: Record<string, string> } | { ok: false; error: string }> {
+    model: AvailableModel,
+  ): Promise<
+    { ok: true; apiKey: string; headers?: Record<string, string> } | { ok: false; error: string }
+  > {
     const userEnv = this.userEnvGetter ? this.userEnvGetter() : {};
     const config = this.providers.get(model.provider);
-    const apiKeyVar = config?.apiKey.startsWith("$")
-      ? config.apiKey.slice(1)
-      : config?.apiKey;
+    const apiKeyVar = config?.apiKey.startsWith("$") ? config.apiKey.slice(1) : config?.apiKey;
     const envKey = apiKeyVar ? (userEnv[apiKeyVar] ?? process.env[apiKeyVar]) : undefined;
 
     const key = model.apiKey ?? this.authStorage.getApiKey(model.provider) ?? envKey;
@@ -261,9 +272,7 @@ export class ModelRegistry {
     const config = this.providers.get(providerName);
     if (!config || !config.dynamic) return [];
 
-    const apiKeyVar = config.apiKey.startsWith("$")
-      ? config.apiKey.slice(1)
-      : config.apiKey;
+    const apiKeyVar = config.apiKey.startsWith("$") ? config.apiKey.slice(1) : config.apiKey;
 
     const storedKey = this.authStorage.getApiKey(providerName);
     const envKey = process.env[apiKeyVar];
@@ -333,7 +342,7 @@ export class ModelRegistry {
           m.meta?.context_length,
           m.info?.context_length,
           m.capabilities?.context_length,
-          m.capabilities?.context_window
+          m.capabilities?.context_window,
         );
 
         const maxTokens = toNumber(
@@ -352,7 +361,7 @@ export class ModelRegistry {
           m.completion_max_tokens,
           m.meta?.max_tokens,
           m.info?.max_tokens,
-          m.capabilities?.max_tokens
+          m.capabilities?.max_tokens,
         );
 
         const explicitReasoning =
@@ -382,9 +391,14 @@ export class ModelRegistry {
           return undefined;
         })();
 
-        const hasVideo = /gemini|google\//i.test(id) || (explicitInput && explicitInput.includes("video")) || false;
+        const hasVideo =
+          /gemini|google\//i.test(id) ||
+          (explicitInput && explicitInput.includes("video")) ||
+          false;
         const hasVision = hasVideo || /vision|vl|multimodal|max|pro/i.test(id);
-        let input = explicitInput ?? (hasVideo ? ["text", "image", "video"] : hasVision ? ["text", "image"] : ["text"]);
+        let input =
+          explicitInput ??
+          (hasVideo ? ["text", "image", "video"] : hasVision ? ["text", "image"] : ["text"]);
         if (hasVideo && !input.includes("video")) {
           input = [...input, "video"];
         }
@@ -424,11 +438,16 @@ export class ModelRegistry {
       if (updatedModels.length > 0) {
         config.models = updatedModels;
         this.refresh();
-        console.log(`[ModelRegistry] Refreshed ${updatedModels.length} models for ${providerName} with models.dev enrichment. Sample: ${updatedModels[0]?.id} context=${updatedModels[0]?.contextWindow} max=${updatedModels[0]?.maxTokens}`);
+        console.log(
+          `[ModelRegistry] Refreshed ${updatedModels.length} models for ${providerName} with models.dev enrichment. Sample: ${updatedModels[0]?.id} context=${updatedModels[0]?.contextWindow} max=${updatedModels[0]?.maxTokens}`,
+        );
       }
       return updatedModels;
     } catch (error) {
-      console.error(`[ModelRegistry] Failed to refresh models for provider ${providerName}:`, error);
+      console.error(
+        `[ModelRegistry] Failed to refresh models for provider ${providerName}:`,
+        error,
+      );
       throw error;
     }
   }

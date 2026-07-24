@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { useState } from "react";
 import { Modal } from "@/components/ui/Modal";
+import { useState } from "react";
 import { RichMarkdown } from "./RichMarkdown";
 
 export interface SkillInfo {
@@ -36,11 +36,19 @@ export function SkillsSelector({ skills, loading, onSelectSkill, disabled = fals
         <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
           <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
         </svg>
-        <span>
-          Skills: {loading ? "loading..." : `${skills.length} active`}
-        </span>
-        <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor" className={`transition-transform ${open ? "rotate-180" : ""}`}>
-          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 11-1.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+        <span>Skills: {loading ? "loading..." : `${skills.length} active`}</span>
+        <svg
+          width="10"
+          height="10"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          className={`transition-transform ${open ? "rotate-180" : ""}`}
+        >
+          <path
+            fillRule="evenodd"
+            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 11-1.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+            clipRule="evenodd"
+          />
         </svg>
       </button>
 
@@ -66,9 +74,13 @@ export function SkillsSelector({ skills, loading, onSelectSkill, disabled = fals
                   {s.name}
                 </span>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
-                  <span className={`text-xs px-1 py-0.2 rounded font-semibold uppercase ${
-                    s.scope === "project" ? "bg-primary/15 text-primary" : "bg-highlight/15 text-highlight"
-                  }`}>
+                  <span
+                    className={`text-xs px-1 py-0.2 rounded font-semibold uppercase ${
+                      s.scope === "project"
+                        ? "bg-primary/15 text-primary"
+                        : "bg-highlight/15 text-highlight"
+                    }`}
+                  >
                     {s.scope === "project" ? "Proj" : "User"}
                   </span>
                   <button
@@ -114,9 +126,13 @@ export function SkillsSelector({ skills, loading, onSelectSkill, disabled = fals
               <span className="font-mono font-bold text-foreground text-sm">
                 {viewingSkill.name}
               </span>
-              <span className={`text-xs px-1.5 py-0.5 rounded font-semibold uppercase ${
-                viewingSkill.scope === "project" ? "bg-primary/15 text-primary" : "bg-highlight/15 text-highlight"
-              }`}>
+              <span
+                className={`text-xs px-1.5 py-0.5 rounded font-semibold uppercase ${
+                  viewingSkill.scope === "project"
+                    ? "bg-primary/15 text-primary"
+                    : "bg-highlight/15 text-highlight"
+                }`}
+              >
                 {viewingSkill.scope === "project" ? "Project-local" : "User-global"}
               </span>
             </div>

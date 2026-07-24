@@ -30,7 +30,10 @@ export abstract class BasePlugin {
   async shutdown?(): Promise<void>;
 
   async beforeToolCall?(ctx: ToolCallContext): Promise<Record<string, unknown> | void>;
-  async afterToolCall?(ctx: ToolCallContext, result: ToolResult | unknown): Promise<ToolResult | unknown | void>;
+  async afterToolCall?(
+    ctx: ToolCallContext,
+    result: ToolResult | unknown,
+  ): Promise<ToolResult | unknown | void>;
   async beforeModelCall?(ctx: ModelCallContext): Promise<void>;
   async afterModelCall?(ctx: ModelCallContext, response: unknown): Promise<unknown | void>;
   async onModelError?(ctx: ModelCallContext, error: Error): Promise<unknown | void>;

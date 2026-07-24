@@ -73,11 +73,15 @@ export function WebFetchResult({ text, details, l }: Props) {
       {/* Info Grid */}
       <div className="px-3 py-2 border-t border-border grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-text-secondary bg-surface/30">
         <div>
-          <span className="block text-muted-foreground font-medium">{l.bodyWebFetchOriginalSize}</span>
+          <span className="block text-muted-foreground font-medium">
+            {l.bodyWebFetchOriginalSize}
+          </span>
           <span className="font-mono text-text-primary">{formatBytes(originalSize)}</span>
         </div>
         <div>
-          <span className="block text-muted-foreground font-medium">{l.bodyWebFetchExtractedSize}</span>
+          <span className="block text-muted-foreground font-medium">
+            {l.bodyWebFetchExtractedSize}
+          </span>
           <span className="font-mono text-text-primary">{formatBytes(extractedSize)}</span>
         </div>
         {duration != null && (

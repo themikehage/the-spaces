@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: MIT
-import path from "node:path";
 import fs from "node:fs";
+import path from "node:path";
 
 const join = (...args: string[]): string => path.join(...args);
 const existsSync = (p: string): boolean => fs.existsSync(p);
 const mkdirSync = (p: string, options?: { recursive?: boolean }): string | undefined =>
   fs.mkdirSync(p, options) as string | undefined;
 
-export const SPACES_DATA_PATH = () =>
-  process.env.SPACES_DATA_PATH || "/app/spaces";
+export const SPACES_DATA_PATH = () => process.env.SPACES_DATA_PATH || "/app/spaces";
 
 export const USERS_DIR = "users";
 export const AUDIT_DIR = "_audit";
@@ -166,18 +165,36 @@ export function getExecutionMessagesPath(
   username: string,
   entityType: "agents" | "projects",
   entityId: string,
-  execId: string
+  execId: string,
 ): string {
-  return join(SPACES_DATA_PATH(), USERS_DIR, username, entityType, entityId, EXECUTIONS_DIR, execId, "messages.jsonl");
+  return join(
+    SPACES_DATA_PATH(),
+    USERS_DIR,
+    username,
+    entityType,
+    entityId,
+    EXECUTIONS_DIR,
+    execId,
+    "messages.jsonl",
+  );
 }
 
 export function getExecutionSummaryPath(
   username: string,
   entityType: "agents" | "projects",
   entityId: string,
-  execId: string
+  execId: string,
 ): string {
-  return join(SPACES_DATA_PATH(), USERS_DIR, username, entityType, entityId, EXECUTIONS_DIR, execId, "summary.json");
+  return join(
+    SPACES_DATA_PATH(),
+    USERS_DIR,
+    username,
+    entityType,
+    entityId,
+    EXECUTIONS_DIR,
+    execId,
+    "summary.json",
+  );
 }
 
 export function getTeamMessagesPath(username: string, teamId: string): string {

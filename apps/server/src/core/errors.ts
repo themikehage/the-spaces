@@ -14,7 +14,11 @@ export class AppError extends Error {
 export class HttpError extends AppError {}
 
 export class BadRequestError extends HttpError {
-  constructor(code = "BAD_REQUEST", message = "Invalid request payload or parameters", details?: unknown) {
+  constructor(
+    code = "BAD_REQUEST",
+    message = "Invalid request payload or parameters",
+    details?: unknown,
+  ) {
     super(400, code, message, details);
   }
 }
@@ -44,7 +48,11 @@ export class ConflictError extends HttpError {
 }
 
 export class InternalError extends AppError {
-  constructor(code = "INTERNAL_ERROR", message = "An unexpected error occurred", details?: unknown) {
+  constructor(
+    code = "INTERNAL_ERROR",
+    message = "An unexpected error occurred",
+    details?: unknown,
+  ) {
     super(500, code, message, details);
   }
 }

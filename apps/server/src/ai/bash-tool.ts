@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
-import { isRestrictedPath } from "./restricted-paths";
 import { logBashExecution } from "../core/middleware/bash-audit-logger";
+import { isRestrictedPath } from "./restricted-paths";
 
 const MAX_OUTPUT_BYTES = 50 * 1024; // 50 KB output limit
 const DEFAULT_TIMEOUT_SECONDS = 30;
@@ -96,7 +96,10 @@ export function verifyCommandSafety(command: string): { safe: boolean; reason?: 
       const hasNetworkKeyword = networkKeywords.some((nw) => lowerCmd.includes(nw));
       if (
         hasNetworkKeyword &&
-        (hasKillKeyword || lowerCmd.includes("stop") || lowerCmd.includes("force") || lowerCmd.includes("-k"))
+        (hasKillKeyword ||
+          lowerCmd.includes("stop") ||
+          lowerCmd.includes("force") ||
+          lowerCmd.includes("-k"))
       ) {
         return {
           safe: false,
@@ -115,7 +118,8 @@ export function createBashToolDefinition(
 ): ToolDefinition<BashExecuteParams, BashExecuteResult> {
   return {
     name: "bash",
-    description: "Run commands in a bash shell or terminal. Use this to run builds, tests, or scripts.",
+    description:
+      "Run commands in a bash shell or terminal. Use this to run builds, tests, or scripts.",
     schema: {
       type: "object",
       properties: {
@@ -288,7 +292,8 @@ export function createBashToolDefinition(
           try {
             child.kill();
           } catch {}
-          let finalOutput = output + errorOutput + `\n[Command timed out after ${effectiveTimeout} seconds]`;
+          let finalOutput =
+            output + errorOutput + `\n[Command timed out after ${effectiveTimeout} seconds]`;
           if (truncated) {
             finalOutput += "\n[...output truncated at 50KB limit]";
           }

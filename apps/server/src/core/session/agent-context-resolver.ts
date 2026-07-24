@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: MIT
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { resolveSessionWorkspace, resolveProjectDir } from "./workspace-resolver";
-import { getResolvedSkillPaths } from "../session-manager";
 import { mcpRegistry } from "../mcp-registry";
+import { getResolvedSkillPaths } from "../session-manager";
 import { userConfigManager } from "./user-config";
-
+import { resolveProjectDir, resolveSessionWorkspace } from "./workspace-resolver";
 
 export interface ResolveAgentContextParams {
   username: string;
@@ -47,7 +46,7 @@ export function resolveAgentContext(params: ResolveAgentContextParams): Resolved
     username,
     sessionId,
     projectId,
-    agentId
+    agentId,
   );
 
   if (customWorkspaceDir) {

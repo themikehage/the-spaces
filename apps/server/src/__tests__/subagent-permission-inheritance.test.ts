@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: MIT
-import { describe, it, expect, beforeAll, afterAll } from "bun:test";
-import { existsSync, rmSync, mkdirSync } from "node:fs";
+import { afterAll, beforeAll, describe, expect, it } from "bun:test";
+import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { buildSubagentRules, evaluateSubagentRules, DEFAULT_SUBAGENT_PERMISSIONS } from "../core/sandbox/subagent-permissions";
-import { userPermissionStore } from "../core/sandbox/user-permission-store";
-import { permissionEngine } from "../core/sandbox/permission-engine";
-import { sessionManager } from "../core/session-manager";
-import { sessionMetadataStore } from "../core/session/metadata-store";
 import { getUserDir } from "shared";
+import { permissionEngine } from "../core/sandbox/permission-engine";
+import { buildSubagentRules, evaluateSubagentRules } from "../core/sandbox/subagent-permissions";
+import { userPermissionStore } from "../core/sandbox/user-permission-store";
+import { sessionMetadataStore } from "../core/session/metadata-store";
 
 describe("Subagent Permission Inheritance", () => {
   const testUser = "test_user_perm";
@@ -32,7 +31,7 @@ describe("Subagent Permission Inheritance", () => {
 
   it("should have correct base defaults", () => {
     const rules = buildSubagentRules(testUser, subagentSessionId);
-    
+
     // Default read tools should be allow
     const readVerdict = evaluateSubagentRules("read", { path: "safe.txt" }, rules);
     expect(readVerdict).toBeDefined();
@@ -97,7 +96,7 @@ describe("Subagent Permission Inheritance", () => {
 
     // Check rules again
     rules = buildSubagentRules(testUser, subagentSessionId);
-    
+
     // git command should be allowed
     const gitVerdict = evaluateSubagentRules("bash", { command: "git status" }, rules);
     expect(gitVerdict).toBeDefined();
@@ -113,11 +112,15 @@ describe("Subagent Permission Inheritance", () => {
     // Even if user allowed bash *, fork bomb should be caught by PermissionEngine static rules
     userPermissionStore.saveDecision(testUser, "bash", "*", "allow");
 
-    const verdict = permissionEngine.evaluate("bash", { command: ":(){ :|:& };:" }, {
-      isSubagent: true,
-      username: testUser,
-      sessionId: subagentSessionId,
-    });
+    const verdict = permissionEngine.evaluate(
+      "bash",
+      { command: ":(){ :|:& };:" },
+      {
+        isSubagent: true,
+        username: testUser,
+        sessionId: subagentSessionId,
+      },
+    );
 
     expect(verdict.allow).toBe(false);
     expect((verdict as any).reason).toContain("Fork bomb");
@@ -150,20 +153,34 @@ describe("Subagent Permission Inheritance", () => {
     it("should inherit autonomous mode from parent session", () => {
       const parentAutoSessionId = "exec_parent_session_auto";
       // Set parent session execution mode to autonomous and persist tools
-      sessionMetadataStore.saveSessionMetadata(testUser, parentAutoSessionId, { executionMode: "autonomous" });
-      sessionMetadataStore.persistSessionTools(testUser, parentAutoSessionId, ["read", "write", "edit", "bash"]);
+      sessionMetadataStore.saveSessionMetadata(testUser, parentAutoSessionId, {
+        executionMode: "autonomous",
+      });
+      sessionMetadataStore.persistSessionTools(testUser, parentAutoSessionId, [
+        "read",
+        "write",
+        "edit",
+        "bash",
+      ]);
 
       // Determine child's resolved subagent type simulating manage_delegations tool logic:
-      const parentMeta = sessionMetadataStore.getSessionMetadata(testUser, parentAutoSessionId) || {};
+      const parentMeta =
+        sessionMetadataStore.getSessionMetadata(testUser, parentAutoSessionId) || {};
       const parentExecutionMode = parentMeta.executionMode;
-      
+
       // If no explicit subagent type is provided
       const subagentTypeInput: string | undefined = undefined;
-      const resolvedSubagentType = subagentTypeInput || (parentExecutionMode === "autonomous" ? "autonomous" : "builder");
+      const resolvedSubagentType =
+        subagentTypeInput || (parentExecutionMode === "autonomous" ? "autonomous" : "builder");
       expect(resolvedSubagentType).toBe("autonomous");
 
-      const rules = buildSubagentRules(testUser, subagentSessionId, parentAutoSessionId, resolvedSubagentType);
-      
+      const rules = buildSubagentRules(
+        testUser,
+        subagentSessionId,
+        parentAutoSessionId,
+        resolvedSubagentType,
+      );
+
       // Child write tools should inherit autonomous and allow execution
       const writeVerdict = evaluateSubagentRules("write", { path: "file.ts" }, rules);
       expect(writeVerdict).toBeDefined();
@@ -175,17 +192,22 @@ describe("Subagent Permission Inheritance", () => {
     it("should allow bash command without asking in autonomous mode when subagentType is missing in metadata but executionMode is autonomous", () => {
       const delSessionId = "del_delegated_session_test";
       // Save metadata for delegate session with only executionMode: autonomous
-      sessionMetadataStore.saveSessionMetadata(testUser, delSessionId, { executionMode: "autonomous" });
-
-      const verdict = permissionEngine.evaluate("bash", { command: "git clone x" }, {
-        isSubagent: true,
-        username: testUser,
-        sessionId: delSessionId,
-        executionMode: "autonomous"
+      sessionMetadataStore.saveSessionMetadata(testUser, delSessionId, {
+        executionMode: "autonomous",
       });
+
+      const verdict = permissionEngine.evaluate(
+        "bash",
+        { command: "git clone x" },
+        {
+          isSubagent: true,
+          username: testUser,
+          sessionId: delSessionId,
+          executionMode: "autonomous",
+        },
+      );
 
       expect(verdict.allow).toBe(true);
     });
   });
 });
-

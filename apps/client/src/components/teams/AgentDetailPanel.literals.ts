@@ -19,7 +19,8 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     save: "Save",
     cancel: "Cancel",
     agentNotFound: "Agent not found",
-    agentNotFoundDesc: "This agent was deleted from the workspace. You can remove it from this channel below.",
+    agentNotFoundDesc:
+      "This agent was deleted from the workspace. You can remove it from this channel below.",
     deletedAgent: "Deleted Agent",
     outputMode: "Output Mode",
     outputModeFull: "Full Proposal",
@@ -43,7 +44,8 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     save: "Guardar",
     cancel: "Cancelar",
     agentNotFound: "Agente no encontrado",
-    agentNotFoundDesc: "Este agente fue eliminado del espacio de trabajo. Puedes removerlo de este canal abajo.",
+    agentNotFoundDesc:
+      "Este agente fue eliminado del espacio de trabajo. Puedes removerlo de este canal abajo.",
     deletedAgent: "Agente eliminado",
     outputMode: "Modo de Entrega (Output)",
     outputModeFull: "Propuesta Completa",

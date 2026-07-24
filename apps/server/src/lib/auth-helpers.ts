@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { getAuthPayload } from "../auth/middleware";
 import { getDb } from "../auth/db";
+import { getAuthPayload } from "../auth/middleware";
 
 const SESSION_COOKIE_KEYS = new Set([
   "better-auth.session_token",
@@ -65,7 +65,9 @@ export function parseCookieHeader(cookieHeader: string): Map<string, string> {
   return map;
 }
 
-export function getSessionTokensFromCookieHeader(cookieHeader: string | null | undefined): string[] {
+export function getSessionTokensFromCookieHeader(
+  cookieHeader: string | null | undefined,
+): string[] {
   if (!cookieHeader) return [];
   const tokens: string[] = [];
   for (const part of cookieHeader.split(";")) {
@@ -88,7 +90,7 @@ function findUserByTokenSync(token: string): { username: string; expiresAt: unkn
     const db = getDb();
     const row = db
       .query(
-        `SELECT user.username, session.expiresAt FROM session INNER JOIN user ON session.userId = user.id WHERE session.token = ?`
+        `SELECT user.username, session.expiresAt FROM session INNER JOIN user ON session.userId = user.id WHERE session.token = ?`,
       )
       .get(token) as { username: string; expiresAt: unknown } | null;
     return row ?? null;
@@ -120,7 +122,7 @@ export function resolveUsernameFromToken(rawToken: string): string | null {
 }
 
 export function resolveUsernameFromCookieHeader(
-  cookieHeader: string | null | undefined
+  cookieHeader: string | null | undefined,
 ): string | null {
   const tokens = getSessionTokensFromCookieHeader(cookieHeader);
   if (tokens.length === 0) return null;
@@ -129,7 +131,7 @@ export function resolveUsernameFromCookieHeader(
 
 export async function resolveUsernameFromCookieHeaderAsync(
   cookieHeader: string | null | undefined,
-  headers?: Headers
+  headers?: Headers,
 ): Promise<string | null> {
   if (!cookieHeader && !headers) return null;
   try {
@@ -146,7 +148,7 @@ export async function resolveUsernameFromCookieHeaderAsync(
 }
 
 export async function validateSessionFromHeaders(
-  headers: Headers
+  headers: Headers,
 ): Promise<{ username: string } | null> {
   try {
     const { auth } = await import("../auth/index");
@@ -173,8 +175,6 @@ export function getUsername(c: any): string | null {
   } catch {}
 
   const tokensToCheck: string[] = [];
-
-
 
   try {
     const authHeader = c.req.header("Authorization") ?? c.req.header("authorization");

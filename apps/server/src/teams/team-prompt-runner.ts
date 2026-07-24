@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
-import { teamStore } from "./team-store";
-import { agentRegistry } from "../agents";
-import { sessionManager } from "../core/session-manager";
-import { resolveModelWithFallback } from "../core/agent-utils";
 import { type Team, type TeamMember, type TeamMessage } from "shared";
+import { agentRegistry } from "../agents";
+import { resolveModelWithFallback } from "../core/agent-utils";
+import { sessionManager } from "../core/session-manager";
+import { teamStore } from "./team-store";
 
-import { assemblePromptAppends } from "../core/prompts/prompt-assembly";
-import { parseAgentResponse, enforceDiffFormat } from "../core/multi-agent/response-parser";
-import { parseMentions } from "../core/multi-agent/mention-parser";
-import { buildAgentPrompt, buildAgentNameMap } from "../core/multi-agent/agent-prompt-runner";
 import { streamSimple } from "../ai/vendor/ai/src/compat.ts";
+import { buildAgentPrompt } from "../core/multi-agent/agent-prompt-runner";
+import { parseMentions } from "../core/multi-agent/mention-parser";
+import { enforceDiffFormat, parseAgentResponse } from "../core/multi-agent/response-parser";
+import { assemblePromptAppends } from "../core/prompts/prompt-assembly";
 
 export interface ActiveTeamStream {
   agentId: string;
@@ -33,7 +33,10 @@ export function isSubstantiveMessage(content: string): boolean {
   return !trivial.test(content.trim());
 }
 
-function getOutputMode(member: TeamMember, team?: Team): "full-proposal" | "diff-suggestion" | "normal" {
+function getOutputMode(
+  member: TeamMember,
+  team?: Team,
+): "full-proposal" | "diff-suggestion" | "normal" {
   if (member.outputMode) return member.outputMode;
   if (member.role === "lead") return "full-proposal";
   return "normal";
@@ -42,12 +45,14 @@ function getOutputMode(member: TeamMember, team?: Team): "full-proposal" | "diff
 function buildTeamDeploymentContext(
   team: Team,
   agentId: string,
-  agentNameMap: Map<string, string>
+  agentNameMap: Map<string, string>,
 ) {
   const selfMember = team.members.find((m) => m.agentId === agentId);
 
   const leaderMember = team.members.find((m) => m.role === "lead");
-  const leaderName = leaderMember ? (agentNameMap.get(leaderMember.agentId) || leaderMember.agentId) : undefined;
+  const leaderName = leaderMember
+    ? agentNameMap.get(leaderMember.agentId) || leaderMember.agentId
+    : undefined;
   const selfOutputMode = selfMember ? getOutputMode(selfMember, team) : "normal";
 
   return {
@@ -70,7 +75,7 @@ function buildTeamDeploymentContext(
 export class TeamPromptRunner {
   constructor(
     private activeStreams: Map<string, Map<string, ActiveTeamStream>>,
-    private broadcastFn: (teamId: string, data: any) => void
+    private broadcastFn: (teamId: string, data: any) => void,
   ) {}
 
   async runStateless(
@@ -80,7 +85,7 @@ export class TeamPromptRunner {
     incomingMsg: TeamMessage,
     recentHistory: TeamMessage[],
     agentNameMap: Map<string, string>,
-    signal: AbortSignal
+    signal: AbortSignal,
   ): Promise<{ agentMsg: TeamMessage | null }> {
     if (signal.aborted) return { agentMsg: null };
 
@@ -115,9 +120,10 @@ export class TeamPromptRunner {
       modelRegistry.refresh();
       const resolved = resolveModelWithFallback(undefined, modelRegistry);
       if (resolved) {
-        model = modelRegistry
-          .getAvailable()
-          .find((m) => m.id === resolved || `${m.provider}/${m.id}` === resolved) || null;
+        model =
+          modelRegistry
+            .getAvailable()
+            .find((m) => m.id === resolved || `${m.provider}/${m.id}` === resolved) || null;
         if (model) {
           try {
             await agentEntry.server.session.setModel(model);
@@ -173,13 +179,15 @@ export class TeamPromptRunner {
 
     const resourceLoader = agentEntry.server.session.resourceLoader;
     const baseSystemPrompt = resourceLoader.getSystemPrompt() || "";
-    const fullSystemPrompt = [
-      baseSystemPrompt,
-      ...(appendSystemPrompts || []),
-    ].filter(Boolean).join("\n\n");
+    const fullSystemPrompt = [baseSystemPrompt, ...(appendSystemPrompts || [])]
+      .filter(Boolean)
+      .join("\n\n");
 
-    const promptText = buildAgentPrompt(incomingMsg as any, recentHistory as any, ((team as any).context || []) as any);
-
+    const promptText = buildAgentPrompt(
+      incomingMsg as any,
+      recentHistory as any,
+      ((team as any).context || []) as any,
+    );
 
     const context = {
       systemPrompt: fullSystemPrompt,
@@ -204,7 +212,7 @@ export class TeamPromptRunner {
     let stream;
     try {
       stream = streamSimple(model as any, context as any, options);
-      
+
       // Consume the stream asynchronously to broadcast token updates
       const streamingEnabled = team.streamingEnabled !== false;
       (async () => {
@@ -246,7 +254,10 @@ export class TeamPromptRunner {
             }
           }
         } catch (streamErr) {
-          console.error(`[TeamPromptRunner] Stream reading error for ${member.agentId}:`, streamErr);
+          console.error(
+            `[TeamPromptRunner] Stream reading error for ${member.agentId}:`,
+            streamErr,
+          );
         }
       })();
 
@@ -255,10 +266,13 @@ export class TeamPromptRunner {
       const parseResult = parseAgentResponse(
         [finalMsg],
         { showThinking: team.showThinking, showTools: true },
-        fullResponse
+        fullResponse,
       );
 
-      parseResult.content = enforceDiffFormat(parseResult.content, deployment.outputMode || "normal");
+      parseResult.content = enforceDiffFormat(
+        parseResult.content,
+        deployment.outputMode || "normal",
+      );
 
       this.broadcastFn(teamId, {
         type: "team_agent_end",
@@ -291,7 +305,6 @@ export class TeamPromptRunner {
       };
 
       return { agentMsg };
-
     } catch (err: any) {
       const isAbort =
         signal.aborted || err.message?.includes("abort") || err.message?.includes("cancel");

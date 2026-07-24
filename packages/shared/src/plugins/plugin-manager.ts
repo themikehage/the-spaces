@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: MIT
-import { type BasePlugin, type ToolCallContext, type ModelCallContext, type SessionContext } from "./base-plugin";
 import { type ToolResult } from "../tools";
+import {
+  type BasePlugin,
+  type ModelCallContext,
+  type SessionContext,
+  type ToolCallContext,
+} from "./base-plugin";
 
 export class PluginManager {
   private plugins: BasePlugin[] = [];
@@ -30,7 +35,10 @@ export class PluginManager {
     }
   }
 
-  async executeAfterToolCall(ctx: ToolCallContext, result: ToolResult | unknown): Promise<ToolResult | unknown> {
+  async executeAfterToolCall(
+    ctx: ToolCallContext,
+    result: ToolResult | unknown,
+  ): Promise<ToolResult | unknown> {
     let currentResult = result;
     for (const plugin of this.plugins) {
       if (plugin.afterToolCall) {

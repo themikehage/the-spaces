@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-import { expect, test, describe, beforeEach, afterEach } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { getAppConfig } from "../config/app-config";
 import { sessionMetadataStore } from "../core/session/metadata-store";
 import { getSubagentDepth } from "../core/session/session-depth";
-import { getAppConfig } from "../config/app-config";
 
 describe("Subagent Depth Limit System", () => {
   let originalGetSessionMetadata: any;

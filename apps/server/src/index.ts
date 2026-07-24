@@ -1,41 +1,41 @@
 // SPDX-License-Identifier: MIT
 import { Hono } from "hono";
+import { createBunWebSocket, serveStatic } from "hono/bun";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import { serveStatic } from "hono/bun";
-import { createBunWebSocket } from "hono/bun";
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+import { SPACES_DATA_PATH } from "shared";
 import { auth } from "./auth/index";
-import { authRouter } from "./routes/auth";
-import { sessionsRouter } from "./routes/sessions";
-import { filesRouter } from "./routes/files";
-import { modelsRouter } from "./routes/models";
-import { providersRouter } from "./routes/providers";
-import { skillsRouter } from "./routes/skills";
-import { envRouter } from "./routes/env";
+import { ensureAuthTables } from "./auth/migrate";
+import { memoryRegistry } from "./core/memory/registry";
+import { globalErrorHandler } from "./core/middleware/error-handler";
+import { requestIdMiddleware } from "./core/middleware/request-id";
+import { createServerContext } from "./core/server-context";
+import { sessionMetadataStore } from "./core/session/metadata-store";
+import { handleRequest as previewRequest, startPreviewServer } from "./preview-server";
 import { agentsRouter } from "./routes/agents";
-import { teamsRouter } from "./routes/teams";
-import { previewRouter } from "./routes/preview";
+import { approvalsRouter } from "./routes/approvals";
+import { authRouter } from "./routes/auth";
 import { backupRouter } from "./routes/backup";
+import { envRouter } from "./routes/env";
+import { factoryRouter } from "./routes/factory";
+import { filesRouter } from "./routes/files";
+import { galleryRouter } from "./routes/gallery";
 import { logsRouter } from "./routes/logs";
 import { mcpRouter } from "./routes/mcp";
+import { modelsRouter } from "./routes/models";
+import { previewRouter } from "./routes/preview";
+import { providersRouter } from "./routes/providers";
+import { sessionsRouter } from "./routes/sessions/index";
 import { settingsRouter } from "./routes/settings";
-import { galleryRouter } from "./routes/gallery";
-import { factoryRouter } from "./routes/factory";
-import { approvalsRouter } from "./routes/approvals";
-import { SPACES_DATA_PATH } from "shared";
-import { memoryRegistry } from "./core/memory/registry";
-import { sessionMetadataStore } from "./core/session/metadata-store";
+import { skillsRouter } from "./routes/skills";
+import { teamsRouter } from "./routes/teams";
 import { teamStore } from "./teams/team-store";
 import { createWsContext } from "./ws/factory";
-import { ensureAuthTables } from "./auth/migrate";
-import { startPreviewServer, handleRequest as previewRequest } from "./preview-server";
-import { requestIdMiddleware } from "./core/middleware/request-id";
-import { globalErrorHandler } from "./core/middleware/error-handler";
 
-import { securityHeadersMiddleware } from "./core/middleware/security-headers";
 import { authRateLimiter, generalRateLimiter } from "./core/middleware/rate-limiter";
+import { securityHeadersMiddleware } from "./core/middleware/security-headers";
 
 sessionMetadataStore.setTeamReader({
   getTeamType(username: string, teamId: string): string | null {
@@ -52,6 +52,7 @@ const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? "")
 
 const { upgradeWebSocket, websocket } = createBunWebSocket();
 
+const serverContext = createServerContext();
 const app = new Hono();
 
 app.use("/*", requestIdMiddleware());
@@ -69,7 +70,7 @@ app.use(
     credentials: true,
     allowHeaders: ["Content-Type", "Authorization", "X-Request-Id"],
     allowMethods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  })
+  }),
 );
 app.use("/*", logger());
 app.onError(globalErrorHandler);
@@ -81,7 +82,7 @@ app.get("/api/health", (c) =>
     uptime: process.uptime(),
     dataPath: SPACES_DATA_PATH(),
     timestamp: Date.now(),
-  })
+  }),
 );
 
 app.on(["GET", "POST"], "/api/auth/**", (c) => auth.handler(c.req.raw));
@@ -114,7 +115,7 @@ app.get(
       onMessage: (evt: any, ws: any) => wsContext.onMessage(evt, ws),
       onClose: (evt: any, ws: any) => wsContext.onClose(evt, ws),
     };
-  })
+  }),
 );
 
 await ensureAuthTables();
@@ -134,18 +135,21 @@ try {
     }
 
     // Run periodic auto-cleanup every 12 hours
-    setInterval(() => {
-      try {
-        if (existsSync(usersBase)) {
-          const uDirs = readdirSync(usersBase, { withFileTypes: true })
-            .filter((ent) => ent.isDirectory())
-            .map((ent) => ent.name);
-          for (const u of uDirs) {
-            sessionManager.autoCleanupSessions(u).catch(() => {});
+    setInterval(
+      () => {
+        try {
+          if (existsSync(usersBase)) {
+            const uDirs = readdirSync(usersBase, { withFileTypes: true })
+              .filter((ent) => ent.isDirectory())
+              .map((ent) => ent.name);
+            for (const u of uDirs) {
+              sessionManager.autoCleanupSessions(u).catch(() => {});
+            }
           }
-        }
-      } catch {}
-    }, 12 * 60 * 60 * 1000);
+        } catch {}
+      },
+      12 * 60 * 60 * 1000,
+    );
   }
 } catch (err) {
   console.error("Failed to run startup cleanup tasks:", err);

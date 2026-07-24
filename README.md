@@ -33,11 +33,11 @@ openai-hack/
 
 ### Apps
 
-| App | Stack | Description |
-|-----|-------|-------------|
-| **client** | React 19, Vite, Tailwind CSS v4, React Router, Recharts, Framer Motion, Lucide, react-markdown | Main dashboard — chat, projects, agents, teams, sessions, workspace file editor, timeline, kanban, logs, preview, settings |
-| **landing** | React 19, Vite, Tailwind CSS v4 | Public-facing product landing page |
-| **server** | Bun, Hono, Zod, better-auth, WebSocket | REST API, auth, WebSocket streaming, agent orchestration, MCP integration, preview builder, permissions engine |
+| App         | Stack                                                                                          | Description                                                                                                                |
+| ----------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| **client**  | React 19, Vite, Tailwind CSS v4, React Router, Recharts, Framer Motion, Lucide, react-markdown | Main dashboard — chat, projects, agents, teams, sessions, workspace file editor, timeline, kanban, logs, preview, settings |
+| **landing** | React 19, Vite, Tailwind CSS v4                                                                | Public-facing product landing page                                                                                         |
+| **server**  | Bun, Hono, Zod, better-auth, WebSocket                                                         | REST API, auth, WebSocket streaming, agent orchestration, MCP integration, preview builder, permissions engine             |
 
 ### Shared Package
 
@@ -48,27 +48,32 @@ openai-hack/
 ## Features
 
 ### Project & Workspace Management
+
 - Create and manage projects with goals, status, and file workspaces
 - Real-time file editing with built-in code editor
 - Live HTML preview with hot-reload builder
 
 ### Agent Orchestration
+
 - Catalog of AI agents with assignable roles and skills
 - Multi-agent coordination via `manage_delegations` (spawn + delegate)
 - Cancellation controls and real-time activity streaming
 - Subagent depth limiting and permission inheritance
 
 ### Team Collaboration
+
 - Agent teams with orchestration runners
 - Team chat and context sharing
 - Visual org flow canvas
 
 ### AI Provider Ecosystem
+
 - 9 integrated providers: OpenAI, Google Gemini, xAI (Grok), DeepSeek, Groq, Mistral, OpenRouter, Qwen, OpenCodeGo
 - Per-provider model catalog and credential management (encrypted at rest)
 - Image generation (`image_gen`) and video generation (`generate_video`)
 
 ### Tool System & MCP
+
 - Filesystem tools: read, write, edit (with diff), grep, find, ls, bash
 - Web fetch with caching, rate-limiting, HTML-to-markdown extraction
 - MCP server registry and marketplace
@@ -76,11 +81,13 @@ openai-hack/
 - Custom tools pipeline engine with approval flows
 
 ### Human-in-the-Loop
+
 - Configurable autonomy levels per task/agent
 - Mandatory approval points for irreversible actions (deploy, delete, merge)
 - Real-time intervention — pause and redirect agents mid-execution
 
 ### Observability
+
 - Session timeline and activity log
 - Full audit logging
 - Image gallery and asset management
@@ -90,17 +97,17 @@ openai-hack/
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| **Runtime** | Bun |
-| **Backend** | Hono (TypeScript) |
-| **Frontend** | React 19, Vite, Tailwind CSS v4 |
-| **Validation** | Zod |
-| **Auth** | better-auth + JWT |
-| **Real-time** | WebSocket (Bun/Hono) |
-| **Persistence** | SQLite (local, encrypted secrets) |
-| **Package Manager** | pnpm workspaces |
-| **PWA** | vite-plugin-pwa |
+| Layer               | Technology                        |
+| ------------------- | --------------------------------- |
+| **Runtime**         | Bun                               |
+| **Backend**         | Hono (TypeScript)                 |
+| **Frontend**        | React 19, Vite, Tailwind CSS v4   |
+| **Validation**      | Zod                               |
+| **Auth**            | better-auth + JWT                 |
+| **Real-time**       | WebSocket (Bun/Hono)              |
+| **Persistence**     | SQLite (local, encrypted secrets) |
+| **Package Manager** | pnpm workspaces                   |
+| **PWA**             | vite-plugin-pwa                   |
 
 ---
 
@@ -179,25 +186,25 @@ apps/server/src/
 
 All API routes are mounted under `/api`:
 
-| Route | Description |
-|-------|-------------|
-| `/api/auth/*` | Authentication (login, register, session) |
-| `/api/sessions` | CRUD sessions and chat streaming |
-| `/api/agents` | Agent definitions and management |
-| `/api/teams` | Teams, members, and orchestration |
-| `/api/providers` | AI provider configuration |
-| `/api/models` | Model catalog |
-| `/api/files` | File upload and management |
-| `/api/preview` | Live project preview |
-| `/api/mcp` | MCP server configuration |
-| `/api/skills` | Skill management |
-| `/api/factory` | Entity factory (agents, projects, teams) |
-| `/api/approvals` | Approval workflows |
-| `/api/gallery` | Generated assets gallery |
-| `/api/logs` | Audit log |
-| `/api/backup` | Data backup |
-| `/api/settings` | User settings |
-| `/api/env` | Environment variables |
+| Route            | Description                               |
+| ---------------- | ----------------------------------------- |
+| `/api/auth/*`    | Authentication (login, register, session) |
+| `/api/sessions`  | CRUD sessions and chat streaming          |
+| `/api/agents`    | Agent definitions and management          |
+| `/api/teams`     | Teams, members, and orchestration         |
+| `/api/providers` | AI provider configuration                 |
+| `/api/models`    | Model catalog                             |
+| `/api/files`     | File upload and management                |
+| `/api/preview`   | Live project preview                      |
+| `/api/mcp`       | MCP server configuration                  |
+| `/api/skills`    | Skill management                          |
+| `/api/factory`   | Entity factory (agents, projects, teams)  |
+| `/api/approvals` | Approval workflows                        |
+| `/api/gallery`   | Generated assets gallery                  |
+| `/api/logs`      | Audit log                                 |
+| `/api/backup`    | Data backup                               |
+| `/api/settings`  | User settings                             |
+| `/api/env`       | Environment variables                     |
 
 WebSocket endpoint: `/ws`
 
@@ -207,11 +214,11 @@ WebSocket endpoint: `/ws`
 
 Key environment variables:
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `PORT` | Server port | `3000` |
-| `PREVIEW_HOST` | Preview server host header | — |
-| `SPACES_DATA_PATH` | Data directory | platform-dependent |
+| Variable           | Description                | Default            |
+| ------------------ | -------------------------- | ------------------ |
+| `PORT`             | Server port                | `3000`             |
+| `PREVIEW_HOST`     | Preview server host header | —                  |
+| `SPACES_DATA_PATH` | Data directory             | platform-dependent |
 
 Provider API keys are configured through the UI (Settings → Providers) and stored encrypted.
 
@@ -232,4 +239,3 @@ Spaces is open-source software licensed under the [MIT License](LICENSE).
 - [Security Policy](SECURITY.md)
 - [Self-Hosting Guide](docs/self-hosting.md)
 - [Changelog](CHANGELOG.md)
-

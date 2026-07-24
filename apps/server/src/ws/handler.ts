@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 import type { WSContext } from "hono/ws";
-import { wsRegistry, startHeartbeat } from "./registry";
 import { setAgentStopCallback } from "../agents/agent-stop-callback";
-import { teamOrchestrator, setTeamBroadcastHandler } from "../teams";
 import { setEventBroadcaster } from "../lib/event-broker";
+import { setTeamBroadcastHandler } from "../teams";
+import { startHeartbeat, wsRegistry } from "./registry";
 
 import { delegationRegistry } from "../core/delegation-registry";
 
@@ -30,7 +30,7 @@ const teamInterceptors = new Set<TeamInterceptor>();
 export function registerTeamInterceptor(
   teamId: string,
   sessionId: string,
-  callback: (data: any) => void
+  callback: (data: any) => void,
 ): () => void {
   const interceptor = { teamId, sessionId, callback };
   teamInterceptors.add(interceptor);
@@ -115,7 +115,7 @@ export function onOpen(
   _evt: Event,
   _ws: WSContext,
   rawHeaders?: Headers | null,
-  forcedWsId?: string | null
+  forcedWsId?: string | null,
 ): string {
   // If forcedWsId is provided, we are in the old capturedId flow.
   // We should reuse or create a context tied to that id where possible.
@@ -169,7 +169,7 @@ export function onClose(evt: any, _ws: WSContext, forcedWsId?: string | null) {
 export async function onMessage(
   evt: MessageEvent<any>,
   _ws: WSContext,
-  forcedWsId?: string | null
+  forcedWsId?: string | null,
 ) {
   if (forcedWsId) {
     const ctx = legacyContextByForcedId.get(forcedWsId);

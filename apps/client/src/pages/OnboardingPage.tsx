@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-import { useState, type FormEvent } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/Button";
+import { useAuth } from "@/contexts/AuthContext";
+import { useState, type FormEvent } from "react";
 
 export function OnboardingPage() {
   const { register, loading } = useAuth();
@@ -38,9 +38,7 @@ export function OnboardingPage() {
           <h1 className="text-3xl font-display font-bold text-foreground mb-2">
             Welcome to Spaces
           </h1>
-          <p className="text-muted-foreground">
-            Create your admin account to get started
-          </p>
+          <p className="text-muted-foreground">Create your admin account to get started</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
@@ -88,15 +86,8 @@ export function OnboardingPage() {
                        text-foreground placeholder-text-secondary outline-none
                        focus:border-primary transition-colors"
           />
-          {error && (
-            <p className="text-destructive text-sm text-center">{error}</p>
-          )}
-          <Button
-            type="submit"
-            disabled={loading}
-            size="lg"
-            className="w-full"
-          >
+          {error && <p className="text-destructive text-sm text-center">{error}</p>}
+          <Button type="submit" disabled={loading} size="lg" className="w-full">
             {loading ? "Creating account..." : "Create Account"}
           </Button>
         </form>

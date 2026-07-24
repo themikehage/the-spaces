@@ -1,17 +1,22 @@
 // SPDX-License-Identifier: MIT
-import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { z } from "zod";
-import { authMiddleware } from "../middleware/auth";
-import { getUsername } from "../lib/auth-helpers";
-import { agentRegistry } from "../agents";
-import { AgentDefinitionSchema, UpdateAgentDefinitionSchema, getAgentDir, AgentScopeTargetSchema } from "shared";
-import { scopeConfigManager } from "../core/scope";
-import { ToolScopeTargetSchema } from "../core/custom-tools/schemas";
-import { sessionManager } from "../core/session-manager";
-import { join } from "node:path";
+import { Hono } from "hono";
 import { existsSync, readdirSync, unlinkSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import {
+  AgentDefinitionSchema,
+  AgentScopeTargetSchema,
+  UpdateAgentDefinitionSchema,
+  getAgentDir,
+} from "shared";
+import { z } from "zod";
+import { agentRegistry } from "../agents";
 import { applyCacheHeaders } from "../core/cache-headers";
+import { ToolScopeTargetSchema } from "../core/custom-tools/schemas";
+import { scopeConfigManager } from "../core/scope";
+import { sessionManager } from "../core/session-manager";
+import { getUsername } from "../lib/auth-helpers";
+import { authMiddleware } from "../middleware/auth";
 
 export const agentsRouter = new Hono();
 
@@ -58,36 +63,32 @@ agentsRouter.get("/", (c) => {
   return c.json({ agents: agentRegistry.list(username) });
 });
 
-agentsRouter.post(
-  "/",
-  zValidator("json", AgentDefinitionSchema),
-  async (c) => {
-    const username = getUsername(c);
-    if (!username) return c.json({ error: "Unauthorized" }, 401);
-    const definition = c.req.valid("json");
+agentsRouter.post("/", zValidator("json", AgentDefinitionSchema), async (c) => {
+  const username = getUsername(c);
+  if (!username) return c.json({ error: "Unauthorized" }, 401);
+  const definition = c.req.valid("json");
 
-    if (agentRegistry.get(definition.id)) {
-      return c.json({ error: `Agent "${definition.id}" already exists` }, 409);
-    }
-
-    try {
-      const { scope, ...defWithoutScope } = definition;
-      const entry = await agentRegistry.register(username, defWithoutScope as any, true, scope);
-      return c.json(
-        {
-          id: definition.id,
-          name: definition.name,
-          role: definition.role,
-          status: entry.status,
-          createdAt: entry.createdAt,
-        },
-        201
-      );
-    } catch (err) {
-      return c.json({ error: String(err) }, 500);
-    }
+  if (agentRegistry.get(definition.id)) {
+    return c.json({ error: `Agent "${definition.id}" already exists` }, 409);
   }
-);
+
+  try {
+    const { scope, ...defWithoutScope } = definition;
+    const entry = await agentRegistry.register(username, defWithoutScope as any, true, scope);
+    return c.json(
+      {
+        id: definition.id,
+        name: definition.name,
+        role: definition.role,
+        status: entry.status,
+        createdAt: entry.createdAt,
+      },
+      201,
+    );
+  } catch (err) {
+    return c.json({ error: String(err) }, 500);
+  }
+});
 
 agentsRouter.get("/:id", (c) => {
   const username = getUsername(c);
@@ -120,9 +121,9 @@ agentsRouter.delete("/:id", async (c) => {
   const sessions = await sessionManager.listSessions(username).catch(() => []);
   for (const s of sessions) {
     if (s.agentId === id) {
-      await sessionManager.destroySession(username, s.id).catch((err) =>
-        console.error(`[AgentsRoute] Failed to destroy session ${s.id}:`, err)
-      );
+      await sessionManager
+        .destroySession(username, s.id)
+        .catch((err) => console.error(`[AgentsRoute] Failed to destroy session ${s.id}:`, err));
     }
   }
 
@@ -130,32 +131,28 @@ agentsRouter.delete("/:id", async (c) => {
   return c.body(null, 204);
 });
 
-agentsRouter.patch(
-  "/:id",
-  zValidator("json", UpdateAgentDefinitionSchema),
-  async (c) => {
-    const username = getUsername(c);
-    if (!username) return c.json({ error: "Unauthorized" }, 401);
-    const id = c.req.param("id");
-    const updates = c.req.valid("json");
+agentsRouter.patch("/:id", zValidator("json", UpdateAgentDefinitionSchema), async (c) => {
+  const username = getUsername(c);
+  if (!username) return c.json({ error: "Unauthorized" }, 401);
+  const id = c.req.param("id");
+  const updates = c.req.valid("json");
 
-    const entry = agentRegistry.get(id, username);
-    if (!entry) return c.json({ error: "Agent not found" }, 404);
+  const entry = agentRegistry.get(id, username);
+  if (!entry) return c.json({ error: "Agent not found" }, 404);
 
-    try {
-      const updatedEntry = await agentRegistry.update(username, id, updates);
-      return c.json({
-        id,
-        name: updatedEntry.server.definition.name,
-        role: updatedEntry.server.definition.role,
-        status: updatedEntry.status,
-        createdAt: updatedEntry.createdAt,
-      });
-    } catch (err) {
-      return c.json({ error: String(err) }, 500);
-    }
+  try {
+    const updatedEntry = await agentRegistry.update(username, id, updates);
+    return c.json({
+      id,
+      name: updatedEntry.server.definition.name,
+      role: updatedEntry.server.definition.role,
+      status: updatedEntry.status,
+      createdAt: updatedEntry.createdAt,
+    });
+  } catch (err) {
+    return c.json({ error: String(err) }, 500);
   }
-);
+});
 
 agentsRouter.patch(
   "/scope/tools",
@@ -171,7 +168,7 @@ agentsRouter.patch(
     } catch (err) {
       return c.json({ error: String(err) }, 500);
     }
-  }
+  },
 );
 
 agentsRouter.patch(
@@ -192,7 +189,7 @@ agentsRouter.patch(
     } catch (err) {
       return c.json({ error: String(err) }, 500);
     }
-  }
+  },
 );
 
 agentsRouter.post(
@@ -214,9 +211,9 @@ agentsRouter.post(
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ message, stream }),
       }),
-      c.env
+      c.env,
     );
-  }
+  },
 );
 
 agentsRouter.get("/:id/messages", async (c) => {
@@ -253,7 +250,7 @@ agentsRouter.get("/:id/observe", async (c) => {
     new Request(`http://internal/observe`, {
       method: "GET",
     }),
-    c.env
+    c.env,
   );
 });
 
@@ -268,7 +265,7 @@ agentsRouter.get("/:id/executions", async (c) => {
     new Request(`http://internal/executions`, {
       method: "GET",
     }),
-    c.env
+    c.env,
   );
 });
 
@@ -284,7 +281,7 @@ agentsRouter.get("/:id/executions/:execId", async (c) => {
     new Request(`http://internal/executions/${execId}`, {
       method: "GET",
     }),
-    c.env
+    c.env,
   );
 });
 
@@ -348,4 +345,3 @@ agentsRouter.delete("/:id/avatar", async (c) => {
   agentRegistry.setAvatarUrl(username, id, null);
   return c.body(null, 204);
 });
-

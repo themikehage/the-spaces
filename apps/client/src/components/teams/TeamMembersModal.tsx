@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-import { useState } from "react";
-import { Modal } from "@/components/ui/Modal";
-import { Dropdown } from "@/components/ui/Dropdown";
 import { AgentAvatar } from "@/components/shared/AgentAvatar";
-import type { TeamMember, AgentInfo, TeamRole } from "shared";
+import { Dropdown } from "@/components/ui/Dropdown";
+import { Modal } from "@/components/ui/Modal";
 import { useLiterals } from "@/lib";
+import { useState } from "react";
+import type { AgentInfo, TeamMember, TeamRole } from "shared";
 import { literals as u } from "./TeamMembersModal.literals";
 
 const TEAM_ROLE_OPTIONS: { value: TeamRole; label: string }[] = [
@@ -13,7 +13,10 @@ const TEAM_ROLE_OPTIONS: { value: TeamRole; label: string }[] = [
   { value: "observer", label: "Observer" },
 ];
 
-const OUTPUT_MODE_OPTIONS: { value: "normal" | "full-proposal" | "diff-suggestion"; label: string }[] = [
+const OUTPUT_MODE_OPTIONS: {
+  value: "normal" | "full-proposal" | "diff-suggestion";
+  label: string;
+}[] = [
   { value: "normal", label: "Normal" },
   { value: "full-proposal", label: "Full Proposal" },
   { value: "diff-suggestion", label: "Diff Suggestion" },
@@ -68,7 +71,10 @@ export function TeamMembersModal({
     }
   };
 
-  const handleOutputModeChange = async (agentId: string, outputMode: "full-proposal" | "diff-suggestion" | "normal") => {
+  const handleOutputModeChange = async (
+    agentId: string,
+    outputMode: "full-proposal" | "diff-suggestion" | "normal",
+  ) => {
     setUpdatingId(agentId);
     try {
       await onUpdateMember(agentId, { outputMode });
@@ -108,13 +114,22 @@ export function TeamMembersModal({
                 const info = getAgentInfo(m.agentId);
                 const isUpdating = updatingId === m.agentId;
                 return (
-                  <tr key={m.agentId} className={isUpdating ? "opacity-60 pointer-events-none" : ""}>
+                  <tr
+                    key={m.agentId}
+                    className={isUpdating ? "opacity-60 pointer-events-none" : ""}
+                  >
                     <td className="py-3 pr-2">
                       <div className="flex items-center gap-2">
-                        <AgentAvatar name={info?.name || m.agentId} avatarUrl={info?.avatarUrl} size="xs" />
+                        <AgentAvatar
+                          name={info?.name || m.agentId}
+                          avatarUrl={info?.avatarUrl}
+                          size="xs"
+                        />
                         <div>
                           <p className="font-semibold text-foreground">{info?.name || m.agentId}</p>
-                          <p className="text-[10px] text-muted-foreground font-mono truncate max-w-[140px]">{m.agentId}</p>
+                          <p className="text-[10px] text-muted-foreground font-mono truncate max-w-[140px]">
+                            {m.agentId}
+                          </p>
                         </div>
                       </div>
                     </td>
@@ -183,7 +198,9 @@ interface AddProps {
 function TeamMembersAdd({ candidates, hasLeader, adding, onAdd, l }: AddProps) {
   const [selectedAgentId, setSelectedAgentId] = useState(candidates[0]?.id || "");
   const [role, setRole] = useState<TeamRole>("member");
-  const [outputMode, setOutputMode] = useState<"full-proposal" | "diff-suggestion" | "normal">("normal");
+  const [outputMode, setOutputMode] = useState<"full-proposal" | "diff-suggestion" | "normal">(
+    "normal",
+  );
   const [error, setError] = useState<string | null>(null);
 
   const roleOptions = TEAM_ROLE_OPTIONS.map((o) => ({
@@ -206,9 +223,7 @@ function TeamMembersAdd({ candidates, hasLeader, adding, onAdd, l }: AddProps) {
   };
 
   if (candidates.length === 0) {
-    return (
-      <p className="text-xs text-muted-foreground text-center py-2">{l.noAgents}</p>
-    );
+    return <p className="text-xs text-muted-foreground text-center py-2">{l.noAgents}</p>;
   }
 
   return (
@@ -232,12 +247,7 @@ function TeamMembersAdd({ candidates, hasLeader, adding, onAdd, l }: AddProps) {
         </div>
 
         <div className="w-[120px]">
-          <Dropdown<TeamRole>
-            value={role}
-            onChange={setRole}
-            options={roleOptions}
-            matchWidth
-          />
+          <Dropdown<TeamRole> value={role} onChange={setRole} options={roleOptions} matchWidth />
         </div>
 
         <div className="w-[140px]">
@@ -267,7 +277,14 @@ function TeamMembersAdd({ candidates, hasLeader, adding, onAdd, l }: AddProps) {
   );
 }
 
-export function AddTeamMemberModal({ availableAgents, currentMemberAgentIds, onClose, onAdd, hasLeader, literals }: {
+export function AddTeamMemberModal({
+  availableAgents,
+  currentMemberAgentIds,
+  onClose,
+  onAdd,
+  hasLeader,
+  literals,
+}: {
   availableAgents: AgentInfo[];
   currentMemberAgentIds: string[];
   onClose: () => void;
@@ -278,7 +295,9 @@ export function AddTeamMemberModal({ availableAgents, currentMemberAgentIds, onC
   const candidates = availableAgents.filter((a) => !currentMemberAgentIds.includes(a.id));
   const [selectedAgentId, setSelectedAgentId] = useState(candidates[0]?.id || "");
   const [role, setRole] = useState<TeamRole>("member");
-  const [outputMode, setOutputMode] = useState<"full-proposal" | "diff-suggestion" | "normal">("normal");
+  const [outputMode, setOutputMode] = useState<"full-proposal" | "diff-suggestion" | "normal">(
+    "normal",
+  );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -310,7 +329,9 @@ export function AddTeamMemberModal({ availableAgents, currentMemberAgentIds, onC
         ) : (
           <>
             <div>
-              <label className="text-xs font-medium text-muted-foreground block mb-1.5">Select Agent</label>
+              <label className="text-xs font-medium text-muted-foreground block mb-1.5">
+                Select Agent
+              </label>
               <div className="space-y-1 max-h-40 overflow-y-auto bg-background p-2 rounded-lg border border-input">
                 {candidates.map((a) => (
                   <button
@@ -327,7 +348,9 @@ export function AddTeamMemberModal({ availableAgents, currentMemberAgentIds, onC
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-1.5">
                         <span className="font-semibold text-foreground truncate">{a.name}</span>
-                        <span className="text-[10px] text-muted-foreground truncate font-mono">@{a.id}</span>
+                        <span className="text-[10px] text-muted-foreground truncate font-mono">
+                          @{a.id}
+                        </span>
                       </div>
                       <p className="text-[10px] text-muted-foreground truncate mt-0.5">{a.role}</p>
                     </div>
@@ -337,7 +360,9 @@ export function AddTeamMemberModal({ availableAgents, currentMemberAgentIds, onC
             </div>
 
             <div>
-              <label className="text-xs font-medium text-muted-foreground block mb-1.5">{literals.role}</label>
+              <label className="text-xs font-medium text-muted-foreground block mb-1.5">
+                {literals.role}
+              </label>
               <Dropdown<TeamRole>
                 value={role}
                 onChange={setRole}
@@ -347,7 +372,9 @@ export function AddTeamMemberModal({ availableAgents, currentMemberAgentIds, onC
             </div>
 
             <div>
-              <label className="text-xs font-medium text-muted-foreground block mb-1.5">{literals.outputMode}</label>
+              <label className="text-xs font-medium text-muted-foreground block mb-1.5">
+                {literals.outputMode}
+              </label>
               <Dropdown<"full-proposal" | "diff-suggestion" | "normal">
                 value={outputMode}
                 onChange={setOutputMode}

@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-import { apiFetch } from "@/lib/api";
-import { useState, useEffect, useCallback } from "react";
-import { useLiterals } from "@/lib";
-import { literals as u } from "./SettingsPage.literals";
+import { EnvVarsTab } from "@/components/settings/EnvVarsTab";
 import { GeneralTab } from "@/components/settings/GeneralTab";
 import { ProvidersTab } from "@/components/settings/ProvidersTab";
-import { EnvVarsTab } from "@/components/settings/EnvVarsTab";
+import { useLiterals } from "@/lib";
+import { apiFetch } from "@/lib/api";
 import { MCPMarketplacePage } from "@/pages/MCPMarketplacePage";
+import { useCallback, useEffect, useState } from "react";
+import { literals as u } from "./SettingsPage.literals";
 
 interface EnvVar {
   key: string;
@@ -94,7 +94,6 @@ export function SettingsPage() {
                   fetchEnvVars={fetchEnvVars}
                 />
               )}
-
             </div>
           )}
         </div>

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import type { McpCatalogItem, McpConfig, McpServerConfig } from "shared";
+import { getMcpConfigOldPath, getMcpServersPath, getUserDir, getWorkspaceDir } from "shared";
 import { McpClient } from "./mcp-client.js";
-import type { McpServerConfig, McpConfig, McpCatalogItem } from "shared";
-import { getUserDir, getWorkspaceDir, getMcpServersPath, getMcpConfigOldPath } from "shared";
 
 export const MCP_CATALOG: McpCatalogItem[] = [
   {
@@ -33,7 +33,8 @@ export const MCP_CATALOG: McpCatalogItem[] = [
   {
     id: "sqlite",
     name: "SQLite",
-    description: "Consultas, lectura de esquemas y manipulación de bases de datos SQLite locales (.sqlite)",
+    description:
+      "Consultas, lectura de esquemas y manipulación de bases de datos SQLite locales (.sqlite)",
     category: "Databases",
     icon: "💾",
     command: "bunx",
@@ -73,7 +74,8 @@ export const MCP_CATALOG: McpCatalogItem[] = [
   {
     id: "fetch",
     name: "Web Fetch",
-    description: "Descarga contenido web de URLs, convirtiendo HTML a Markdown simplificado para el agente",
+    description:
+      "Descarga contenido web de URLs, convirtiendo HTML a Markdown simplificado para el agente",
     category: "Web & Browser",
     icon: "📥",
     command: "bunx",
@@ -147,7 +149,6 @@ export const MCP_CATALOG: McpCatalogItem[] = [
     homepage: "https://github.com/modelcontextprotocol/servers",
     isHttp: false,
   },
-
 ];
 
 export class McpRegistry {
@@ -164,7 +165,8 @@ export class McpRegistry {
         github: {
           id: "github",
           name: "GitHub",
-          description: "Gestión de repositorios, issues, pull requests y búsqueda de código en GitHub",
+          description:
+            "Gestión de repositorios, issues, pull requests y búsqueda de código en GitHub",
           transport: "stdio",
           command: "bunx",
           args: ["@modelcontextprotocol/server-github"],
@@ -220,13 +222,12 @@ export class McpRegistry {
 
     // Auto-migrate old configurations from npx to bunx
     for (const [key, srv] of Object.entries(config.mcpServers)) {
-      const catalogItem = MCP_CATALOG.find(c => c.id === key);
+      const catalogItem = MCP_CATALOG.find((c) => c.id === key);
       if (srv.isBuiltin && srv.command === "npx" && catalogItem) {
         srv.command = "bunx";
         const userWorkspace = getWorkspaceDir(username);
-        srv.args = catalogItem.args?.map(arg => 
-          arg.replace("$WORKSPACE_DIR", userWorkspace)
-        ) || [];
+        srv.args =
+          catalogItem.args?.map((arg) => arg.replace("$WORKSPACE_DIR", userWorkspace)) || [];
         changed = true;
         console.log(`[MCP Migration] Migrated server ${key} config to bunx.`);
       }
@@ -264,9 +265,8 @@ export class McpRegistry {
         // Lazily connect the global server if it isn't running already
         if (!client) {
           const userWorkspace = getWorkspaceDir(username);
-          const processedArgs = srv.args?.map(arg => 
-            arg.replace("$WORKSPACE_DIR", userWorkspace)
-          ) || [];
+          const processedArgs =
+            srv.args?.map((arg) => arg.replace("$WORKSPACE_DIR", userWorkspace)) || [];
 
           client = new McpClient(srv.id, { ...srv, args: processedArgs, enabled: true });
           try {
@@ -275,7 +275,7 @@ export class McpRegistry {
 
             const mcpTools = await client.listTools();
             srv.status = "connected";
-            srv.tools = mcpTools.map(t => t.name);
+            srv.tools = mcpTools.map((t) => t.name);
             srv.error = undefined;
             configChanged = true;
           } catch (e: any) {
@@ -299,7 +299,7 @@ export class McpRegistry {
               execute: async (toolCallId: string, params: any) => {
                 const activeClient = this.globalClients.get(key);
                 if (!activeClient) throw new Error(`MCP Server ${name} is not connected`);
-                
+
                 const res = await activeClient.callTool(t.name, params);
                 if (res.isError) {
                   const errText = res.content?.[0]?.text || JSON.stringify(res);
@@ -338,7 +338,7 @@ export class McpRegistry {
         }
 
         return serverTools;
-      })
+      }),
     );
 
     for (const serverTools of results) {
@@ -357,11 +357,13 @@ export class McpRegistry {
     // Process cleanup is handled globally at application exit or server disconnect.
   }
 
-  async testConnection(username: string, serverConfig: McpServerConfig): Promise<{ success: boolean; tools: string[]; error?: string }> {
+  async testConnection(
+    username: string,
+    serverConfig: McpServerConfig,
+  ): Promise<{ success: boolean; tools: string[]; error?: string }> {
     const userWorkspace = getWorkspaceDir(username);
-    const processedArgs = serverConfig.args?.map(arg => 
-      arg.replace("$WORKSPACE_DIR", userWorkspace)
-    ) || [];
+    const processedArgs =
+      serverConfig.args?.map((arg) => arg.replace("$WORKSPACE_DIR", userWorkspace)) || [];
 
     const processedConfig = {
       ...serverConfig,
@@ -373,7 +375,7 @@ export class McpRegistry {
     try {
       await client.start();
       const mcpTools = await client.listTools();
-      const tools = mcpTools.map(t => t.name);
+      const tools = mcpTools.map((t) => t.name);
       client.stop();
 
       // Persist fresh tools to user's saved config if this server is registered
@@ -410,9 +412,8 @@ export class McpRegistry {
     }
 
     const userWorkspace = getWorkspaceDir(username);
-    const processedArgs = srv.args?.map(arg => 
-      arg.replace("$WORKSPACE_DIR", userWorkspace)
-    ) || [];
+    const processedArgs =
+      srv.args?.map((arg) => arg.replace("$WORKSPACE_DIR", userWorkspace)) || [];
 
     try {
       const client = new McpClient(srv.id, { ...srv, args: processedArgs, enabled: true });
@@ -420,7 +421,7 @@ export class McpRegistry {
 
       const mcpTools = await client.listTools();
       srv.status = "connected";
-      srv.tools = mcpTools.map(t => t.name);
+      srv.tools = mcpTools.map((t) => t.name);
       srv.error = undefined;
 
       this.globalClients.set(key, client);
@@ -489,4 +490,3 @@ process.on("SIGTERM", () => {
   mcpRegistry.stopAll();
   process.exit(0);
 });
-

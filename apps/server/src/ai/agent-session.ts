@@ -1,24 +1,35 @@
-// SPDX-License-Identifier: MIT
-import { Agent } from "./vendor/agent/src/agent.ts";
-import { prepareCompaction, compact } from "./vendor/agent/src/harness/compaction/compaction.ts";
-import { completeSimple, streamSimple } from "./vendor/ai/src/compat.ts";
-import type { AgentMessage, AgentTool, BeforeToolCallContext, BeforeToolCallResult } from "./vendor/agent/src/types.ts";
-import type { AvailableModel, ModelRegistry } from "./model-registry";
-import type { SessionManager } from "./session-persistence";
-import type { DefaultResourceLoader } from "./resource-loader";
 import { convertToLlm } from "./messages";
-import { estimateContextTokens } from "./vendor/ai/src/utils/estimate.ts";
-import type { AuthStorage } from "./auth-storage.ts";
 import { formatSkillsForSystemPrompt } from "./vendor/agent/src/harness/system-prompt.ts";
+import { streamSimple } from "./vendor/ai/src/compat.ts";
+import { TypedEventEmitter } from "../core/event-bus";
+import { NavigationController } from "../core/navigation-controller";
+import { ToolRegistry } from "../core/tool-registry";
+import type { AuthStorage } from "./auth-storage.ts";
+import { CompactionManager } from "./compaction-manager";
+import { estimateContextUsage as estimateContextUsageHelper } from "./context-estimator";
+import type { AvailableModel, ModelRegistry } from "./model-registry";
+import { PromptBuilder } from "./prompt-builder";
+import type { DefaultResourceLoader } from "./resource-loader";
+import type { JsonlSessionStore } from "./session-persistence";
+import { Agent } from "./vendor/agent/src/agent.ts";
+import type {
+  AgentMessage,
+  AgentTool,
+  BeforeToolCallContext,
+  BeforeToolCallResult,
+} from "./vendor/agent/src/types.ts";
 
 export interface CreateAgentSessionOptions {
   cwd: string;
-  sessionManager: SessionManager;
+  sessionManager: JsonlSessionStore;
   authStorage: AuthStorage;
   modelRegistry: ModelRegistry;
   resourceLoader: DefaultResourceLoader;
   customTools?: any[];
-  beforeToolCall?: (context: BeforeToolCallContext, signal?: AbortSignal) => Promise<BeforeToolCallResult | undefined>;
+  beforeToolCall?: (
+    context: BeforeToolCallContext,
+    signal?: AbortSignal,
+  ) => Promise<BeforeToolCallResult | undefined>;
   delegationRegistry?: any;
 }
 
@@ -26,23 +37,43 @@ export type AgentSessionEvent = any;
 
 export class AgentSession {
   cwd: string;
-  sessionManager: SessionManager;
+  sessionManager: JsonlSessionStore;
   authStorage: AuthStorage;
   modelRegistry: ModelRegistry;
   resourceLoader: DefaultResourceLoader;
   customTools: any[];
   _customTools: any[];
-  beforeToolCall?: (context: BeforeToolCallContext, signal?: AbortSignal) => Promise<BeforeToolCallResult | undefined>;
+  beforeToolCall?: (
+    context: BeforeToolCallContext,
+    signal?: AbortSignal,
+  ) => Promise<BeforeToolCallResult | undefined>;
   delegationRegistry?: any;
 
   model: AvailableModel | null = null;
 
   private agent!: Agent;
-  private activeTools: AgentTool[] = [];
+  private eventBus = new TypedEventEmitter();
+  private toolRegistry = new ToolRegistry();
+  private promptBuilder!: PromptBuilder;
+  private compactionManager!: CompactionManager;
+  private navigationController!: NavigationController;
   private activeSkillPrompts: string[] = [];
-  private allToolsMap: Map<string, AgentTool> = new Map();
-  private eventListeners: Set<(evt: any) => void> = new Set();
   private abortController: AbortController | null = null;
+
+  get activeTools(): AgentTool[] {
+    return this.toolRegistry.getActiveTools();
+  }
+  set activeTools(tools: AgentTool[]) {
+    this.toolRegistry.setActiveTools(tools);
+  }
+
+  get allToolsMap(): Map<string, AgentTool> {
+    const map = new Map<string, AgentTool>();
+    for (const tool of this.toolRegistry.getAllTools()) {
+      map.set(tool.name, tool);
+    }
+    return map;
+  }
 
   get messages(): any[] {
     return this.agent?.state?.messages || [];
@@ -86,6 +117,13 @@ export class AgentSession {
     this.beforeToolCall = options.beforeToolCall;
     this.delegationRegistry = options.delegationRegistry;
 
+    this.promptBuilder = new PromptBuilder(this.resourceLoader);
+    this.compactionManager = new CompactionManager(this.sessionManager, this.modelRegistry);
+    this.navigationController = new NavigationController(
+      this.sessionManager,
+      this.delegationRegistry,
+    );
+
     this.initializeTools();
     this.restoreSessionState();
     this.initializeAgent();
@@ -100,7 +138,9 @@ export class AgentSession {
   }
 
   _refreshToolRegistry(): void {
-    const prevActiveNames = this.activeTools?.length ? this.activeTools.map((t: any) => t.name) : null;
+    const prevActiveNames = this.activeTools?.length
+      ? this.activeTools.map((t: any) => t.name)
+      : null;
     this.allToolsMap.clear();
     for (const toolDef of this.customTools) {
       const wrappedTool: AgentTool = {
@@ -119,9 +159,10 @@ export class AgentSession {
               details: { output: res },
             };
           }
-          const outputText = res && typeof res === "object" && "output" in res
-            ? String(res.output)
-            : JSON.stringify(res);
+          const outputText =
+            res && typeof res === "object" && "output" in res
+              ? String(res.output)
+              : JSON.stringify(res);
           return {
             content: [{ type: "text", text: outputText }],
             details: res,
@@ -185,37 +226,43 @@ export class AgentSession {
       ...(this.resourceLoader.getAppendSystemPrompt() || []),
       availableSkillsPrompt,
       ...this.activeSkillPrompts,
-    ].filter(Boolean).join("\n\n");
+    ]
+      .filter(Boolean)
+      .join("\n\n");
 
     if (this.model && !this.model.contextWindow) {
-      throw new Error(`Model ${this.model.id} missing contextWindow - fetch mandatory, run POST /api/providers/${this.model.provider}/refresh`);
+      throw new Error(
+        `Model ${this.model.id} missing contextWindow - fetch mandatory, run POST /api/providers/${this.model.provider}/refresh`,
+      );
     }
-    const modelObj = this.model ? {
-      id: this.model.id,
-      name: this.model.name,
-      provider: this.model.provider,
-      api: this.model.api,
-      baseUrl: this.model.baseUrl,
-      apiKey: this.model.apiKey,
-      reasoning: !!this.model.reasoning,
-      contextWindow: this.model.contextWindow!,
-      maxTokens: this.model.maxTokens ?? 0,
-      compat: this.model.compat,
-      input: (this.model as any).input || [],
-      cost: (this.model as any).cost || {},
-    } : {
-      id: "unknown",
-      name: "unknown",
-      provider: "unknown",
-      api: "unknown",
-      baseUrl: "",
-      reasoning: false,
-      contextWindow: 0,
-      maxTokens: 0,
-      compat: undefined,
-      input: [],
-      cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
-    };
+    const modelObj = this.model
+      ? {
+          id: this.model.id,
+          name: this.model.name,
+          provider: this.model.provider,
+          api: this.model.api,
+          baseUrl: this.model.baseUrl,
+          apiKey: this.model.apiKey,
+          reasoning: !!this.model.reasoning,
+          contextWindow: this.model.contextWindow!,
+          maxTokens: this.model.maxTokens ?? 0,
+          compat: this.model.compat,
+          input: (this.model as any).input || [],
+          cost: (this.model as any).cost || {},
+        }
+      : {
+          id: "unknown",
+          name: "unknown",
+          provider: "unknown",
+          api: "unknown",
+          baseUrl: "",
+          reasoning: false,
+          contextWindow: 0,
+          maxTokens: 0,
+          compat: undefined,
+          input: [],
+          cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+        };
 
     const initialMessages = this.sessionManager.buildSessionContext().messages;
 
@@ -246,7 +293,9 @@ export class AgentSession {
             ...(this.resourceLoader.getAppendSystemPrompt() || []),
             availableSkillsPrompt,
             ...this.activeSkillPrompts,
-          ].filter(Boolean).join("\n\n");
+          ]
+            .filter(Boolean)
+            .join("\n\n");
           const freshMessages = this.sessionManager.buildSessionContext().messages;
           return {
             context: {
@@ -300,8 +349,14 @@ export class AgentSession {
       if (evt.message) {
         this.sessionManager.appendMessage(evt.message);
         if (evt.message.role === "assistant" && evt.message.stopReason === "error") {
-          console.warn(`[AgentSession API Error] Session ${this.sessionManager.getSessionId()}:`, evt.message.errorMessage || "API error response");
-          this.emit({ type: "agent_error", error: evt.message.errorMessage || "API error response" });
+          console.warn(
+            `[AgentSession API Error] Session ${this.sessionManager.getSessionId()}:`,
+            evt.message.errorMessage || "API error response",
+          );
+          this.emit({
+            type: "agent_error",
+            error: evt.message.errorMessage || "API error response",
+          });
         }
       }
       this.emit({
@@ -309,7 +364,10 @@ export class AgentSession {
         message: evt.message,
       });
     } else if (evt.type === "message_update") {
-      if (evt.assistantMessageEvent?.type === "text_delta" || evt.assistantMessageEvent?.type === "thinking_delta") {
+      if (
+        evt.assistantMessageEvent?.type === "text_delta" ||
+        evt.assistantMessageEvent?.type === "thinking_delta"
+      ) {
         this.emit({
           type: "message_update",
           assistantMessageEvent: evt.assistantMessageEvent,
@@ -349,7 +407,10 @@ export class AgentSession {
       });
     } else if (evt.type === "turn_end") {
       if (evt.message && evt.message.role === "assistant" && evt.message.errorMessage) {
-        console.warn(`[AgentSession API Error] Session ${this.sessionManager.getSessionId()}:`, evt.message.errorMessage);
+        console.warn(
+          `[AgentSession API Error] Session ${this.sessionManager.getSessionId()}:`,
+          evt.message.errorMessage,
+        );
         this.emit({ type: "agent_error", error: evt.message.errorMessage });
       }
     }
@@ -375,7 +436,9 @@ export class AgentSession {
     this.model = model;
     this.sessionManager.appendModelChange(model.provider, model.id);
     if (!model.contextWindow) {
-      throw new Error(`Model ${model.id} missing contextWindow - fetch mandatory, run POST /api/providers/${model.provider}/refresh`);
+      throw new Error(
+        `Model ${model.id} missing contextWindow - fetch mandatory, run POST /api/providers/${model.provider}/refresh`,
+      );
     }
     if (this.agent) {
       (this.agent.state as any).model = {
@@ -401,20 +464,11 @@ export class AgentSession {
   }
 
   subscribe(listener: (evt: any) => void): () => void {
-    this.eventListeners.add(listener);
-    return () => {
-      this.eventListeners.delete(listener);
-    };
+    return this.eventBus.on(listener);
   }
 
   private emit(event: any) {
-    for (const listener of this.eventListeners) {
-      try {
-        listener(event);
-      } catch (err) {
-        console.error("[AgentSession] Event listener error:", err);
-      }
-    }
+    this.eventBus.emit(event);
   }
 
   async prompt(messageText: string, opts?: any): Promise<any> {
@@ -430,10 +484,10 @@ export class AgentSession {
       const availableSkills = this.resourceLoader.getSkills().skills;
       const matchedSkills = [];
       const matches = [...messageText.matchAll(/(?:^|\s)\/([a-zA-Z0-9_-]+)/g)];
-      const uniqueNames = new Set(matches.map(m => m[1].toLowerCase()));
-      
+      const uniqueNames = new Set(matches.map((m) => m[1].toLowerCase()));
+
       for (const name of uniqueNames) {
-        const skill = availableSkills.find(s => s.name.toLowerCase() === name);
+        const skill = availableSkills.find((s) => s.name.toLowerCase() === name);
         if (skill) {
           matchedSkills.push(skill);
         }
@@ -469,7 +523,9 @@ export class AgentSession {
       };
 
       if (!this.model?.contextWindow) {
-        throw new Error(`Model ${this.model?.id} missing contextWindow - fetch mandatory, run POST /api/providers/${this.model?.provider}/refresh`);
+        throw new Error(
+          `Model ${this.model?.id} missing contextWindow - fetch mandatory, run POST /api/providers/${this.model?.provider}/refresh`,
+        );
       }
       if (this.model) {
         const modelObj = {
@@ -496,7 +552,9 @@ export class AgentSession {
         ...(this.resourceLoader.getAppendSystemPrompt() || []),
         availableSkillsPrompt,
         ...this.activeSkillPrompts,
-      ].filter(Boolean).join("\n\n");
+      ]
+        .filter(Boolean)
+        .join("\n\n");
 
       if (this.injectedMemoryContext) {
         systemPrompt += `\n\n## Auto-Recalled Memory Context:\n${this.injectedMemoryContext}`;
@@ -537,7 +595,9 @@ export class AgentSession {
     try {
       if (this.model) {
         if (!this.model.contextWindow) {
-          throw new Error(`Model ${this.model.id} missing contextWindow - fetch mandatory, run POST /api/providers/${this.model.provider}/refresh`);
+          throw new Error(
+            `Model ${this.model.id} missing contextWindow - fetch mandatory, run POST /api/providers/${this.model.provider}/refresh`,
+          );
         }
         const modelObj = {
           id: this.model.id,
@@ -563,7 +623,9 @@ export class AgentSession {
         ...(this.resourceLoader.getAppendSystemPrompt() || []),
         availableSkillsPrompt,
         ...this.activeSkillPrompts,
-      ].filter(Boolean).join("\n\n");
+      ]
+        .filter(Boolean)
+        .join("\n\n");
       (this.agent.state as any).systemPrompt = systemPrompt;
 
       const currentMessages = this.sessionManager.buildSessionContext().messages;
@@ -589,122 +651,35 @@ export class AgentSession {
   }
 
   steer(messageText: string): void {
-    const steeringMsg = {
-      role: "user" as const,
-      content: messageText,
-      timestamp: Date.now(),
-    };
-    this.agent.steer(steeringMsg);
+    this.navigationController.steer(this.agent, messageText);
   }
 
   followUp(messageText: string): void {
-    const followUpMsg = {
-      role: "user" as const,
-      content: messageText,
-      timestamp: Date.now(),
-    };
-    this.agent.followUp(followUpMsg);
+    this.navigationController.followUp(this.agent, messageText);
   }
 
   async abort(): Promise<void> {
-    if (this.agent) {
-      this.agent.abort();
-      await this.agent.waitForIdle();
-    }
-    if (this.abortController) {
-      this.abortController.abort();
-    }
-    const sId = this.sessionManager.getSessionId();
-    try {
-      const registry = this.delegationRegistry ?? (await import("../core/delegation-registry")).delegationRegistry;
-      registry.abortAllRecursive(sId);
-    } catch (err) {
-      console.error("[AgentSession.abort] Failed to propagate abort to delegation registry:", err);
-    }
+    await this.navigationController.abort(this.agent, this.abortController);
   }
 
   async compact(customInstructions?: string): Promise<void> {
     if (this.isStreaming) {
       throw new Error("Cannot compact while session is streaming");
     }
-
-    if (!this.model) {
-      throw new Error("No model configured for compaction");
-    }
-    if (!this.model.contextWindow) {
-      throw new Error(`Model ${this.model.id} missing contextWindow - fetch mandatory, run POST /api/providers/${this.model.provider}/refresh`);
-    }
-
-    const modelObj = {
-      id: this.model.id,
-      name: this.model.name,
-      provider: this.model.provider,
-      api: this.model.api,
-      baseUrl: this.model.baseUrl,
-      apiKey: this.model.apiKey,
-      reasoning: !!this.model.reasoning,
-      contextWindow: this.model.contextWindow!,
-      maxTokens: this.model.maxTokens ?? 0,
-      compat: this.model.compat,
-      input: (this.model as any).input || [],
-      cost: (this.model as any).cost || {},
-    };
-
-    const entries = this.sessionManager.getEntries();
-    const settings = {
-      enabled: true,
-      reserveTokens: 16384,
-      keepRecentTokens: 20000,
-    };
-
-    const prepResult = prepareCompaction(entries as any[], settings);
-    if (!prepResult.ok) {
-      console.error("[Compaction] Preparation failed:", prepResult.error);
-      return;
-    }
-
-    const preparation = prepResult.value;
-    if (!preparation) {
-      console.log("[Compaction] Nothing to compact");
-      return;
-    }
-
-    const dummyModels = {
-      completeSimple: async (m: any, ctx: any, opts?: any) => {
-        const result = await this.modelRegistry.getApiKeyAndHeaders({
-          provider: m.provider,
-          apiKey: this.model?.apiKey,
-        } as any);
-        const apiKey = result.ok ? result.apiKey : undefined;
-        return completeSimple(m, ctx, { ...opts, apiKey });
-      }
-    } as any;
-
-    try {
-      const compactResult = await compact(
-        preparation,
-        dummyModels,
-        modelObj,
-        customInstructions,
-        undefined,
-        this.thinkingLevel as any
-      );
-
-      if (!compactResult.ok) {
-        console.error("[Compaction] Execution failed:", compactResult.error);
-        return;
-      }
-
-      const { summary, firstKeptEntryId, tokensBefore } = compactResult.value;
-      this.sessionManager.appendCompaction(summary, tokensBefore, firstKeptEntryId);
+    const result = await this.compactionManager.compactSession(
+      this.model,
+      this.thinkingLevel,
+      customInstructions,
+    );
+    if (result) {
       this.messages = this.sessionManager.buildSessionContext().messages;
-      console.log("[Compaction] Successfully compacted session context");
-    } catch (err) {
-      console.error("[Compaction] Unexpected error during compaction:", err);
     }
   }
 
-  async navigateTree(targetId: string, options?: { summarize?: boolean }): Promise<{ editorText: string }> {
+  async navigateTree(
+    targetId: string,
+    options?: { summarize?: boolean },
+  ): Promise<{ editorText: string }> {
     if (this.isStreaming) {
       throw new Error("Cannot navigate while session is streaming");
     }
@@ -718,49 +693,8 @@ export class AgentSession {
 
   getContextUsage() {
     const context = this.sessionManager.buildSessionContext();
-    try {
-      const systemPrompt = [
-        this.resourceLoader.getSystemPrompt() || "",
-        ...(this.resourceLoader.getAppendSystemPrompt() || []),
-      ].filter(Boolean).join("\n\n");
-      const llmContext = {
-        systemPrompt,
-        messages: convertToLlm(context.messages),
-      };
-      const estimate = estimateContextTokens(llmContext);
-      return {
-        totalTokens: estimate.tokens,
-        inputTokens: estimate.usageTokens,
-        outputTokens: estimate.trailingTokens,
-        limit: this.model?.contextWindow ?? null,
-      };
-    } catch (err) {
-      console.error("[AgentSession] Error estimating context tokens:", err);
-      let charCount = 0;
-      for (const msg of context.messages as any[]) {
-        if (msg.content) {
-          if (typeof msg.content === "string") {
-            charCount += msg.content.length;
-          } else if (Array.isArray(msg.content)) {
-            for (const block of msg.content) {
-              if (block.type === "text" && block.text) {
-                charCount += block.text.length;
-              } else if (block.type === "image") {
-                const imageTokens = 1200;
-                charCount += imageTokens * 4;
-              }
-            }
-          }
-        }
-      }
-      const estimatedTokens = Math.ceil(charCount / 4);
-      return {
-        totalTokens: estimatedTokens,
-        inputTokens: estimatedTokens,
-        outputTokens: 0,
-        limit: this.model?.contextWindow ?? null,
-      };
-    }
+    const systemPrompt = this.promptBuilder.buildSystemPrompt(this.activeSkillPrompts);
+    return estimateContextUsageHelper(context.messages, systemPrompt, this.model?.contextWindow);
   }
 
   getSessionStats() {
@@ -777,7 +711,8 @@ export class AgentSession {
         if (entry.message.role === "user") userMessages++;
         if (entry.message.role === "assistant") {
           assistantMessages++;
-          const tc = (entry.message.content as any)?.filter((c: any) => c.type === "toolCall") || [];
+          const tc =
+            (entry.message.content as any)?.filter((c: any) => c.type === "toolCall") || [];
           toolCalls += tc.length;
         }
         if (entry.message.role === "toolResult") toolResults++;
@@ -814,7 +749,7 @@ export class AgentSession {
 
   async dispose(): Promise<void> {
     await this.abort();
-    this.eventListeners.clear();
+    this.eventBus.clear();
   }
 
   private handleSessionError(errorMsg: string) {
@@ -839,7 +774,9 @@ export class AgentSession {
   }
 }
 
-export async function createAgentSession(options: CreateAgentSessionOptions): Promise<{ session: AgentSession; extensionsResult: any }> {
+export async function createAgentSession(
+  options: CreateAgentSessionOptions,
+): Promise<{ session: AgentSession; extensionsResult: any }> {
   try {
     const session = new AgentSession(options);
     return {

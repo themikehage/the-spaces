@@ -17,8 +17,6 @@ export function SubagentLiveView({ toolCallId, isComplete }: SubagentLiveViewPro
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
 
-
-
   useEffect(() => {
     if (isComplete) return;
 
@@ -34,7 +32,7 @@ export function SubagentLiveView({ toolCallId, isComplete }: SubagentLiveViewPro
 
         if (evt.type === "token" || evt.type === "thinking") {
           const typeLabel = evt.type === "thinking" ? "thinking" : "token";
-          
+
           // If the last log entry is of the same type, append to it to reduce vertical noise
           const lastEntry = next[next.length - 1];
           if (lastEntry && lastEntry.type === typeLabel) {
@@ -66,12 +64,10 @@ export function SubagentLiveView({ toolCallId, isComplete }: SubagentLiveViewPro
         }
 
         if (evt.type === "tool_call_end") {
-          const resultStr = typeof evt.result === "string" 
-            ? evt.result 
-            : JSON.stringify(evt.result || "");
-          const truncatedResult = resultStr.length > 250 
-            ? `${resultStr.substring(0, 250)}...` 
-            : resultStr;
+          const resultStr =
+            typeof evt.result === "string" ? evt.result : JSON.stringify(evt.result || "");
+          const truncatedResult =
+            resultStr.length > 250 ? `${resultStr.substring(0, 250)}...` : resultStr;
           return [
             ...next,
             {
@@ -168,7 +164,11 @@ export function SubagentLiveView({ toolCallId, isComplete }: SubagentLiveViewPro
 
             return (
               <div key={log.id} className={`${textColor} whitespace-pre-wrap break-words`}>
-                {log.type === "thinking" && <span className="text-[9px] not-italic mr-1 text-yellow-500/50">💭 [thinking]</span>}
+                {log.type === "thinking" && (
+                  <span className="text-[9px] not-italic mr-1 text-yellow-500/50">
+                    💭 [thinking]
+                  </span>
+                )}
                 {log.text}
               </div>
             );

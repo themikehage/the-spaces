@@ -29,7 +29,8 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     title: "Tareas Delegadas",
     subtitle: "Tareas externalizadas a subagentes programáticos para mantener limpio el contexto",
     noActiveSession: "Sin Sesión Activa",
-    noActiveSessionDesc: "Por favor selecciona o inicia una sesión de chat para ver sus tareas delegadas.",
+    noActiveSessionDesc:
+      "Por favor selecciona o inicia una sesión de chat para ver sus tareas delegadas.",
     noDelegations: "Sin Delegaciones",
     noDelegationsDesc: "Esta sesión no ha delegado ninguna tarea a otros subagentes todavía.",
     thTask: "Tarea",

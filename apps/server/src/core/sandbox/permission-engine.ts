@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: MIT
-import { buildSubagentRules, evaluateSubagentRules } from "./subagent-permissions";
-import { resolve, sep, isAbsolute } from "node:path";
 import { tmpdir } from "node:os";
+import { isAbsolute, resolve, sep } from "node:path";
+import { buildSubagentRules, evaluateSubagentRules } from "./subagent-permissions";
 
 export type PermissionVerdict =
-  | { allow: true }
-  | { allow: false; reason: string }
-  | { allow: "ask"; reason: string };
+  { allow: true } | { allow: false; reason: string } | { allow: "ask"; reason: string };
 
 export interface PermissionEngineOptions {
   isSubagent?: boolean;
@@ -18,8 +16,8 @@ export interface PermissionEngineOptions {
 }
 
 export interface PermissionRule {
-  tool: string;           // "bash" | "write" | "read" | "edit" | "*"
-  pattern?: RegExp;       // Regex sobre el string del argumento clave
+  tool: string; // "bash" | "write" | "read" | "edit" | "*"
+  pattern?: RegExp; // Regex sobre el string del argumento clave
   allow: boolean | "ask";
   reason: string;
 }
@@ -31,41 +29,41 @@ const DENY_RULES: PermissionRule[] = [
     tool: "bash",
     pattern: /\brm\s+-[rRfF]{1,4}\s+(\/(?!tmp|workspace)[a-zA-Z0-9_\-*]+)/,
     allow: false,
-    reason: "Recursive deletion of critical system directories is blocked."
+    reason: "Recursive deletion of critical system directories is blocked.",
   },
   // Fork bomb explícita
   {
     tool: "bash",
     pattern: /:\(\)\s*\{\s*:\s*\|\s*:\s*&\s*\}\s*;\s*:/,
     allow: false,
-    reason: "Fork bomb patterns are blocked."
+    reason: "Fork bomb patterns are blocked.",
   },
   // Acceso directo a claves SSH, passwords del sistema, etc.
   {
     tool: "read",
     pattern: /(\bssh\b|\.ssh\b|\bpasswd\b|\bshadow\b|\bcredentials\b|\bsecrets\b)/i,
     allow: false,
-    reason: "Access to system credentials or sensitive keys is blocked."
+    reason: "Access to system credentials or sensitive keys is blocked.",
   },
   {
     tool: "bash",
     pattern: /(cat|less|more|grep|find)\s+.*(\.ssh\/|passwd|shadow)/i,
     allow: false,
-    reason: "Inspecting system credential files is blocked."
+    reason: "Inspecting system credential files is blocked.",
   },
   // curl-pipe-bash o wget-pipe-bash (ejecución remota directa no verificada)
   {
     tool: "bash",
     pattern: /\b(curl|wget)\b[^|]*\|\s*(ba)?sh\b/,
     allow: false,
-    reason: "Piping remote network scripts directly into a shell execution is blocked."
+    reason: "Piping remote network scripts directly into a shell execution is blocked.",
   },
   // mkfs / dd sobre discos o particiones directamente
   {
     tool: "bash",
     pattern: /\b(mkfs|dd\b.*\/dev\/(sd|nvme|vd))/,
     allow: false,
-    reason: "Disk formatting or direct writing to raw devices is blocked."
+    reason: "Disk formatting or direct writing to raw devices is blocked.",
   },
 ];
 
@@ -76,27 +74,29 @@ const ASK_RULES: PermissionRule[] = [
     tool: "bash",
     pattern: /\brm\s+-[rRfF]{1,4}/,
     allow: "ask",
-    reason: "Recursive directory deletion requires explicit user confirmation."
+    reason: "Recursive directory deletion requires explicit user confirmation.",
   },
   // Escritura o modificación fuera de paths temporales o del workspace de spaces
   {
     tool: "write",
-    pattern: /^(?!\/tmp|C:\\Users\\[^\\]+\\AppData\\Local\\Temp|.*[\\/]workspace[\\/]|.*[\\/]projects[\\/]).*$/i,
+    pattern:
+      /^(?!\/tmp|C:\\Users\\[^\\]+\\AppData\\Local\\Temp|.*[\\/]workspace[\\/]|.*[\\/]projects[\\/]).*$/i,
     allow: "ask",
-    reason: "Writing file content outside workspace/temp directories requires confirmation."
+    reason: "Writing file content outside workspace/temp directories requires confirmation.",
   },
   {
     tool: "edit",
-    pattern: /^(?!\/tmp|C:\\Users\\[^\\]+\\AppData\\Local\\Temp|.*[\\/]workspace[\\/]|.*[\\/]projects[\\/]).*$/i,
+    pattern:
+      /^(?!\/tmp|C:\\Users\\[^\\]+\\AppData\\Local\\Temp|.*[\\/]workspace[\\/]|.*[\\/]projects[\\/]).*$/i,
     allow: "ask",
-    reason: "Editing file content outside workspace/temp directories requires confirmation."
+    reason: "Editing file content outside workspace/temp directories requires confirmation.",
   },
   // Modificación recursiva de permisos o propiedad
   {
     tool: "bash",
     pattern: /\b(chmod|chown)\b.*-R/,
     allow: "ask",
-    reason: "Recursive permission or ownership modification requires confirmation."
+    reason: "Recursive permission or ownership modification requires confirmation.",
   },
 ];
 
@@ -105,35 +105,37 @@ const SUBAGENT_DENY_RULES: PermissionRule[] = [
     tool: "bash",
     pattern: /\brm\s+-[rRfF]{1,4}\s+(\/(etc|var|usr|home|tmp\/spaces))/,
     allow: false,
-    reason: "Subagent: deletion of critical system or workspace root directories is blocked."
+    reason: "Subagent: deletion of critical system or workspace root directories is blocked.",
   },
   {
     tool: "bash",
     pattern: /\b(curl|wget)\b[^|]*\|\s*(ba)?sh\b/,
     allow: false,
-    reason: "Subagent: piping remote network scripts directly into a shell execution is blocked."
+    reason: "Subagent: piping remote network scripts directly into a shell execution is blocked.",
   },
   {
     tool: "write",
     pattern: /\.env(\..+)?$/i,
     allow: false,
-    reason: "Subagent: modification of environment files is blocked."
+    reason: "Subagent: modification of environment files is blocked.",
   },
   {
     tool: "edit",
     pattern: /\.env(\..+)?$/i,
     allow: false,
-    reason: "Subagent: modification of environment files is blocked."
-  }
+    reason: "Subagent: modification of environment files is blocked.",
+  },
 ];
 
 export class PermissionEngine {
   isSubpath(parent: string, child: string): boolean {
     try {
       const parentResolved = resolve(parent);
-      const parentNormalized = parentResolved.toLowerCase() + (parentResolved.endsWith(sep) ? "" : sep);
+      const parentNormalized =
+        parentResolved.toLowerCase() + (parentResolved.endsWith(sep) ? "" : sep);
       const resolvedChild = isAbsolute(child) ? resolve(child) : resolve(parentResolved, child);
-      const childNormalized = resolvedChild.toLowerCase() + (resolvedChild.endsWith(sep) ? "" : sep);
+      const childNormalized =
+        resolvedChild.toLowerCase() + (resolvedChild.endsWith(sep) ? "" : sep);
       return childNormalized.startsWith(parentNormalized);
     } catch {
       return false;
@@ -149,13 +151,15 @@ export class PermissionEngine {
     }
   }
 
-  evaluate(toolName: string, args: Record<string, unknown>, options?: PermissionEngineOptions): PermissionVerdict {
+  evaluate(
+    toolName: string,
+    args: Record<string, unknown>,
+    options?: PermissionEngineOptions,
+  ): PermissionVerdict {
     const subject = this.extractSubject(toolName, args);
 
     // 1. Evaluate critical static system DENY rules
-    const denyRules = options?.isSubagent
-      ? [...DENY_RULES, ...SUBAGENT_DENY_RULES]
-      : DENY_RULES;
+    const denyRules = options?.isSubagent ? [...DENY_RULES, ...SUBAGENT_DENY_RULES] : DENY_RULES;
 
     for (const rule of denyRules) {
       if (this.matches(rule, toolName, subject)) {
@@ -173,7 +177,7 @@ export class PermissionEngine {
         if (options.executionMode !== "autonomous") {
           return {
             allow: "ask",
-            reason: `Writing/Editing outside the authorized workspace (${allowedDir}) requires confirmation.`
+            reason: `Writing/Editing outside the authorized workspace (${allowedDir}) requires confirmation.`,
           };
         }
       }
@@ -181,14 +185,17 @@ export class PermissionEngine {
 
     // 3. Evaluate dynamic rules for subagents if username and sessionId are available
     if (options?.isSubagent && options.username && options.sessionId) {
-      const subagentType = options.executionMode === "readonly" ? "explorer"
-        : options.executionMode === "autonomous" ? "autonomous"
-        : "builder";
+      const subagentType =
+        options.executionMode === "readonly"
+          ? "explorer"
+          : options.executionMode === "autonomous"
+            ? "autonomous"
+            : "builder";
       const dynamicRules = buildSubagentRules(
         options.username,
         options.sessionId,
         options.parentSessionId,
-        subagentType
+        subagentType,
       );
       const verdict = evaluateSubagentRules(toolName, args, dynamicRules);
       if (verdict) {
@@ -214,7 +221,8 @@ export class PermissionEngine {
   private extractSubject(toolName: string, args: Record<string, unknown>): string {
     if (!args || typeof args !== "object") return "";
     if (toolName === "bash") return String(args.command ?? "");
-    if (toolName === "write" || toolName === "read" || toolName === "edit") return String(args.path ?? "");
+    if (toolName === "write" || toolName === "read" || toolName === "edit")
+      return String(args.path ?? "");
     return JSON.stringify(args);
   }
 

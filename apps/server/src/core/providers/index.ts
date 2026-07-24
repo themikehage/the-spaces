@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
-import { registerOpenAIProvider } from "./openai-provider";
-import { registerGoogleProvider } from "./google-provider";
-import { registerXAIProvider } from "./xai-provider";
 import { registerDeepSeekProvider } from "./deepseek-provider";
+import { registerGoogleProvider } from "./google-provider";
 import { registerGroqProvider } from "./groq-provider";
 import { registerMistralProvider } from "./mistral-provider";
+import { registerOpenAIProvider } from "./openai-provider";
+import { registerOpenCodeGoProvider } from "./opencode-go-provider";
 import { registerOpenRouterProvider } from "./openrouter-provider";
 import { registerQwenProvider } from "./qwen-provider";
-import { registerOpenCodeGoProvider } from "./opencode-go-provider";
+import { registerXAIProvider } from "./xai-provider";
 
 export function registerAllProviders(registry: any, username?: string): void {
   registerOpenAIProvider(registry);

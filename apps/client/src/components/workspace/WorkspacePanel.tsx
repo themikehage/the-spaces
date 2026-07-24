@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-import { apiFetch } from "@/lib/api";
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { WorkspaceFileTree } from "./WorkspaceFileTree";
-import { WorkspaceFileEditor } from "./WorkspaceFileEditor";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { apiFetch } from "@/lib/api";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FileInfo } from "shared";
+import { WorkspaceFileEditor } from "./WorkspaceFileEditor";
+import { WorkspaceFileTree } from "./WorkspaceFileTree";
 
 interface Props {
   activeProjectName: string | null;
@@ -13,7 +13,12 @@ interface Props {
   activeTeamId?: string | null;
 }
 
-export function WorkspacePanel({ activeProjectName, activeAgentId = null, activeChannelId = null, activeTeamId = null }: Props) {
+export function WorkspacePanel({
+  activeProjectName,
+  activeAgentId = null,
+  activeChannelId = null,
+  activeTeamId = null,
+}: Props) {
   const [files, setFiles] = useState<FileInfo[]>([]);
   const [selectedFile, setSelectedFile] = useState<FileInfo | null>(null);
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
@@ -27,19 +32,21 @@ export function WorkspacePanel({ activeProjectName, activeAgentId = null, active
   const [deleting, setDeleting] = useState(false);
 
   // Helper centralizado para construir las URLs con scoping de repositorio/agente/canal/equipo
-  const getWorkspaceUrl = useCallback((path: string) => {
-    const base = `/api/workspace/${path.replace(/^\/+/, "")}`;
-    const params = new URLSearchParams();
-    if (activeProjectName) params.append("project", activeProjectName);
-    if (activeAgentId) params.append("agentId", activeAgentId);
-    if (activeChannelId) params.append("channelId", activeChannelId);
-    if (activeTeamId) params.append("teamId", activeTeamId);
-    const query = params.toString();
-    return query ? `${base}?${query}` : base;
-  }, [activeProjectName, activeAgentId, activeChannelId, activeTeamId]);
+  const getWorkspaceUrl = useCallback(
+    (path: string) => {
+      const base = `/api/workspace/${path.replace(/^\/+/, "")}`;
+      const params = new URLSearchParams();
+      if (activeProjectName) params.append("project", activeProjectName);
+      if (activeAgentId) params.append("agentId", activeAgentId);
+      if (activeChannelId) params.append("channelId", activeChannelId);
+      if (activeTeamId) params.append("teamId", activeTeamId);
+      const query = params.toString();
+      return query ? `${base}?${query}` : base;
+    },
+    [activeProjectName, activeAgentId, activeChannelId, activeTeamId],
+  );
 
   // Helper for auth headers
-  
 
   // Fetch file or folder contents
   const loadWorkspace = useCallback(
@@ -47,8 +54,7 @@ export function WorkspacePanel({ activeProjectName, activeAgentId = null, active
       setLoading(true);
       setError(null);
       try {
-        const res = await apiFetch(getWorkspaceUrl(path), {
-        });
+        const res = await apiFetch(getWorkspaceUrl(path), {});
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
           throw new Error(data.error || `HTTP ${res.status}`);
@@ -60,7 +66,8 @@ export function WorkspacePanel({ activeProjectName, activeAgentId = null, active
           } else {
             setPathContents((prev) => ({
               ...prev,
-              [path]: data.children || []}));
+              [path]: data.children || [],
+            }));
           }
         }
       } catch (err: any) {
@@ -69,7 +76,7 @@ export function WorkspacePanel({ activeProjectName, activeAgentId = null, active
         setLoading(false);
       }
     },
-    [getWorkspaceUrl]
+    [getWorkspaceUrl],
   );
 
   // Initial load
@@ -110,7 +117,7 @@ export function WorkspacePanel({ activeProjectName, activeAgentId = null, active
         return next;
       });
     },
-    [pathContents, loadWorkspace]
+    [pathContents, loadWorkspace],
   );
 
   // Handle file select
@@ -119,8 +126,7 @@ export function WorkspacePanel({ activeProjectName, activeAgentId = null, active
       setLoading(true);
       setError(null);
       try {
-        const res = await apiFetch(getWorkspaceUrl(file.path), {
-        });
+        const res = await apiFetch(getWorkspaceUrl(file.path), {});
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
           throw new Error(data.error || `HTTP ${res.status}`);
@@ -133,7 +139,7 @@ export function WorkspacePanel({ activeProjectName, activeAgentId = null, active
         setLoading(false);
       }
     },
-    [getWorkspaceUrl]
+    [getWorkspaceUrl],
   );
 
   // Listen for file-click events from Chat messages to open files in editor
@@ -163,7 +169,8 @@ export function WorkspacePanel({ activeProjectName, activeAgentId = null, active
           path: targetPath,
           isDirectory: false,
           size: 0,
-          lastModified: new Date().toISOString()});
+          lastModified: new Date().toISOString(),
+        });
       }
     };
     window.addEventListener("openWorkspaceFile", handleOpenFile);
@@ -177,8 +184,9 @@ export function WorkspacePanel({ activeProjectName, activeAgentId = null, active
     async (path: string, content: string) => {
       const res = await apiFetch(getWorkspaceUrl(path), {
         method: "PUT",
-        
-        body: JSON.stringify({ type: "file", content })});
+
+        body: JSON.stringify({ type: "file", content }),
+      });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || "Save operation failed");
@@ -186,7 +194,7 @@ export function WorkspacePanel({ activeProjectName, activeAgentId = null, active
       const data = await res.json();
       setSelectedFile(data);
     },
-    [, getWorkspaceUrl]
+    [, getWorkspaceUrl],
   );
 
   // Create new file or folder
@@ -196,8 +204,9 @@ export function WorkspacePanel({ activeProjectName, activeAgentId = null, active
       try {
         const res = await apiFetch(getWorkspaceUrl(fullPath), {
           method: "PUT",
-          
-          body: JSON.stringify({ type })});
+
+          body: JSON.stringify({ type }),
+        });
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
           throw new Error(data.error || "Failed to create resource");
@@ -214,7 +223,7 @@ export function WorkspacePanel({ activeProjectName, activeAgentId = null, active
         setError(err.message || "Create failed");
       }
     },
-    [, loadWorkspace, getWorkspaceUrl]
+    [, loadWorkspace, getWorkspaceUrl],
   );
 
   // Rename file or folder
@@ -223,14 +232,19 @@ export function WorkspacePanel({ activeProjectName, activeAgentId = null, active
       try {
         const res = await apiFetch(getWorkspaceUrl(oldPath), {
           method: "PATCH",
-          
-          body: JSON.stringify({ newPath })});
+
+          body: JSON.stringify({ newPath }),
+        });
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
           throw new Error(data.error || "Failed to rename resource");
         }
-        const parentOfOld = oldPath.includes("/") ? oldPath.substring(0, oldPath.lastIndexOf("/")) : "";
-        const parentOfNew = newPath.includes("/") ? newPath.substring(0, newPath.lastIndexOf("/")) : "";
+        const parentOfOld = oldPath.includes("/")
+          ? oldPath.substring(0, oldPath.lastIndexOf("/"))
+          : "";
+        const parentOfNew = newPath.includes("/")
+          ? newPath.substring(0, newPath.lastIndexOf("/"))
+          : "";
         await loadWorkspace(parentOfOld);
         if (parentOfNew !== parentOfOld) {
           await loadWorkspace(parentOfNew);
@@ -243,44 +257,41 @@ export function WorkspacePanel({ activeProjectName, activeAgentId = null, active
         setError(err.message || "Rename failed");
       }
     },
-    [, selectedFile, loadWorkspace, getWorkspaceUrl]
+    [, selectedFile, loadWorkspace, getWorkspaceUrl],
   );
 
-  const executeDelete = useCallback(
-    async () => {
-      if (!pendingDeletePath) return;
-      setDeleting(true);
-      try {
-        const res = await apiFetch(getWorkspaceUrl(pendingDeletePath), {
-          method: "DELETE"});
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.error || "Failed to delete resource");
-        }
-        const parentPath = pendingDeletePath.includes("/") ? pendingDeletePath.substring(0, pendingDeletePath.lastIndexOf("/")) : "";
-        await loadWorkspace(parentPath);
-        if (selectedFile?.path === pendingDeletePath) {
-          setSelectedFile(null);
-        }
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        setError(msg || "Delete failed");
-      } finally {
-        setDeleting(false);
-        setShowDeleteConfirm(false);
-        setPendingDeletePath(null);
+  const executeDelete = useCallback(async () => {
+    if (!pendingDeletePath) return;
+    setDeleting(true);
+    try {
+      const res = await apiFetch(getWorkspaceUrl(pendingDeletePath), {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to delete resource");
       }
-    },
-    [pendingDeletePath, selectedFile, loadWorkspace, getWorkspaceUrl]
-  );
+      const parentPath = pendingDeletePath.includes("/")
+        ? pendingDeletePath.substring(0, pendingDeletePath.lastIndexOf("/"))
+        : "";
+      await loadWorkspace(parentPath);
+      if (selectedFile?.path === pendingDeletePath) {
+        setSelectedFile(null);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(msg || "Delete failed");
+    } finally {
+      setDeleting(false);
+      setShowDeleteConfirm(false);
+      setPendingDeletePath(null);
+    }
+  }, [pendingDeletePath, selectedFile, loadWorkspace, getWorkspaceUrl]);
 
-  const handleDelete = useCallback(
-    (path: string) => {
-      setPendingDeletePath(path);
-      setShowDeleteConfirm(true);
-    },
-    []
-  );
+  const handleDelete = useCallback((path: string) => {
+    setPendingDeletePath(path);
+    setShowDeleteConfirm(true);
+  }, []);
 
   // Filter files based on search query recursively or at root level
   const filteredFiles = useMemo(() => {
@@ -296,7 +307,8 @@ export function WorkspacePanel({ activeProjectName, activeAgentId = null, active
             if (filteredChildren.length > 0 || item.name.toLowerCase().includes(query)) {
               return {
                 ...item,
-                children: filteredChildren};
+                children: filteredChildren,
+              };
             }
           } else if (item.name.toLowerCase().includes(query)) {
             return item;
@@ -313,7 +325,10 @@ export function WorkspacePanel({ activeProjectName, activeAgentId = null, active
       {error && (
         <div className="px-3 py-1.5 bg-destructive/10 border-b border-error/20 text-destructive text-xs flex items-center justify-between flex-shrink-0">
           <span className="truncate">{error}</span>
-          <button onClick={() => setError(null)} className="underline cursor-pointer flex-shrink-0 ml-2">
+          <button
+            onClick={() => setError(null)}
+            className="underline cursor-pointer flex-shrink-0 ml-2"
+          >
             Dismiss
           </button>
         </div>

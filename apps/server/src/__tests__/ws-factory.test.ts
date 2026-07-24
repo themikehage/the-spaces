@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { describe, it, expect, beforeEach } from "bun:test";
+import { beforeEach, describe, expect, it } from "bun:test";
 import { createWsContext } from "../ws/factory";
 import { wsRegistry } from "../ws/registry";
 
@@ -18,9 +18,7 @@ describe("ws/factory", () => {
     const ctx1 = createWsContext();
     const ctx2 = createWsContext();
     expect(ctx1.id).not.toBe(ctx2.id);
-    expect(ctx1.id).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
-    );
+    expect(ctx1.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
   });
 
   it("should retain id via closure across open/close lifecycle", async () => {

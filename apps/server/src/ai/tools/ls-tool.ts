@@ -1,19 +1,23 @@
 // SPDX-License-Identifier: MIT
 import { readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
-import { resolveSafePath } from "./path-safety";
 import { truncateHead } from "../vendor/agent/src/harness/utils/truncate";
+import { resolveSafePath } from "./path-safety";
 
 export function createLsToolDefinition(cwd: string, allowedDirs?: string[]) {
   return {
     name: "ls",
-    description: "List directory contents. Returns entries sorted alphabetically, with '/' suffix for directories. Includes dotfiles.",
+    description:
+      "List directory contents. Returns entries sorted alphabetically, with '/' suffix for directories. Includes dotfiles.",
     schema: {
       type: "object",
       properties: {
         path: { type: "string", description: "Directory to list (default: current directory)" },
-        limit: { type: "number", description: "Maximum number of entries to return (default: 500)" }
-      }
+        limit: {
+          type: "number",
+          description: "Maximum number of entries to return (default: 500)",
+        },
+      },
     },
     execute: async (toolCallId: string, args: any, signal?: AbortSignal) => {
       const { path: dirPath, limit } = args;
@@ -59,7 +63,7 @@ export function createLsToolDefinition(cwd: string, allowedDirs?: string[]) {
       if (results.length === 0) {
         return {
           content: [{ type: "text", text: "(empty directory)" }],
-          details: { count: 0 }
+          details: { count: 0 },
         };
       }
 
@@ -78,9 +82,9 @@ export function createLsToolDefinition(cwd: string, allowedDirs?: string[]) {
         details: {
           count: results.length,
           limitReached,
-          truncated: truncation.truncated
-        }
+          truncated: truncation.truncated,
+        },
       };
-    }
+    },
   };
 }

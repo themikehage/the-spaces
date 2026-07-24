@@ -29,6 +29,7 @@ apps/server/src/core/session/
 ```
 
 Estos hooks se cablean manualmente en `createAgentRuntime()` (líneas 141-163 de `agent-runtime.ts`). No hay:
+
 - Una interfaz unificada de plugin
 - Un mecanismo de registro/descubrimiento
 - Ordenamiento por prioridad o short-circuit
@@ -70,23 +71,24 @@ Plugins built-in: `LoggingPlugin`, `GlobalInstructionPlugin`, `SecurityPlugin`. 
 
 El mapeo de hooks de ADK a eventos del ciclo de vida de Spaces:
 
-| Hook ADK | Equivalente en Spaces | Existe hoy? |
-|---|---|---|
-| `onUserMessageCallback` | Interceptar mensaje antes de enqueue | No — todo va directo al loop |
-| `beforeAgentCallback` | Al inicializar `createAgentRuntime` | No — la factory es monolítica |
-| `afterAgentCallback` | Al finalizar sesión (éxito o error) | No — `afterToolCall` no es lo mismo |
-| `beforeModelCallback` | Antes de enviar mensajes al LLM | No — `transformContext` existe pero es un solo callback |
-| `afterModelCallback` | Después de recibir respuesta del LLM | No |
-| `beforeToolCallback` | **`beforeToolCall`** | **Sí** — cableado manualmente |
-| `afterToolCallback` | **`afterToolCall`** | **Sí** — cableado manualmente |
-| `onModelErrorCallback` | Cuando el LLM falla (rate limit, timeout) | Parcial — el loop maneja retry pero no notifica |
-| `onToolErrorCallback` | Cuando una tool falla en ejecución | Parcial — `afterToolCall` recibe error |
-| `beforeContextCompaction` | Antes de compactar contexto en sesiones largas | No |
-| `afterContextCompaction` | Después de compactar | No |
-| `onEventCallback` | Eventos del `EventBroker` | No — el broker existe pero no tiene hooks |
-| `afterRunCallback` | Al terminar el loop del agente | No |
+| Hook ADK                  | Equivalente en Spaces                          | Existe hoy?                                             |
+| ------------------------- | ---------------------------------------------- | ------------------------------------------------------- |
+| `onUserMessageCallback`   | Interceptar mensaje antes de enqueue           | No — todo va directo al loop                            |
+| `beforeAgentCallback`     | Al inicializar `createAgentRuntime`            | No — la factory es monolítica                           |
+| `afterAgentCallback`      | Al finalizar sesión (éxito o error)            | No — `afterToolCall` no es lo mismo                     |
+| `beforeModelCallback`     | Antes de enviar mensajes al LLM                | No — `transformContext` existe pero es un solo callback |
+| `afterModelCallback`      | Después de recibir respuesta del LLM           | No                                                      |
+| `beforeToolCallback`      | **`beforeToolCall`**                           | **Sí** — cableado manualmente                           |
+| `afterToolCallback`       | **`afterToolCall`**                            | **Sí** — cableado manualmente                           |
+| `onModelErrorCallback`    | Cuando el LLM falla (rate limit, timeout)      | Parcial — el loop maneja retry pero no notifica         |
+| `onToolErrorCallback`     | Cuando una tool falla en ejecución             | Parcial — `afterToolCall` recibe error                  |
+| `beforeContextCompaction` | Antes de compactar contexto en sesiones largas | No                                                      |
+| `afterContextCompaction`  | Después de compactar                           | No                                                      |
+| `onEventCallback`         | Eventos del `EventBroker`                      | No — el broker existe pero no tiene hooks               |
+| `afterRunCallback`        | Al terminar el loop del agente                 | No                                                      |
 
 **Lo que falta:**
+
 - Diseñar `BasePlugin` interface con hooks que mapeen al ciclo de vida real de Spaces (no copiar los 15 de ADK ciegamente — Spaces tiene menos superficie)
 - Crear `PluginManager` con registro por prioridad, orden determinista y soporte de short-circuit (un plugin puede decir "no sigas")
 - Extraer los hooks existentes (`beforeToolCall`, `afterToolCall`, `transformContext`) en implementaciones de plugin estándar: `AuditLogPlugin`, `WebSocketNotifyPlugin`, `MemoryEnricherPlugin`
@@ -178,6 +180,7 @@ El patrón es: extendé `BaseLlm`, implementá `generateContentAsync()`, registr
 ### Lo que Spaces Necesita
 
 **Lo que falta:**
+
 - Diseñar `BaseLlmProvider` interface con:
   - `id: string` — identificador único del provider
   - `matchModel(modelId: string): boolean` — si este provider maneja este modelo
@@ -189,7 +192,7 @@ El patrón es: extendé `BaseLlm`, implementá `generateContentAsync()`, registr
   registry.register({
     provider: new OpenAIProvider(),
     patterns: [/^gpt-/, /^o1-/, /^o3-/],
-  })
+  });
   ```
 - Extraer la lógica de models.dev en un servicio separado `ModelEnrichmentService` (no dentro de `ModelRegistry`)
 - Crear formato declarativo de provider: `providers/openai.provider.ts` exporta `{ provider, patterns }` y un index los descubre automáticamente
@@ -259,6 +262,7 @@ const bashTool = createBashToolDefinition(workspaceDir, { spawnHook, ... });
 ```
 
 Problemas concretos:
+
 1. **No hay `BaseTool`**: cada tool es un objeto literal `{ name, description, schema, execute }`. Sin clase base ni interfaz formal, no hay manera de inspeccionar tools programáticamente (ej: "dame todas las tools que modifican archivos").
 2. **No hay `ToolDeclaration` type**: el tipo de tool que fluye por el sistema es `any` (`customTools: any[]` en `AgentRuntimeConfig` línea 29 de `agent-runtime.ts`).
 3. **No hay `Toolset`**: las herramientas MCP se inyectan con string concatenation (`mcp_${server}_${tool}`) sin agrupación semántica. Las tools de skills o factory no tienen namespace.
@@ -292,6 +296,7 @@ El patrón es limpio: `BaseTool` es el contrato mínimo. `BaseToolset` agrupa to
 ### Lo que Spaces Necesita
 
 **Lo que falta:**
+
 - Crear `BaseTool` interface/class:
   ```ts
   interface BaseTool {
@@ -308,7 +313,7 @@ El patrón es limpio: `BaseTool` es el contrato mínimo. `BaseToolset` agrupa to
     metadata?: {
       durationMs: number;
       tokensUsed?: number;
-      artifacts?: string[];  // paths de archivos creados
+      artifacts?: string[]; // paths de archivos creados
     };
     isError?: boolean;
     errorCode?: string;
@@ -352,7 +357,7 @@ El patrón es limpio: `BaseTool` es el contrato mínimo. `BaseToolset` agrupa to
 
 Crear una tool nueva (caso común — 3 líneas):
   import { FunctionTool } from "spaces-sdk";
-  
+
   const weatherTool = new FunctionTool({
     name: "get_weather",
     description: "Obtiene el clima actual",
@@ -414,6 +419,7 @@ La inyección ocurre en el `Runner`: cada implementación se pasa como dependenc
 El patrón ya existe para memoria. Hay que extenderlo a las otras capas:
 
 **Lo que falta:**
+
 - Definir interfaces:
   ```ts
   interface ISessionStore {
@@ -542,6 +548,7 @@ El paquete `@google/adk-devtools` incluye CLI para development. El paquete `@goo
 ### Lo que Spaces Necesita
 
 **Lo que falta:**
+
 - Crear `packages/spaces-sdk` con `package.json` completo:
   ```json
   {
@@ -713,6 +720,7 @@ Dependencias:
 ```
 
 **Orden lógico de implementación:**
+
 1. **Service Abstraction** (extraer interfaces de stores) — es el refactor más interno, no rompe nada
 2. **Tool Abstraction** (BaseTool + ToolRegistry) — estandariza lo que ya existe
 3. **Model Providers** (BaseLlmProvider + LLMRegistry) — desacopla providers del monolito
@@ -723,14 +731,14 @@ Dependencias:
 
 ## Riesgos y Puntos de Fricción
 
-| Riesgo | Área | Mitigación |
-|---|---|---|
-| Romper compatibilidad de tools existentes al tipar `BaseTool` | Tool Abstraction | Crear adaptador `legacyToolToBaseTool()` que wrappea objetos planos. Migración progresiva, no big-bang. |
-| Providers que no encajan en `BaseLlmProvider` (ej: OpenRouter con routing dinámico) | Model Providers | La interfaz debe ser mínima. Si un provider necesita comportamiento extra, que lo haga internamente. `matchModel()` con regex da flexibilidad. |
-| Plugins que necesitan estado (no son stateless) | Plugin System | El `PluginManager` debe soportar `initialize()` y `shutdown()` en cada plugin. El estado vive en el plugin, no en el manager. |
-| El SDK expone `vendor/` internamente | SDK Packaging | El exports map debe ser explícito — solo lo que está en el `exports` de package.json es público. `vendor/` no se re-exporta. |
-| Cambiar el store sin migrar datos existentes (filesystem → Postgres) | Service Abstraction | Las interfaces deben incluir `migrate(from: I*Store, to: I*Store)`. El cambio de backend es una operación explícita, no automágica. |
-| CI/CD de publicación: "rompí el SDK sin darme cuenta" | SDK Packaging | Contract tests: una suite que importa `spaces-sdk` y verifica que todos los exports públicos existen y tienen la firma esperada. Corre en CI en cada PR. |
+| Riesgo                                                                              | Área                | Mitigación                                                                                                                                               |
+| ----------------------------------------------------------------------------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Romper compatibilidad de tools existentes al tipar `BaseTool`                       | Tool Abstraction    | Crear adaptador `legacyToolToBaseTool()` que wrappea objetos planos. Migración progresiva, no big-bang.                                                  |
+| Providers que no encajan en `BaseLlmProvider` (ej: OpenRouter con routing dinámico) | Model Providers     | La interfaz debe ser mínima. Si un provider necesita comportamiento extra, que lo haga internamente. `matchModel()` con regex da flexibilidad.           |
+| Plugins que necesitan estado (no son stateless)                                     | Plugin System       | El `PluginManager` debe soportar `initialize()` y `shutdown()` en cada plugin. El estado vive en el plugin, no en el manager.                            |
+| El SDK expone `vendor/` internamente                                                | SDK Packaging       | El exports map debe ser explícito — solo lo que está en el `exports` de package.json es público. `vendor/` no se re-exporta.                             |
+| Cambiar el store sin migrar datos existentes (filesystem → Postgres)                | Service Abstraction | Las interfaces deben incluir `migrate(from: I*Store, to: I*Store)`. El cambio de backend es una operación explícita, no automágica.                      |
+| CI/CD de publicación: "rompí el SDK sin darme cuenta"                               | SDK Packaging       | Contract tests: una suite que importa `spaces-sdk` y verifica que todos los exports públicos existen y tienen la firma esperada. Corre en CI en cada PR. |
 
 ---
 

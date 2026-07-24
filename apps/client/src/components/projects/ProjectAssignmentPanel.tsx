@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-import { useState, useEffect, useMemo } from "react";
-import { apiFetch } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { Dropdown } from "@/components/ui/Dropdown";
+import { apiFetch } from "@/lib/api";
+import { useEffect, useMemo, useState } from "react";
 
 export interface ProjectAssignmentMember {
   id: string;
@@ -48,8 +48,12 @@ export function ProjectAssignmentPanel({ projectId }: Props) {
       setError(null);
       try {
         const [agentsRes, assignRes] = await Promise.all([
-          apiFetch("/api/agents").then((r) => r.json()).catch(() => ({ agents: [] })),
-          apiFetch(`/api/workspace-projects/${projectId}/assignment`).then((r) => r.json()).catch(() => ({ assignment: null })),
+          apiFetch("/api/agents")
+            .then((r) => r.json())
+            .catch(() => ({ agents: [] })),
+          apiFetch(`/api/workspace-projects/${projectId}/assignment`)
+            .then((r) => r.json())
+            .catch(() => ({ assignment: null })),
         ]);
 
         if (!active) return;
@@ -141,23 +145,29 @@ export function ProjectAssignmentPanel({ projectId }: Props) {
     setMembers(members.map((m) => (m.id === id ? { ...m, role: newRole } : m)));
   };
 
-  const leaderOptions = useMemo(() => [
-    { value: "", label: "-- No Leader Assigned --" },
-    ...availableAgents.map((a) => ({
-      value: a.id,
-      label: a.name + (a.role ? ` (${a.role})` : ""),
-    })),
-  ], [availableAgents]);
-
-  const memberOptions = useMemo(() => [
-    { value: "", label: "-- Add Agent as Member --" },
-    ...availableAgents
-      .filter((a) => a.id !== leaderId && !members.some((m) => m.id === a.id))
-      .map((a) => ({
+  const leaderOptions = useMemo(
+    () => [
+      { value: "", label: "-- No Leader Assigned --" },
+      ...availableAgents.map((a) => ({
         value: a.id,
         label: a.name + (a.role ? ` (${a.role})` : ""),
       })),
-  ], [availableAgents, leaderId, members]);
+    ],
+    [availableAgents],
+  );
+
+  const memberOptions = useMemo(
+    () => [
+      { value: "", label: "-- Add Agent as Member --" },
+      ...availableAgents
+        .filter((a) => a.id !== leaderId && !members.some((m) => m.id === a.id))
+        .map((a) => ({
+          value: a.id,
+          label: a.name + (a.role ? ` (${a.role})` : ""),
+        })),
+    ],
+    [availableAgents, leaderId, members],
+  );
 
   if (loading) {
     return (
@@ -173,7 +183,8 @@ export function ProjectAssignmentPanel({ projectId }: Props) {
         <div>
           <h4 className="text-sm font-bold text-foreground">Project Agent Assignment</h4>
           <p className="text-xs text-text-secondary">
-            Assign a lead agent and team members. The leader's prompt will be automatically injected into project sessions.
+            Assign a lead agent and team members. The leader's prompt will be automatically injected
+            into project sessions.
           </p>
         </div>
         {success && (
@@ -220,7 +231,9 @@ export function ProjectAssignmentPanel({ projectId }: Props) {
         </label>
 
         {members.length === 0 ? (
-          <p className="text-xs text-text-secondary italic">No additional team members assigned yet.</p>
+          <p className="text-xs text-text-secondary italic">
+            No additional team members assigned yet.
+          </p>
         ) : (
           <div className="space-y-2">
             {members.map((member) => (
@@ -296,4 +309,3 @@ export function ProjectAssignmentPanel({ projectId }: Props) {
     </div>
   );
 }
-

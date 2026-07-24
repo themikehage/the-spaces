@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { parseHTML } from "linkedom";
 import { Readability } from "@mozilla/readability";
+import { parseHTML } from "linkedom";
 import TurndownService from "turndown";
 
 const turndownService = new TurndownService({
@@ -22,15 +22,15 @@ export function htmlToText(html: string): string {
     .replace(/<head[^>]*>[\s\S]*?<\/head>/gi, "")
     .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
     .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
-    .replace(/<[^>]+>/g, " ")          // strip tags
+    .replace(/<[^>]+>/g, " ") // strip tags
     .replace(/&nbsp;/g, " ")
     .replace(/&amp;/g, "&")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
     .replace(/&#(\d+);/g, (_, d) => String.fromCharCode(parseInt(d)))
-    .replace(/\s{2,}/g, "\n")          // collapse whitespace
-    .replace(/\n{3,}/g, "\n\n")        // collapse blank lines
+    .replace(/\s{2,}/g, "\n") // collapse whitespace
+    .replace(/\n{3,}/g, "\n\n") // collapse blank lines
     .trim();
 }
 
@@ -46,7 +46,9 @@ export function extractContent(html: string, url: string): ExtractedContent {
     const article = reader.parse();
 
     if (article && (article.content || article.textContent)) {
-      const markdown = article.content ? turndownService.turndown(article.content) : article.textContent;
+      const markdown = article.content
+        ? turndownService.turndown(article.content)
+        : article.textContent;
       return {
         title: article.title || extractTitleRegex(html) || "Untitled Page",
         markdown: markdown || "",

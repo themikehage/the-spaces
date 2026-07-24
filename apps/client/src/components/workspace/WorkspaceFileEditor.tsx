@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-import { useState, useEffect, useCallback } from "react";
-import type { FileInfo } from "shared";
-import { apiFetch } from "@/lib/api";
 import { useLiterals } from "@/lib";
+import { apiFetch } from "@/lib/api";
+import { useCallback, useEffect, useState } from "react";
+import type { FileInfo } from "shared";
 import { literals as u } from "./WorkspaceFileEditor.literals";
 
 interface Props {
@@ -57,7 +57,7 @@ export function WorkspaceFileEditor({
   activeTeamId = null,
   onSave,
 }: Props) {
-const l = useLiterals(u);
+  const l = useLiterals(u);
   const [content, setContent] = useState("");
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -132,7 +132,7 @@ const l = useLiterals(u);
         handleSave();
       }
     },
-    [handleSave]
+    [handleSave],
   );
 
   const [previewBlobUrl, setPreviewBlobUrl] = useState<string | null>(null);
@@ -177,18 +177,21 @@ const l = useLiterals(u);
         URL.revokeObjectURL(url);
       }
     };
-  }, [file?.path, activeProjectName, activeAgentId, activeChannelId, activeTeamId, isHtml, isImage, saveStatus]);
+  }, [
+    file?.path,
+    activeProjectName,
+    activeAgentId,
+    activeChannelId,
+    activeTeamId,
+    isHtml,
+    isImage,
+    saveStatus,
+  ]);
 
   if (!file) {
     return (
       <div className="h-full flex flex-col items-center justify-center text-muted-foreground font-sans border-t border-border sm:border-t-0 sm:border-l border-border">
-        <svg
-          width="32"
-          height="32"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          className="mb-2"
-        >
+        <svg width="32" height="32" viewBox="0 0 20 20" fill="currentColor" className="mb-2">
           <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6h8v2H6v-2zm0 4h8v2H6v-2zm0-8h4v2H6V6z" />
         </svg>
         <p className="text-xs">Select a file to inspect or edit</p>

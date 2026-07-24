@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-import { useState, useEffect, useCallback } from "react";
-import { apiFetch } from "@/lib/api";
-import { Button } from "@/components/ui/Button";
 import { EntityAvatar } from "@/components/shared/EntityAvatar";
+import { Button } from "@/components/ui/Button";
+import { apiFetch } from "@/lib/api";
 import { wsClient } from "@/lib/ws-client";
-import { Play, Shield, HelpCircle, Check, X, AlertTriangle, Send, Users } from "lucide-react";
+import { AlertTriangle, Check, HelpCircle, Play, Send, Shield, Users, X } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { ProjectAssignmentModal } from "./ProjectAssignmentModal";
 
 interface ProjectFloorPanelProps {
@@ -43,7 +43,9 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
   const [approvals, setApprovals] = useState<ApprovalRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [autonomyMap, setAutonomyMap] = useState<Record<string, "auto" | "propose" | "suggest">>({});
+  const [autonomyMap, setAutonomyMap] = useState<Record<string, "auto" | "propose" | "suggest">>(
+    {},
+  );
   const [steerMessages, setSteerMessages] = useState<Record<string, string>>({});
   const [startingAgent, setStartingAgent] = useState<string | null>(null);
 
@@ -63,7 +65,9 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
       }
 
       // Fetch project assignment
-      const assignRes = await apiFetch(`/api/workspace-projects/${projectId}/assignment`).catch(() => null);
+      const assignRes = await apiFetch(`/api/workspace-projects/${projectId}/assignment`).catch(
+        () => null,
+      );
       if (assignRes && assignRes.ok) {
         const assignData = await assignRes.json();
         setAssignment(assignData.assignment || null);
@@ -83,12 +87,12 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
         setSessions(data.sessions || []);
 
         // Load autonomy level for active sessions
-        for (const s of (data.sessions || [])) {
+        for (const s of data.sessions || []) {
           const toolsRes = await apiFetch(`/api/sessions/${s.id}/tools`);
           if (toolsRes.ok) {
             const toolsData = await toolsRes.json();
             if (toolsData.autonomyLevel) {
-              setAutonomyMap(prev => ({ ...prev, [s.id]: toolsData.autonomyLevel }));
+              setAutonomyMap((prev) => ({ ...prev, [s.id]: toolsData.autonomyLevel }));
             }
           }
         }
@@ -100,7 +104,6 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
         const data = await approvalsRes.json();
         setApprovals(data.pending || []);
       }
-
     } catch (err: any) {
       setError(err.message || "Failed to load floor data");
     } finally {
@@ -192,7 +195,7 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
           }),
         });
         if (res.ok) {
-          setAutonomyMap(prev => ({ ...prev, [sessionId]: level }));
+          setAutonomyMap((prev) => ({ ...prev, [sessionId]: level }));
         }
       }
     } catch (err) {
@@ -226,7 +229,7 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
         body: JSON.stringify({ message: msg }),
       });
       if (res.ok) {
-        setSteerMessages(prev => ({ ...prev, [sessionId]: "" }));
+        setSteerMessages((prev) => ({ ...prev, [sessionId]: "" }));
         await fetchProjectData();
       }
     } catch (err) {
@@ -259,13 +262,17 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
       <div className="h-16 px-6 border-b border-border flex items-center justify-between flex-shrink-0 bg-card/10 backdrop-blur-md">
         <div className="flex items-center gap-4">
           <div className="hidden sm:block">
-            <h1 className="text-sm font-bold text-foreground Outfit tracking-wide">Piso de Trabajo (Live floor)</h1>
-            <p className="text-[11px] text-muted-foreground">Monitoreá y controlá a tus agentes en tiempo real</p>
+            <h1 className="text-sm font-bold text-foreground Outfit tracking-wide">
+              Piso de Trabajo (Live floor)
+            </h1>
+            <p className="text-[11px] text-muted-foreground">
+              Monitoreá y controlá a tus agentes en tiempo real
+            </p>
           </div>
 
           {/* Project Status machine UI */}
           <div className="flex items-center gap-1.5 bg-surface/50 border border-input/20 rounded-xl p-1">
-            {statuses.map(s => {
+            {statuses.map((s) => {
               const active = currentStatus === s;
               return (
                 <button
@@ -296,7 +303,10 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
               <Users className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
               <span>Equipo</span>
               {assignment?.leaderId && (
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="Líder asignado activo" />
+                <span
+                  className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"
+                  title="Líder asignado activo"
+                />
               )}
               {Array.isArray(assignment?.members) && assignment.members.length > 0 && (
                 <span className="px-1.5 py-0.5 bg-primary/20 text-primary font-bold text-[10px] rounded-full">
@@ -312,16 +322,26 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
       <div className="flex-1 overflow-y-auto p-6 bg-surface/10">
         {agents.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-muted-foreground text-sm gap-3 pt-20">
-            <p className="font-semibold text-foreground">No hay agentes asignados a este proyecto</p>
-            <p className="text-xs text-muted-foreground">Asigná agentes desde la configuración del proyecto.</p>
+            <p className="font-semibold text-foreground">
+              No hay agentes asignados a este proyecto
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Asigná agentes desde la configuración del proyecto.
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {agents.map(agent => {
-              const session = sessions.find(s => s.agentId === agent.id);
-              const isRunning = session && (session.status === "active" || session.status === "streaming" || session.status === "task-running");
+            {agents.map((agent) => {
+              const session = sessions.find((s) => s.agentId === agent.id);
+              const isRunning =
+                session &&
+                (session.status === "active" ||
+                  session.status === "streaming" ||
+                  session.status === "task-running");
               const autonomy = session ? autonomyMap[session.id] || "auto" : "auto";
-              const pendingApproval = session ? approvals.find(app => app.sessionId === session.id) : null;
+              const pendingApproval = session
+                ? approvals.find((app) => app.sessionId === session.id)
+                : null;
 
               return (
                 <div
@@ -334,7 +354,12 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
                   <div className="flex items-start justify-between pb-3 border-b border-input/5">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl overflow-hidden bg-surface-hover relative border border-input/10">
-                        <EntityAvatar name={agent.name} avatarUrl={agent.avatarUrl} size="full" type="agent" />
+                        <EntityAvatar
+                          name={agent.name}
+                          avatarUrl={agent.avatarUrl}
+                          size="full"
+                          type="agent"
+                        />
                       </div>
                       <div>
                         <h3 className="font-extrabold text-sm text-foreground leading-tight flex items-center gap-1.5">
@@ -360,14 +385,16 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
                             session.status === "streaming" || session.status === "task-running"
                               ? "text-emerald-400 bg-emerald-500/5 border-emerald-500/10"
                               : pendingApproval
-                              ? "text-amber-400 bg-amber-500/5 border-amber-500/10"
-                              : "text-neutral-400 bg-neutral-500/5 border-neutral-500/10"
+                                ? "text-amber-400 bg-amber-500/5 border-amber-500/10"
+                                : "text-neutral-400 bg-neutral-500/5 border-neutral-500/10"
                           }
                         >
                           {pendingApproval ? "WAITING APPROVAL" : session.status || "idle"}
                         </span>
                       ) : (
-                        <span className="text-muted-foreground bg-muted/5 border-muted/10">OFFLINE</span>
+                        <span className="text-muted-foreground bg-muted/5 border-muted/10">
+                          OFFLINE
+                        </span>
                       )}
                     </div>
                   </div>
@@ -382,7 +409,7 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
                             Nivel de Autonomía
                           </label>
                           <div className="grid grid-cols-3 gap-1 bg-surface-hover/80 rounded-xl p-0.5 border border-input/5">
-                            {(["auto", "propose", "suggest"] as const).map(lvl => (
+                            {(["auto", "propose", "suggest"] as const).map((lvl) => (
                               <button
                                 key={lvl}
                                 onClick={() => changeAutonomyLevel(session.id, lvl)}
@@ -440,9 +467,13 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
                           <div className="flex-1 bg-black/25 rounded-xl p-3 border border-input/5 font-mono text-[10px] leading-relaxed text-neutral-300 max-h-[110px] overflow-y-auto mb-3">
                             <span className="text-neutral-500 select-none">&gt;</span>{" "}
                             {session.status === "streaming" || session.status === "task-running" ? (
-                              <span className="text-emerald-400 animate-pulse">Ejecutando proceso...</span>
+                              <span className="text-emerald-400 animate-pulse">
+                                Ejecutando proceso...
+                              </span>
                             ) : (
-                              <span className="text-neutral-400">Agente listo en espera de instrucciones.</span>
+                              <span className="text-neutral-400">
+                                Agente listo en espera de instrucciones.
+                              </span>
                             )}
                           </div>
                         )}
@@ -453,10 +484,13 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
                             type="text"
                             placeholder="Enviar instrucción (Steer message)..."
                             value={steerMessages[session.id] || ""}
-                            onChange={e =>
-                              setSteerMessages(prev => ({ ...prev, [session.id]: e.target.value }))
+                            onChange={(e) =>
+                              setSteerMessages((prev) => ({
+                                ...prev,
+                                [session.id]: e.target.value,
+                              }))
                             }
-                            onKeyDown={e => {
+                            onKeyDown={(e) => {
                               if (e.key === "Enter") handleSendSteerMessage(session.id);
                             }}
                             className="flex-1 bg-black/10 border border-input/10 rounded-xl px-3 py-1.5 text-[11px] focus:outline-none focus:border-primary/50 text-foreground"
@@ -472,7 +506,9 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
                       </div>
                     ) : (
                       <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
-                        <p className="text-xs text-muted-foreground mb-4">El agente no se encuentra activo.</p>
+                        <p className="text-xs text-muted-foreground mb-4">
+                          El agente no se encuentra activo.
+                        </p>
                         <Button
                           onClick={() => handleStartAgent(agent)}
                           disabled={startingAgent === agent.id}

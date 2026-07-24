@@ -60,8 +60,12 @@ export function DiffComponent({ oldCode, newCode, language, title }: DiffProps) 
               if (line.type === "equal") {
                 return (
                   <tr key={idx} className="hover:bg-muted/10">
-                    <td className="w-10 px-2 text-right select-none text-muted-foreground border-r border-border bg-muted/20">{line.oldNum}</td>
-                    <td className="w-10 px-2 text-right select-none text-muted-foreground border-r border-border bg-muted/20">{line.newNum}</td>
+                    <td className="w-10 px-2 text-right select-none text-muted-foreground border-r border-border bg-muted/20">
+                      {line.oldNum}
+                    </td>
+                    <td className="w-10 px-2 text-right select-none text-muted-foreground border-r border-border bg-muted/20">
+                      {line.newNum}
+                    </td>
                     <td className="px-4 py-0.5 whitespace-pre text-foreground">{line.oldText}</td>
                   </tr>
                 );
@@ -69,8 +73,12 @@ export function DiffComponent({ oldCode, newCode, language, title }: DiffProps) 
               if (line.type === "remove") {
                 return (
                   <tr key={idx} className="bg-error/10 hover:bg-error/15">
-                    <td className="w-10 px-2 text-right select-none text-error border-r border-error/20 bg-error/15">{line.oldNum}</td>
-                    <td className="w-10 px-2 text-right select-none text-muted-foreground/30 border-r border-border bg-muted/20">-</td>
+                    <td className="w-10 px-2 text-right select-none text-error border-r border-error/20 bg-error/15">
+                      {line.oldNum}
+                    </td>
+                    <td className="w-10 px-2 text-right select-none text-muted-foreground/30 border-r border-border bg-muted/20">
+                      -
+                    </td>
                     <td className="px-4 py-0.5 whitespace-pre text-error-foreground/90 font-semibold">{`-${line.oldText}`}</td>
                   </tr>
                 );
@@ -78,8 +86,12 @@ export function DiffComponent({ oldCode, newCode, language, title }: DiffProps) 
               // Add line
               return (
                 <tr key={idx} className="bg-success/10 hover:bg-success/15">
-                  <td className="w-10 px-2 text-right select-none text-muted-foreground/30 border-r border-border bg-muted/20">+</td>
-                  <td className="w-10 px-2 text-right select-none text-success border-r border-success/20 bg-success/15">{line.newNum}</td>
+                  <td className="w-10 px-2 text-right select-none text-muted-foreground/30 border-r border-border bg-muted/20">
+                    +
+                  </td>
+                  <td className="w-10 px-2 text-right select-none text-success border-r border-success/20 bg-success/15">
+                    {line.newNum}
+                  </td>
                   <td className="px-4 py-0.5 whitespace-pre text-success-foreground/90 font-semibold">{`+${line.newText}`}</td>
                 </tr>
               );

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-import { useState, useEffect, useCallback, Fragment } from "react";
 import { useLiterals } from "@/lib";
-import { literals as u } from "./ProvidersTab.literals";
 import { apiFetch } from "@/lib/api";
+import { Fragment, useCallback, useEffect, useState } from "react";
+import { literals as u } from "./ProvidersTab.literals";
 
 interface ModelInfo {
   id: string;
@@ -20,7 +20,7 @@ interface ProviderInfo {
 }
 
 export function ProvidersTab() {
-const l = useLiterals(u);
+  const l = useLiterals(u);
   const [providers, setProviders] = useState<ProviderInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -68,9 +68,7 @@ const l = useLiterals(u);
         if (modelsRes.ok) {
           const modelsData = await modelsRes.json();
           setInfoProvider((prev) =>
-            prev
-              ? { ...prev, models: modelsData.models ?? prev.models }
-              : prev
+            prev ? { ...prev, models: modelsData.models ?? prev.models } : prev,
           );
         }
       }
@@ -144,14 +142,10 @@ const l = useLiterals(u);
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-foreground font-semibold text-base">{l.title}</h2>
-          <p className="text-muted-foreground text-[11px] mt-0.5">
-            {l.subtitle}
-          </p>
+          <p className="text-muted-foreground text-[11px] mt-0.5">{l.subtitle}</p>
         </div>
       </div>
-      {error && (
-        <p className="text-destructive text-sm mb-4 p-3 bg-card rounded-lg">{error}</p>
-      )}
+      {error && <p className="text-destructive text-sm mb-4 p-3 bg-card rounded-lg">{error}</p>}
       <div className="relative mb-4">
         <svg
           className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none"
@@ -187,9 +181,7 @@ const l = useLiterals(u);
             .filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
             .map((p, index, arr) => {
               const showDivider =
-                index > 0 &&
-                !p.authStatus.configured &&
-                arr[index - 1].authStatus.configured;
+                index > 0 && !p.authStatus.configured && arr[index - 1].authStatus.configured;
               return (
                 <Fragment key={p.id}>
                   {showDivider && (
@@ -209,9 +201,7 @@ const l = useLiterals(u);
                         }`}
                       />
                       <div className="min-w-0">
-                        <div className="text-foreground text-sm font-medium truncate">
-                          {p.name}
-                        </div>
+                        <div className="text-foreground text-sm font-medium truncate">{p.name}</div>
                         <div className="text-muted-foreground text-xs">
                           {p.models.length} model{p.models.length !== 1 ? "s" : ""}{" "}
                           {p.authStatus.configured
@@ -227,7 +217,16 @@ const l = useLiterals(u);
                             onClick={() => handleOpenInfo(p)}
                             className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2.5 py-1.5 cursor-pointer font-semibold flex items-center gap-1 border border-input rounded-lg bg-background"
                           >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <svg
+                              width="12"
+                              height="12"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
                               <circle cx="12" cy="12" r="10"></circle>
                               <line x1="12" y1="16" x2="12" y2="12"></line>
                               <line x1="12" y1="8" x2="12.01" y2="8"></line>
@@ -242,7 +241,16 @@ const l = useLiterals(u);
                             {refreshing[p.id] ? (
                               <div className="w-3 h-3 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
                             ) : (
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
                                 <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
                               </svg>
                             )}
@@ -318,16 +326,27 @@ const l = useLiterals(u);
       )}
 
       {infoProvider && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-          onKeyDown={(e) => { if (e.key === "Escape") setInfoProvider(null); }}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setInfoProvider(null);
+          }}
         >
           <div className="bg-card border border-border rounded-xl w-full max-w-2xl p-6 shadow-2xl flex flex-col max-h-[85vh] relative animate-in fade-in zoom-in-95 duration-200">
             <button
               onClick={() => setInfoProvider(null)}
               className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors p-1 rounded-lg hover:bg-card-hover"
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <line x1="18" y1="6" x2="6" y2="18"></line>
                 <line x1="6" y1="6" x2="18" y2="18"></line>
               </svg>
@@ -337,9 +356,7 @@ const l = useLiterals(u);
               <h3 className="text-foreground font-semibold text-lg">
                 {l.modalTitle.replace("{provider}", infoProvider.name)}
               </h3>
-              <p className="text-muted-foreground text-xs">
-                {l.modalSubtitle}
-              </p>
+              <p className="text-muted-foreground text-xs">{l.modalSubtitle}</p>
             </div>
 
             <div className="mt-6 overflow-y-auto flex-1 border border-card-hover rounded-lg bg-background">
@@ -358,13 +375,17 @@ const l = useLiterals(u);
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-card-hover">
-                      {infoProvider.models.map((m) => {
+                    {infoProvider.models.map((m) => {
                       const hasVision = m.input?.includes("image");
                       return (
                         <tr key={m.id} className="hover:bg-card-hover transition-colors">
                           <td className="p-3 font-medium text-foreground">{m.name}</td>
-                          <td className="p-3 text-muted-foreground font-mono text-[10px]">{m.id}</td>
-                          <td className="p-3 text-center text-foreground">{m.contextWindow ? `${Math.round(m.contextWindow / 1000)}K` : "-"}</td>
+                          <td className="p-3 text-muted-foreground font-mono text-[10px]">
+                            {m.id}
+                          </td>
+                          <td className="p-3 text-center text-foreground">
+                            {m.contextWindow ? `${Math.round(m.contextWindow / 1000)}K` : "-"}
+                          </td>
                           <td className="p-3">
                             <div className="flex items-center justify-center gap-1.5 flex-wrap">
                               {m.reasoning && (

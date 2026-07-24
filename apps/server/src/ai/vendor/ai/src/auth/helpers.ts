@@ -8,21 +8,21 @@ import type { ApiKeyAuth, OAuthAuth } from "./types.ts";
  * write their own `ApiKeyAuth`.
  */
 export function envApiKeyAuth(name: string, envVars: readonly string[]): ApiKeyAuth {
-	return {
-		name,
-		login: async (callbacks) => {
-			const key = await callbacks.prompt({ type: "secret", message: `Enter ${name}` });
-			return { type: "api_key", key };
-		},
-		resolve: async ({ ctx, credential }) => {
-			if (credential?.key) return { auth: { apiKey: credential.key }, source: "stored credential" };
-			for (const envVar of envVars) {
-				const value = await ctx.env(envVar);
-				if (value) return { auth: { apiKey: value }, source: envVar };
-			}
-			return undefined;
-		},
-	};
+  return {
+    name,
+    login: async (callbacks) => {
+      const key = await callbacks.prompt({ type: "secret", message: `Enter ${name}` });
+      return { type: "api_key", key };
+    },
+    resolve: async ({ ctx, credential }) => {
+      if (credential?.key) return { auth: { apiKey: credential.key }, source: "stored credential" };
+      for (const envVar of envVars) {
+        const value = await ctx.env(envVar);
+        if (value) return { auth: { apiKey: value }, source: envVar };
+      }
+      return undefined;
+    },
+  };
 }
 
 /**
@@ -33,15 +33,15 @@ export function envApiKeyAuth(name: string, envVars: readonly string[]): ApiKeyA
  * specifier, see the bedrock lazy wrapper).
  */
 export function lazyOAuth(input: { name: string; load: () => Promise<OAuthAuth> }): OAuthAuth {
-	let promise: Promise<OAuthAuth> | undefined;
-	const loaded = () => {
-		promise ??= input.load();
-		return promise;
-	};
-	return {
-		name: input.name,
-		login: async (callbacks) => (await loaded()).login(callbacks),
-		refresh: async (credential) => (await loaded()).refresh(credential),
-		toAuth: async (credential) => (await loaded()).toAuth(credential),
-	};
+  let promise: Promise<OAuthAuth> | undefined;
+  const loaded = () => {
+    promise ??= input.load();
+    return promise;
+  };
+  return {
+    name: input.name,
+    login: async (callbacks) => (await loaded()).login(callbacks),
+    refresh: async (credential) => (await loaded()).refresh(credential),
+    toAuth: async (credential) => (await loaded()).toAuth(credential),
+  };
 }

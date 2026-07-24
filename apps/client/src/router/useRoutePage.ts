@@ -1,7 +1,27 @@
 // SPDX-License-Identifier: MIT
 import { useLocation } from "react-router-dom";
 
-export type RoutePage = "chat" | "delegations" | "timeline" | "workspace" | "preview" | "projects" | "settings" | "skills" | "agents" | "org" | "benchmark" | "teams" | "team" | "logs" | "plugins" | "sessions" | "analytics" | "not-found" | "dashboard" | "floor";
+export type RoutePage =
+  | "chat"
+  | "delegations"
+  | "timeline"
+  | "workspace"
+  | "preview"
+  | "projects"
+  | "settings"
+  | "skills"
+  | "agents"
+  | "org"
+  | "benchmark"
+  | "teams"
+  | "team"
+  | "logs"
+  | "plugins"
+  | "sessions"
+  | "analytics"
+  | "not-found"
+  | "dashboard"
+  | "floor";
 
 export function useRoutePage(): RoutePage {
   const { pathname } = useLocation();
@@ -23,5 +43,9 @@ export function useRoutePage(): RoutePage {
   if (pathname === "/logs") return "logs";
   if (pathname === "/plugins") return "plugins";
   if (pathname === "/sessions") return "sessions";
-  return pathname === "/" || pathname.startsWith("/session/") || /\/(projects|agents|teams)\/[^/]+(?:\/chat|\/session\/|$)/.test(pathname) ? "chat" : "not-found";
+  return pathname === "/" ||
+    pathname.startsWith("/session/") ||
+    /\/(projects|agents|teams)\/[^/]+(?:\/chat|\/session\/|$)/.test(pathname)
+    ? "chat"
+    : "not-found";
 }

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-import { join, dirname } from "node:path";
 import { existsSync, mkdirSync } from "node:fs";
-import type { MemoryProvider } from "./types";
-import { NullMemoryProvider } from "./null-provider";
+import { dirname } from "node:path";
 import { LocalMemoryProvider } from "./local-provider";
+import { NullMemoryProvider } from "./null-provider";
+import type { MemoryProvider } from "./types";
 
 class MemoryRegistry {
   private providers = new Map<string, MemoryProvider>();

@@ -20,7 +20,8 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     portPlaceholder: "4200",
     modelPlaceholder: "e.g. GPT 5.6 Terra",
     skillsPlaceholder: "github-deploy, cloudflare-deploy",
-    systemPromptPlaceholder: "You are an expert web developer specializing in React and TypeScript...",
+    systemPromptPlaceholder:
+      "You are an expert web developer specializing in React and TypeScript...",
     saving: "Saving...",
     saveChanges: "Save Changes",
     cancel: "Cancel",
@@ -28,7 +29,8 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     idPatternTitle: "lowercase letters, numbers, and dashes only",
     advancedConfig: "Advanced Configuration",
     serialToolsLabel: "Serial Tools (Interactive)",
-    serialToolsDescription: "Select the tools that will suspend agent execution to wait for your approval or input.",
+    serialToolsDescription:
+      "Select the tools that will suspend agent execution to wait for your approval or input.",
     blueprintIdLabel: "Blueprint ID",
     createdAtLabel: "Created At",
   },
@@ -50,7 +52,8 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     portPlaceholder: "4200",
     modelPlaceholder: "ej. GPT 5.6 Terra",
     skillsPlaceholder: "github-deploy, cloudflare-deploy",
-    systemPromptPlaceholder: "Eres un desarrollador web experto especializado en React y TypeScript...",
+    systemPromptPlaceholder:
+      "Eres un desarrollador web experto especializado en React y TypeScript...",
     saving: "Guardando...",
     saveChanges: "Guardar Cambios",
     cancel: "Cancelar",
@@ -58,7 +61,8 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     idPatternTitle: "solo minúsculas, números y guiones",
     advancedConfig: "Configuracion Avanzada",
     serialToolsLabel: "Herramientas Seriales (Interactivas)",
-    serialToolsDescription: "Selecciona las herramientas que pausaran la ejecucion del agente para esperar tu aprobacion o respuesta.",
+    serialToolsDescription:
+      "Selecciona las herramientas que pausaran la ejecucion del agente para esperar tu aprobacion o respuesta.",
     blueprintIdLabel: "ID del Blueprint",
     createdAtLabel: "Creado el",
   },

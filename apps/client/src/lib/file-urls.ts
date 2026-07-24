@@ -7,7 +7,7 @@ export function resolveFileUrl(
     agentId?: string | null;
     channelId?: string | null;
     teamId?: string | null;
-  }
+  },
 ): string {
   if (!url) return "";
 
@@ -15,7 +15,10 @@ export function resolveFileUrl(
     return url;
   }
 
-  if (sessionId && (url.includes("/tmp/") || url.includes("C:\\tmp\\") || url.includes("C:/tmp/"))) {
+  if (
+    sessionId &&
+    (url.includes("/tmp/") || url.includes("C:\\tmp\\") || url.includes("C:/tmp/"))
+  ) {
     const sessionMarker = `sessions/${sessionId}/`;
     const idx = url.indexOf(sessionMarker);
     if (idx !== -1) {

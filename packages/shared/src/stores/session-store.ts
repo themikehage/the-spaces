@@ -54,7 +54,10 @@ export interface SessionData {
 export interface ISessionStore {
   create(session: SessionData): Promise<void>;
   appendMessage(sessionId: string, msg: MessageRecord): Promise<void>;
-  getMessages(sessionId: string, opts?: { limit?: number; offset?: number }): Promise<MessageRecord[]>;
+  getMessages(
+    sessionId: string,
+    opts?: { limit?: number; offset?: number },
+  ): Promise<MessageRecord[]>;
   listUserSessions(username: string, query?: SessionListQueryFilters): Promise<SessionSummary[]>;
   delete(sessionId: string): Promise<void>;
   exists(sessionId: string): Promise<boolean>;

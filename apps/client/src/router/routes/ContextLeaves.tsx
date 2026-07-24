@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
-import { useNavigate, useParams } from "react-router-dom";
 import { ChatArea } from "@/components/chat/ChatArea";
 import { DelegationsPanel } from "@/components/chat/DelegationsPanel";
-import { TeamChatArea } from "@/components/teams/TeamChatArea";
-import { PreviewPanel } from "@/components/preview/PreviewPanel";
-import { WorkspacePanel } from "@/components/workspace/WorkspacePanel";
 import { TimelineTabPanel } from "@/components/chat/TimelineTabPanel";
+import { PreviewPanel } from "@/components/preview/PreviewPanel";
+import { ProjectFloorPanel } from "@/components/projects/ProjectFloorPanel";
+import { TeamChatArea } from "@/components/teams/TeamChatArea";
+import { WorkspacePanel } from "@/components/workspace/WorkspacePanel";
+import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
 import { TeamDetailPage } from "@/pages/TeamDetailPage";
 import { TeamOrgPage } from "@/pages/TeamOrgPage";
-import { ProjectFloorPanel } from "@/components/projects/ProjectFloorPanel";
-import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
+import { useNavigate, useParams } from "react-router-dom";
 
 function sessionFromSplat(splat: string | undefined, suffix = ""): string | null {
   const value = splat?.replace(new RegExp(`${suffix}$`), "") ?? "";
@@ -18,11 +18,27 @@ function sessionFromSplat(splat: string | undefined, suffix = ""): string | null
 
 export function ChatRoute() {
   const { "*": splat } = useParams();
-  const { activeProjectId, activeProjectFriendlyName, activeAgent, activeTeam } = useWorkspaceContext();
+  const { activeProjectId, activeProjectFriendlyName, activeAgent, activeTeam } =
+    useWorkspaceContext();
   const sessionId = sessionFromSplat(splat);
   const projectDisplayName = activeProjectFriendlyName || activeProjectId;
-  if (activeTeam) return <TeamChatArea key={`${sessionId}-${activeTeam.id}`} activeTeam={activeTeam} sessionId={sessionId} />;
-  return <ChatArea key={`${sessionId}-${activeProjectId}-${activeAgent?.id}`} sessionId={sessionId} activeProjectName={projectDisplayName} activeProjectId={activeProjectId} activeAgent={activeAgent} />;
+  if (activeTeam)
+    return (
+      <TeamChatArea
+        key={`${sessionId}-${activeTeam.id}`}
+        activeTeam={activeTeam}
+        sessionId={sessionId}
+      />
+    );
+  return (
+    <ChatArea
+      key={`${sessionId}-${activeProjectId}-${activeAgent?.id}`}
+      sessionId={sessionId}
+      activeProjectName={projectDisplayName}
+      activeProjectId={activeProjectId}
+      activeAgent={activeAgent}
+    />
+  );
 }
 
 export function SessionRoute() {
@@ -34,24 +50,50 @@ export function SessionRoute() {
 
 export function TimelineRoute() {
   const { "*": splat } = useParams();
-  const { activeProjectId, activeProjectFriendlyName, activeAgent, activeTeam } = useWorkspaceContext();
+  const { activeProjectId, activeProjectFriendlyName, activeAgent, activeTeam } =
+    useWorkspaceContext();
   const sessionId = sessionFromSplat(splat, "/timeline");
   const projectDisplayName = activeProjectFriendlyName || activeProjectId;
-  return <TimelineTabPanel key={`${sessionId}-${activeProjectId}-${activeAgent?.id}-${activeTeam?.id}`} sessionId={sessionId} activeProjectName={projectDisplayName} activeAgent={activeAgent} activeTeam={activeTeam} />;
+  return (
+    <TimelineTabPanel
+      key={`${sessionId}-${activeProjectId}-${activeAgent?.id}-${activeTeam?.id}`}
+      sessionId={sessionId}
+      activeProjectName={projectDisplayName}
+      activeAgent={activeAgent}
+      activeTeam={activeTeam}
+    />
+  );
 }
 
 export function DelegationsRoute() {
   const { "*": splat } = useParams();
-  const { activeProjectId, activeProjectFriendlyName, activeAgent, activeTeam } = useWorkspaceContext();
+  const { activeProjectId, activeProjectFriendlyName, activeAgent, activeTeam } =
+    useWorkspaceContext();
   const sessionId = sessionFromSplat(splat, "/delegations");
   const projectDisplayName = activeProjectFriendlyName || activeProjectId;
-  return <DelegationsPanel key={`${sessionId}-${activeProjectId}-${activeAgent?.id}-${activeTeam?.id}`} sessionId={sessionId} activeProjectName={projectDisplayName} activeAgent={activeAgent} activeTeam={activeTeam} />;
+  return (
+    <DelegationsPanel
+      key={`${sessionId}-${activeProjectId}-${activeAgent?.id}-${activeTeam?.id}`}
+      sessionId={sessionId}
+      activeProjectName={projectDisplayName}
+      activeAgent={activeAgent}
+      activeTeam={activeTeam}
+    />
+  );
 }
 
 export function WorkspaceRoute() {
-  const { activeProjectId, activeProjectFriendlyName, activeAgent, activeTeam } = useWorkspaceContext();
+  const { activeProjectId, activeProjectFriendlyName, activeAgent, activeTeam } =
+    useWorkspaceContext();
   const projectDisplayName = activeProjectFriendlyName || activeProjectId;
-  return <WorkspacePanel key={activeProjectId || activeAgent?.id || activeTeam?.id || "global"} activeProjectName={projectDisplayName} activeAgentId={activeAgent?.id} activeTeamId={activeTeam?.id} />;
+  return (
+    <WorkspacePanel
+      key={activeProjectId || activeAgent?.id || activeTeam?.id || "global"}
+      activeProjectName={projectDisplayName}
+      activeAgentId={activeAgent?.id}
+      activeTeamId={activeTeam?.id}
+    />
+  );
 }
 
 export function PreviewRoute() {

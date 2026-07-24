@@ -13,14 +13,14 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     labelDelegation: "delegation",
     labelExaSearch: "exa",
     labelMemory: "memory",
-    
+
     argApprovalRequest: "Approval Request",
     argUserQuestion: "User Question",
     argImages: "images",
     argChart: "Chart",
     argHtmlDoc: "HTML document",
     argUiRefresh: "UI refresh",
-    
+
     resWaiting: "waiting...",
     resRendered: "rendered",
     resShared: "shared",
@@ -32,7 +32,7 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     resMemory: "memory",
     resStored: "stored",
     resForgotten: "forgotten",
-    
+
     bodySubagentConsole: "Subagent Console",
     bodyViewLiveConsole: "View",
     bodySubagentView: "View",
@@ -49,7 +49,7 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     bodyTasksPlanned: "Tasks Planned",
     bodyDependsOn: "depends on",
     bodyEstimatedSteps: "Est. Steps",
-    
+
     labelWebFetch: "web_fetch",
     bodyWebFetchTitle: "Web Content",
     bodyWebFetchSource: "Source",
@@ -74,14 +74,14 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     labelDelegation: "delegación",
     labelExaSearch: "exa",
     labelMemory: "memoria",
-    
+
     argApprovalRequest: "Petición de aprobación",
     argUserQuestion: "Pregunta al usuario",
     argImages: "imágenes",
     argChart: "Gráfico",
     argHtmlDoc: "documento HTML",
     argUiRefresh: "refresco de UI",
-    
+
     resWaiting: "esperando...",
     resRendered: "renderizado",
     resShared: "compartido",
@@ -93,7 +93,7 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     resMemory: "memoria",
     resStored: "guardado",
     resForgotten: "eliminado",
-    
+
     bodySubagentConsole: "Subagente Consola",
     bodyViewLiveConsole: "Ver",
     bodySubagentView: "Ver",
@@ -110,7 +110,7 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     bodyTasksPlanned: "Tareas Planificadas",
     bodyDependsOn: "depende de",
     bodyEstimatedSteps: "Pasos Est.",
-    
+
     labelWebFetch: "web_fetch",
     bodyWebFetchTitle: "Contenido Web",
     bodyWebFetchSource: "Fuente",

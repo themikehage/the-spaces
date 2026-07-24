@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { wsClient } from "@/lib/ws-client";
-import { apiFetch } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
+import { apiFetch } from "@/lib/api";
+import { wsClient } from "@/lib/ws-client";
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
 interface ApprovalRequest {
   approvalId: string;

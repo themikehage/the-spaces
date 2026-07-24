@@ -49,12 +49,14 @@ export function createExaSearchTool(opts: ExaSearchOptions) {
       properties: {
         query: {
           type: "string",
-          description: "Natural language search query. Supports long, semantically rich descriptions.",
+          description:
+            "Natural language search query. Supports long, semantically rich descriptions.",
         },
         type: {
           type: "string",
           enum: ["auto", "fast", "instant", "deep-lite", "deep", "deep-reasoning"],
-          description: "Search method. auto=balanced, fast/instant=low-latency, deep-lite/deep/deep-reasoning=synthesized multi-step.",
+          description:
+            "Search method. auto=balanced, fast/instant=low-latency, deep-lite/deep/deep-reasoning=synthesized multi-step.",
           default: "auto",
         },
         numResults: {
@@ -76,12 +78,20 @@ export function createExaSearchTool(opts: ExaSearchOptions) {
         },
         category: {
           type: "string",
-          enum: ["company", "people", "research paper", "news", "personal site", "financial report"],
+          enum: [
+            "company",
+            "people",
+            "research paper",
+            "news",
+            "personal site",
+            "financial report",
+          ],
           description: "Focus on specific content type.",
         },
         startPublishedDate: {
           type: "string",
-          description: 'ISO 8601 date. Only return results published after this date (e.g. "2025-01-01").',
+          description:
+            'ISO 8601 date. Only return results published after this date (e.g. "2025-01-01").',
         },
         endPublishedDate: {
           type: "string",
@@ -89,18 +99,21 @@ export function createExaSearchTool(opts: ExaSearchOptions) {
         },
         maxAgeHours: {
           type: "integer",
-          description: "Max age of cached content in hours. 0=always livecrawl, -1=never livecrawl. Omit for balanced default.",
+          description:
+            "Max age of cached content in hours. 0=always livecrawl, -1=never livecrawl. Omit for balanced default.",
           minimum: -1,
         },
         contentMode: {
           type: "string",
           enum: ["highlights", "text", "summary"],
-          description: "Content extraction mode. highlights=token-efficient excerpts, text=full page text, summary=LLM summary.",
+          description:
+            "Content extraction mode. highlights=token-efficient excerpts, text=full page text, summary=LLM summary.",
           default: "highlights",
         },
         textMaxCharacters: {
           type: "integer",
-          description: "Max characters for text content mode. Only used when contentMode is 'text'.",
+          description:
+            "Max characters for text content mode. Only used when contentMode is 'text'.",
           default: 10000,
         },
       },
@@ -111,7 +124,12 @@ export function createExaSearchTool(opts: ExaSearchOptions) {
       const apiKey = getExaApiKey(opts.username);
       if (!apiKey) {
         return {
-          content: [{ type: "text", text: "EXA_API_KEY not configured. Go to Settings > Env Vars to add it." }],
+          content: [
+            {
+              type: "text",
+              text: "EXA_API_KEY not configured. Go to Settings > Env Vars to add it.",
+            },
+          ],
           isError: true,
         };
       }
@@ -229,6 +247,6 @@ function getExaApiKey(username: string): string | null {
   try {
     const env = sessionManager.userConfig.getUserEnv(username);
     if (env.EXA_API_KEY) return env.EXA_API_KEY;
-  } catch { }
+  } catch {}
   return process.env.EXA_API_KEY || null;
 }

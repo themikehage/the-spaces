@@ -49,7 +49,7 @@ export class CircuitBreaker {
       } else {
         const remainingSec = Math.ceil((this.nextAttempt - now) / 1000);
         throw new Error(
-          `CircuitBreaker [${this.name}] is OPEN. Requests blocked to protect provider. Try again in ${remainingSec}s.`
+          `CircuitBreaker [${this.name}] is OPEN. Requests blocked to protect provider. Try again in ${remainingSec}s.`,
         );
       }
     }

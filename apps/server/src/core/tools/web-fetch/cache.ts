@@ -37,7 +37,7 @@ export class WebFetchCache {
     }
 
     // Refresh LRU order
-    this.order = this.order.filter(u => u !== url);
+    this.order = this.order.filter((u) => u !== url);
     this.order.push(url);
 
     return entry;
@@ -45,9 +45,9 @@ export class WebFetchCache {
 
   set(url: string, entry: CacheEntry): void {
     if (this.memory.has(url)) {
-      this.order = this.order.filter(u => u !== url);
+      this.order = this.order.filter((u) => u !== url);
     }
-    
+
     this.memory.set(url, entry);
     this.order.push(url);
 
@@ -56,7 +56,7 @@ export class WebFetchCache {
 
   invalidate(url: string): void {
     this.memory.delete(url);
-    this.order = this.order.filter(u => u !== url);
+    this.order = this.order.filter((u) => u !== url);
   }
 
   private prune(): void {

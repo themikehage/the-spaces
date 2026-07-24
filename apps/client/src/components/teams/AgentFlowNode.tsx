@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-import { Handle, Position, type NodeProps, type Node } from "@xyflow/react";
-import type { TeamMember, AgentInfo, TeamRole } from "shared";
 import { AgentAvatar } from "@/components/shared/AgentAvatar";
+import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
+import type { AgentInfo, TeamMember, TeamRole } from "shared";
 
 export type AgentNodeData = {
   member: TeamMember;
@@ -9,7 +9,10 @@ export type AgentNodeData = {
   streamingState?: {
     text: string;
     thinking?: string;
-    toolCalls?: Record<string, { toolName: string; args: any; result: any | null; isError: boolean }>;
+    toolCalls?: Record<
+      string,
+      { toolName: string; args: any; result: any | null; isError: boolean }
+    >;
   };
   sessionStatus?: "idle" | "working" | "unknown";
   onEdit: () => void;
@@ -17,12 +20,15 @@ export type AgentNodeData = {
 
 export type AgentNode = Node<AgentNodeData>;
 
-const ROLE_THEME: Record<TeamRole, {
-  label: string;
-  badgeStyle: string;
-  cardStyle: string;
-  glowStyle: string;
-}> = {
+const ROLE_THEME: Record<
+  TeamRole,
+  {
+    label: string;
+    badgeStyle: string;
+    cardStyle: string;
+    glowStyle: string;
+  }
+> = {
   lead: {
     label: "Lead",
     badgeStyle: "bg-accent/15 border-accent/30 text-accent",
@@ -57,7 +63,7 @@ export function AgentFlowNode({ data }: NodeProps<AgentNode>) {
   const theme = ROLE_THEME[role] ?? ROLE_THEME.member;
   const name = agentInfo?.name || member.agentId;
   const isOrphan = !agentInfo;
-  const agentRole = agentInfo ? (agentInfo.role || "agent") : "Deleted Agent";
+  const agentRole = agentInfo ? agentInfo.role || "agent" : "Deleted Agent";
   const skills = agentInfo?.skills || [];
 
   const isStreaming = !!streamingState;
@@ -71,8 +77,16 @@ export function AgentFlowNode({ data }: NodeProps<AgentNode>) {
   return (
     <div className="relative group/node select-none">
       {/* Ports */}
-      <Handle type="target" position={Position.Top} className="!bg-border !w-2.5 !h-2.5 !border-card-hover" />
-      <Handle type="source" position={Position.Bottom} className="!bg-border !w-2.5 !h-2.5 !border-card-hover" />
+      <Handle
+        type="target"
+        position={Position.Top}
+        className="!bg-border !w-2.5 !h-2.5 !border-card-hover"
+      />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        className="!bg-border !w-2.5 !h-2.5 !border-card-hover"
+      />
 
       {/* Main card */}
       <div
@@ -81,8 +95,8 @@ export function AgentFlowNode({ data }: NodeProps<AgentNode>) {
           isOrphan
             ? "border-dashed border-destructive/30 bg-destructive/5 opacity-85 shadow-[0_0_10px_rgba(239,68,68,0.05)]"
             : isStreaming
-            ? theme.glowStyle
-            : theme.cardStyle
+              ? theme.glowStyle
+              : theme.cardStyle
         } hover:scale-[1.02] hover:-translate-y-0.5`}
       >
         {/* Header */}
@@ -90,17 +104,23 @@ export function AgentFlowNode({ data }: NodeProps<AgentNode>) {
           <div className="flex items-center gap-1.5 min-w-0 flex-1">
             <span className="relative flex-shrink-0">
               <AgentAvatar name={name} avatarUrl={agentInfo?.avatarUrl} size="xs" />
-              <span className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border-2 border-background ${sessionDot}`} />
+              <span
+                className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border-2 border-background ${sessionDot}`}
+              />
             </span>
-            <span className={`font-semibold text-xs truncate ${isOrphan ? "text-destructive" : "text-foreground"}`}>
+            <span
+              className={`font-semibold text-xs truncate ${isOrphan ? "text-destructive" : "text-foreground"}`}
+            >
               {isOrphan ? `⚠️ ${name}` : name}
             </span>
           </div>
-          <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border flex-shrink-0 ${
-            isOrphan
-              ? "bg-destructive/15 border-destructive/30 text-destructive"
-              : theme.badgeStyle
-          }`}>
+          <span
+            className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border flex-shrink-0 ${
+              isOrphan
+                ? "bg-destructive/15 border-destructive/30 text-destructive"
+                : theme.badgeStyle
+            }`}
+          >
             {isOrphan ? "missing" : theme.label}
           </span>
         </div>

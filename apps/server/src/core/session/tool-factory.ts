@@ -1,30 +1,30 @@
 // SPDX-License-Identifier: MIT
-import { createProgrammaticSessionSync } from "../../auth/onboarding";
+import { getTeamWorkspaceDir, legacyToolToBaseTool, type BaseTool } from "shared";
 import {
   createBashToolDefinition,
+  createEditToolDefinition,
+  createFindToolDefinition,
+  createGrepToolDefinition,
+  createLsToolDefinition,
   createReadToolDefinition,
   createWriteToolDefinition,
-  createEditToolDefinition,
-  createGrepToolDefinition,
-  createFindToolDefinition,
-  createLsToolDefinition
 } from "../../ai";
-import { filterSecretsFromOutput } from "../bash-output-filter";
-import { createExaSearchTool } from "../tools/exa-search-tool";
-import { createWebFetchTool } from "../tools/web-fetch";
-import { createMemoryTools } from "../memory/memory-tools";
-import { createUiTools } from "../tools/ui-tools";
-import { createFactoryTool } from "../tools/factory-tool";
-import { createPreviewTools } from "../tools/preview-tools";
+import { createProgrammaticSessionSync } from "../../auth/onboarding";
 import { teamStore } from "../../teams/team-store";
-import { getTeamWorkspaceDir, type BaseTool, legacyToolToBaseTool } from "shared";
-import { userConfigManager } from "./user-config";
+import { filterSecretsFromOutput } from "../bash-output-filter";
 import {
+  createCustomToolRuntime,
   createManageCustomToolsTool,
   customToolStorage,
-  createCustomToolRuntime,
 } from "../custom-tools";
+import { createMemoryTools } from "../memory/memory-tools";
 import { scopeConfigManager } from "../scope";
+import { createExaSearchTool } from "../tools/exa-search-tool";
+import { createFactoryTool } from "../tools/factory-tool";
+import { createPreviewTools } from "../tools/preview-tools";
+import { createUiTools } from "../tools/ui-tools";
+import { createWebFetchTool } from "../tools/web-fetch";
+import { userConfigManager } from "./user-config";
 
 export interface CreateSessionToolsParams {
   username: string;
@@ -41,7 +41,10 @@ export interface CreateSessionToolsParams {
 }
 
 export class SessionToolFactory {
-  createSessionTools(params: CreateSessionToolsParams): { customTools: BaseTool[]; hasExaKey: boolean } {
+  createSessionTools(params: CreateSessionToolsParams): {
+    customTools: BaseTool[];
+    hasExaKey: boolean;
+  } {
     const {
       username,
       sessionId,
@@ -97,9 +100,7 @@ export class SessionToolFactory {
         if (team && team.teamType === "Orchestration") {
           inheritedWorkspaceDir = getTeamWorkspaceDir(username, teamId);
           permittedAgentIds = new Set(
-            team.members
-              .filter((m: any) => m.role !== "lead")
-              .map((m: any) => m.agentId)
+            team.members.filter((m: any) => m.role !== "lead").map((m: any) => m.agentId),
           );
         }
       } catch (e) {
@@ -121,7 +122,9 @@ export class SessionToolFactory {
     const userEnv = userConfigManager.getUserEnv(username);
     const hasExaKey = !!(userEnv.EXA_API_KEY || process.env.EXA_API_KEY);
 
-    const allowedDirs = resourceLoader ? resourceLoader.getSkills().skills.map((s: any) => s.baseDir) : [];
+    const allowedDirs = resourceLoader
+      ? resourceLoader.getSkills().skills.map((s: any) => s.baseDir)
+      : [];
 
     const readTool = createReadToolDefinition(workspaceDir, allowedDirs);
     const writeTool = createWriteToolDefinition(workspaceDir, allowedDirs);
@@ -144,16 +147,18 @@ export class SessionToolFactory {
       ? new Set(scopeConfigManager.resolveToolsForAgent(username, contextAgentId))
       : null;
 
-    const activeCustomDefs = customToolStorage.loadAll(username).filter((d: any) =>
-      d.enabled && (resolvedToolNames === null || resolvedToolNames.has(d.name))
-    );
+    const activeCustomDefs = customToolStorage
+      .loadAll(username)
+      .filter(
+        (d: any) => d.enabled && (resolvedToolNames === null || resolvedToolNames.has(d.name)),
+      );
     const activeCustomTools = activeCustomDefs.map((def: any) =>
       createCustomToolRuntime(def, {
         cwd: workspaceDir,
         session: null as any,
         username,
         sessionId,
-      })
+      }),
     );
 
     const rawTools = [

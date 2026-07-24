@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-import { useState, useCallback } from "react";
 import { apiFetch } from "@/lib/api";
 import { buildCreateSessionBody, getSessionPath as resolveSessionPath } from "@/lib/session-utils";
+import { useCallback, useState } from "react";
 
 interface UseSessionActionsProps {
   activeProjectId?: string | null;
@@ -31,7 +31,7 @@ export function useSessionActions({
         activeProjectFriendlyName,
       });
     },
-    [activeTeam, activeAgent, activeProjectId, activeProjectFriendlyName]
+    [activeTeam, activeAgent, activeProjectId, activeProjectFriendlyName],
   );
 
   const handleSelectSession = useCallback(
@@ -47,13 +47,12 @@ export function useSessionActions({
           } else {
             basePath = `/agents/${activeAgent.id}/chat`;
           }
-        }
-        else if (activeProjectId) basePath = `/projects/${activeProjectId}/chat`;
+        } else if (activeProjectId) basePath = `/projects/${activeProjectId}/chat`;
         onNavigate(basePath || "/");
       }
       setSidebarOpen?.(false);
     },
-    [onNavigate, getSessionPath, activeTeam?.id, activeAgent?.id, activeProjectId, setSidebarOpen]
+    [onNavigate, getSessionPath, activeTeam?.id, activeAgent?.id, activeProjectId, setSidebarOpen],
   );
 
   const handleNewSession = useCallback(
@@ -61,7 +60,7 @@ export function useSessionActions({
       onNavigate(getSessionPath(id));
       setSidebarOpen?.(false);
     },
-    [onNavigate, getSessionPath, setSidebarOpen]
+    [onNavigate, getSessionPath, setSidebarOpen],
   );
 
   const handleQuickCreate = useCallback(async () => {
@@ -70,11 +69,13 @@ export function useSessionActions({
       const res = await apiFetch("/api/sessions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(buildCreateSessionBody("Nueva sesion", {
-          activeProjectName: activeProjectId,
-          activeAgent,
-          activeTeam,
-        })),
+        body: JSON.stringify(
+          buildCreateSessionBody("Nueva sesion", {
+            activeProjectName: activeProjectId,
+            activeAgent,
+            activeTeam,
+          }),
+        ),
       });
       if (!res.ok) return;
       const session = await res.json();

@@ -33,15 +33,21 @@ export function TimelineComponent({ items, title }: TimelineProps) {
           return (
             <div key={i} className="relative flex flex-col items-start min-w-0">
               {/* Dot */}
-              <div className={`w-3 h-3 rounded-full absolute left-[-24px] top-1 border-2 ${colorClass}`} />
-              
+              <div
+                className={`w-3 h-3 rounded-full absolute left-[-24px] top-1 border-2 ${colorClass}`}
+              />
+
               {/* Date */}
               {item.date && (
-                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">{item.date}</span>
+                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
+                  {item.date}
+                </span>
               )}
 
               {/* Title */}
-              <span className="text-xs font-semibold text-foreground mt-0.5 leading-snug">{item.title}</span>
+              <span className="text-xs font-semibold text-foreground mt-0.5 leading-snug">
+                {item.title}
+              </span>
 
               {/* Description */}
               {item.description && (

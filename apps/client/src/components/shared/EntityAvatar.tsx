@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-import { useMemo, useState } from "react";
-import type { FC } from "react";
-import { getAvatarComponent, isDefaultAvatar } from "@/lib/defaultAvatars";
 import { useAuth } from "@/contexts/AuthContext";
+import { getAvatarComponent, isDefaultAvatar } from "@/lib/defaultAvatars";
+import type { FC } from "react";
+import { useMemo, useState } from "react";
 
 interface EntityAvatarProps {
   name: string;

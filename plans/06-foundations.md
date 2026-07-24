@@ -18,12 +18,12 @@ Un proyecto open-source no es solo código público. Es licencia, verificación 
 
 No existe archivo `LICENSE` en el repositorio. El `README.md` declara _"Proprietary — internal use"_. Ningún `package.json` tiene campo `license`. Ningún archivo fuente tiene encabezado SPDX.
 
-| Qué falta | Estado |
-|---|---|
-| Archivo `LICENSE` | ❌ No existe |
-| Campo `license` en `package.json` | ❌ Ausente en los 7 `package.json` del monorepo |
-| Encabezados SPDX en archivos fuente | ❌ No hay ninguno |
-| Verificación de licencia en CI | ❌ No existe CI |
+| Qué falta                           | Estado                                          |
+| ----------------------------------- | ----------------------------------------------- |
+| Archivo `LICENSE`                   | ❌ No existe                                    |
+| Campo `license` en `package.json`   | ❌ Ausente en los 7 `package.json` del monorepo |
+| Encabezados SPDX en archivos fuente | ❌ No hay ninguno                               |
+| Verificación de licencia en CI      | ❌ No existe CI                                 |
 
 ### Estado objetivo
 
@@ -50,14 +50,14 @@ No existe archivo `LICENSE` en el repositorio. El `README.md` declara _"Propriet
 
 No existe directorio `.github/`. No hay workflows de GitHub Actions. No hay verificación automática de lint, typecheck, build o test en push o PR. El nombre del paquete raíz es `openai-hack-scaffold`. No existe `turbo.json` para orquestación de builds en el monorepo. Los comandos `pnpm typecheck`, `pnpm lint` y `pnpm test` no existen a nivel raíz.
 
-| Qué falta | Estado |
-|---|---|
-| `.github/workflows/` | ❌ No existe |
-| CI de validación (lint + typecheck + build + test) | ❌ Nada |
-| Matrix de SO (ubuntu/windows/macos) | ❌ No aplica sin CI |
-| Release automation (Changesets / Release Please) | ❌ No existe |
-| `turbo.json` | ❌ No existe |
-| Nombre del paquete raíz | `openai-hack-scaffold` (incorrecto) |
+| Qué falta                                          | Estado                              |
+| -------------------------------------------------- | ----------------------------------- |
+| `.github/workflows/`                               | ❌ No existe                        |
+| CI de validación (lint + typecheck + build + test) | ❌ Nada                             |
+| Matrix de SO (ubuntu/windows/macos)                | ❌ No aplica sin CI                 |
+| Release automation (Changesets / Release Please)   | ❌ No existe                        |
+| `turbo.json`                                       | ❌ No existe                        |
+| Nombre del paquete raíz                            | `openai-hack-scaffold` (incorrecto) |
 
 ### Estado objetivo
 
@@ -93,14 +93,14 @@ No existe directorio `.github/`. No hay workflows de GitHub Actions. No hay veri
 
 No existe `.env.example`. El `README.md` referencia _"Provider API keys are configured through the UI"_ pero no documenta qué variables de entorno existen, cuáles son obligatorias, ni dónde se obtienen. Las variables de entorno están dispersas en más de 10 archivos fuente del servidor sin documentación central. Existen `Dockerfile` y `docker-compose.yml` pero sin guía de self-hosting. No existe `CONTRIBUTING.md` ni `CHANGELOG.md`.
 
-| Qué falta | Estado |
-|---|---|
-| `.env.example` | ❌ No existe |
-| Documentación centralizada de env vars | ❌ Dispersa en 10+ archivos fuente |
-| Guía de self-hosting | ❌ No existe (hay Dockerfile y compose pero sin docs) |
-| `CONTRIBUTING.md` | ❌ No existe |
-| `CHANGELOG.md` | ❌ No existe |
-| Documentación de auto-generación de auth secret | ⚠️ Existe en código, no documentada |
+| Qué falta                                       | Estado                                                |
+| ----------------------------------------------- | ----------------------------------------------------- |
+| `.env.example`                                  | ❌ No existe                                          |
+| Documentación centralizada de env vars          | ❌ Dispersa en 10+ archivos fuente                    |
+| Guía de self-hosting                            | ❌ No existe (hay Dockerfile y compose pero sin docs) |
+| `CONTRIBUTING.md`                               | ❌ No existe                                          |
+| `CHANGELOG.md`                                  | ❌ No existe                                          |
+| Documentación de auto-generación de auth secret | ⚠️ Existe en código, no documentada                   |
 
 ### Estado objetivo
 
@@ -159,14 +159,14 @@ No existe `.env.example`. El `README.md` referencia _"Provider API keys are conf
 
 No existen archivos comunitarios: sin `CONTRIBUTING.md`, sin PR template, sin issue templates, sin `CODE_OF_CONDUCT.md`, sin `SECURITY.md`. No hay criterios formales de merge ni proceso de triage de issues.
 
-| Qué falta | Estado |
-|---|---|
-| `CODE_OF_CONDUCT.md` | ❌ No existe |
-| `SECURITY.md` | ❌ No existe |
-| PR template (`.github/pull_request_template.md`) | ❌ No existe |
+| Qué falta                                               | Estado        |
+| ------------------------------------------------------- | ------------- |
+| `CODE_OF_CONDUCT.md`                                    | ❌ No existe  |
+| `SECURITY.md`                                           | ❌ No existe  |
+| PR template (`.github/pull_request_template.md`)        | ❌ No existe  |
 | Issue templates (`bug_report.md`, `feature_request.md`) | ❌ No existen |
-| Criterios de merge documentados | ❌ No existen |
-| Proceso de triage de issues | ❌ No existe |
+| Criterios de merge documentados                         | ❌ No existen |
+| Proceso de triage de issues                             | ❌ No existe  |
 
 ### Estado objetivo
 
@@ -189,9 +189,11 @@ No existen archivos comunitarios: sin `CONTRIBUTING.md`, sin PR template, sin is
 - **Crear `.github/pull_request_template.md`**:
   ```markdown
   ## Descripción
+
   <!-- Qué cambia y por qué -->
 
   ## Tipo de cambio
+
   - [ ] Bug fix
   - [ ] Nueva funcionalidad
   - [ ] Breaking change
@@ -199,6 +201,7 @@ No existen archivos comunitarios: sin `CONTRIBUTING.md`, sin PR template, sin is
   - [ ] Refactor / mejora interna
 
   ## Checklist
+
   - [ ] El código sigue las convenciones del proyecto (TypeScript strict, no `any`, Tailwind v4)
   - [ ] Pasé `pnpm lint` y `pnpm typecheck` localmente
   - [ ] Agregué o actualicé tests

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 import { Hono } from "hono";
-import { authMiddleware } from "../middleware/auth";
-import { getUsername } from "../lib/auth-helpers";
-import { existsSync, readdirSync, readFileSync, writeFileSync, mkdirSync, copyFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { getAgentDir, getWorkspaceSkillsDir } from "shared";
 import { agentRegistry } from "../agents";
-import { getWorkspaceSkillsDir, getAgentDir } from "shared";
+import { getUsername } from "../lib/auth-helpers";
+import { authMiddleware } from "../middleware/auth";
 
 export const galleryRouter = new Hono();
 
@@ -14,10 +14,10 @@ galleryRouter.use("/*", authMiddleware);
 function getCommunityDir(): string {
   let dir = join(process.cwd(), "community");
   if (existsSync(dir)) return dir;
-  
+
   dir = join(process.cwd(), "../../community");
   if (existsSync(dir)) return dir;
-  
+
   return join(process.cwd(), "community");
 }
 
@@ -60,12 +60,12 @@ galleryRouter.get("/blueprints", (c) => {
 galleryRouter.get("/blueprints/:id/icon", (c) => {
   const id = c.req.param("id");
   const communityDir = getCommunityDir();
-  
+
   // Try agent icon
   const agentIconPath = join(communityDir, "agents", id, "icon.svg");
   if (existsSync(agentIconPath)) {
     return c.body(readFileSync(agentIconPath, "utf-8"), 200, {
-      "Content-Type": "image/svg+xml"
+      "Content-Type": "image/svg+xml",
     });
   }
 
@@ -118,7 +118,7 @@ galleryRouter.post("/blueprints/:id/install", async (c) => {
 
     // Register the agent
     await agentRegistry.register(username, definition, true);
-    
+
     // Copy avatar icon if present
     const bpIconPath = join(communityDir, "agents", id, "icon.svg");
     if (existsSync(bpIconPath)) {
@@ -134,7 +134,6 @@ galleryRouter.post("/blueprints/:id/install", async (c) => {
       id: definition.id,
       name: definition.name,
     });
-
   } catch (err) {
     return c.json({ error: String(err) }, 500);
   }

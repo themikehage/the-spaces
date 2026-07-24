@@ -1,24 +1,24 @@
 // SPDX-License-Identifier: MIT
 import type { ReactNode } from "react";
+import { AccordionComponent } from "./AccordionComponent";
+import { AudioComponent } from "./AudioComponent";
 import { BadgeComponent } from "./BadgeComponent";
 import { CardComponent } from "./CardComponent";
 import { CardListComponent } from "./CardListComponent";
-import { TableComponent } from "./TableComponent";
-import { MetricComponent } from "./MetricComponent";
 import { CodeComponent } from "./CodeComponent";
-import { SectionComponent } from "./SectionComponent";
 import { CustomHtmlComponent } from "./CustomHtmlComponent";
-import { VideoComponent } from "./VideoComponent";
-import { AudioComponent } from "./AudioComponent";
-import { PdfComponent } from "./PdfComponent";
-import { TabsComponent } from "./TabsComponent";
-import { MarkdownComponent } from "./MarkdownComponent";
-import { ProgressComponent } from "./ProgressComponent";
-import { AccordionComponent } from "./AccordionComponent";
 import { DiffComponent } from "./DiffComponent";
-import { StepsComponent } from "./StepsComponent";
+import { MarkdownComponent } from "./MarkdownComponent";
+import { MetricComponent } from "./MetricComponent";
+import { PdfComponent } from "./PdfComponent";
+import { ProgressComponent } from "./ProgressComponent";
+import { SectionComponent } from "./SectionComponent";
 import { StatsComponent } from "./StatsComponent";
+import { StepsComponent } from "./StepsComponent";
+import { TableComponent } from "./TableComponent";
+import { TabsComponent } from "./TabsComponent";
 import { TimelineComponent } from "./TimelineComponent";
+import { VideoComponent } from "./VideoComponent";
 import { CUSTOM_TOOL_THEME_CSS } from "./design-tokens";
 
 interface CustomUiRendererProps {
@@ -102,7 +102,10 @@ export function CustomUiRenderer({ ui, presentation, sessionId = null }: CustomU
 
       default:
         return (
-          <div key={key} className="text-xs text-muted-foreground bg-muted p-2 rounded border border-border">
+          <div
+            key={key}
+            className="text-xs text-muted-foreground bg-muted p-2 rounded border border-border"
+          >
             Unknown component type: {comp.type}
           </div>
         );

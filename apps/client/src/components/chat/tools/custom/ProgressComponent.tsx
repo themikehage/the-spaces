@@ -6,7 +6,12 @@ interface ProgressProps {
   showPercentage?: boolean;
 }
 
-export function ProgressComponent({ value, label, variant = "bar", showPercentage = true }: ProgressProps) {
+export function ProgressComponent({
+  value,
+  label,
+  variant = "bar",
+  showPercentage = true,
+}: ProgressProps) {
   const percentage = Math.min(Math.max(value, 0), 100);
 
   if (variant === "circle") {
@@ -39,14 +44,10 @@ export function ProgressComponent({ value, label, variant = "bar", showPercentag
             />
           </svg>
           {showPercentage && (
-            <span className="absolute text-[10px] font-bold text-foreground">
-              {percentage}%
-            </span>
+            <span className="absolute text-[10px] font-bold text-foreground">{percentage}%</span>
           )}
         </div>
-        {label && (
-          <span className="text-xs font-semibold text-muted-foreground">{label}</span>
-        )}
+        {label && <span className="text-xs font-semibold text-muted-foreground">{label}</span>}
       </div>
     );
   }

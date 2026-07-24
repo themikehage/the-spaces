@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { useEffect, useCallback, useState } from "react";
 import { wsClient } from "@/lib/ws-client";
+import { useCallback, useEffect, useState } from "react";
 import { useConnectionAwareEffect } from "./useConnectionAware";
 
 type EventHandler = (data: unknown) => void;
@@ -30,7 +30,7 @@ export function useWebSocket(sessionId: string | null): WebSocketState {
     (data: Record<string, unknown>) => {
       wsClient.send({ ...data, sessionId });
     },
-    [sessionId]
+    [sessionId],
   );
 
   const subscribe = useCallback((type: string, handler: EventHandler) => {

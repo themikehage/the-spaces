@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-import type { TeamMember, AgentInfo } from "shared";
-import type { StreamingAgentState } from "@/hooks/useTeam";
 import { AgentAvatar } from "@/components/shared/AgentAvatar";
+import type { StreamingAgentState } from "@/hooks/useTeam";
+import type { AgentInfo, TeamMember } from "shared";
 
 interface Props {
   members: TeamMember[];
@@ -12,12 +12,30 @@ interface Props {
 }
 
 const ROLE_LABELS: Record<string, { label: string; textStyle: string; badgeStyle: string }> = {
-  lead: { label: "Leads", textStyle: "text-accent", badgeStyle: "bg-accent/10 border-accent/20 text-accent" },
-  member: { label: "Members", textStyle: "text-muted-foreground", badgeStyle: "bg-card-hover border-border text-muted-foreground" },
-  observer: { label: "Observers", textStyle: "text-muted-foreground/60", badgeStyle: "bg-background border-border/50 text-muted-foreground/60" },
+  lead: {
+    label: "Leads",
+    textStyle: "text-accent",
+    badgeStyle: "bg-accent/10 border-accent/20 text-accent",
+  },
+  member: {
+    label: "Members",
+    textStyle: "text-muted-foreground",
+    badgeStyle: "bg-card-hover border-border text-muted-foreground",
+  },
+  observer: {
+    label: "Observers",
+    textStyle: "text-muted-foreground/60",
+    badgeStyle: "bg-background border-border/50 text-muted-foreground/60",
+  },
 };
 
-export function OrgFlowMobile({ members, registeredAgents, streamingAgents, onEditAgent, sessionStatuses }: Props) {
+export function OrgFlowMobile({
+  members,
+  registeredAgents,
+  streamingAgents,
+  onEditAgent,
+  sessionStatuses,
+}: Props) {
   const getAgentInfo = (agentId: string) => {
     return registeredAgents.find((a) => a.id === agentId);
   };
@@ -46,7 +64,7 @@ export function OrgFlowMobile({ members, registeredAgents, streamingAgents, onEd
             const info = getAgentInfo(m.agentId);
             const name = info?.name || m.agentId;
             const isOrphan = !info;
-            const role = info ? (info.role || "agent") : "Deleted Agent";
+            const role = info ? info.role || "agent" : "Deleted Agent";
             const isStreaming = !!streamingAgents[m.agentId];
             const streaming = streamingAgents[m.agentId];
 
@@ -66,26 +84,32 @@ export function OrgFlowMobile({ members, registeredAgents, streamingAgents, onEd
                   isOrphan
                     ? "border-dashed border-destructive/30 bg-destructive/5 opacity-85"
                     : isStreaming
-                    ? "border-accent/40 shadow-sm shadow-accent/5"
-                    : "border-border"
+                      ? "border-accent/40 shadow-sm shadow-accent/5"
+                      : "border-border"
                 }`}
               >
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   <span className="relative flex-shrink-0">
                     <AgentAvatar name={name} avatarUrl={info?.avatarUrl} size="sm" />
-                    <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-background ${memberSessionDot}`} />
+                    <span
+                      className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-background ${memberSessionDot}`}
+                    />
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <p className={`font-semibold text-xs truncate ${isOrphan ? "text-destructive" : "text-foreground"}`}>
+                      <p
+                        className={`font-semibold text-xs truncate ${isOrphan ? "text-destructive" : "text-foreground"}`}
+                      >
                         {isOrphan ? `⚠️ ${name}` : name}
                       </p>
-                      <span className={`px-1.5 py-0.2 rounded text-[8px] font-bold border uppercase ${
-                        isOrphan
-                          ? "bg-destructive/10 border-destructive/20 text-destructive"
-                          : config.badgeStyle
-                      }`}>
-                        {isOrphan ? "missing" : (m.role || "member")}
+                      <span
+                        className={`px-1.5 py-0.2 rounded text-[8px] font-bold border uppercase ${
+                          isOrphan
+                            ? "bg-destructive/10 border-destructive/20 text-destructive"
+                            : config.badgeStyle
+                        }`}
+                      >
+                        {isOrphan ? "missing" : m.role || "member"}
                       </span>
                     </div>
                     <p className="text-[10px] text-muted-foreground font-mono truncate">{role}</p>
@@ -99,11 +123,19 @@ export function OrgFlowMobile({ members, registeredAgents, streamingAgents, onEd
                 </div>
 
                 <div className="flex-shrink-0 flex items-center gap-2">
-                  {isStreaming && (
-                    <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-                  )}
-                  <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor" className="text-muted-foreground">
-                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                  {isStreaming && <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />}
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    className="text-muted-foreground"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </div>
               </div>

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-import { resolveAndValidate, validateUrl } from "./security";
-import { extractContent } from "./extractor";
 import { webFetchCache, type CacheEntry } from "./cache";
+import { extractContent } from "./extractor";
 import { rateLimiter } from "./rate-limiter";
+import { resolveAndValidate, validateUrl } from "./security";
 
 export interface WebFetchOptions {
   username: string;
@@ -19,7 +19,8 @@ export function createWebFetchTool(opts: WebFetchOptions) {
   return {
     name: "web_fetch",
     label: "Web Fetch",
-    description: "Fetch and extract text content from a web URL. Returns cleaned, sanitized text suitable for LLM processing. Works on server-rendered pages.",
+    description:
+      "Fetch and extract text content from a web URL. Returns cleaned, sanitized text suitable for LLM processing. Works on server-rendered pages.",
     parameters: {
       type: "object",
       properties: {
@@ -31,7 +32,8 @@ export function createWebFetchTool(opts: WebFetchOptions) {
           type: "string",
           enum: ["auto", "text", "markdown"],
           default: "auto",
-          description: "auto=readability+markdown (best), text=plain text extraction, markdown=force markdown conversion",
+          description:
+            "auto=readability+markdown (best), text=plain text extraction, markdown=force markdown conversion",
         },
         maxChars: {
           type: "integer",
@@ -68,10 +70,12 @@ export function createWebFetchTool(opts: WebFetchOptions) {
       if (!forceRefresh) {
         const cachedEntry = webFetchCache.get(urlString);
         if (cachedEntry) {
-          const contentText = extractMode === "text" ? cachedEntry.textContent : cachedEntry.markdown;
+          const contentText =
+            extractMode === "text" ? cachedEntry.textContent : cachedEntry.markdown;
           const truncated = contentText.length > maxChars;
-          const returnedText = truncated 
-            ? contentText.substring(0, maxChars) + "\n\n... [Content Truncated for Context Length] ..."
+          const returnedText = truncated
+            ? contentText.substring(0, maxChars) +
+              "\n\n... [Content Truncated for Context Length] ..."
             : contentText;
 
           return {
@@ -112,7 +116,12 @@ export function createWebFetchTool(opts: WebFetchOptions) {
         if (!response.ok) {
           rateLimiter.release();
           return {
-            content: [{ type: "text", text: `Fetch failed with status ${response.status}: ${response.statusText}` }],
+            content: [
+              {
+                type: "text",
+                text: `Fetch failed with status ${response.status}: ${response.statusText}`,
+              },
+            ],
             isError: true,
             details: { statusCode: response.status },
           };
@@ -120,18 +129,31 @@ export function createWebFetchTool(opts: WebFetchOptions) {
 
         const contentType = response.headers.get("content-type") || "";
         const mimeType = contentType.split(";")[0].trim().toLowerCase();
-        
+
         const ALLOWED_CONTENT_TYPES = [
-          "text/html", "text/plain", "application/json",
-          "application/xml", "text/xml", "text/markdown",
-          "text/csv", "application/javascript",
-          "application/xhtml+xml"
+          "text/html",
+          "text/plain",
+          "application/json",
+          "application/xml",
+          "text/xml",
+          "text/markdown",
+          "text/csv",
+          "application/javascript",
+          "application/xhtml+xml",
         ];
 
-        if (!ALLOWED_CONTENT_TYPES.some(t => mimeType.startsWith(t)) && !mimeType.startsWith("text/")) {
+        if (
+          !ALLOWED_CONTENT_TYPES.some((t) => mimeType.startsWith(t)) &&
+          !mimeType.startsWith("text/")
+        ) {
           rateLimiter.release();
           return {
-            content: [{ type: "text", text: `Blocked content type: ${mimeType}. Only text-based pages are supported.` }],
+            content: [
+              {
+                type: "text",
+                text: `Blocked content type: ${mimeType}. Only text-based pages are supported.`,
+              },
+            ],
             isError: true,
           };
         }
@@ -169,8 +191,9 @@ export function createWebFetchTool(opts: WebFetchOptions) {
         // 9. Truncate for LLM return limit
         const contentText = extractMode === "text" ? extracted.textContent : extracted.markdown;
         const truncated = contentText.length > maxChars;
-        const returnedText = truncated 
-          ? contentText.substring(0, maxChars) + "\n\n... [Content Truncated for Context Length] ..."
+        const returnedText = truncated
+          ? contentText.substring(0, maxChars) +
+            "\n\n... [Content Truncated for Context Length] ..."
           : contentText;
 
         return {
@@ -184,7 +207,6 @@ export function createWebFetchTool(opts: WebFetchOptions) {
             returnedSize: returnedText.length,
           },
         };
-
       } catch (error) {
         rateLimiter.release();
         return {
@@ -199,7 +221,7 @@ export function createWebFetchTool(opts: WebFetchOptions) {
 async function safeFetchWithRedirects(
   initialUrl: string,
   signal?: AbortSignal,
-  timeoutMs = 15000
+  timeoutMs = 15000,
 ): Promise<{ response: Response; finalUrl: string }> {
   const MAX_REDIRECTS = 5;
   let currentUrl = initialUrl;
@@ -222,7 +244,7 @@ async function safeFetchWithRedirects(
         redirect: "manual",
         headers: {
           "User-Agent": "SpacesWebFetch/1.0 (Security-Validated Bot)",
-          "Accept": "text/html, text/plain, application/xhtml+xml, application/xml;q=0.9, */*;q=0.8",
+          Accept: "text/html, text/plain, application/xhtml+xml, application/xml;q=0.9, */*;q=0.8",
         },
         signal: controller.signal,
       });
@@ -282,5 +304,5 @@ async function readResponseBody(response: Response, maxBytes: number): Promise<s
     reader.releaseLock();
   }
 
-  return chunks.map(chunk => decoder.decode(chunk, { stream: true })).join("") + decoder.decode();
+  return chunks.map((chunk) => decoder.decode(chunk, { stream: true })).join("") + decoder.decode();
 }

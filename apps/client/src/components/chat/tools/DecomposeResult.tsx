@@ -32,16 +32,12 @@ export function DecomposeResult({ text, details, l }: Props) {
   return (
     <div className="flex flex-col gap-3 font-sans text-xs">
       <div className="flex items-center justify-between gap-2">
-        <span className="font-semibold text-text-primary text-[13px]">
-          {l.bodyTasksPlanned}
-        </span>
+        <span className="font-semibold text-text-primary text-[13px]">{l.bodyTasksPlanned}</span>
         <div className="flex items-center gap-2">
           <span className="text-[10px] font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
             {mode}
           </span>
-          <span className="text-[10px] font-mono text-muted-foreground">
-            {totalTasks} tasks
-          </span>
+          <span className="text-[10px] font-mono text-muted-foreground">{totalTasks} tasks</span>
         </div>
       </div>
 

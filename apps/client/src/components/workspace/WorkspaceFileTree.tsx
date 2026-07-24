@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-import { useState, useCallback } from "react";
-import type { FileInfo } from "shared";
 import { useLiterals } from "@/lib";
+import { useCallback, useState } from "react";
+import type { FileInfo } from "shared";
 import { literals as u } from "./WorkspaceFileTree.literals";
 
 interface FileTreeProps {
@@ -55,7 +55,7 @@ function TreeNode({
       e.stopPropagation();
       onToggleExpand(file.path);
     },
-    [file.path, onToggleExpand]
+    [file.path, onToggleExpand],
   );
 
   const handleClick = useCallback(() => {
@@ -151,9 +151,7 @@ function TreeNode({
                 height="12"
                 viewBox="0 0 20 20"
                 fill="currentColor"
-                className={`transition-transform duration-150 ${
-                  isExpanded ? "rotate-90" : ""
-                }`}
+                className={`transition-transform duration-150 ${isExpanded ? "rotate-90" : ""}`}
               >
                 <path
                   fillRule="evenodd"

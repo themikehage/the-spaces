@@ -1,35 +1,30 @@
 // SPDX-License-Identifier: MIT
-import { type AgentMessage, uuidv7 } from "./vendor/agent/src/index.ts";
-import type { ImageContent, Message, TextContent } from "./vendor/ai/src/index.ts";
 import { randomUUID } from "node:crypto";
 import {
   appendFileSync,
   closeSync,
-  createReadStream,
+  copyFileSync,
   existsSync,
   mkdirSync,
   openSync,
-  readdirSync,
   readSync,
-  statSync,
-  writeFileSync,
   renameSync,
-  copyFileSync,
+  statSync,
   unlinkSync,
+  writeFileSync,
 } from "node:fs";
-import { readdir, stat } from "node:fs/promises";
-import { join, resolve } from "node:path";
-import { createInterface } from "node:readline";
+import { join } from "node:path";
 import { StringDecoder } from "node:string_decoder";
-import { normalizePath, resolvePath } from "./utils";
 import {
   type BashExecutionMessage,
   type CustomMessage,
   createBranchSummaryMessage,
   createCompactionSummaryMessage,
   createCustomMessage,
-  convertToLlm,
 } from "./messages";
+import { normalizePath, resolvePath } from "./utils";
+import { type AgentMessage, uuidv7 } from "./vendor/agent/src/index.ts";
+import type { ImageContent, Message, TextContent } from "./vendor/ai/src/index.ts";
 
 export const CURRENT_SESSION_VERSION = 3;
 
@@ -158,7 +153,7 @@ function createSessionId(): string {
 export function assertValidSessionId(id: string): void {
   if (!/^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$/.test(id)) {
     throw new Error(
-      "Session id must be non-empty, contain only alphanumeric characters, '-', '_', and '.', and start and end with an alphanumeric character"
+      "Session id must be non-empty, contain only alphanumeric characters, '-', '_', and '.', and start and end with an alphanumeric character",
     );
   }
 }
@@ -250,7 +245,10 @@ export function getLatestCompactionEntry(entries: SessionEntry[]): CompactionEnt
   return null;
 }
 
-function buildEntryIndex(entries: SessionEntry[], byId?: Map<string, SessionEntry>): Map<string, SessionEntry> {
+function buildEntryIndex(
+  entries: SessionEntry[],
+  byId?: Map<string, SessionEntry>,
+): Map<string, SessionEntry> {
   if (byId) return byId;
   const index = new Map<string, SessionEntry>();
   for (const entry of entries) {
@@ -287,7 +285,9 @@ function buildSessionPath(
   return path;
 }
 
-function getSessionContextSettings(path: SessionEntry[]): Pick<SessionContext, "thinkingLevel" | "model"> {
+function getSessionContextSettings(
+  path: SessionEntry[],
+): Pick<SessionContext, "thinkingLevel" | "model"> {
   let thinkingLevel = "off";
   let model: { provider: string; modelId: string } | null = null;
 
@@ -309,7 +309,15 @@ export function sessionEntryToContextMessages(entry: SessionEntry): AgentMessage
     return [entry.message];
   }
   if (entry.type === "custom_message") {
-    return [createCustomMessage(entry.customType, entry.content, entry.display, entry.details, entry.timestamp)];
+    return [
+      createCustomMessage(
+        entry.customType,
+        entry.content,
+        entry.display,
+        entry.details,
+        entry.timestamp,
+      ),
+    ];
   }
   if (entry.type === "branch_summary" && entry.summary) {
     return [createBranchSummaryMessage(entry.summary, entry.fromId, entry.timestamp)];
@@ -365,7 +373,9 @@ export function buildSessionContext(
 ): SessionContext {
   const path = buildSessionPath(entries, leafId, byId);
   const { thinkingLevel, model } = getSessionContextSettings(path);
-  const messages = buildContextEntries(entries, leafId, byId).flatMap(sessionEntryToContextMessages);
+  const messages = buildContextEntries(entries, leafId, byId).flatMap(
+    sessionEntryToContextMessages,
+  );
   return { messages, thinkingLevel, model };
 }
 
@@ -423,7 +433,11 @@ export function loadEntriesFromFile(filePath: string): FileEntry[] {
   return entries;
 }
 
-export class SessionManager {
+/**
+ * JsonlSessionStore manages low-level JSONL file persistence, session tree navigation,
+ * entry reading/writing, and session branch management.
+ */
+export class JsonlSessionStore {
   private sessionId: string = "";
   private sessionFile: string | undefined;
   private sessionDir: string;
@@ -457,12 +471,12 @@ export class SessionManager {
     }
   }
 
-  static create(cwd: string, sessionDir: string): SessionManager {
-    return new SessionManager(cwd, sessionDir, undefined, true);
+  static create(cwd: string, sessionDir: string): JsonlSessionStore {
+    return new JsonlSessionStore(cwd, sessionDir, undefined, true);
   }
 
-  static open(filePath: string, cwd: string, sessionDir: string): SessionManager {
-    return new SessionManager(cwd, sessionDir, filePath, true);
+  static open(filePath: string, cwd: string, sessionDir: string): JsonlSessionStore {
+    return new JsonlSessionStore(cwd, sessionDir, filePath, true);
   }
 
   setSessionFile(sessionFile: string): void {
@@ -482,7 +496,8 @@ export class SessionManager {
         return;
       }
 
-      const header = this.fileEntries.find((e) => e.type === "session") as SessionHeader | undefined;
+      const header = this.fileEntries.find((e) => e.type === "session") as
+        SessionHeader | undefined;
       this.sessionId = header?.id ?? createSessionId();
 
       if (migrateToCurrentVersion(this.fileEntries)) {

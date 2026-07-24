@@ -34,7 +34,11 @@ export function TableComponent({ title, columns, rows, striped = true }: TablePr
                   {columns.map((col, cIdx) => {
                     const value = row[col] ?? row[col.toLowerCase()] ?? "";
                     return (
-                      <td key={cIdx} className="px-4 py-2.5 whitespace-nowrap truncate max-w-[200px]" title={String(value)}>
+                      <td
+                        key={cIdx}
+                        className="px-4 py-2.5 whitespace-nowrap truncate max-w-[200px]"
+                        title={String(value)}
+                      >
                         {typeof value === "boolean" ? (value ? "true" : "false") : String(value)}
                       </td>
                     );

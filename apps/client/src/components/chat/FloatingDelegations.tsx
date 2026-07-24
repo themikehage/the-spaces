@@ -54,22 +54,30 @@ export function FloatingDelegations({ delegations, onNavigateToSession }: Props)
               className="flex items-center justify-between p-2 rounded bg-bg/50 border border-border/50 hover:bg-surface-hover hover:border-accent/40 cursor-pointer transition-all duration-150"
             >
               <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                <span className={`w-2.5 h-2.5 rounded-full ${statusColor} ${isRunning ? "animate-pulse" : ""}`} />
+                <span
+                  className={`w-2.5 h-2.5 rounded-full ${statusColor} ${isRunning ? "animate-pulse" : ""}`}
+                />
                 <div className="flex flex-col min-w-0 flex-1">
-                  <span className="text-xs text-text-primary font-medium truncate">
-                    {d.task}
-                  </span>
-                  <span className="text-[10px] text-text-secondary">
-                    {statusText}
-                  </span>
+                  <span className="text-xs text-text-primary font-medium truncate">{d.task}</span>
+                  <span className="text-[10px] text-text-secondary">{statusText}</span>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-[9px] font-mono text-text-secondary uppercase px-1.5 py-0.5 rounded bg-surface border border-border">
                   {d.targetType}
                 </span>
-                <svg className="w-3.5 h-3.5 text-text-secondary" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                <svg
+                  className="w-3.5 h-3.5 text-text-secondary"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                  />
                 </svg>
               </div>
             </div>

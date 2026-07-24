@@ -1,4 +1,5 @@
 # SHAPES Orquestador de Proyectos Agénticos
+
 ### Reporte de funcionalidades y arquitectura — OpenAI Build Week (Codex + GPT-5.6)
 
 ---
@@ -11,7 +12,7 @@ Un gestor de proyectos donde cada **proyecto es un entorno de trabajo real** (re
 - **Tools propias** (acceso real a sistemas vía MCP: Git, Coolify, APIs, filesystem, bases de datos).
 - **Contexto y memoria persistente** del proyecto (no arrancan de cero en cada sesión).
 
-El diferenciador frente a ClickUp/Asana/Wrike/Monday: sus agentes ejecutan *dentro de su propia app* (mover tarjetas, resumir, notificar). Los tuyos **ejecutan de verdad** — corren código, hacen commits, despliegan, consultan APIs externas — y lo hacen de forma visible y coordinada entre sí.
+El diferenciador frente a ClickUp/Asana/Wrike/Monday: sus agentes ejecutan _dentro de su propia app_ (mover tarjetas, resumir, notificar). Los tuyos **ejecutan de verdad** — corren código, hacen commits, despliegan, consultan APIs externas — y lo hacen de forma visible y coordinada entre sí.
 
 ---
 
@@ -148,6 +149,7 @@ El diferenciador frente a ClickUp/Asana/Wrike/Monday: sus agentes ejecutan *dent
 ## 4. Alcance recomendado para la semana de hackathon
 
 **MVP demostrable (prioridad alta):**
+
 1. Crear proyecto con contexto básico (objetivo + repo vinculado).
 2. Asignar 2–3 agentes con roles distintos y skills predefinidas (reusar tu librería de skills).
 3. Un agente controlador que delega a un especialista visible en el dashboard (handoff en vivo).
@@ -156,6 +158,7 @@ El diferenciador frente a ClickUp/Asana/Wrike/Monday: sus agentes ejecutan *dent
 6. Timeline legible de lo que hizo cada agente.
 
 **Fuera de alcance para esta semana (roadmap):**
+
 - Memoria vectorial completa (podés simularla con contexto estructurado en Postgres para el demo).
 - Métricas y reporting avanzado.
 - Multi-tenant / permisos granulares complejos.

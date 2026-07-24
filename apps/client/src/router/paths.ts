@@ -22,7 +22,10 @@ export function buildSessionPath(context: ContextPathInput | null, sessionId: st
   return `/${contextSegment(context.type)}/${context.id}/session/${sessionId}`;
 }
 
-export function buildDelegationsPath(context: ContextPathInput | null, sessionId: string | null): string {
+export function buildDelegationsPath(
+  context: ContextPathInput | null,
+  sessionId: string | null,
+): string {
   if (sessionId) {
     return `${buildSessionPath(context, sessionId)}/delegations`;
   }

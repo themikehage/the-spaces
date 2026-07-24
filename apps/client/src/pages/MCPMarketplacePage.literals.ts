@@ -9,7 +9,8 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     customComingSoonDesc: "You'll be able to add custom stdio and HTTP MCP servers. Stay tuned!",
     addCustomServer: "Add Custom Server",
     noCustomServers: "No Custom Servers",
-    noCustomServersDesc: "Create local MCP integrations running node/python scripts, or point to external microservices compatible with the protocol.",
+    noCustomServersDesc:
+      "Create local MCP integrations running node/python scripts, or point to external microservices compatible with the protocol.",
     installing: "Installing...",
     validating: "Validating...",
     installedSuccess: "installed successfully. Starting connection...",
@@ -37,7 +38,8 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     customComingSoonDesc: "Podrás agregar servidores MCP stdio y HTTP personalizados. ¡Muy pronto!",
     addCustomServer: "Agregar Servidor Custom",
     noCustomServers: "Sin Servidores Personalizados",
-    noCustomServersDesc: "Crea integraciones MCP locales ejecutando scripts de node/python, o apunta a microservicios externos compatibles con el protocolo.",
+    noCustomServersDesc:
+      "Crea integraciones MCP locales ejecutando scripts de node/python, o apunta a microservicios externos compatibles con el protocolo.",
     installing: "Instalando...",
     validating: "Validando...",
     installedSuccess: "instalado con éxito. Iniciando conexión...",

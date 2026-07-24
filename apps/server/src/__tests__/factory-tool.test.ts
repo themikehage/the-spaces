@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: MIT
-import { mock, describe, it, expect, beforeEach } from "bun:test";
-import { createFactoryTool, validateParams } from "../core/tools/factory-tool";
+import { beforeEach, describe, expect, it, mock } from "bun:test";
 import { agentRegistry } from "../agents";
-import { sessionManager } from "../core/session-manager";
+import { createFactoryTool, validateParams } from "../core/tools/factory-tool";
 
-const mockBroadcast = mock((username: string, data: any) => { });
+const mockBroadcast = mock((username: string, data: any) => {});
 
 // Mock the ws/handler module so we can verify notifications are broadcasted
 mock.module("../ws/handler", () => ({
   broadcastToUser: mockBroadcast,
-  broadcastToSession: mock(() => { }),
+  broadcastToSession: mock(() => {}),
 }));
 
 describe("Spaces Tool Validation & Broadcast Tests", () => {
@@ -19,12 +18,10 @@ describe("Spaces Tool Validation & Broadcast Tests", () => {
 
   describe("validateParams helper", () => {
     it("should pass validation with valid parameters for agent upsert", () => {
-      const error = validateParams(
-        "agents",
-        "upsert",
-        "my-agent",
-        { name: "My Agent", role: "developer" }
-      );
+      const error = validateParams("agents", "upsert", "my-agent", {
+        name: "My Agent",
+        role: "developer",
+      });
       expect(error).toBeNull();
     });
 
@@ -33,18 +30,17 @@ describe("Spaces Tool Validation & Broadcast Tests", () => {
         "agents",
         "upsert",
         undefined,
-        { role: "developer" } // missing id/name
+        { role: "developer" }, // missing id/name
       );
       expect(error).toContain("required");
     });
 
     it("should fail validation if parameter type is incorrect", () => {
-      const error = validateParams(
-        "agents",
-        "upsert",
-        "my-agent",
-        { name: "My Agent", role: "developer", skills: "not-an-array" }
-      );
+      const error = validateParams("agents", "upsert", "my-agent", {
+        name: "My Agent",
+        role: "developer",
+        skills: "not-an-array",
+      });
       expect(error).toContain("must be an array");
     });
 
@@ -83,7 +79,7 @@ describe("Spaces Tool Validation & Broadcast Tests", () => {
     it("should trigger broadcastToUser when a mutation is successful", async () => {
       // Mock agentRegistry register method to succeed
       const originalRegister = agentRegistry.register;
-      agentRegistry.register = async () => ({} as any);
+      agentRegistry.register = async () => ({}) as any;
 
       try {
         const tool = createFactoryTool({

@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { useLiterals } from "@/lib";
-import { literals as u } from "./ProjectSettingsModal.literals";
-import { Button } from "@/components/ui/Button";
 import { AvatarUploadField } from "@/components/shared/AvatarUploadField";
+import { Button } from "@/components/ui/Button";
+import { useLiterals } from "@/lib";
 import { DEFAULT_AVATAR_PREFIX, isDefaultAvatar } from "@/lib/defaultAvatars";
+import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import { ProjectAssignmentPanel } from "./ProjectAssignmentPanel";
+import { literals as u } from "./ProjectSettingsModal.literals";
 
 interface Project {
   id: string;
@@ -162,7 +162,11 @@ export function ProjectSettingsModal({
             className="p-1 rounded-lg text-text-secondary hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
           >
             <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              <path
+                fillRule="evenodd"
+                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              />
             </svg>
           </button>
         </div>
@@ -277,8 +281,12 @@ export function ProjectSettingsModal({
 
           {onDeleteProject && (
             <div className="pt-4 mt-4 border-t border-error/20 space-y-3">
-              <h4 className="text-xs font-bold text-error uppercase tracking-wider">{l.deleteProject}</h4>
-              <p className="text-[11px] text-text-secondary leading-relaxed font-body">{l.deleteProjectDescription}</p>
+              <h4 className="text-xs font-bold text-error uppercase tracking-wider">
+                {l.deleteProject}
+              </h4>
+              <p className="text-[11px] text-text-secondary leading-relaxed font-body">
+                {l.deleteProjectDescription}
+              </p>
               <form onSubmit={handleDelete} className="space-y-3">
                 <div>
                   <label className="block text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1">

@@ -2,9 +2,7 @@
 import dns from "node:dns/promises";
 import net from "node:net";
 
-const BLOCKED_HOSTS = new Set([
-  "localhost", "127.0.0.1", "0.0.0.0", "[::1]", "[::]",
-]);
+const BLOCKED_HOSTS = new Set(["localhost", "127.0.0.1", "0.0.0.0", "[::1]", "[::]"]);
 
 const BLOCKED_METADATA_HOSTS = new Set([
   "metadata.google.internal",
@@ -58,9 +56,10 @@ export function isPrivateIp(ip: string): boolean {
   return false;
 }
 
-export async function resolveAndValidate(urlString: string): Promise<
-  | { valid: false; reason: string }
-  | { valid: true; ip: string; hostname: string; url: URL }
+export async function resolveAndValidate(
+  urlString: string,
+): Promise<
+  { valid: false; reason: string } | { valid: true; ip: string; hostname: string; url: URL }
 > {
   const validation = validateUrl(urlString);
   if (!validation.valid) {

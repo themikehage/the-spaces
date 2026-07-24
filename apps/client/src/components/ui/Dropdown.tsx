@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { useState, useRef, useCallback } from "react";
 import { PortalPopover } from "@/components/chat/PortalPopover";
+import { useCallback, useRef, useState } from "react";
 
 export interface DropdownOption<T extends string> {
   value: T;
@@ -47,7 +47,7 @@ export function Dropdown<T extends string>({
       onChange(opt.value);
       setOpen(false);
     },
-    [onChange]
+    [onChange],
   );
 
   return (
@@ -86,8 +86,10 @@ export function Dropdown<T extends string>({
         onClose={() => setOpen(false)}
         matchWidth={matchWidth}
       >
-        <div className={`bg-[#171717] border border-border rounded-xl shadow-xl overflow-y-auto py-1 ${matchWidth ? "" : "min-w-[140px]"}`}
-          style={{ maxHeight: "min(50vh, 240px)" }}>
+        <div
+          className={`bg-[#171717] border border-border rounded-xl shadow-xl overflow-y-auto py-1 ${matchWidth ? "" : "min-w-[140px]"}`}
+          style={{ maxHeight: "min(50vh, 240px)" }}
+        >
           {options.map((opt) => {
             const isSelected = opt.value === value;
             return (

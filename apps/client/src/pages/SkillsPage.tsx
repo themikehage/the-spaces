@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-import { apiFetch } from "@/lib/api";
-import { useState, useEffect, useCallback } from "react";
 import { RichMarkdown } from "@/components/chat/RichMarkdown";
+import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useToast } from "@/contexts/ToastContext";
 import { useLiterals } from "@/lib";
+import { apiFetch } from "@/lib/api";
+import { useCallback, useEffect, useState } from "react";
 import { literals as u } from "./SkillsPage.literals";
-import { Button } from "@/components/ui/Button";
 
 interface SkillInfo {
   name: string;
@@ -35,7 +35,7 @@ export function SkillsPage() {
     setResetting(true);
     try {
       const res = await apiFetch("/api/skills/reset", {
-        method: "POST"
+        method: "POST",
       });
       if (!res.ok) throw new Error(l.loadError);
 
@@ -59,7 +59,7 @@ export function SkillsPage() {
       if (!res.ok) throw new Error(l.loadError);
       const data = await res.json();
       const sorted = (data.skills ?? []).sort((a: SkillInfo, b: SkillInfo) =>
-        a.name.localeCompare(b.name)
+        a.name.localeCompare(b.name),
       );
       setSkills(sorted);
       if (sorted.length > 0) {
@@ -90,7 +90,7 @@ export function SkillsPage() {
   const filteredSkills = skills.filter(
     (s) =>
       s.name.toLowerCase().includes(search.toLowerCase()) ||
-      s.description.toLowerCase().includes(search.toLowerCase())
+      s.description.toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
@@ -111,7 +111,9 @@ export function SkillsPage() {
         </div>
       ) : (
         <div className="flex-1 flex min-h-0">
-          <div className={`w-full md:w-80 lg:w-96 border-r border-border flex flex-col flex-shrink-0 bg-background ${mobileShowDetails ? "hidden md:flex" : "flex"}`}>
+          <div
+            className={`w-full md:w-80 lg:w-96 border-r border-border flex flex-col flex-shrink-0 bg-background ${mobileShowDetails ? "hidden md:flex" : "flex"}`}
+          >
             <div className="p-3 border-b border-border flex flex-col gap-2">
               <div className="flex gap-2">
                 <div className="relative flex-1">
@@ -122,7 +124,11 @@ export function SkillsPage() {
                     stroke="currentColor"
                     strokeWidth={2}
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"
+                    />
                   </svg>
                   <input
                     type="text"
@@ -143,14 +149,25 @@ export function SkillsPage() {
                   {resetting ? (
                     <div className="w-3.5 h-3.5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                   ) : (
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89H18v3" />
+                    <svg
+                      className="w-3.5 h-3.5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89H18v3"
+                      />
                     </svg>
                   )}
                 </button>
               </div>
               <div className="text-xs text-muted-foreground select-none font-medium px-0.5">
-                {skills.length} {l.skillCount}{skills.length !== 1 ? "s" : ""} loaded
+                {skills.length} {l.skillCount}
+                {skills.length !== 1 ? "s" : ""} loaded
               </div>
             </div>
             <div className="flex-1 overflow-y-auto p-2 space-y-1">
@@ -161,20 +178,22 @@ export function SkillsPage() {
                     setSelectedSkill(s);
                     setMobileShowDetails(true);
                   }}
-                  className={`w-full text-left p-3 rounded-lg transition-all duration-150 cursor-pointer ${selectedSkill?.name === s.name
+                  className={`w-full text-left p-3 rounded-lg transition-all duration-150 cursor-pointer ${
+                    selectedSkill?.name === s.name
                       ? "bg-card text-foreground border border-input/80 shadow"
                       : "text-muted-foreground hover:bg-card/50 hover:text-foreground border border-transparent"
-                    }`}
+                  }`}
                 >
                   <div className="flex items-center justify-between mb-1">
                     <span className="font-mono font-bold text-xs truncate max-w-[70%]">
                       {s.name}
                     </span>
                     <span
-                      className={`text-xs px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider ${s.scope === "project"
+                      className={`text-xs px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider ${
+                        s.scope === "project"
                           ? "bg-primary/10 text-primary"
                           : "bg-highlight/10 text-highlight"
-                        }`}
+                      }`}
                     >
                       {s.scope === "project" ? l.scopeProject : l.scopeUser}
                     </span>
@@ -185,14 +204,14 @@ export function SkillsPage() {
                 </button>
               ))}
               {filteredSkills.length === 0 && (
-                <p className="text-muted-foreground text-xs text-center py-8">
-                  {l.noSkillsFound}
-                </p>
+                <p className="text-muted-foreground text-xs text-center py-8">{l.noSkillsFound}</p>
               )}
             </div>
           </div>
 
-          <div className={`flex-1 overflow-y-auto bg-card/10 flex flex-col min-w-0 ${!mobileShowDetails ? "hidden md:flex" : "flex"}`}>
+          <div
+            className={`flex-1 overflow-y-auto bg-card/10 flex flex-col min-w-0 ${!mobileShowDetails ? "hidden md:flex" : "flex"}`}
+          >
             {selectedSkill ? (
               <div className="p-4 sm:p-6 max-w-4xl w-full mx-auto space-y-4">
                 <button
@@ -215,10 +234,11 @@ export function SkillsPage() {
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <span
-                      className={`text-xs px-2 py-0.5 rounded font-semibold uppercase ${selectedSkill.scope === "project"
+                      className={`text-xs px-2 py-0.5 rounded font-semibold uppercase ${
+                        selectedSkill.scope === "project"
                           ? "bg-primary/20 text-primary"
                           : "bg-highlight/20 text-highlight"
-                        }`}
+                      }`}
                     >
                       {selectedSkill.scope === "project" ? l.scopeProjectDetail : l.scopeUserDetail}
                     </span>

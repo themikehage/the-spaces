@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-import { useState, useEffect, useCallback } from "react";
 import { useLiterals } from "@/lib";
-import { literals as u } from "./McpTab.literals";
 import { apiFetch } from "@/lib/api";
+import { useCallback, useEffect, useState } from "react";
+import { literals as u } from "./McpTab.literals";
 
 interface McpServerConfig {
   enabled: boolean;
@@ -16,7 +16,7 @@ interface McpConfig {
 }
 
 export function McpTab() {
-const l = useLiterals(u);
+  const l = useLiterals(u);
   const [mcpConfig, setMcpConfig] = useState<McpConfig | null>(null);
   const [mcpLoading, setMcpLoading] = useState(true);
   const [mcpError, setMcpError] = useState("");
@@ -68,7 +68,8 @@ const l = useLiterals(u);
         <div>
           <h2 className="text-foreground font-semibold text-base">{l.title}</h2>
           <p className="text-muted-foreground text-[11px] mt-0.5">
-            Configure and connect dynamic MCP servers. Enabled servers will supply their tools automatically to running agents.
+            Configure and connect dynamic MCP servers. Enabled servers will supply their tools
+            automatically to running agents.
           </p>
         </div>
         {mcpSaving && (
@@ -79,9 +80,7 @@ const l = useLiterals(u);
         )}
       </div>
 
-      {mcpError && (
-        <p className="text-destructive text-sm p-3 bg-card rounded-lg">{mcpError}</p>
-      )}
+      {mcpError && <p className="text-destructive text-sm p-3 bg-card rounded-lg">{mcpError}</p>}
 
       {mcpLoading ? (
         <div className="flex justify-center py-8">
@@ -98,13 +97,17 @@ const l = useLiterals(u);
               <div className="p-4 bg-card-hover/10 border-b border-input/30 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <h3 className="text-foreground text-sm font-semibold capitalize">{name}</h3>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                    srv.enabled ? "bg-primary/10 text-primary border border-success/20" : "bg-text-secondary/10 text-muted-foreground border border-input"
-                  }`}>
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                      srv.enabled
+                        ? "bg-primary/10 text-primary border border-success/20"
+                        : "bg-text-secondary/10 text-muted-foreground border border-input"
+                    }`}
+                  >
                     {srv.enabled ? "Enabled" : "Disabled"}
                   </span>
                 </div>
-                
+
                 <label className="flex items-center gap-2 cursor-pointer select-none">
                   <input
                     type="checkbox"
@@ -114,8 +117,8 @@ const l = useLiterals(u);
                         ...mcpConfig,
                         mcpServers: {
                           ...mcpConfig.mcpServers,
-                          [name]: { ...srv, enabled: e.target.checked }
-                        }
+                          [name]: { ...srv, enabled: e.target.checked },
+                        },
                       };
                       handleSaveMcpConfig(updated);
                     }}
@@ -128,7 +131,9 @@ const l = useLiterals(u);
               <div className="p-4 space-y-3 text-xs">
                 <div className="grid grid-cols-1 gap-3">
                   <div>
-                    <label className="text-xs text-muted-foreground block mb-1 font-semibold uppercase tracking-wider">{l.command}</label>
+                    <label className="text-xs text-muted-foreground block mb-1 font-semibold uppercase tracking-wider">
+                      {l.command}
+                    </label>
                     <input
                       type="text"
                       value={srv.command}
@@ -137,8 +142,8 @@ const l = useLiterals(u);
                           ...mcpConfig,
                           mcpServers: {
                             ...mcpConfig.mcpServers,
-                            [name]: { ...srv, command: e.target.value }
-                          }
+                            [name]: { ...srv, command: e.target.value },
+                          },
                         };
                         setMcpConfig(updated);
                       }}
@@ -148,7 +153,9 @@ const l = useLiterals(u);
                   </div>
 
                   <div>
-                    <label className="text-xs text-muted-foreground block mb-1 font-semibold uppercase tracking-wider">{l.arguments}</label>
+                    <label className="text-xs text-muted-foreground block mb-1 font-semibold uppercase tracking-wider">
+                      {l.arguments}
+                    </label>
                     <input
                       type="text"
                       value={JSON.stringify(srv.args)}
@@ -160,8 +167,8 @@ const l = useLiterals(u);
                               ...mcpConfig,
                               mcpServers: {
                                 ...mcpConfig.mcpServers,
-                                [name]: { ...srv, args: parsedArgs }
-                              }
+                                [name]: { ...srv, args: parsedArgs },
+                              },
                             };
                             setMcpConfig(updated);
                           }
@@ -174,31 +181,34 @@ const l = useLiterals(u);
                     />
                   </div>
 
-                  {srv.env && Object.entries(srv.env).map(([envKey, envVal]) => (
-                    <div key={envKey}>
-                      <label className="text-xs text-muted-foreground block mb-1 font-semibold uppercase tracking-wider">{envKey}</label>
-                      <input
-                        type="password"
-                        value={envVal}
-                        onChange={(e) => {
-                          const updated = {
-                            ...mcpConfig,
-                            mcpServers: {
-                              ...mcpConfig.mcpServers,
-                              [name]: {
-                                ...srv,
-                                env: { ...srv.env, [envKey]: e.target.value }
-                              }
-                            }
-                          };
-                          setMcpConfig(updated);
-                        }}
-                        onBlur={() => handleSaveMcpConfig(mcpConfig)}
-                        placeholder={l.enterValue}
-                        className="w-full px-3 py-1.5 bg-background border border-input rounded-lg text-foreground outline-none focus:border-primary text-xs"
-                      />
-                    </div>
-                  ))}
+                  {srv.env &&
+                    Object.entries(srv.env).map(([envKey, envVal]) => (
+                      <div key={envKey}>
+                        <label className="text-xs text-muted-foreground block mb-1 font-semibold uppercase tracking-wider">
+                          {envKey}
+                        </label>
+                        <input
+                          type="password"
+                          value={envVal}
+                          onChange={(e) => {
+                            const updated = {
+                              ...mcpConfig,
+                              mcpServers: {
+                                ...mcpConfig.mcpServers,
+                                [name]: {
+                                  ...srv,
+                                  env: { ...srv.env, [envKey]: e.target.value },
+                                },
+                              },
+                            };
+                            setMcpConfig(updated);
+                          }}
+                          onBlur={() => handleSaveMcpConfig(mcpConfig)}
+                          placeholder={l.enterValue}
+                          className="w-full px-3 py-1.5 bg-background border border-input rounded-lg text-foreground outline-none focus:border-primary text-xs"
+                        />
+                      </div>
+                    ))}
                 </div>
               </div>
             </div>

@@ -11,7 +11,8 @@ export interface DeploymentMember {
 }
 
 export interface DeploymentContext {
-  mode: "broadcast" | "targeted" | "solo" | "orchestration" | "orchestration-team" | "negotiation-team";
+  mode:
+    "broadcast" | "targeted" | "solo" | "orchestration" | "orchestration-team" | "negotiation-team";
   channelId?: string;
   agentRole?: string;
   members?: DeploymentMember[];
@@ -32,7 +33,7 @@ export class PromptComposer {
   compose(
     agentDef: { name: string; role: string; systemPrompt: string },
     deployment: DeploymentContext,
-    workspaceDir?: string
+    workspaceDir?: string,
   ): LayeredPrompt {
     const fragments: PromptFragment[] = [];
 
@@ -49,12 +50,16 @@ export class PromptComposer {
     // Layer 2: Role (Skip in solo mode)
     if (deployment.mode !== "solo" && deployment.mode !== "orchestration") {
       const roleToLoad =
-        deployment.agentRole === "lead" ? "role.leader" :
-        deployment.agentRole === "senior" ? "role.senior" :
-        deployment.agentRole === "observer" ? "role.observer" :
-        "role.member";
-      const roleFrags = promptFragmentRegistry.listByCategory("role", workspaceDir)
-        .filter(f => f.key.startsWith(roleToLoad));
+        deployment.agentRole === "lead"
+          ? "role.leader"
+          : deployment.agentRole === "senior"
+            ? "role.senior"
+            : deployment.agentRole === "observer"
+              ? "role.observer"
+              : "role.member";
+      const roleFrags = promptFragmentRegistry
+        .listByCategory("role", workspaceDir)
+        .filter((f) => f.key.startsWith(roleToLoad));
       fragments.push(...roleFrags);
     }
 
@@ -63,19 +68,34 @@ export class PromptComposer {
       const soloFrag = promptFragmentRegistry.get("instance.solo", workspaceDir);
       if (soloFrag) fragments.push(soloFrag);
     } else if (deployment.mode === "orchestration" || deployment.mode === "orchestration-team") {
-      const orchestrationFrag = promptFragmentRegistry.get("instance.team.orchestration", workspaceDir);
+      const orchestrationFrag = promptFragmentRegistry.get(
+        "instance.team.orchestration",
+        workspaceDir,
+      );
       if (orchestrationFrag) {
         const roster = (deployment.members || [])
-          .map((member) => `- ${member.agentName} (id: ${member.agentId}, role: ${member.role}, capability: ${member.capability || member.role})`)
+          .map(
+            (member) =>
+              `- ${member.agentName} (id: ${member.agentId}, role: ${member.role}, capability: ${member.capability || member.role})`,
+          )
           .join("\n");
-        fragments.push({ ...orchestrationFrag, content: orchestrationFrag.content.replace("{roster}", roster) });
+        fragments.push({
+          ...orchestrationFrag,
+          content: orchestrationFrag.content.replace("{roster}", roster),
+        });
       }
-      const leaderContract = promptFragmentRegistry.get("instance.team.orchestration.leader-contract", workspaceDir);
+      const leaderContract = promptFragmentRegistry.get(
+        "instance.team.orchestration.leader-contract",
+        workspaceDir,
+      );
       if (leaderContract) {
         fragments.push(leaderContract);
       }
     } else if (deployment.mode === "negotiation-team") {
-      const rosterFrag = promptFragmentRegistry.get("instance.team.negotiation.roster", workspaceDir);
+      const rosterFrag = promptFragmentRegistry.get(
+        "instance.team.negotiation.roster",
+        workspaceDir,
+      );
       if (rosterFrag && deployment.members) {
         const roster = deployment.members
           .map((member) => `- ${member.agentName} (id: ${member.agentId}, role: ${member.role})`)
@@ -88,16 +108,20 @@ export class PromptComposer {
       if (rosterFrag && deployment.members) {
         const rosterLines = [
           "- @user (the human user)",
-          ...deployment.members.map(m => `- @${m.agentName} (id: ${m.agentId}, role: ${m.role}, replyMode: ${m.replyMode})`)
+          ...deployment.members.map(
+            (m) =>
+              `- @${m.agentName} (id: ${m.agentId}, role: ${m.role}, replyMode: ${m.replyMode})`,
+          ),
         ].join("\n");
         const content = rosterFrag.content.replace("{roster}", rosterLines);
         fragments.push({ ...rosterFrag, content });
       }
 
       // Mode configuration
-      const modeFragKey = deployment.mode === "broadcast" 
-        ? "instance.channel.broadcast" 
-        : "instance.channel.targeted";
+      const modeFragKey =
+        deployment.mode === "broadcast"
+          ? "instance.channel.broadcast"
+          : "instance.channel.targeted";
       const modeFrag = promptFragmentRegistry.get(modeFragKey, workspaceDir);
       if (modeFrag) {
         const selfReplyMode = deployment.selfReplyMode || "broadcast";
@@ -122,14 +146,17 @@ export class PromptComposer {
 
     // Layer 5: Output Format
     if (deployment.mode !== "solo" && deployment.outputMode) {
-      const outputFrag = promptFragmentRegistry.get(`output-format.${deployment.outputMode}`, workspaceDir);
+      const outputFrag = promptFragmentRegistry.get(
+        `output-format.${deployment.outputMode}`,
+        workspaceDir,
+      );
       if (outputFrag) fragments.push(outputFrag);
     }
 
     return {
-      layers: fragments.map(f => f.content),
-      composed: fragments.map(f => f.content).join("\n\n"),
-      applied: fragments.map(f => f.key),
+      layers: fragments.map((f) => f.content),
+      composed: fragments.map((f) => f.content).join("\n\n"),
+      applied: fragments.map((f) => f.key),
     };
   }
 }

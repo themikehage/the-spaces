@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-import { Hono } from "hono";
-import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
-import { authMiddleware, getAuthPayload } from "../middleware/auth";
-import { sessionManager } from "../core/session-manager";
+import { Hono } from "hono";
 import { SetEnvVarSchema } from "shared";
+import { z } from "zod";
 import { auditLog } from "../core/audit-log";
+import { sessionManager } from "../core/session-manager";
+import { authMiddleware, getAuthPayload } from "../middleware/auth";
 
 export const envRouter = new Hono();
 
@@ -37,29 +37,22 @@ envRouter.get("/reveal/:key", (c) => {
   return c.json({ key, value: userEnv[key] });
 });
 
-envRouter.post(
-  "/",
-  zValidator("json", SetEnvVarSchema),
-  (c) => {
-    const { key, value } = c.req.valid("json");
-    const { username } = getAuthPayload(c);
+envRouter.post("/", zValidator("json", SetEnvVarSchema), (c) => {
+  const { key, value } = c.req.valid("json");
+  const { username } = getAuthPayload(c);
 
-    sessionManager.userConfig.setUserEnv(username, key.trim(), value);
+  sessionManager.userConfig.setUserEnv(username, key.trim(), value);
 
-    return c.json({ success: true, key, value: "••••••••" });
-  }
-);
+  return c.json({ success: true, key, value: "••••••••" });
+});
 
 envRouter.put(
   "/",
   zValidator(
     "json",
     z.object({
-      variables: z.record(
-        z.string().regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/),
-        z.string()
-      ),
-    })
+      variables: z.record(z.string().regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/), z.string()),
+    }),
   ),
   (c) => {
     const { variables } = c.req.valid("json");
@@ -86,7 +79,7 @@ envRouter.put(
     }));
 
     return c.json({ success: true, env: envList });
-  }
+  },
 );
 
 envRouter.delete("/:key", (c) => {

@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
-import { useState, useEffect, useCallback, useRef } from "react";
-import type { PreviewState } from "shared";
-import { useAuth } from "@/contexts/AuthContext";
-import { useLiterals } from "@/lib";
-import { literals as u } from "./PreviewPanel.literals";
 import { Button } from "@/components/ui/Button";
 import { Dropdown } from "@/components/ui/Dropdown";
+import { useAuth } from "@/contexts/AuthContext";
+import { useLiterals } from "@/lib";
 import { apiFetch } from "@/lib/api";
 import { wsClient } from "@/lib/ws-client";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { PreviewState } from "shared";
+import { literals as u } from "./PreviewPanel.literals";
 
 interface Props {
   activeProjectName: string | null;
@@ -88,10 +88,16 @@ function usePreviewStatus(projectName: string) {
 }
 
 export function PreviewPanel({ activeProjectName }: Props) {
-const l = useLiterals(u);
+  const l = useLiterals(u);
   const projectName = activeProjectName || "";
   const { user } = useAuth();
-  const { state: previewState, buildLogs, setBuildLogs, fetchConfig, previewBaseUrl: runtimePreviewBase } = usePreviewStatus(projectName);
+  const {
+    state: previewState,
+    buildLogs,
+    setBuildLogs,
+    fetchConfig,
+    previewBaseUrl: runtimePreviewBase,
+  } = usePreviewStatus(projectName);
   const [buildKey, setBuildKey] = useState(0);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [configOpen, setConfigOpen] = useState(false);
@@ -202,7 +208,9 @@ const l = useLiterals(u);
         );
       default:
         return (
-          <div className={`${base} bg-text-secondary/5 border-text-secondary/15 text-muted-foreground`}>
+          <div
+            className={`${base} bg-text-secondary/5 border-text-secondary/15 text-muted-foreground`}
+          >
             <div className="w-3 h-3 rounded-full bg-text-secondary/20" />
             No build yet
           </div>
@@ -370,15 +378,10 @@ const l = useLiterals(u);
       {/* Config drawer */}
       {configOpen && (
         <>
-          <div
-            className="fixed inset-0 bg-black/40 z-40"
-            onClick={() => setConfigOpen(false)}
-          />
+          <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setConfigOpen(false)} />
           <div className="fixed right-0 top-0 h-full w-80 sm:w-96 bg-card border-l border-input z-50 flex flex-col shadow-2xl">
             <div className="flex items-center justify-between px-4 py-3 border-b border-input">
-              <span className="text-sm font-semibold text-foreground">
-                Preview Settings
-              </span>
+              <span className="text-sm font-semibold text-foreground">Preview Settings</span>
               <button
                 onClick={() => setConfigOpen(false)}
                 className="text-muted-foreground hover:text-foreground cursor-pointer"
@@ -445,9 +448,7 @@ const l = useLiterals(u);
                     }))
                   }
                   placeholder={
-                    configForm.framework === "html"
-                      ? "No build needed"
-                      : "e.g. npm run build"
+                    configForm.framework === "html" ? "No build needed" : "e.g. npm run build"
                   }
                   disabled={configForm.framework === "html"}
                   className="w-full bg-background border border-input hover:border-primary/40 focus:border-primary outline-none text-foreground px-2.5 py-1.5 rounded text-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed font-mono"

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-import type { ReactNode } from "react";
 import { Logo } from "@/components/ui/Logo";
 import type { ConnectionState } from "@/lib/ws-client";
+import type { ReactNode } from "react";
 
 interface DesktopHeaderProps {
   onHome: () => void;
@@ -49,7 +49,16 @@ export function DesktopHeader({
           className="p-1 text-muted-foreground hover:text-foreground rounded cursor-pointer"
           title="Session Board"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <rect x="3" y="3" width="7" height="7" />
             <rect x="14" y="3" width="7" height="7" />
             <rect x="3" y="14" width="7" height="7" />
@@ -58,9 +67,11 @@ export function DesktopHeader({
         </button>
         <span
           className={`w-2 h-2 rounded-full flex-shrink-0 ${
-            wsState === "connected" ? "bg-success" :
-            wsState === "connecting" ? "bg-warning animate-pulse" :
-            "bg-error"
+            wsState === "connected"
+              ? "bg-success"
+              : wsState === "connecting"
+                ? "bg-warning animate-pulse"
+                : "bg-error"
           }`}
           title={`WebSocket: ${wsState}`}
         />

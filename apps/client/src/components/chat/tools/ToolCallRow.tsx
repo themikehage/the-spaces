@@ -1,29 +1,29 @@
 // SPDX-License-Identifier: MIT
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
-import { LsResult } from "./LsResult";
-import { FindResult } from "./FindResult";
-import { WriteResult } from "./WriteResult";
-import { ReadResult } from "./ReadResult";
-import { EditResult } from "./EditResult";
-import { GrepResult } from "./GrepResult";
-import { BashResult } from "./BashResult";
-import { ApprovalForm } from "./ApprovalForm";
-import { ChartView } from "./ChartView";
-import { AskQuestionForm } from "./AskQuestionForm";
-import { ImageGrid } from "../ImageGrid";
-import { HtmlPreview } from "../HtmlPreview";
-import { ShareFileCard } from "./ShareFileCard";
-import { ExaSearchResult } from "./ExaSearchResult";
-import { WebFetchResult } from "./WebFetchResult";
-import { MemoryResult } from "./MemoryResult";
-import { DecomposeResult } from "./DecomposeResult";
 import { useLiterals } from "@/lib";
-import { literals } from "./ToolCallRow.literals";
-import { CustomToolBody } from "./custom";
 import { ArrowRight } from "lucide-react";
+import { HtmlPreview } from "../HtmlPreview";
+import { ImageGrid } from "../ImageGrid";
+import { ApprovalForm } from "./ApprovalForm";
+import { AskQuestionForm } from "./AskQuestionForm";
+import { BashResult } from "./BashResult";
+import { ChartView } from "./ChartView";
+import { DecomposeResult } from "./DecomposeResult";
+import { EditResult } from "./EditResult";
+import { ExaSearchResult } from "./ExaSearchResult";
+import { FindResult } from "./FindResult";
+import { GrepResult } from "./GrepResult";
+import { LsResult } from "./LsResult";
+import { MemoryResult } from "./MemoryResult";
+import { ReadResult } from "./ReadResult";
+import { ShareFileCard } from "./ShareFileCard";
 import { SubagentLiveView } from "./SubagentLiveView";
+import { literals } from "./ToolCallRow.literals";
+import { WebFetchResult } from "./WebFetchResult";
+import { WriteResult } from "./WriteResult";
+import { CustomToolBody } from "./custom";
 
 export interface ToolContentBlock {
   type: string;
@@ -46,7 +46,13 @@ export interface ToolResultData {
     synthesizedOutput?: string;
     costDollars?: number;
     count?: number;
-    memories?: Array<{ id: string; type: string; importance: number; content: string; tags?: string[] }>;
+    memories?: Array<{
+      id: string;
+      type: string;
+      importance: number;
+      content: string;
+      tags?: string[];
+    }>;
     status?: string;
     type?: string;
     importance?: number;
@@ -92,7 +98,16 @@ const TOOL_META: Record<string, { label: string; colorClass: string; icon: React
     label: "find",
     colorClass: "text-primary",
     icon: (
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="13"
+        height="13"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <circle cx="11" cy="11" r="8" />
         <line x1="21" y1="21" x2="16.65" y2="16.65" />
       </svg>
@@ -113,7 +128,11 @@ const TOOL_META: Record<string, { label: string; colorClass: string; icon: React
     icon: (
       <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor">
         <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-        <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+        <path
+          fillRule="evenodd"
+          d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
+          clipRule="evenodd"
+        />
       </svg>
     ),
   },
@@ -122,7 +141,11 @@ const TOOL_META: Record<string, { label: string; colorClass: string; icon: React
     colorClass: "text-warning",
     icon: (
       <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor">
-        <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+        <path
+          fillRule="evenodd"
+          d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
+          clipRule="evenodd"
+        />
       </svg>
     ),
   },
@@ -130,7 +153,16 @@ const TOOL_META: Record<string, { label: string; colorClass: string; icon: React
     label: "grep",
     colorClass: "text-highlight",
     icon: (
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="13"
+        height="13"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <circle cx="11" cy="11" r="8" />
         <line x1="21" y1="21" x2="16.65" y2="16.65" />
         <line x1="8" y1="11" x2="14" y2="11" />
@@ -142,7 +174,16 @@ const TOOL_META: Record<string, { label: string; colorClass: string; icon: React
     label: "bash",
     colorClass: "text-primary",
     icon: (
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="13"
+        height="13"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <polyline points="4 17 10 11 4 5" />
         <line x1="12" y1="19" x2="20" y2="19" />
       </svg>
@@ -153,7 +194,11 @@ const TOOL_META: Record<string, { label: string; colorClass: string; icon: React
     colorClass: "text-warning",
     icon: (
       <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor">
-        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zm-1 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+        <path
+          fillRule="evenodd"
+          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zm-1 9a1 1 0 100-2 1 1 0 000 2z"
+          clipRule="evenodd"
+        />
       </svg>
     ),
   },
@@ -162,7 +207,11 @@ const TOOL_META: Record<string, { label: string; colorClass: string; icon: React
     colorClass: "text-warning",
     icon: (
       <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor">
-        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zm-1 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+        <path
+          fillRule="evenodd"
+          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zm-1 9a1 1 0 100-2 1 1 0 000 2z"
+          clipRule="evenodd"
+        />
       </svg>
     ),
   },
@@ -171,7 +220,11 @@ const TOOL_META: Record<string, { label: string; colorClass: string; icon: React
     colorClass: "text-primary",
     icon: (
       <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor">
-        <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+        <path
+          fillRule="evenodd"
+          d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
+          clipRule="evenodd"
+        />
       </svg>
     ),
   },
@@ -180,7 +233,11 @@ const TOOL_META: Record<string, { label: string; colorClass: string; icon: React
     colorClass: "text-primary",
     icon: (
       <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor">
-        <path fillRule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h8a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+        <path
+          fillRule="evenodd"
+          d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h8a1 1 0 110 2H4a1 1 0 01-1-1z"
+          clipRule="evenodd"
+        />
       </svg>
     ),
   },
@@ -199,7 +256,11 @@ const TOOL_META: Record<string, { label: string; colorClass: string; icon: React
     colorClass: "text-primary",
     icon: (
       <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor">
-        <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+        <path
+          fillRule="evenodd"
+          d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+          clipRule="evenodd"
+        />
       </svg>
     ),
   },
@@ -207,7 +268,16 @@ const TOOL_META: Record<string, { label: string; colorClass: string; icon: React
     label: "spawn_subagent",
     colorClass: "text-primary",
     icon: (
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="13"
+        height="13"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
         <line x1="9" y1="3" x2="9" y2="21" />
       </svg>
@@ -217,7 +287,16 @@ const TOOL_META: Record<string, { label: string; colorClass: string; icon: React
     label: "delegate_task",
     colorClass: "text-primary",
     icon: (
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="13"
+        height="13"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
         <circle cx="9" cy="7" r="4" />
         <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -229,7 +308,16 @@ const TOOL_META: Record<string, { label: string; colorClass: string; icon: React
     label: "manage_delegations",
     colorClass: "text-primary",
     icon: (
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="13"
+        height="13"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
         <circle cx="9" cy="7" r="4" />
@@ -240,7 +328,16 @@ const TOOL_META: Record<string, { label: string; colorClass: string; icon: React
     label: "exa_search",
     colorClass: "text-highlight",
     icon: (
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="13"
+        height="13"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <circle cx="11" cy="11" r="7" />
         <line x1="21" y1="21" x2="16.65" y2="16.65" />
         <path d="M8 11h6" />
@@ -252,7 +349,16 @@ const TOOL_META: Record<string, { label: string; colorClass: string; icon: React
     label: "web_fetch",
     colorClass: "text-highlight",
     icon: (
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="13"
+        height="13"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <circle cx="12" cy="12" r="10" />
         <line x1="2" y1="12" x2="22" y2="12" />
         <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
@@ -263,7 +369,16 @@ const TOOL_META: Record<string, { label: string; colorClass: string; icon: React
     label: "memory_store",
     colorClass: "text-accent",
     icon: (
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="13"
+        height="13"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <path d="M12 2a4 4 0 0 1 4 4v1a3 3 0 0 1 3 3v2a3 3 0 0 1-1.5 2.6A4 4 0 0 1 14 18h-4a4 4 0 0 1-3.5-3.4A3 3 0 0 1 5 12v-2a3 3 0 0 1 3-3V6a4 4 0 0 1 4-4z" />
         <line x1="12" y1="18" x2="12" y2="22" />
         <line x1="9" y1="22" x2="15" y2="22" />
@@ -274,7 +389,16 @@ const TOOL_META: Record<string, { label: string; colorClass: string; icon: React
     label: "memory_recall",
     colorClass: "text-accent",
     icon: (
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="13"
+        height="13"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <path d="M12 2a4 4 0 0 1 4 4v1a3 3 0 0 1 3 3v2a3 3 0 0 1-1.5 2.6A4 4 0 0 1 14 18h-4a4 4 0 0 1-3.5-3.4A3 3 0 0 1 5 12v-2a3 3 0 0 1 3-3V6a4 4 0 0 1 4-4z" />
         <circle cx="18" cy="18" r="3" />
         <line x1="20.5" y1="20.5" x2="22" y2="22" />
@@ -285,7 +409,16 @@ const TOOL_META: Record<string, { label: string; colorClass: string; icon: React
     label: "memory_forget",
     colorClass: "text-error",
     icon: (
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="13"
+        height="13"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <path d="M12 2a4 4 0 0 1 4 4v1a3 3 0 0 1 3 3v2a3 3 0 0 1-1.5 2.6A4 4 0 0 1 14 18h-4a4 4 0 0 1-3.5-3.4A3 3 0 0 1 5 12v-2a3 3 0 0 1 3-3V6a4 4 0 0 1 4-4z" />
         <line x1="15" y1="15" x2="21" y2="21" />
         <line x1="21" y1="15" x2="15" y2="21" />
@@ -296,7 +429,16 @@ const TOOL_META: Record<string, { label: string; colorClass: string; icon: React
     label: "decompose_tasks",
     colorClass: "text-primary",
     icon: (
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="13"
+        height="13"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <line x1="8" y1="6" x2="21" y2="6" />
         <line x1="8" y1="12" x2="21" y2="12" />
         <line x1="8" y1="18" x2="21" y2="18" />
@@ -310,7 +452,16 @@ const TOOL_META: Record<string, { label: string; colorClass: string; icon: React
     label: "manage_custom_tools",
     colorClass: "text-primary",
     icon: (
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="13"
+        height="13"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
       </svg>
     ),
@@ -319,7 +470,16 @@ const TOOL_META: Record<string, { label: string; colorClass: string; icon: React
     label: "preview",
     colorClass: "text-emerald-500",
     icon: (
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="13"
+        height="13"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
         <line x1="8" y1="21" x2="16" y2="21" />
         <line x1="12" y1="17" x2="12" y2="21" />
@@ -328,12 +488,20 @@ const TOOL_META: Record<string, { label: string; colorClass: string; icon: React
   },
 };
 
-function getArgSummary(toolName: string, args: Record<string, unknown>, l: Record<string, string>): string {
+function getArgSummary(
+  toolName: string,
+  args: Record<string, unknown>,
+  l: Record<string, string>,
+): string {
   switch (toolName) {
-    case "ls": return (args.path as string) || ".";
-    case "find": return (args.pattern as string) || "";
-    case "write": return (args.path as string) || "";
-    case "read": return (args.path as string) || "";
+    case "ls":
+      return (args.path as string) || ".";
+    case "find":
+      return (args.pattern as string) || "";
+    case "write":
+      return (args.path as string) || "";
+    case "read":
+      return (args.path as string) || "";
     case "edit": {
       const path = (args.path as string) || "";
       const edits = Array.isArray(args.edits) ? args.edits.length : 0;
@@ -348,13 +516,20 @@ function getArgSummary(toolName: string, args: Record<string, unknown>, l: Recor
       const cmd = (args.command as string) || "";
       return cmd.length > 55 ? cmd.slice(0, 55) + "…" : cmd;
     }
-    case "request_approval": return (args.title as string) || l.argApprovalRequest;
-    case "ask_question": return (args.question as string) || l.argUserQuestion;
-    case "render_images": return Array.isArray(args.images) ? `${args.images.length} ${l.argImages}` : "Images";
-    case "render_html": return (args.title as string) || l.argHtmlDoc;
-    case "render_chart": return (args.title as string) || (args.chartType as string) || l.argChart;
-    case "refresh_ui": return `${l.argUiRefresh}: ${String(args.entityType)}`;
-    case "create_experiment": return (args.name as string) || "Experimento";
+    case "request_approval":
+      return (args.title as string) || l.argApprovalRequest;
+    case "ask_question":
+      return (args.question as string) || l.argUserQuestion;
+    case "render_images":
+      return Array.isArray(args.images) ? `${args.images.length} ${l.argImages}` : "Images";
+    case "render_html":
+      return (args.title as string) || l.argHtmlDoc;
+    case "render_chart":
+      return (args.title as string) || (args.chartType as string) || l.argChart;
+    case "refresh_ui":
+      return `${l.argUiRefresh}: ${String(args.entityType)}`;
+    case "create_experiment":
+      return (args.name as string) || "Experimento";
     case "spawn_subagent": {
       const task = (args.task as string) || "";
       const role = (args.subagentRole as string) || "";
@@ -362,7 +537,6 @@ function getArgSummary(toolName: string, args: Record<string, unknown>, l: Recor
       return role ? `[${role}] ${cleanTask}` : cleanTask;
     }
     case "delegate_task": {
-
       return ``;
     }
     case "manage_delegations": {
@@ -385,7 +559,8 @@ function getArgSummary(toolName: string, args: Record<string, unknown>, l: Recor
       const c = (args.content as string) || "";
       return c.length > 50 ? c.slice(0, 50) + "…" : c;
     }
-    case "memory_forget": return (args.id as string) || "";
+    case "memory_forget":
+      return (args.id as string) || "";
     case "decompose_tasks": {
       const obj = (args.objective as string) || "";
       return obj.length > 50 ? obj.slice(0, 50) + "…" : obj;
@@ -401,7 +576,12 @@ function getArgSummary(toolName: string, args: Record<string, unknown>, l: Recor
       const entries = Object.entries(args)
         .slice(0, 2)
         .map(([k, v]) => {
-          const val = typeof v === "string" ? v : typeof v === "number" || typeof v === "boolean" ? String(v) : "";
+          const val =
+            typeof v === "string"
+              ? v
+              : typeof v === "number" || typeof v === "boolean"
+                ? String(v)
+                : "";
           if (!val) return k;
           const short = val.length > 20 ? val.slice(0, 20) + "…" : val;
           return `${k}: ${short}`;
@@ -413,8 +593,13 @@ function getArgSummary(toolName: string, args: Record<string, unknown>, l: Recor
   }
 }
 
-function getResultSummary(toolName: string, result: ToolResultData, l: Record<string, string>, args: Record<string, unknown>): string {
-  const text = result.content.find(b => b.type === "text")?.text ?? "";
+function getResultSummary(
+  toolName: string,
+  result: ToolResultData,
+  l: Record<string, string>,
+  args: Record<string, unknown>,
+): string {
+  const text = result.content.find((b) => b.type === "text")?.text ?? "";
   if (result.isError) return "error";
   switch (toolName) {
     case "ls": {
@@ -430,7 +615,7 @@ function getResultSummary(toolName: string, result: ToolResultData, l: Record<st
       return m ? `${m[1]} B` : "written";
     }
     case "read": {
-      if (result.content.some(b => b.type === "image")) return "image";
+      if (result.content.some((b) => b.type === "image")) return "image";
       const n = text.split("\n").length;
       return `${n} line${n !== 1 ? "s" : ""}`;
     }
@@ -439,21 +624,33 @@ function getResultSummary(toolName: string, result: ToolResultData, l: Record<st
       return m ? `${m[1]} change${Number(m[1]) !== 1 ? "s" : ""}` : "edited";
     }
     case "grep": {
-      const n = text.split("\n").filter(l => /:[\d]+:/.test(l)).length;
+      const n = text.split("\n").filter((l) => /:[\d]+:/.test(l)).length;
       return `${n} match${n !== 1 ? "es" : ""}`;
     }
-    case "bash": return "done";
-    case "request_approval": return text || l.resWaiting;
-    case "ask_question": return text || l.resWaiting;
-    case "render_images": return l.resRendered;
-    case "render_html": return l.resRendered;
-    case "render_chart": return l.resRendered;
-    case "share_file": return l.resShared;
-    case "refresh_ui": return l.resRefreshed;
-    case "create_experiment": return "creado/actualizado";
-    case "spawn_subagent": return l.resCompleted;
-    case "delegate_task": return l.resCompleted;
-    case "manage_delegations": return l.resCompleted;
+    case "bash":
+      return "done";
+    case "request_approval":
+      return text || l.resWaiting;
+    case "ask_question":
+      return text || l.resWaiting;
+    case "render_images":
+      return l.resRendered;
+    case "render_html":
+      return l.resRendered;
+    case "render_chart":
+      return l.resRendered;
+    case "share_file":
+      return l.resShared;
+    case "refresh_ui":
+      return l.resRefreshed;
+    case "create_experiment":
+      return "creado/actualizado";
+    case "spawn_subagent":
+      return l.resCompleted;
+    case "delegate_task":
+      return l.resCompleted;
+    case "manage_delegations":
+      return l.resCompleted;
     case "exa_search": {
       const n = result.details?.totalResults ?? 0;
       return `${n} ${n !== 1 ? l.resExaResults : l.resExaResult}`;
@@ -466,9 +663,12 @@ function getResultSummary(toolName: string, result: ToolResultData, l: Record<st
       const n = result.details?.count ?? 0;
       return `${n} ${n !== 1 ? l.resMemories : l.resMemory}`;
     }
-    case "memory_store": return l.resStored;
-    case "memory_forget": return l.resForgotten;
-    case "decompose_tasks": return l.resDecomposed;
+    case "memory_store":
+      return l.resStored;
+    case "memory_forget":
+      return l.resForgotten;
+    case "decompose_tasks":
+      return l.resDecomposed;
     case "manage_preview": {
       if (result.isError) return "error";
       const action = (args.action as string) || "status";
@@ -511,7 +711,7 @@ function ToolBody({
   onOpenSubagentConsole?: (toolCallId: string, targetType?: string, targetId?: string) => void;
   l: Record<string, string>;
 }) {
-  const text = result?.content.find(b => b.type === "text")?.text ?? "";
+  const text = result?.content.find((b) => b.type === "text")?.text ?? "";
 
   switch (toolName) {
     case "decompose_tasks":
@@ -520,20 +720,25 @@ function ToolBody({
       const details = result?.details as any;
       const expId = details?.experimentId || args.experimentId;
       const expName = details?.name || args.name || "Experimento";
-      const agentsCount = details?.agentsCount || (Array.isArray(args.agents) ? args.agents.length : 0);
+      const agentsCount =
+        details?.agentsCount || (Array.isArray(args.agents) ? args.agents.length : 0);
       const crit = details?.criteria || args.criteria || [];
 
       return (
         <div className="flex flex-col gap-3 p-4 rounded-xl bg-surface border border-border/80 shadow-md">
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-0.5">
-              <span className="text-xs text-text-secondary uppercase tracking-wider font-semibold">Experimento Multi-Agente</span>
+              <span className="text-xs text-text-secondary uppercase tracking-wider font-semibold">
+                Experimento Multi-Agente
+              </span>
               <h4 className="text-sm font-bold text-text-primary">{expName}</h4>
             </div>
             {expId && (
               <button
                 onClick={() => {
-                  window.dispatchEvent(new CustomEvent("select-lab-experiment", { detail: { id: expId } }));
+                  window.dispatchEvent(
+                    new CustomEvent("select-lab-experiment", { detail: { id: expId } }),
+                  );
                 }}
                 className="px-3 py-1.5 rounded-lg bg-accent/15 text-accent hover:bg-accent/25 font-bold text-xs transition-colors flex items-center gap-1 cursor-pointer"
               >
@@ -562,16 +767,18 @@ function ToolBody({
       return (
         <div className="flex flex-col gap-2 w-full">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-xs text-text-primary truncate flex-1">
-              {task}
-            </span>
+            <span className="text-xs text-text-primary truncate flex-1">{task}</span>
             {onOpenSubagentConsole && (
               <button
                 onClick={() => {
                   if (isSpawn) {
                     onOpenSubagentConsole(encodeURIComponent(toolCallId || ""));
                   } else {
-                    onOpenSubagentConsole(encodeURIComponent(toolCallId || ""), String(args.targetType || ""), String(args.targetId || ""));
+                    onOpenSubagentConsole(
+                      encodeURIComponent(toolCallId || ""),
+                      String(args.targetType || ""),
+                      String(args.targetId || ""),
+                    );
                   }
                 }}
                 className="shrink-0 text-xs text-text-primary hover:text-accent transition-colors cursor-pointer underline underline-offset-2"
@@ -589,9 +796,7 @@ function ToolBody({
       return (
         <div className="">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-xs text-text-primary truncate">
-              {task}
-            </span>
+            <span className="text-xs text-text-primary truncate">{task}</span>
             {onOpenSubagentConsole && (
               <button
                 onClick={() => onOpenSubagentConsole(encodeURIComponent(toolCallId || ""))}
@@ -610,13 +815,17 @@ function ToolBody({
         <div className="">
           <div className="flex items-center justify-between gap-2">
             <div className="flex flex-col gap-0.5 min-w-0">
-              <span className="text-xs text-text-primary truncate">
-                {task}
-              </span>
+              <span className="text-xs text-text-primary truncate">{task}</span>
             </div>
             {onOpenSubagentConsole && (
               <button
-                onClick={() => onOpenSubagentConsole(encodeURIComponent(toolCallId || ""), String(args.targetType || ""), String(args.targetId || ""))}
+                onClick={() =>
+                  onOpenSubagentConsole(
+                    encodeURIComponent(toolCallId || ""),
+                    String(args.targetType || ""),
+                    String(args.targetId || ""),
+                  )
+                }
                 className="shrink-0 text-xs text-text-primary hover:text-accent transition-colors cursor-pointer underline underline-offset-2"
               >
                 {l.bodyViewLiveConsole}
@@ -626,13 +835,33 @@ function ToolBody({
         </div>
       );
     }
-    case "ls": return <LsResult text={text} />;
-    case "find": return <FindResult text={text} />;
-    case "write": return <WriteResult text={text} isError={result?.isError ?? false} />;
-    case "read": return <ReadResult content={result?.content ?? []} args={args} />;
-    case "edit": return <EditResult text={text} filePath={(args.path as string) || undefined} details={result?.details} isError={result?.isError ?? false} />;
-    case "grep": return <GrepResult text={text} args={args} />;
-    case "bash": return <BashResult text={text} command={(args.command as string) || ""} isError={result?.isError ?? false} />;
+    case "ls":
+      return <LsResult text={text} />;
+    case "find":
+      return <FindResult text={text} />;
+    case "write":
+      return <WriteResult text={text} isError={result?.isError ?? false} />;
+    case "read":
+      return <ReadResult content={result?.content ?? []} args={args} />;
+    case "edit":
+      return (
+        <EditResult
+          text={text}
+          filePath={(args.path as string) || undefined}
+          details={result?.details}
+          isError={result?.isError ?? false}
+        />
+      );
+    case "grep":
+      return <GrepResult text={text} args={args} />;
+    case "bash":
+      return (
+        <BashResult
+          text={text}
+          command={(args.command as string) || ""}
+          isError={result?.isError ?? false}
+        />
+      );
     case "request_approval":
       return (
         <ApprovalForm
@@ -715,7 +944,10 @@ function ToolBody({
       return (
         <div className="flex items-center gap-2 p-2.5 rounded-lg bg-bg border border-primary/30 text-primary-foreground text-xs font-mono">
           <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-          <span>{l.bodyWorkspaceRefreshed}{String(args.entityType)}</span>
+          <span>
+            {l.bodyWorkspaceRefreshed}
+            {String(args.entityType)}
+          </span>
         </div>
       );
     case "exa_search":
@@ -753,7 +985,17 @@ function ToolBody({
                   to={previewPagePath}
                   className="px-2.5 py-1 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 hover:text-emerald-400 text-[11px] font-bold flex items-center gap-1 transition-all"
                 >
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                  <svg
+                    width="11"
+                    height="11"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="shrink-0"
+                  >
                     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
                     <polyline points="15 3 21 3 21 9" />
                     <line x1="10" y1="14" x2="21" y2="3" />
@@ -778,7 +1020,9 @@ function ToolBody({
               {config.buildCommand && (
                 <div className="flex flex-col gap-0.5">
                   <span className="text-text-secondary font-medium">Build Command</span>
-                  <span className="font-mono text-text-primary truncate">{config.buildCommand}</span>
+                  <span className="font-mono text-text-primary truncate">
+                    {config.buildCommand}
+                  </span>
                 </div>
               )}
             </div>
@@ -792,13 +1036,25 @@ function ToolBody({
               </div>
               <div className="flex flex-col gap-0.5">
                 <span className="text-text-secondary">Dist Exists</span>
-                <span className={details.state.distExists ? "text-emerald-500 font-semibold" : "text-warning font-semibold"}>
+                <span
+                  className={
+                    details.state.distExists
+                      ? "text-emerald-500 font-semibold"
+                      : "text-warning font-semibold"
+                  }
+                >
                   {details.state.distExists ? "Yes" : "No"}
                 </span>
               </div>
               <div className="flex flex-col gap-0.5">
                 <span className="text-text-secondary">Index HTML</span>
-                <span className={details.state.indexHtmlExists ? "text-emerald-500 font-semibold" : "text-warning font-semibold"}>
+                <span
+                  className={
+                    details.state.indexHtmlExists
+                      ? "text-emerald-500 font-semibold"
+                      : "text-warning font-semibold"
+                  }
+                >
                   {details.state.indexHtmlExists ? "Yes" : "No"}
                 </span>
               </div>
@@ -817,7 +1073,9 @@ function ToolBody({
       const uiDef = (result?.details as any)?.ui || (args as any)?.ui;
       if (uiDef) {
         const presentation = (result?.details as any)?.presentation || (args as any)?.presentation;
-        return <CustomToolBody ui={uiDef} presentation={presentation} sessionId={sessionId || null} />;
+        return (
+          <CustomToolBody ui={uiDef} presentation={presentation} sessionId={sessionId || null} />
+        );
       }
       return (
         <pre className="text-[11px] font-mono text-muted-foreground whitespace-pre-wrap break-words bg-muted p-3 rounded-md max-h-48 overflow-y-auto">
@@ -843,7 +1101,11 @@ export function ToolCallRow({
   onOpenSubagentConsole,
 }: Props) {
   const l = useLiterals(literals);
-  const isInteractive = serialTools.includes(toolName) || toolName === "manage_delegations" || toolName === "spawn_subagent" || toolName === "delegate_task";
+  const isInteractive =
+    serialTools.includes(toolName) ||
+    toolName === "manage_delegations" ||
+    toolName === "spawn_subagent" ||
+    toolName === "delegate_task";
 
   const [partialResult, setPartialResult] = useState<any>(null);
 
@@ -864,14 +1126,39 @@ export function ToolCallRow({
   }, [toolCallId, result]);
 
   const resultPresentation = (result?.details as any)?.presentation;
-  const isCustomTool = ![
-    "read", "write", "edit", "bash", "grep", "find", "ls",
-    "request_approval", "ask_question", "render_images", "render_html", "render_chart",
-    "share_file", "refresh_ui", "manage_delegations", "spawn_subagent", "delegate_task",
-    "exa_search", "web_fetch", "decompose_tasks", "update_task_status", "complete_task_list",
-    "memory_store", "memory_recall", "memory_forget", "create_experiment",
-    "vision", "generate_image", "manage_factory", "manage_custom_tools"
-  ].includes(toolName) && !toolName.startsWith("mcp_");
+  const isCustomTool =
+    ![
+      "read",
+      "write",
+      "edit",
+      "bash",
+      "grep",
+      "find",
+      "ls",
+      "request_approval",
+      "ask_question",
+      "render_images",
+      "render_html",
+      "render_chart",
+      "share_file",
+      "refresh_ui",
+      "manage_delegations",
+      "spawn_subagent",
+      "delegate_task",
+      "exa_search",
+      "web_fetch",
+      "decompose_tasks",
+      "update_task_status",
+      "complete_task_list",
+      "memory_store",
+      "memory_recall",
+      "memory_forget",
+      "create_experiment",
+      "vision",
+      "generate_image",
+      "manage_factory",
+      "manage_custom_tools",
+    ].includes(toolName) && !toolName.startsWith("mcp_");
 
   const [expanded, setExpanded] = useState(() => {
     if (disabled) return false;
@@ -905,7 +1192,16 @@ export function ToolCallRow({
     label: toolName,
     colorClass: "text-primary",
     icon: hasUiDetails ? (
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="13"
+        height="13"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
         <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
         <line x1="12" y1="22.08" x2="12" y2="12" />
@@ -917,43 +1213,75 @@ export function ToolCallRow({
 
   const getToolLabel = (name: string, toolArgs?: Record<string, unknown>): string => {
     switch (name) {
-      case "request_approval": return l.labelApproval;
-      case "ask_question": return l.labelQuestion;
-      case "render_images": return l.labelImages;
-      case "render_html": return l.labelHtml;
-      case "render_chart": return l.labelChart;
-      case "refresh_ui": return l.labelRefresh;
-      case "spawn_subagent": return l.labelSubagent;
-      case "delegate_task": return l.labelDelegation;
-      case "manage_delegations": return toolArgs?.action === "spawn" ? "subagente" : l.labelDelegation;
-      case "exa_search": return l.labelExaSearch;
-      case "web_fetch": return l.labelWebFetch;
+      case "request_approval":
+        return l.labelApproval;
+      case "ask_question":
+        return l.labelQuestion;
+      case "render_images":
+        return l.labelImages;
+      case "render_html":
+        return l.labelHtml;
+      case "render_chart":
+        return l.labelChart;
+      case "refresh_ui":
+        return l.labelRefresh;
+      case "spawn_subagent":
+        return l.labelSubagent;
+      case "delegate_task":
+        return l.labelDelegation;
+      case "manage_delegations":
+        return toolArgs?.action === "spawn" ? "subagente" : l.labelDelegation;
+      case "exa_search":
+        return l.labelExaSearch;
+      case "web_fetch":
+        return l.labelWebFetch;
       case "memory_recall":
       case "memory_store":
-      case "memory_forget": return l.labelMemory;
-      case "manage_custom_tools": return l.labelManageCustomTools;
-      default: return name;
+      case "memory_forget":
+        return l.labelMemory;
+      case "manage_custom_tools":
+        return l.labelManageCustomTools;
+      default:
+        return name;
     }
   };
 
   const labelText = meta.label === toolName ? getToolLabel(toolName, args) : meta.label;
 
   const running = result === null;
-  const activeResult = result || (partialResult ? {
-    toolName,
-    content: [{ type: "text", text: typeof partialResult === "string" ? partialResult : (partialResult.output || partialResult.text || JSON.stringify(partialResult)) }],
-    isError: false,
-    details: partialResult.details || partialResult,
-  } : null);
+  const activeResult =
+    result ||
+    (partialResult
+      ? {
+          toolName,
+          content: [
+            {
+              type: "text",
+              text:
+                typeof partialResult === "string"
+                  ? partialResult
+                  : partialResult.output || partialResult.text || JSON.stringify(partialResult),
+            },
+          ],
+          isError: false,
+          details: partialResult.details || partialResult,
+        }
+      : null);
   const hasError = result?.isError ?? false;
   const argSummary = getArgSummary(toolName, args, l);
   const resultSummary = activeResult ? getResultSummary(toolName, activeResult, l, args) : "";
   const isFullBleed = toolName === "render_html" || toolName === "render_chart";
 
   return (
-    <div className={`my-1.5 rounded-lg border overflow-hidden transition-all ${disabled ? "border-input/30 bg-card/25 opacity-60 select-none pointer-events-none" :
-      hasError ? "border-error/40 bg-destructive/5" : "border-input bg-card/50"
-      }`}>
+    <div
+      className={`my-1.5 rounded-lg border overflow-hidden transition-all ${
+        disabled
+          ? "border-input/30 bg-card/25 opacity-60 select-none pointer-events-none"
+          : hasError
+            ? "border-error/40 bg-destructive/5"
+            : "border-input bg-card/50"
+      }`}
+    >
       <button
         onClick={() => !disabled && setExpanded(!expanded)}
         disabled={disabled}
@@ -979,7 +1307,6 @@ export function ToolCallRow({
             <span className="text-[10px] font-bold tracking-wider text-primary bg-surface-hover px-1.5 py-0.5 rounded flex-shrink-0">
               {String(args.targetId)}
             </span>
-
           </>
         )}
 
@@ -1022,14 +1349,28 @@ export function ToolCallRow({
           ) : hasError ? (
             <span className="flex items-center gap-1.5 text-xs text-destructive">
               <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                  clipRule="evenodd"
+                />
               </svg>
               error
             </span>
           ) : (
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <svg width="11" height="11" viewBox="0 0 20 20" fill="currentColor" className="text-primary/70">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              <svg
+                width="11"
+                height="11"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="text-primary/70"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clipRule="evenodd"
+                />
               </svg>
               {resultSummary}
             </span>
@@ -1037,10 +1378,17 @@ export function ToolCallRow({
 
           {!running && !disabled && (
             <svg
-              width="11" height="11" viewBox="0 0 20 20" fill="currentColor"
+              width="11"
+              height="11"
+              viewBox="0 0 20 20"
+              fill="currentColor"
               className={`text-muted-foreground transition-transform ${expanded ? "rotate-90" : ""}`}
             >
-              <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+              <path
+                fillRule="evenodd"
+                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                clipRule="evenodd"
+              />
             </svg>
           )}
         </div>

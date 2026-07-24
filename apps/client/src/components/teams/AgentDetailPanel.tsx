@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import type { TeamMember, AgentInfo, TeamRole } from "shared";
-import { useLiterals } from "@/lib";
-import { literals as u } from "./AgentDetailPanel.literals";
 import { AgentAvatar } from "@/components/shared/AgentAvatar";
-import { Dropdown } from "@/components/ui/Dropdown";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { Dropdown } from "@/components/ui/Dropdown";
+import { useLiterals } from "@/lib";
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import type { AgentInfo, TeamMember, TeamRole } from "shared";
+import { literals as u } from "./AgentDetailPanel.literals";
 
 export type UpdateMember = Partial<Omit<TeamMember, "agentId">>;
 
@@ -25,7 +25,10 @@ interface Props {
   streamingState?: {
     text: string;
     thinking?: string;
-    toolCalls?: Record<string, { toolName: string; args: any; result: any | null; isError: boolean }>;
+    toolCalls?: Record<
+      string,
+      { toolName: string; args: any; result: any | null; isError: boolean }
+    >;
   };
   onUpdateMember: (agentId: string, updates: UpdateMember) => Promise<void>;
   onRemoveMember: (agentId: string) => Promise<void>;
@@ -45,7 +48,9 @@ export function AgentDetailPanel({
 }: Props) {
   const l = useLiterals(u);
   const [role, setRole] = useState<TeamRole>(member.role || "member");
-  const [outputMode, setOutputMode] = useState<"full-proposal" | "diff-suggestion" | "normal">(member.outputMode || "normal");
+  const [outputMode, setOutputMode] = useState<"full-proposal" | "diff-suggestion" | "normal">(
+    member.outputMode || "normal",
+  );
   const [isSaving, setIsSaving] = useState(false);
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
 
@@ -81,7 +86,7 @@ export function AgentDetailPanel({
 
   const name = agentInfo?.name || member.agentId;
   const isOrphan = !agentInfo;
-  const agentRole = agentInfo ? (agentInfo.role || "agent") : l.deletedAgent;
+  const agentRole = agentInfo ? agentInfo.role || "agent" : l.deletedAgent;
   const skills = agentInfo?.skills || [];
 
   const panelVariants = {
@@ -167,9 +172,16 @@ export function AgentDetailPanel({
                   {streamingState.toolCalls && Object.keys(streamingState.toolCalls).length > 0 && (
                     <div className="space-y-1">
                       {Object.entries(streamingState.toolCalls).map(([id, t]) => (
-                        <div key={id} className="flex items-center justify-between text-[10px] bg-background/80 p-1.5 rounded border border-border/60 font-mono">
+                        <div
+                          key={id}
+                          className="flex items-center justify-between text-[10px] bg-background/80 p-1.5 rounded border border-border/60 font-mono"
+                        >
                           <span className="truncate max-w-[180px]">{t.toolName}</span>
-                          <span className={t.result ? "text-accent" : "text-muted-foreground animate-pulse"}>
+                          <span
+                            className={
+                              t.result ? "text-accent" : "text-muted-foreground animate-pulse"
+                            }
+                          >
                             {t.result ? "Done" : "Running"}
                           </span>
                         </div>
@@ -188,7 +200,12 @@ export function AgentDetailPanel({
                     onChange={setRole}
                     options={TEAM_ROLE_OPTIONS.map((o) => ({
                       ...o,
-                      disabled: o.value === "lead" ? allMembers.some((m) => m.role === "lead" && m.agentId !== member.agentId) : false,
+                      disabled:
+                        o.value === "lead"
+                          ? allMembers.some(
+                              (m) => m.role === "lead" && m.agentId !== member.agentId,
+                            )
+                          : false,
                     }))}
                     disabled={isOrphan}
                     matchWidth
@@ -196,7 +213,9 @@ export function AgentDetailPanel({
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold text-muted-foreground">{l.outputMode}</label>
+                  <label className="text-xs font-semibold text-muted-foreground">
+                    {l.outputMode}
+                  </label>
                   <Dropdown<"full-proposal" | "diff-suggestion" | "normal">
                     value={outputMode}
                     onChange={setOutputMode}
@@ -216,7 +235,9 @@ export function AgentDetailPanel({
                     disabled={isSaving || isOrphan}
                     className="flex-1 bg-accent/90 hover:bg-accent text-background font-bold text-xs py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
                   >
-                    {isSaving && <div className="w-3 h-3 border border-background border-t-transparent rounded-full animate-spin" />}
+                    {isSaving && (
+                      <div className="w-3 h-3 border border-background border-t-transparent rounded-full animate-spin" />
+                    )}
                     {l.save}
                   </button>
                 </div>
@@ -230,7 +251,10 @@ export function AgentDetailPanel({
                 ) : (
                   <div className="flex flex-wrap gap-1">
                     {skills.map((s) => (
-                      <span key={s} className="px-2 py-0.5 rounded-md bg-card-hover border border-border text-[10px] text-foreground font-medium">
+                      <span
+                        key={s}
+                        className="px-2 py-0.5 rounded-md bg-card-hover border border-border text-[10px] text-foreground font-medium"
+                      >
                         {s}
                       </span>
                     ))}
@@ -246,7 +270,11 @@ export function AgentDetailPanel({
                 className="w-full bg-error/10 hover:bg-error/15 border border-error/20 hover:border-error/35 text-error font-semibold text-xs py-2 rounded-lg transition-colors flex items-center justify-center gap-1.5"
               >
                 <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                  <path
+                    fillRule="evenodd"
+                    d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 {l.removeAgent}
               </button>

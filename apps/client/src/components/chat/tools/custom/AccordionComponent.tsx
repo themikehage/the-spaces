@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { useState } from "react";
 import type { ReactNode } from "react";
+import { useState } from "react";
 
 interface AccordionItem {
   title: string;
@@ -15,7 +15,7 @@ interface AccordionProps {
 }
 
 export function AccordionComponent({ items, renderChild, defaultOpen }: AccordionProps) {
-  // By default, accordions are open (better UX for custom tools). 
+  // By default, accordions are open (better UX for custom tools).
   // Respects per-item defaultOpen if provided, otherwise uses global defaultOpen or true.
   const globalDefault = defaultOpen ?? true;
   const [openIndexes, setOpenIndexes] = useState<Record<number, boolean>>(() => {
@@ -30,7 +30,7 @@ export function AccordionComponent({ items, renderChild, defaultOpen }: Accordio
   });
 
   const toggleIndex = (idx: number) => {
-    setOpenIndexes(prev => ({
+    setOpenIndexes((prev) => ({
       ...prev,
       [idx]: !prev[idx],
     }));
@@ -43,7 +43,10 @@ export function AccordionComponent({ items, renderChild, defaultOpen }: Accordio
       {items.map((item, idx) => {
         const isOpen = !!openIndexes[idx];
         return (
-          <div key={idx} className="border border-border rounded-lg overflow-hidden bg-card shadow-sm">
+          <div
+            key={idx}
+            className="border border-border rounded-lg overflow-hidden bg-card shadow-sm"
+          >
             {/* Header Button */}
             <button
               onClick={() => toggleIndex(idx)}
@@ -58,7 +61,12 @@ export function AccordionComponent({ items, renderChild, defaultOpen }: Accordio
                 viewBox="0 0 24 24"
                 stroke="currentColor"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </button>
 

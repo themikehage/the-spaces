@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import type { ReactNode } from "react";
 import type { RoutePage } from "@/router/useRoutePage";
+import type { ReactNode } from "react";
 
 interface Tab {
   id: string;
@@ -16,12 +16,7 @@ interface ContextTabBarProps {
   rightSlot?: ReactNode;
 }
 
-export function ContextTabBar({
-  page,
-  contextTabs,
-  onNavigateTab,
-  rightSlot,
-}: ContextTabBarProps) {
+export function ContextTabBar({ page, contextTabs, onNavigateTab, rightSlot }: ContextTabBarProps) {
   return (
     <div className="flex items-center justify-between px-4 border-b border-border bg-card/5 flex-shrink-0">
       <div className="flex gap-1 overflow-x-auto scrollbar-none flex-nowrap">

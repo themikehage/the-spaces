@@ -1,19 +1,35 @@
 // SPDX-License-Identifier: MIT
-import { apiFetch } from "@/lib/api";
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { DEFAULT_AVATAR_PREFIX, isDefaultAvatar } from "@/lib/defaultAvatars";
 import { AvatarUploadField } from "@/components/shared/AvatarUploadField";
-import type { AgentDefinition, AgentInfo } from "shared";
-import { useLiterals } from "@/lib";
-import { literals as u } from "./RegisterModal.literals";
 import { Button } from "@/components/ui/Button";
+import { useLiterals } from "@/lib";
+import { apiFetch } from "@/lib/api";
+import { DEFAULT_AVATAR_PREFIX, isDefaultAvatar } from "@/lib/defaultAvatars";
+import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import type { AgentDefinition, AgentInfo } from "shared";
+import { literals as u } from "./RegisterModal.literals";
 
 const KNOWN_SERIAL_TOOLS = [
-  { id: "request_approval", label: "request_approval", description: "Suspends execution for explicit user approval" },
-  { id: "ask_question",     label: "ask_question",     description: "Prompts the user for a free-text answer" },
-  { id: "spawn_subagent",   label: "spawn_subagent",   description: "Delegates to a child agent and waits for result" },
-  { id: "delegate_task",    label: "delegate_task",    description: "Runs a task in an isolated session and awaits result" },
+  {
+    id: "request_approval",
+    label: "request_approval",
+    description: "Suspends execution for explicit user approval",
+  },
+  {
+    id: "ask_question",
+    label: "ask_question",
+    description: "Prompts the user for a free-text answer",
+  },
+  {
+    id: "spawn_subagent",
+    label: "spawn_subagent",
+    description: "Delegates to a child agent and waits for result",
+  },
+  {
+    id: "delegate_task",
+    label: "delegate_task",
+    description: "Runs a task in an isolated session and awaits result",
+  },
 ];
 
 const DEFAULT_FORM: AgentDefinition = {
@@ -24,7 +40,8 @@ const DEFAULT_FORM: AgentDefinition = {
   model: "",
   skills: [],
   port: undefined,
-  serialTools: ["request_approval", "ask_question"]};
+  serialTools: ["request_approval", "ask_question"],
+};
 
 interface RegisterModalProps {
   agent?: AgentInfo | null;
@@ -60,9 +77,10 @@ export function RegisterModal({
             if (data.definition) {
               setForm({
                 ...data.definition,
-                serialTools: data.definition.serialTools && data.definition.serialTools.length > 0
-                  ? data.definition.serialTools
-                  : ["request_approval", "ask_question"]
+                serialTools:
+                  data.definition.serialTools && data.definition.serialTools.length > 0
+                    ? data.definition.serialTools
+                    : ["request_approval", "ask_question"],
               });
               setSkillsInput(data.definition.skills?.join(", ") || "");
               const avUrl = data.definition.avatarUrl || null;
@@ -79,8 +97,6 @@ export function RegisterModal({
       fetchDetail();
     }
   }, [agent]);
-
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,13 +118,20 @@ export function RegisterModal({
           ? DEFAULT_AVATAR_PREFIX + selectedDefaultAvatar
           : avatarPreview && !avatarPreview.startsWith("blob:") && !isDefaultAvatar(avatarPreview)
             ? avatarPreview
-            : undefined};
+            : undefined,
+      };
       const result = await onSubmit(def);
       const agentId = agent?.id || (result as AgentInfo)?.id;
       if (avatarFile && agentId && onUploadAvatar) {
         await onUploadAvatar(agentId, avatarFile);
       }
-      if (!avatarFile && !selectedDefaultAvatar && avatarPreview === null && agent?.id && onDeleteAvatar) {
+      if (
+        !avatarFile &&
+        !selectedDefaultAvatar &&
+        avatarPreview === null &&
+        agent?.id &&
+        onDeleteAvatar
+      ) {
         await onDeleteAvatar(agent.id);
       }
       onClose();
@@ -119,8 +142,10 @@ export function RegisterModal({
     }
   };
 
-  const set = (key: keyof AgentDefinition) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-    setForm((prev) => ({ ...prev, [key]: e.target.value }));
+  const set =
+    (key: keyof AgentDefinition) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+      setForm((prev) => ({ ...prev, [key]: e.target.value }));
 
   const toggleSerialTool = (toolId: string) => {
     setForm((prev) => {
@@ -156,7 +181,11 @@ export function RegisterModal({
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-card-hover transition-colors"
           >
             <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              <path
+                fillRule="evenodd"
+                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              />
             </svg>
           </button>
         </div>
@@ -185,7 +214,9 @@ export function RegisterModal({
           />
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-medium text-muted-foreground block mb-1">{l.idField}</label>
+              <label className="text-xs font-medium text-muted-foreground block mb-1">
+                {l.idField}
+              </label>
               <input
                 required
                 disabled={!!agent}
@@ -198,7 +229,9 @@ export function RegisterModal({
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground block mb-1">{l.nameField}</label>
+              <label className="text-xs font-medium text-muted-foreground block mb-1">
+                {l.nameField}
+              </label>
               <input
                 required
                 value={form.name}
@@ -211,7 +244,9 @@ export function RegisterModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-medium text-muted-foreground block mb-1">{l.roleField}</label>
+              <label className="text-xs font-medium text-muted-foreground block mb-1">
+                {l.roleField}
+              </label>
               <input
                 required
                 value={form.role}
@@ -221,7 +256,9 @@ export function RegisterModal({
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground block mb-1">{l.portField}</label>
+              <label className="text-xs font-medium text-muted-foreground block mb-1">
+                {l.portField}
+              </label>
               <input
                 type="number"
                 min={1024}
@@ -230,7 +267,9 @@ export function RegisterModal({
                 onChange={(e) =>
                   setForm((prev) => ({
                     ...prev,
-                    port: e.target.value ? parseInt(e.target.value) : undefined}))}
+                    port: e.target.value ? parseInt(e.target.value) : undefined,
+                  }))
+                }
                 placeholder={l.portPlaceholder}
                 className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 font-mono"
               />
@@ -238,7 +277,9 @@ export function RegisterModal({
           </div>
 
           <div>
-            <label className="text-xs font-medium text-muted-foreground block mb-1">{l.modelField}</label>
+            <label className="text-xs font-medium text-muted-foreground block mb-1">
+              {l.modelField}
+            </label>
             <input
               value={form.model || ""}
               onChange={set("model")}
@@ -248,7 +289,9 @@ export function RegisterModal({
           </div>
 
           <div>
-            <label className="text-xs font-medium text-muted-foreground block mb-1">{l.skillsField}</label>
+            <label className="text-xs font-medium text-muted-foreground block mb-1">
+              {l.skillsField}
+            </label>
             <input
               value={skillsInput}
               onChange={(e) => setSkillsInput(e.target.value)}
@@ -258,7 +301,9 @@ export function RegisterModal({
           </div>
 
           <div>
-            <label className="text-xs font-medium text-muted-foreground block mb-1">{l.systemPromptField}</label>
+            <label className="text-xs font-medium text-muted-foreground block mb-1">
+              {l.systemPromptField}
+            </label>
             <textarea
               required
               value={form.systemPrompt}
@@ -287,9 +332,7 @@ export function RegisterModal({
                 <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
                   {l.serialToolsLabel}
                 </label>
-                <p className="text-[10px] text-muted-foreground mb-2">
-                  {l.serialToolsDescription}
-                </p>
+                <p className="text-[10px] text-muted-foreground mb-2">{l.serialToolsDescription}</p>
                 <div className="space-y-1.5">
                   {KNOWN_SERIAL_TOOLS.map((tool) => {
                     const isChecked = form.serialTools?.includes(tool.id) ?? false;

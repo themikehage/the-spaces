@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
-import { useState, useMemo } from "react";
-import type { TeamMember, AgentInfo } from "shared";
+import { useSessions } from "@/contexts/SessionsContext";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import type { StreamingAgentState } from "@/hooks/useTeam";
 import { useLiterals } from "@/lib";
-import { literals as u } from "./TeamOrgTab.literals";
+import { useMemo, useState } from "react";
+import type { AgentInfo, TeamMember } from "shared";
+import { AgentDetailPanel } from "./AgentDetailPanel";
 import { OrgFlowCanvas } from "./OrgFlowCanvas";
 import { OrgFlowMobile } from "./OrgFlowMobile";
-import { AgentDetailPanel } from "./AgentDetailPanel";
-import type { StreamingAgentState } from "@/hooks/useTeam";
-import { useSessions } from "@/contexts/SessionsContext";
+import { literals as u } from "./TeamOrgTab.literals";
 
 interface Props {
   members: TeamMember[];
@@ -83,7 +83,11 @@ export function TeamOrgTab({
           className="px-3.5 py-1.5 bg-primary/10 border border-primary/20 text-primary hover:bg-primary/15 transition-colors font-semibold text-xs rounded-lg flex items-center gap-1 cursor-pointer"
         >
           <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+            <path
+              fillRule="evenodd"
+              d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+              clipRule="evenodd"
+            />
           </svg>
           <span>{l.addAgent}</span>
         </button>
@@ -103,7 +107,11 @@ export function TeamOrgTab({
           className="px-2.5 py-1 bg-accent/90 hover:bg-accent text-background font-bold text-xs rounded-lg transition-colors flex items-center gap-1 shadow-sm cursor-pointer"
         >
           <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+            <path
+              fillRule="evenodd"
+              d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+              clipRule="evenodd"
+            />
           </svg>
           <span>{l.addAgent}</span>
         </button>

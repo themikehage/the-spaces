@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   type AgentScopeTarget,
   getScopeConfigPath,
   getUserDir,
   SPACES_DATA_PATH,
-  USERS_DIR
+  USERS_DIR,
 } from "shared";
 import { type ToolScopeTarget } from "../custom-tools/schemas";
 
@@ -16,16 +16,17 @@ export interface ScopeConfig {
     agents: string[];
     tools: string[];
   };
-  projects: Record<string, {
-    agents: string[];
-    tools: string[];
-  }>;
+  projects: Record<
+    string,
+    {
+      agents: string[];
+      tools: string[];
+    }
+  >;
   agentTools: Record<string, string[]>;
 }
 
-export type AgentMembership =
-  | { type: "global" }
-  | { type: "project"; id: string };
+export type AgentMembership = { type: "global" } | { type: "project"; id: string };
 
 class ScopeConfigManager {
   private cache = new Map<string, ScopeConfig>();
@@ -36,7 +37,9 @@ class ScopeConfigManager {
   private async withLock<T>(username: string, fn: () => Promise<T>): Promise<T> {
     const current = this.locks.get(username) ?? Promise.resolve();
     let resolve!: () => void;
-    const next = new Promise<void>(r => { resolve = r; });
+    const next = new Promise<void>((r) => {
+      resolve = r;
+    });
     this.locks.set(username, next);
 
     await current;
@@ -55,8 +58,11 @@ class ScopeConfigManager {
     if (!existsSync(agentsDir)) return [];
     try {
       return readdirSync(agentsDir, { withFileTypes: true })
-        .filter(entry => entry.isDirectory() && existsSync(join(agentsDir, entry.name, "definition.json")))
-        .map(entry => entry.name);
+        .filter(
+          (entry) =>
+            entry.isDirectory() && existsSync(join(agentsDir, entry.name, "definition.json")),
+        )
+        .map((entry) => entry.name);
     } catch {
       return [];
     }
@@ -67,8 +73,10 @@ class ScopeConfigManager {
     if (!existsSync(toolsDir)) return [];
     try {
       return readdirSync(toolsDir, { withFileTypes: true })
-        .filter(entry => entry.isFile() && entry.name.endsWith(".json") && entry.name !== "_index.json")
-        .map(entry => entry.name.slice(0, -5));
+        .filter(
+          (entry) => entry.isFile() && entry.name.endsWith(".json") && entry.name !== "_index.json",
+        )
+        .map((entry) => entry.name.slice(0, -5));
     } catch {
       return [];
     }
@@ -138,13 +146,13 @@ class ScopeConfigManager {
     }
 
     const oldGlobalAgentsLength = config.global.agents.length;
-    config.global.agents = config.global.agents.filter(id => diskAgentIds.has(id));
+    config.global.agents = config.global.agents.filter((id) => diskAgentIds.has(id));
     if (config.global.agents.length !== oldGlobalAgentsLength) dirty = true;
 
     if (config.projects) {
       for (const [projectId, proj] of Object.entries(config.projects)) {
         const oldLen = proj.agents.length;
-        proj.agents = proj.agents.filter(id => diskAgentIds.has(id));
+        proj.agents = proj.agents.filter((id) => diskAgentIds.has(id));
         if (proj.agents.length !== oldLen) dirty = true;
       }
     } else {
@@ -153,20 +161,24 @@ class ScopeConfigManager {
     }
 
     const allConfigAgents = new Set<string>();
-    config.global.agents.forEach(id => allConfigAgents.add(id));
-    Object.values(config.projects).forEach(proj => proj.agents.forEach(id => allConfigAgents.add(id)));
+    config.global.agents.forEach((id) => allConfigAgents.add(id));
+    Object.values(config.projects).forEach((proj) =>
+      proj.agents.forEach((id) => allConfigAgents.add(id)),
+    );
 
     for (const agentId of diskAgentIds) {
       if (!allConfigAgents.has(agentId)) {
         config.global.agents.push(agentId);
         dirty = true;
-        console.warn(`[ScopeConfigManager] Agent ${agentId} on disk was not in config. Automatically moved to global.`);
+        console.warn(
+          `[ScopeConfigManager] Agent ${agentId} on disk was not in config. Automatically moved to global.`,
+        );
       }
     }
 
     if (config.global.tools) {
       const oldLen = config.global.tools.length;
-      config.global.tools = config.global.tools.filter(t => diskToolNames.has(t));
+      config.global.tools = config.global.tools.filter((t) => diskToolNames.has(t));
       if (config.global.tools.length !== oldLen) dirty = true;
     } else {
       config.global.tools = [];
@@ -176,7 +188,7 @@ class ScopeConfigManager {
     for (const chan of Object.values(config.channels)) {
       if (chan.tools) {
         const oldLen = chan.tools.length;
-        chan.tools = chan.tools.filter(t => diskToolNames.has(t));
+        chan.tools = chan.tools.filter((t) => diskToolNames.has(t));
         if (chan.tools.length !== oldLen) dirty = true;
       } else {
         chan.tools = [];
@@ -187,7 +199,7 @@ class ScopeConfigManager {
     for (const proj of Object.values(config.projects)) {
       if (proj.tools) {
         const oldLen = proj.tools.length;
-        proj.tools = proj.tools.filter(t => diskToolNames.has(t));
+        proj.tools = proj.tools.filter((t) => diskToolNames.has(t));
         if (proj.tools.length !== oldLen) dirty = true;
       } else {
         proj.tools = [];
@@ -205,7 +217,7 @@ class ScopeConfigManager {
           dirty = true;
         } else {
           const oldLen = tools.length;
-          const cleaned = tools.filter(t => diskToolNames.has(t));
+          const cleaned = tools.filter((t) => diskToolNames.has(t));
           if (cleaned.length !== oldLen) {
             config.agentTools[agentId] = cleaned;
             dirty = true;
@@ -236,7 +248,9 @@ class ScopeConfigManager {
         renameSync(tmp, path);
       } catch (err) {
         writeFileSync(path, JSON.stringify(config, null, 2), "utf8");
-        try { unlinkSync(tmp); } catch {}
+        try {
+          unlinkSync(tmp);
+        } catch {}
       }
     } catch (err) {
       console.error(`[ScopeConfigManager] Failed to persist config for ${username}:`, err);
@@ -252,7 +266,11 @@ class ScopeConfigManager {
     return this.cache.get(username)?.global.agents ?? [];
   }
 
-  getScopedAgentIds(username: string, parentType: "channels" | "projects", parentId: string): string[] {
+  getScopedAgentIds(
+    username: string,
+    parentType: "channels" | "projects",
+    parentId: string,
+  ): string[] {
     this.ensureLoaded(username);
     const config = this.cache.get(username);
     if (!config) return [];
@@ -293,14 +311,14 @@ class ScopeConfigManager {
       if (membership.type === "project") {
         const proj = config.projects[membership.id];
         if (proj && proj.tools) {
-          proj.tools.forEach(t => tools.add(t));
+          proj.tools.forEach((t) => tools.add(t));
         }
       }
     }
 
     const agentSpecific = config.agentTools[agentId];
     if (agentSpecific) {
-      agentSpecific.forEach(t => tools.add(t));
+      agentSpecific.forEach((t) => tools.add(t));
     }
 
     return Array.from(tools);
@@ -317,12 +335,12 @@ class ScopeConfigManager {
     await this.withLock(username, async () => {
       const config = await this.load(username);
 
-      config.global.agents = config.global.agents.filter(id => id !== agentId);
+      config.global.agents = config.global.agents.filter((id) => id !== agentId);
       for (const cid of Object.keys(config.channels)) {
-        config.channels[cid].agents = config.channels[cid].agents.filter(id => id !== agentId);
+        config.channels[cid].agents = config.channels[cid].agents.filter((id) => id !== agentId);
       }
       for (const pid of Object.keys(config.projects)) {
-        config.projects[pid].agents = config.projects[pid].agents.filter(id => id !== agentId);
+        config.projects[pid].agents = config.projects[pid].agents.filter((id) => id !== agentId);
       }
 
       if (!scope || scope.type === "global") {
@@ -413,14 +431,18 @@ class ScopeConfigManager {
     await this.withLock(username, async () => {
       const config = await this.load(username);
 
-      config.global.agents = config.global.agents.filter(id => id !== agentId);
+      config.global.agents = config.global.agents.filter((id) => id !== agentId);
 
       for (const channelId of Object.keys(config.channels)) {
-        config.channels[channelId].agents = config.channels[channelId].agents.filter(id => id !== agentId);
+        config.channels[channelId].agents = config.channels[channelId].agents.filter(
+          (id) => id !== agentId,
+        );
       }
 
       for (const projectId of Object.keys(config.projects)) {
-        config.projects[projectId].agents = config.projects[projectId].agents.filter(id => id !== agentId);
+        config.projects[projectId].agents = config.projects[projectId].agents.filter(
+          (id) => id !== agentId,
+        );
       }
 
       delete config.agentTools[agentId];
@@ -449,7 +471,5 @@ class ScopeConfigManager {
 export const scopeConfigManager = new ScopeConfigManager();
 
 process.nextTick(() => {
-  scopeConfigManager.init().catch((err) =>
-    console.error("[ScopeConfigManager] Init error:", err)
-  );
+  scopeConfigManager.init().catch((err) => console.error("[ScopeConfigManager] Init error:", err));
 });

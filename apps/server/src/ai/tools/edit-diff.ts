@@ -40,17 +40,15 @@ export function restoreLineEndings(text: string, ending: "\r\n" | "\n"): string 
 }
 
 export function normalizeForFuzzyMatch(text: string): string {
-  return (
-    text
-      .normalize("NFKC")
-      .split("\n")
-      .map((line) => line.trimEnd())
-      .join("\n")
-      .replace(/[\u2018\u2019\u201A\u201B]/g, "'")
-      .replace(/[\u201C\u201D\u201E\u201F]/g, '"')
-      .replace(/[\u2010\u2011\u2012\u2013\u2014\u2015\u2212]/g, "-")
-      .replace(/[\u00A0\u2002-\u200A\u202F\u205F\u3000]/g, " ")
-  );
+  return text
+    .normalize("NFKC")
+    .split("\n")
+    .map((line) => line.trimEnd())
+    .join("\n")
+    .replace(/[\u2018\u2019\u201A\u201B]/g, "'")
+    .replace(/[\u201C\u201D\u201E\u201F]/g, '"')
+    .replace(/[\u2010\u2011\u2012\u2013\u2014\u2015\u2212]/g, "-")
+    .replace(/[\u00A0\u2002-\u200A\u202F\u205F\u3000]/g, " ");
 }
 
 function splitLinesWithEndings(content: string): string[] {
@@ -113,7 +111,9 @@ function applyReplacements(content: string, replacements: TextReplacement[], off
     const replacement = replacements[i];
     const matchIndex = replacement.matchIndex - offset;
     result =
-      result.substring(0, matchIndex) + replacement.newText + result.substring(matchIndex + replacement.matchLength);
+      result.substring(0, matchIndex) +
+      replacement.newText +
+      result.substring(matchIndex + replacement.matchLength);
   }
   return result;
 }
@@ -126,7 +126,9 @@ export function applyReplacementsPreservingUnchangedLines(
   const originalLines = splitLinesWithEndings(originalContent);
   const baseLines = getLineSpans(baseContent);
   if (originalLines.length !== baseLines.length) {
-    throw new Error("Cannot preserve unchanged lines because the base content has a different line count.");
+    throw new Error(
+      "Cannot preserve unchanged lines because the base content has a different line count.",
+    );
   }
 
   const groups: Array<{ startLine: number; endLine: number; replacements: TextReplacement[] }> = [];
@@ -205,7 +207,9 @@ export function fuzzyFindText(content: string, oldText: string): FuzzyMatchResul
 }
 
 export function stripBom(content: string): { bom: string; text: string } {
-  return content.startsWith("\uFEFF") ? { bom: "\uFEFF", text: content.slice(1) } : { bom: "", text: content };
+  return content.startsWith("\uFEFF")
+    ? { bom: "\uFEFF", text: content.slice(1) }
+    : { bom: "", text: content };
 }
 
 function countOccurrences(content: string, oldText: string): number {
@@ -225,7 +229,12 @@ function getNotFoundError(path: string, editIndex: number, totalEdits: number): 
   );
 }
 
-function getDuplicateError(path: string, editIndex: number, totalEdits: number, occurrences: number): Error {
+function getDuplicateError(
+  path: string,
+  editIndex: number,
+  totalEdits: number,
+  occurrences: number,
+): Error {
   if (totalEdits === 1) {
     return new Error(
       `Found ${occurrences} occurrences of the text in ${path}. The text must be unique. Please provide more context to make it unique.`,
@@ -268,9 +277,13 @@ export function applyEditsToNormalizedContent(
     }
   }
 
-  const initialMatches = normalizedEdits.map((edit) => fuzzyFindText(normalizedContent, edit.oldText));
+  const initialMatches = normalizedEdits.map((edit) =>
+    fuzzyFindText(normalizedContent, edit.oldText),
+  );
   const usedFuzzyMatch = initialMatches.some((match) => match.usedFuzzyMatch);
-  const replacementBaseContent = usedFuzzyMatch ? normalizeForFuzzyMatch(normalizedContent) : normalizedContent;
+  const replacementBaseContent = usedFuzzyMatch
+    ? normalizeForFuzzyMatch(normalizedContent)
+    : normalizedContent;
 
   const matchedEdits: MatchedEdit[] = [];
   for (let i = 0; i < normalizedEdits.length; i++) {
@@ -306,7 +319,11 @@ export function applyEditsToNormalizedContent(
 
   const baseContent = normalizedContent;
   const newContent = usedFuzzyMatch
-    ? applyReplacementsPreservingUnchangedLines(normalizedContent, replacementBaseContent, matchedEdits)
+    ? applyReplacementsPreservingUnchangedLines(
+        normalizedContent,
+        replacementBaseContent,
+        matchedEdits,
+      )
     : applyReplacements(replacementBaseContent, matchedEdits);
 
   if (baseContent === newContent) {
@@ -316,7 +333,12 @@ export function applyEditsToNormalizedContent(
   return { baseContent, newContent };
 }
 
-export function generateUnifiedPatch(path: string, oldContent: string, newContent: string, contextLines = 4): string {
+export function generateUnifiedPatch(
+  path: string,
+  oldContent: string,
+  newContent: string,
+  contextLines = 4,
+): string {
   return Diff.createTwoFilesPatch(path, path, oldContent, newContent, undefined, undefined, {
     context: contextLines,
     headerOptions: Diff.FILE_HEADERS_ONLY,
@@ -454,14 +476,19 @@ export async function computeEditsDiff(
     try {
       await access(absolutePath, constants.R_OK);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error && "code" in error ? `Error code: ${error.code}` : String(error);
+      const errorMessage =
+        error instanceof Error && "code" in error ? `Error code: ${error.code}` : String(error);
       return { error: `Could not edit file: ${path}. ${errorMessage}.` };
     }
 
     const rawContent = await readFile(absolutePath, "utf-8");
     const { text: content } = stripBom(rawContent);
     const normalizedContent = normalizeToLF(content);
-    const { baseContent, newContent } = applyEditsToNormalizedContent(normalizedContent, edits, path);
+    const { baseContent, newContent } = applyEditsToNormalizedContent(
+      normalizedContent,
+      edits,
+      path,
+    );
 
     return generateDiffString(baseContent, newContent);
   } catch (err) {

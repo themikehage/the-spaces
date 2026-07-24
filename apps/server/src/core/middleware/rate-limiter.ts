@@ -54,7 +54,7 @@ export function createRateLimiter(options: RateLimitOptions): MiddlewareHandler 
         {
           error: options.message || "Too many requests, please try again later.",
         },
-        429
+        429,
       );
     }
 

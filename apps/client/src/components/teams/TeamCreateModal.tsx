@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
-import { useState } from "react";
-import { motion } from "framer-motion";
-import type { TeamMember, CreateTeam } from "shared";
-import { useLiterals } from "@/lib";
-import { literals as u } from "./TeamCreateModal.literals";
-import { Button } from "@/components/ui/Button";
-import { Dropdown } from "@/components/ui/Dropdown";
 import { AgentAvatar } from "@/components/shared/AgentAvatar";
 import { AvatarUploadField } from "@/components/shared/AvatarUploadField";
+import { Button } from "@/components/ui/Button";
+import { Dropdown } from "@/components/ui/Dropdown";
+import { useLiterals } from "@/lib";
 import { DEFAULT_AVATAR_PREFIX } from "@/lib/defaultAvatars";
+import { motion } from "framer-motion";
+import { useState } from "react";
+import type { CreateTeam, TeamMember } from "shared";
+import { literals as u } from "./TeamCreateModal.literals";
 
 interface TeamCreateModalProps {
   onClose: () => void;
@@ -64,9 +64,7 @@ export function TeamCreateModal({
 
   const toggleMember = (agentId: string) => {
     setSelectedMemberIds((prev) =>
-      prev.includes(agentId)
-        ? prev.filter((id) => id !== agentId)
-        : [...prev, agentId]
+      prev.includes(agentId) ? prev.filter((id) => id !== agentId) : [...prev, agentId],
     );
   };
 
@@ -131,9 +129,16 @@ export function TeamCreateModal({
             <h2 className="text-sm font-semibold text-foreground">{l.createTitle}</h2>
             <p className="text-xs text-muted-foreground mt-0.5">{l.createSubtitle}</p>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-card-hover transition-colors cursor-pointer">
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-card-hover transition-colors cursor-pointer"
+          >
             <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              <path
+                fillRule="evenodd"
+                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              />
             </svg>
           </button>
         </div>
@@ -151,7 +156,9 @@ export function TeamCreateModal({
           />
 
           <div>
-            <label className="text-xs font-medium text-muted-foreground block mb-1">{l.teamNameLabel}</label>
+            <label className="text-xs font-medium text-muted-foreground block mb-1">
+              {l.teamNameLabel}
+            </label>
             <input
               required
               value={name}
@@ -162,7 +169,9 @@ export function TeamCreateModal({
           </div>
 
           <div>
-            <label className="text-xs font-medium text-muted-foreground block mb-1">{l.descriptionLabel}</label>
+            <label className="text-xs font-medium text-muted-foreground block mb-1">
+              {l.descriptionLabel}
+            </label>
             <input
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -171,10 +180,10 @@ export function TeamCreateModal({
             />
           </div>
 
-
-
           <div>
-            <label className="text-xs font-medium text-muted-foreground block mb-1">{l.leaderLabel}</label>
+            <label className="text-xs font-medium text-muted-foreground block mb-1">
+              {l.leaderLabel}
+            </label>
             {registeredAgents.length === 0 ? (
               <p className="text-xs text-destructive">{l.noAgentsError}</p>
             ) : (
@@ -190,7 +199,9 @@ export function TeamCreateModal({
 
           {leaderAgentId && nonLeaderAgents.length > 0 && (
             <div>
-              <label className="text-xs font-medium text-muted-foreground block mb-1">{l.membersLabel}</label>
+              <label className="text-xs font-medium text-muted-foreground block mb-1">
+                {l.membersLabel}
+              </label>
               <div className="space-y-1 max-h-[140px] overflow-y-auto border border-input rounded-lg p-1.5 bg-background/50">
                 {nonLeaderAgents.map((agent: any) => {
                   const isSelected = selectedMemberIds.includes(agent.id);
@@ -226,10 +237,19 @@ export function TeamCreateModal({
           )}
 
           <div className="flex gap-2 pt-2 border-t border-input bg-card flex-shrink-0">
-            <Button variant="outline" type="button" onClick={onClose} className="flex-1 cursor-pointer">
+            <Button
+              variant="outline"
+              type="button"
+              onClick={onClose}
+              className="flex-1 cursor-pointer"
+            >
               {l.cancel}
             </Button>
-            <Button type="submit" disabled={submitting || !name.trim() || !leaderAgentId} className="flex-1 cursor-pointer">
+            <Button
+              type="submit"
+              disabled={submitting || !name.trim() || !leaderAgentId}
+              className="flex-1 cursor-pointer"
+            >
               {submitting ? l.creating : l.createTeam}
             </Button>
           </div>

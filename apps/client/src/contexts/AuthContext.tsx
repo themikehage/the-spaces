@@ -1,13 +1,6 @@
 // SPDX-License-Identifier: MIT
-import {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  useEffect,
-  type ReactNode,
-} from "react";
 import { apiFetch } from "@/lib/api";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 
 interface User {
   username: string;
@@ -47,7 +40,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     apiFetch("/api/auth/status")
       .then(async (res) => {
         if (!res.ok) return;
-        const data = await res.json() as { needsSetup: boolean; authenticated: boolean; user?: User; token?: string };
+        const data = (await res.json()) as {
+          needsSetup: boolean;
+          authenticated: boolean;
+          user?: User;
+          token?: string;
+        };
         setNeedsSetup(data.needsSetup);
         if (data.authenticated && data.user) {
           setUser(data.user);
@@ -80,11 +78,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (!res.ok) {
-        const data = await res.json() as { error?: string };
+        const data = (await res.json()) as { error?: string };
         throw new Error(data.error ?? "Login failed");
       }
 
-      const data = await res.json() as { user: User; token: string | null };
+      const data = (await res.json()) as { user: User; token: string | null };
       setUser(data.user);
       setToken(data.token);
       setNeedsSetup(false);
@@ -103,11 +101,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (!res.ok) {
-        const data = await res.json() as { error?: string };
+        const data = (await res.json()) as { error?: string };
         throw new Error(data.error ?? "Registration failed");
       }
 
-      const data = await res.json() as { user: User; token: string | null };
+      const data = (await res.json()) as { user: User; token: string | null };
       setUser(data.user);
       setToken(data.token);
       setNeedsSetup(false);
@@ -131,13 +129,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     if (!res.ok) {
-      const data = await res.json() as { error?: string };
+      const data = (await res.json()) as { error?: string };
       throw new Error(data.error ?? "Failed to change password");
     }
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, needsSetup, login, register, logout, changePassword }}>
+    <AuthContext.Provider
+      value={{ user, token, loading, needsSetup, login, register, logout, changePassword }}
+    >
       {children}
     </AuthContext.Provider>
   );

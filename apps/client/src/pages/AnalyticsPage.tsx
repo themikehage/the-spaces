@@ -1,25 +1,34 @@
 // SPDX-License-Identifier: MIT
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { apiFetch } from "@/lib/api";
+import { Dropdown } from "@/components/ui/Dropdown";
 import { useLiterals } from "@/lib";
-import { literals as u } from "./AnalyticsPage.literals";
+import { apiFetch } from "@/lib/api";
 import {
-  ComposedChart,
+  AlertCircle,
+  Calendar,
+  Cpu,
+  Hourglass,
+  Layers,
+  RefreshCw,
+  ShieldAlert,
+  Zap,
+} from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
   Area,
   Bar,
   BarChart,
-  PieChart,
-  Pie,
+  CartesianGrid,
   Cell,
+  ComposedChart,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
 } from "recharts";
-import { Calendar, Layers, Cpu, ShieldAlert, Zap, Hourglass, AlertCircle, RefreshCw } from "lucide-react";
-import { Dropdown } from "@/components/ui/Dropdown";
+import { literals as u } from "./AnalyticsPage.literals";
 
 interface AnalyticsData {
   totalSessions: number;
@@ -48,7 +57,9 @@ export function AnalyticsPage() {
 
   // Set default dates to last 30 days
   const defaultTo = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().substring(0, 10);
-  const defaultFrom = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().substring(0, 10);
+  const defaultFrom = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .substring(0, 10);
 
   const [from, setFrom] = useState(defaultFrom);
   const [to, setTo] = useState(defaultTo);
@@ -97,30 +108,33 @@ export function AnalyticsPage() {
     loadFilters();
   }, []);
 
-  const loadAnalytics = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
-    else setLoading(true);
+  const loadAnalytics = useCallback(
+    async (isRefresh = false) => {
+      if (isRefresh) setRefreshing(true);
+      else setLoading(true);
 
-    try {
-      const params = new URLSearchParams();
-      if (from) params.append("from", from);
-      if (to) params.append("to", to);
-      if (selectedProject) params.append("projectId", selectedProject);
-      if (selectedAgent) params.append("agentId", selectedAgent);
-      if (selectedTeam) params.append("teamId", selectedTeam);
+      try {
+        const params = new URLSearchParams();
+        if (from) params.append("from", from);
+        if (to) params.append("to", to);
+        if (selectedProject) params.append("projectId", selectedProject);
+        if (selectedAgent) params.append("agentId", selectedAgent);
+        if (selectedTeam) params.append("teamId", selectedTeam);
 
-      const res = await apiFetch(`/api/sessions/analytics?${params.toString()}`);
-      if (res.ok) {
-        const d = await res.json();
-        setData(d);
+        const res = await apiFetch(`/api/sessions/analytics?${params.toString()}`);
+        if (res.ok) {
+          const d = await res.json();
+          setData(d);
+        }
+      } catch (err) {
+        console.error("Failed to load analytics data:", err);
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
       }
-    } catch (err) {
-      console.error("Failed to load analytics data:", err);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [from, to, selectedProject, selectedAgent, selectedTeam]);
+    },
+    [from, to, selectedProject, selectedAgent, selectedTeam],
+  );
 
   useEffect(() => {
     loadAnalytics();
@@ -300,7 +314,9 @@ export function AnalyticsPage() {
                 className={`border rounded-2xl p-4 flex flex-col space-y-2 transition-all hover:scale-101 shadow-sm ${kpi.bg}`}
               >
                 <div className="flex items-center justify-between text-muted-foreground">
-                  <span className="text-[10px] uppercase font-bold tracking-wider">{kpi.label}</span>
+                  <span className="text-[10px] uppercase font-bold tracking-wider">
+                    {kpi.label}
+                  </span>
                   {kpi.icon}
                 </div>
                 <span className="text-xl font-bold text-foreground leading-none">{kpi.value}</span>
@@ -325,7 +341,13 @@ export function AnalyticsPage() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#262626" />
                   <XAxis dataKey="date" stroke="#737373" fontSize={10} tickLine={false} />
                   <YAxis yAxisId="left" stroke="#737373" fontSize={10} tickLine={false} />
-                  <YAxis yAxisId="right" orientation="right" stroke="#4ade80" fontSize={10} tickLine={false} />
+                  <YAxis
+                    yAxisId="right"
+                    orientation="right"
+                    stroke="#4ade80"
+                    fontSize={10}
+                    tickLine={false}
+                  />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: "#171717",
@@ -336,8 +358,24 @@ export function AnalyticsPage() {
                     }}
                   />
                   <Legend verticalAlign="top" height={36} wrapperStyle={{ fontSize: "11px" }} />
-                  <Bar yAxisId="left" dataKey="count" fill="#3b82f6" name="Sessions" radius={[3, 3, 0, 0]} maxBarSize={20} />
-                  <Area yAxisId="right" type="monotone" dataKey="tokens" stroke="#4ade80" strokeWidth={2} fillOpacity={1} fill="url(#colorTokens)" name="Tokens" />
+                  <Bar
+                    yAxisId="left"
+                    dataKey="count"
+                    fill="#3b82f6"
+                    name="Sessions"
+                    radius={[3, 3, 0, 0]}
+                    maxBarSize={20}
+                  />
+                  <Area
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey="tokens"
+                    stroke="#4ade80"
+                    strokeWidth={2}
+                    fillOpacity={1}
+                    fill="url(#colorTokens)"
+                    name="Tokens"
+                  />
                 </ComposedChart>
               </ResponsiveContainer>
             </div>
@@ -360,7 +398,14 @@ export function AnalyticsPage() {
                     <BarChart layout="vertical" data={data.topTools.slice(0, 5)}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#262626" horizontal={false} />
                       <XAxis type="number" stroke="#737373" fontSize={9} tickLine={false} />
-                      <YAxis type="category" dataKey="tool" stroke="#737373" fontSize={9} tickLine={false} width={80} />
+                      <YAxis
+                        type="category"
+                        dataKey="tool"
+                        stroke="#737373"
+                        fontSize={9}
+                        tickLine={false}
+                        width={80}
+                      />
                       <Tooltip
                         contentStyle={{
                           backgroundColor: "#171717",
@@ -369,7 +414,13 @@ export function AnalyticsPage() {
                           fontSize: "11px",
                         }}
                       />
-                      <Bar dataKey="count" fill="#a855f7" radius={[0, 4, 4, 0]} maxBarSize={15} name="Executions" />
+                      <Bar
+                        dataKey="count"
+                        fill="#a855f7"
+                        radius={[0, 4, 4, 0]}
+                        maxBarSize={15}
+                        name="Executions"
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
@@ -411,7 +462,13 @@ export function AnalyticsPage() {
                           fontSize: "11px",
                         }}
                       />
-                      <Legend verticalAlign="bottom" align="center" iconSize={8} iconType="circle" wrapperStyle={{ fontSize: "10px", lineHeight: "16px" }} />
+                      <Legend
+                        verticalAlign="bottom"
+                        align="center"
+                        iconSize={8}
+                        iconType="circle"
+                        wrapperStyle={{ fontSize: "10px", lineHeight: "16px" }}
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                 )}
@@ -442,7 +499,13 @@ export function AnalyticsPage() {
                           fontSize: "11px",
                         }}
                       />
-                      <Bar dataKey="count" fill="#f43f5e" radius={[4, 4, 0, 0]} maxBarSize={20} name="Errors" />
+                      <Bar
+                        dataKey="count"
+                        fill="#f43f5e"
+                        radius={[4, 4, 0, 0]}
+                        maxBarSize={20}
+                        name="Errors"
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 )}

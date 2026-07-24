@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 import type { Context } from "hono";
-import { statSync, existsSync } from "node:fs";
+import { existsSync, statSync } from "node:fs";
 
 export function applyCacheHeaders(
   c: Context,
   filePath: string,
-  opts?: { immutable?: boolean; maxAge?: number }
+  opts?: { immutable?: boolean; maxAge?: number },
 ): Response | null {
   if (!existsSync(filePath)) {
     return null;
@@ -45,7 +45,7 @@ export function applyCacheHeaders(
       const serverTimeSecObj = new Date(mtime);
       serverTimeSecObj.setMilliseconds(0);
       const serverTimeSec = serverTimeSecObj.getTime();
-      
+
       if (!isNaN(clientTime) && serverTimeSec <= clientTime) {
         return new Response(null, { status: 304 });
       }

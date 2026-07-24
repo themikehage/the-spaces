@@ -3,9 +3,11 @@
 Un espacio de trabajo en la nube para manejar todos tus proyectos con el poder de los agentes de IA
 
 ## Mandatory Context Files
+
 Before any work, read: `about.md`, `steps.md`, `AGENTS.md` (this file). These are the single source of truth.
 
 ## Workflow
+
 1. Read the 3 MDs above
 2. Pick the next incomplete task from `steps.md`
 3. Complete the task, validate, and commit
@@ -13,6 +15,7 @@ Before any work, read: `about.md`, `steps.md`, `AGENTS.md` (this file). These ar
 5. Update `about.md` after each major change to keep documentation current
 
 ## Commands
+
 - `pnpm dev` - Start client, landing, and server in parallel
 - `pnpm build` - Build all apps and packages
 - `pnpm --filter client run dev` - Run client development server
@@ -20,6 +23,7 @@ Before any work, read: `about.md`, `steps.md`, `AGENTS.md` (this file). These ar
 - `pnpm --filter server run dev` - Run server in watch mode
 
 ## Code Conventions
+
 - TypeScript strict mode, no `any` types
 - Tailwind CSS v4 only, define custom values in `index.css` via `@theme`
 - No comments in production code
@@ -27,6 +31,7 @@ Before any work, read: `about.md`, `steps.md`, `AGENTS.md` (this file). These ar
 - Functional components with React hooks
 
 ## Stack
+
 - **Backend:** Bun + Hono + Zod
 - **Frontend:** React 19 + Vite + TypeScript + Tailwind CSS v4
 - **Shared:** TypeScript library with Zod schemas for shared models and contracts

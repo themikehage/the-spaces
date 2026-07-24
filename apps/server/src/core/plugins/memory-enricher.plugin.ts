@@ -16,7 +16,9 @@ export class MemoryEnricherPlugin extends BasePlugin {
   async beforeModelCall(ctx: ModelCallContext): Promise<void> {
     if (this.config.memory && typeof this.config.memory.buildContext === "function") {
       try {
-        await this.config.memory.buildContext(String(ctx.prompt || ""), { sessionId: ctx.sessionId });
+        await this.config.memory.buildContext(String(ctx.prompt || ""), {
+          sessionId: ctx.sessionId,
+        });
       } catch (e) {
         console.error("[MemoryEnricherPlugin] Failed to build context:", e);
       }

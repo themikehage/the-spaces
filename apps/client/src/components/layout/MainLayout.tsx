@@ -1,34 +1,34 @@
 // SPDX-License-Identifier: MIT
-import { useState, useMemo, useEffect, useCallback } from "react";
-import { useLocation } from "react-router-dom";
-import type { ReactNode } from "react";
-import { apiFetch } from "@/lib/api";
-import { Plus, Settings } from "lucide-react";
-import { AnimatePresence } from "framer-motion";
-import type { RoutePage } from "@/router/useRoutePage";
+import { GlobalAgentSettingsModal } from "@/components/agents/GlobalAgentSettingsModal";
+import { RegisterModal } from "@/components/agents/RegisterModal";
+import { ProjectSettingsModal } from "@/components/projects/ProjectSettingsModal";
+import { SessionPopover } from "@/components/sidebar/SessionPopover";
+import { SessionSidebar } from "@/components/sidebar/SessionSidebar";
+import { TeamSettingsModal } from "@/components/teams/TeamSettingsModal";
+import { useAgents } from "@/hooks/useAgents";
 import { useSessionResolver } from "@/hooks/useSessionResolver";
-import { useLiterals } from "@/lib";
 import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
+import { useLiterals } from "@/lib";
+import { apiFetch } from "@/lib/api";
 import { getSessionPath } from "@/lib/session-utils";
-import { literals as u } from "./MainLayout.literals";
-import { MobileTopbar } from "./MobileTopbar";
 import { wsClient, type ConnectionState } from "@/lib/ws-client";
-import { useWorkspaceNavigation } from "./hooks/useWorkspaceNavigation";
-import { useSessionActions } from "./hooks/useSessionActions";
+import type { RoutePage } from "@/router/useRoutePage";
+import { AnimatePresence } from "framer-motion";
+import { Plus, Settings } from "lucide-react";
+import type { ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
+import type { AgentDefinition, AgentInfo } from "shared";
 import { Breadcrumbs } from "./header/Breadcrumbs";
 import { DesktopHeader } from "./header/DesktopHeader";
-import { ContextTabBar } from "./tabs/ContextTabBar";
+import { useSessionActions } from "./hooks/useSessionActions";
+import { useWorkspaceNavigation } from "./hooks/useWorkspaceNavigation";
+import { literals as u } from "./MainLayout.literals";
+import { MobileBottomBar } from "./mobile/MobileBottomBar";
+import { MobileTopbar } from "./MobileTopbar";
 import { DesktopSidebar } from "./sidebar/DesktopSidebar";
 import { MobileSidebarOverlay } from "./sidebar/MobileSidebarOverlay";
-import { MobileBottomBar } from "./mobile/MobileBottomBar";
-import { SessionSidebar } from "@/components/sidebar/SessionSidebar";
-import { SessionPopover } from "@/components/sidebar/SessionPopover";
-import { RegisterModal } from "@/components/agents/RegisterModal";
-import { useAgents } from "@/hooks/useAgents";
-import type { AgentDefinition, AgentInfo } from "shared";
-import { ProjectSettingsModal } from "@/components/projects/ProjectSettingsModal";
-import { TeamSettingsModal } from "@/components/teams/TeamSettingsModal";
-import { GlobalAgentSettingsModal } from "@/components/agents/GlobalAgentSettingsModal";
+import { ContextTabBar } from "./tabs/ContextTabBar";
 
 interface Props {
   page: RoutePage;
@@ -71,7 +71,10 @@ export function MainLayout({
   const [showGlobalEdit, setShowGlobalEdit] = useState(false);
   const [activeProjectData, setActiveProjectData] = useState<any>(null);
   const [activeTeamData, setActiveTeamData] = useState<any>(null);
-  const [globalSettings, setGlobalSettings] = useState<{ factoryName?: string; factoryAvatarUrl?: string | null } | null>(null);
+  const [globalSettings, setGlobalSettings] = useState<{
+    factoryName?: string;
+    factoryAvatarUrl?: string | null;
+  } | null>(null);
   const { updateAgent, uploadAvatar, deleteAvatar } = useAgents();
 
   useEffect(() => {
@@ -84,35 +87,34 @@ export function MainLayout({
   const sessionMatch = pathname.match(/\/session\/(.+?)(?:\/(?:delegations|timeline))?$/);
   const sessionId = sessionMatch?.[1] ?? null;
 
-  const handleExport = useCallback((format: "json" | "jsonl" | "markdown") => {
-    if (!sessionId) return;
-    setExportDropdownOpen(false);
+  const handleExport = useCallback(
+    (format: "json" | "jsonl" | "markdown") => {
+      if (!sessionId) return;
+      setExportDropdownOpen(false);
 
-    const url = `/api/sessions/${sessionId}/export?format=${format}`;
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `session-${sessionId}.${format === "markdown" ? "md" : format}`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  }, [sessionId]);
+      const url = `/api/sessions/${sessionId}/export?format=${format}`;
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `session-${sessionId}.${format === "markdown" ? "md" : format}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    },
+    [sessionId],
+  );
 
   // Hooks extraídos
   useWorkspaceNavigation(page, onNavigate);
 
-  const {
-    quickCreating,
-    handleSelectSession,
-    handleNewSession,
-    handleQuickCreate,
-  } = useSessionActions({
-    activeProjectId,
-    activeProjectFriendlyName: activeProjectName,
-    activeAgent,
-    activeTeam,
-    onNavigate,
-    setSidebarOpen,
-  });
+  const { quickCreating, handleSelectSession, handleNewSession, handleQuickCreate } =
+    useSessionActions({
+      activeProjectId,
+      activeProjectFriendlyName: activeProjectName,
+      activeAgent,
+      activeTeam,
+      onNavigate,
+      setSidebarOpen,
+    });
 
   const handleBackClick = useCallback(() => {
     if (onBack) {
@@ -120,26 +122,32 @@ export function MainLayout({
     }
   }, [onBack]);
 
-  const handleUpdateAgent = useCallback(async (def: AgentDefinition) => {
-    if (!activeAgent) return;
-    const { id, ...updates } = def;
-    await updateAgent(activeAgent.id, updates);
-  }, [activeAgent, updateAgent]);
+  const handleUpdateAgent = useCallback(
+    async (def: AgentDefinition) => {
+      if (!activeAgent) return;
+      const { id, ...updates } = def;
+      await updateAgent(activeAgent.id, updates);
+    },
+    [activeAgent, updateAgent],
+  );
 
-  const handleUpdateProject = useCallback(async (updates: { name: string; cloneUrl: string | null; avatarUrl: string | null }) => {
-    if (!activeProjectId) return;
-    const res = await apiFetch(`/api/workspace-projects/${activeProjectId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updates),
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({ error: "Failed to update project" }));
-      throw new Error(err.error || "Failed to update project");
-    }
-    localStorage.setItem("active-project-name", updates.name);
-    window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "project" } }));
-  }, [activeProjectId]);
+  const handleUpdateProject = useCallback(
+    async (updates: { name: string; cloneUrl: string | null; avatarUrl: string | null }) => {
+      if (!activeProjectId) return;
+      const res = await apiFetch(`/api/workspace-projects/${activeProjectId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Failed to update project" }));
+        throw new Error(err.error || "Failed to update project");
+      }
+      localStorage.setItem("active-project-name", updates.name);
+      window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "project" } }));
+    },
+    [activeProjectId],
+  );
 
   const handleUploadProjectAvatar = useCallback(async (id: string, file: File) => {
     const formData = new FormData();
@@ -168,32 +176,38 @@ export function MainLayout({
     window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "project" } }));
   }, []);
 
-  const handleDeleteProject = useCallback(async (id: string) => {
-    const res = await apiFetch(`/api/workspace-projects/${id}`, {
-      method: "DELETE",
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || "Failed to delete project");
-    }
-    onSelectProject(null, null);
-    onNavigate("/projects");
-    window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "project" } }));
-  }, [onSelectProject, onNavigate]);
+  const handleDeleteProject = useCallback(
+    async (id: string) => {
+      const res = await apiFetch(`/api/workspace-projects/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to delete project");
+      }
+      onSelectProject(null, null);
+      onNavigate("/projects");
+      window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "project" } }));
+    },
+    [onSelectProject, onNavigate],
+  );
 
-  const handleUpdateTeam = useCallback(async (updates: any) => {
-    if (!activeTeam?.id) return;
-    const res = await apiFetch(`/api/teams/${activeTeam.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updates),
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({ error: "Failed to update team" }));
-      throw new Error(err.error || "Failed to update team");
-    }
-    window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "team" } }));
-  }, [activeTeam?.id]);
+  const handleUpdateTeam = useCallback(
+    async (updates: any) => {
+      if (!activeTeam?.id) return;
+      const res = await apiFetch(`/api/teams/${activeTeam.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Failed to update team" }));
+        throw new Error(err.error || "Failed to update team");
+      }
+      window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "team" } }));
+    },
+    [activeTeam?.id],
+  );
 
   const handleUploadTeamAvatar = useCallback(async (id: string, file: File) => {
     const formData = new FormData();
@@ -222,18 +236,21 @@ export function MainLayout({
     window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "team" } }));
   }, []);
 
-  const handleDeleteTeam = useCallback(async (id: string) => {
-    const res = await apiFetch(`/api/teams/${id}`, {
-      method: "DELETE",
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || "Failed to delete team");
-    }
-    onSelectTeam(null);
-    onNavigate("/teams");
-    window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "team" } }));
-  }, [onSelectTeam, onNavigate]);
+  const handleDeleteTeam = useCallback(
+    async (id: string) => {
+      const res = await apiFetch(`/api/teams/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to delete team");
+      }
+      onSelectTeam(null);
+      onNavigate("/teams");
+      window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "team" } }));
+    },
+    [onSelectTeam, onNavigate],
+  );
 
   const fetchGlobalSettings = useCallback(async () => {
     try {
@@ -372,7 +389,15 @@ export function MainLayout({
       };
       onNavigate(getSessionPath(resolvedSessionId, context));
     }
-  }, [resolvedSessionId, sessionId, activeTeam, activeAgent, activeProjectId, activeProjectName, onNavigate]);
+  }, [
+    resolvedSessionId,
+    sessionId,
+    activeTeam,
+    activeAgent,
+    activeProjectId,
+    activeProjectName,
+    onNavigate,
+  ]);
 
   const resolvingSession = !sessionId && page === "chat" && resolving;
 
@@ -384,7 +409,13 @@ export function MainLayout({
     children
   );
 
-  const isContextView = page === "chat" || page === "workspace" || page === "preview" || page === "org" || page === "delegations" || page === "timeline";
+  const isContextView =
+    page === "chat" ||
+    page === "workspace" ||
+    page === "preview" ||
+    page === "org" ||
+    page === "delegations" ||
+    page === "timeline";
   const showNewSessionButton = !isHome && isContextView;
 
   const isNegotiationTeam = activeTeamData?.teamType === "Negotiation";
@@ -399,10 +430,14 @@ export function MainLayout({
       {
         id: "chat",
         label: l.tabChat,
-        path: sessionId ? `${basePath}/session/${sessionId}` : (basePath ? `${basePath}/chat` : "/"),
+        path: sessionId ? `${basePath}/session/${sessionId}` : basePath ? `${basePath}/chat` : "/",
         icon: (
           <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
+            <path
+              fillRule="evenodd"
+              d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"
+              clipRule="evenodd"
+            />
           </svg>
         ),
       },
@@ -413,9 +448,22 @@ export function MainLayout({
         {
           id: "delegations",
           label: l.tabDelegations || "Delegations",
-          path: sessionId ? `${basePath}/session/${sessionId}/delegations` : (basePath ? `${basePath}/delegations` : "/delegations"),
+          path: sessionId
+            ? `${basePath}/session/${sessionId}/delegations`
+            : basePath
+              ? `${basePath}/delegations`
+              : "/delegations",
           icon: (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
               <circle cx="9" cy="7" r="4" />
               <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -436,30 +484,45 @@ export function MainLayout({
         {
           id: "timeline",
           label: l.tabTimeline || "Timeline",
-          path: sessionId ? `${basePath}/session/${sessionId}/timeline` : (basePath ? `${basePath}/timeline` : "/timeline"),
+          path: sessionId
+            ? `${basePath}/session/${sessionId}/timeline`
+            : basePath
+              ? `${basePath}/timeline`
+              : "/timeline",
           icon: (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <circle cx="12" cy="12" r="10" />
               <polyline points="12 6 12 12 16 14" />
             </svg>
           ),
-        }
+        },
       );
     }
 
     if (activeProjectName || activeProjectId) {
-      list.push(
-        {
-          id: "preview",
-          label: l.tabPreview,
-          path: basePath ? `${basePath}/preview` : "/preview",
-          icon: (
-            <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM4.332 8.027a6.012 6.012 0 011.912-2.706C6.512 5.73 6.974 6 7.5 6A1.5 1.5 0 019 7.5V8a2 2 0 004 0 2 2 0 01-1.523-1.943A5.977 5.977 0 0116 10c0 .34-.028.675-.083 1H15a2 2 0 00-2 2v2.197A5.973 5.973 0 0110 16v-2a2 2 0 00-2-2 2 2 0 01-2-2 2 2 0 00-1.668-1.973z" clipRule="evenodd" />
-            </svg>
-          ),
-        }
-      );
+      list.push({
+        id: "preview",
+        label: l.tabPreview,
+        path: basePath ? `${basePath}/preview` : "/preview",
+        icon: (
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
+            <path
+              fillRule="evenodd"
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zM4.332 8.027a6.012 6.012 0 011.912-2.706C6.512 5.73 6.974 6 7.5 6A1.5 1.5 0 019 7.5V8a2 2 0 004 0 2 2 0 01-1.523-1.943A5.977 5.977 0 0116 10c0 .34-.028.675-.083 1H15a2 2 0 00-2 2v2.197A5.973 5.973 0 0110 16v-2a2 2 0 00-2-2 2 2 0 01-2-2 2 2 0 00-1.668-1.973z"
+              clipRule="evenodd"
+            />
+          </svg>
+        ),
+      });
     }
 
     if (activeTeam) {
@@ -469,7 +532,11 @@ export function MainLayout({
         path: `${basePath}/org`,
         icon: (
           <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M3 3a1 1 0 000 2h11a1 1 0 100-2H3zm0 4a1 1 0 000 2h7a1 1 0 100-2H3zm0 4a1 1 0 100 2h7a1 1 0 100-2H3zm0 4a1 1 0 100 2h11a1 1 0 100-2H3z" clipRule="evenodd" />
+            <path
+              fillRule="evenodd"
+              d="M3 3a1 1 0 000 2h11a1 1 0 100-2H3zm0 4a1 1 0 000 2h7a1 1 0 100-2H3zm0 4a1 1 0 100 2h7a1 1 0 100-2H3zm0 4a1 1 0 100 2h11a1 1 0 100-2H3z"
+              clipRule="evenodd"
+            />
           </svg>
         ),
       });
@@ -512,18 +579,30 @@ export function MainLayout({
         {sessionId && (
           <div className="relative flex items-center">
             <button
-              onClick={() => setExportDropdownOpen(p => !p)}
+              onClick={() => setExportDropdownOpen((p) => !p)}
               className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-semibold border border-border hover:bg-card text-muted-foreground hover:text-foreground transition-all cursor-pointer bg-card/10"
               title="Exportar conversación"
             >
-              <svg className="w-3 h-3 text-muted-foreground" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+              <svg
+                className="w-3 h-3 text-muted-foreground"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
+                />
               </svg>
-
             </button>
             {exportDropdownOpen && (
               <>
-                <div className="fixed inset-0 z-40 bg-transparent" onClick={() => setExportDropdownOpen(false)} />
+                <div
+                  className="fixed inset-0 z-40 bg-transparent"
+                  onClick={() => setExportDropdownOpen(false)}
+                />
                 <div className="absolute right-0 top-full mt-2 w-44 bg-card border border-input rounded-xl shadow-2xl flex flex-col z-50 animate-scale-in overflow-hidden p-1">
                   <button
                     onClick={() => handleExport("markdown")}
@@ -554,7 +633,11 @@ export function MainLayout({
           title={l.titleSessions}
         >
           <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.8 2.8a1 1 0 101.414-1.414L11 10.586V6z" clipRule="evenodd" />
+            <path
+              fillRule="evenodd"
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.8 2.8a1 1 0 101.414-1.414L11 10.586V6z"
+              clipRule="evenodd"
+            />
           </svg>
           <span>{l.btnSessions}</span>
         </button>
@@ -628,78 +711,90 @@ export function MainLayout({
   );
 
   return (
-    <><div className="h-dvh flex flex-col bg-background text-foreground overflow-hidden font-sans">
-      {isMobile ? (
-        <MobileTopbar
-          isMobile={isMobile}
-          isHome={isHome}
-          title={mobileTitle}
-          canGoBack={canGoBack}
-          onBack={handleBackClick}
-          onMenuToggle={() => setSidebarOpen((prev) => !prev)}
-          onNewSession={handleQuickCreate}
-          onNavigate={onNavigate}
-          showNewSessionButton={showNewSessionButton}
-          l={l}
-          wsState={wsState}
-        />
-      ) : (
-        <DesktopHeader
-          onHome={() => { onSelectProject(null, null); onNavigate("/dashboard"); }}
-          onToggleSidebar={() => setSidebarOpen((p) => !p)}
-          onNavigate={onNavigate}
-          wsState={wsState}
-          breadcrumbs={breadcrumbsElement}
-        />
-      )}
-
-      <div className="flex flex-1 min-h-0 relative overflow-hidden">
+    <>
+      <div className="h-dvh flex flex-col bg-background text-foreground overflow-hidden font-sans">
         {isMobile ? (
-          <>
-            <MobileSidebarOverlay
-              sidebarOpen={sidebarOpen}
-              isHome={isHome}
-              onClose={() => setSidebarOpen(false)}
-              onNavigate={onNavigate}
-            >
-              {sessionSidebarElement}
-            </MobileSidebarOverlay>
-
-            <main
-              className={`absolute inset-x-0 top-0 ${sidebarOpen ? "bottom-14" : "bottom-0"
-                } z-30 flex flex-col bg-background`}
-            >
-              {isContextView && sharedTabBar}
-              <div className="flex-1 min-h-0 relative">{contentElement}</div>
-            </main>
-
-            {sidebarOpen && (
-              <MobileBottomBar
-                currentPage={page}
-                isHome={isHome}
-                onNavigate={onNavigate}
-                setSidebarOpen={setSidebarOpen}
-              />
-            )}
-          </>
+          <MobileTopbar
+            isMobile={isMobile}
+            isHome={isHome}
+            title={mobileTitle}
+            canGoBack={canGoBack}
+            onBack={handleBackClick}
+            onMenuToggle={() => setSidebarOpen((prev) => !prev)}
+            onNewSession={handleQuickCreate}
+            onNavigate={onNavigate}
+            showNewSessionButton={showNewSessionButton}
+            l={l}
+            wsState={wsState}
+          />
         ) : (
-          <>
-            <DesktopSidebar sidebarOpen={sidebarOpen}>
-              {sessionSidebarElement}
-            </DesktopSidebar>
-
-            <main className="flex-1 min-w-0 flex flex-col h-full bg-background">
-              {isContextView && sharedTabBar}
-              <div className="flex-1 min-h-0 relative">{contentElement}</div>
-            </main>
-          </>
+          <DesktopHeader
+            onHome={() => {
+              onSelectProject(null, null);
+              onNavigate("/dashboard");
+            }}
+            onToggleSidebar={() => setSidebarOpen((p) => !p)}
+            onNavigate={onNavigate}
+            wsState={wsState}
+            breadcrumbs={breadcrumbsElement}
+          />
         )}
+
+        <div className="flex flex-1 min-h-0 relative overflow-hidden">
+          {isMobile ? (
+            <>
+              <MobileSidebarOverlay
+                sidebarOpen={sidebarOpen}
+                isHome={isHome}
+                onClose={() => setSidebarOpen(false)}
+                onNavigate={onNavigate}
+              >
+                {sessionSidebarElement}
+              </MobileSidebarOverlay>
+
+              <main
+                className={`absolute inset-x-0 top-0 ${
+                  sidebarOpen ? "bottom-14" : "bottom-0"
+                } z-30 flex flex-col bg-background`}
+              >
+                {isContextView && sharedTabBar}
+                <div className="flex-1 min-h-0 relative">{contentElement}</div>
+              </main>
+
+              {sidebarOpen && (
+                <MobileBottomBar
+                  currentPage={page}
+                  isHome={isHome}
+                  onNavigate={onNavigate}
+                  setSidebarOpen={setSidebarOpen}
+                />
+              )}
+            </>
+          ) : (
+            <>
+              <DesktopSidebar sidebarOpen={sidebarOpen}>{sessionSidebarElement}</DesktopSidebar>
+
+              <main className="flex-1 min-w-0 flex flex-col h-full bg-background">
+                {isContextView && sharedTabBar}
+                <div className="flex-1 min-h-0 relative">{contentElement}</div>
+              </main>
+            </>
+          )}
+        </div>
       </div>
-    </div>
       <AnimatePresence>
         {showAgentEdit && activeAgent && (
           <RegisterModal
-            agent={{ id: activeAgent.id, name: activeAgent.name, avatarUrl: activeAgent.avatarUrl, role: "", status: "idle" as const, createdAt: "" } as unknown as AgentInfo}
+            agent={
+              {
+                id: activeAgent.id,
+                name: activeAgent.name,
+                avatarUrl: activeAgent.avatarUrl,
+                role: "",
+                status: "idle" as const,
+                createdAt: "",
+              } as unknown as AgentInfo
+            }
             onClose={() => setShowAgentEdit(false)}
             onSubmit={handleUpdateAgent}
             onUploadAvatar={uploadAvatar}
@@ -733,11 +828,7 @@ export function MainLayout({
             onDeleteTeam={handleDeleteTeam}
           />
         )}
-        {showGlobalEdit && (
-          <GlobalAgentSettingsModal
-            onClose={() => setShowGlobalEdit(false)}
-          />
-        )}
+        {showGlobalEdit && <GlobalAgentSettingsModal onClose={() => setShowGlobalEdit(false)} />}
       </AnimatePresence>
     </>
   );

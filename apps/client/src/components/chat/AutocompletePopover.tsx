@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-import { useRef } from "react";
-import { PortalPopover } from "./PortalPopover";
 import { useLiterals } from "@/lib";
+import { useRef } from "react";
 import { literals as u } from "./ChatInput.literals";
+import { PortalPopover } from "./PortalPopover";
 
 interface AutocompleteItem {
   id: string;
@@ -69,9 +69,7 @@ export function AutocompletePopover({
                   </>
                 ) : (
                   <div className="flex flex-col gap-0.5 min-w-0">
-                    <span className="font-mono font-bold text-foreground">
-                      /{item.name}
-                    </span>
+                    <span className="font-mono font-bold text-foreground">/{item.name}</span>
                     {item.description && (
                       <span className="text-[10px] text-muted-foreground truncate max-w-full">
                         {item.description}

@@ -6,7 +6,11 @@
 
 import { openAICompletionsApi } from "./api/openai-completions.lazy.ts";
 import { getEnvApiKey } from "./env-api-keys.ts";
-import { createFauxCore, type FauxProviderRegistration, type RegisterFauxProviderOptions } from "./providers/faux.ts";
+import {
+  createFauxCore,
+  type FauxProviderRegistration,
+  type RegisterFauxProviderOptions,
+} from "./providers/faux.ts";
 import type {
   Api,
   ApiStreamOptions,
@@ -54,7 +58,11 @@ const apiProviderRegistry = new Map<string, RegisteredApiProvider>();
 
 function wrapStreamSimple<TApi extends Api>(
   api: TApi,
-  streamSimpleFn: (model: Model<TApi>, context: Context, options?: SimpleStreamOptions) => AssistantMessageEventStream,
+  streamSimpleFn: (
+    model: Model<TApi>,
+    context: Context,
+    options?: SimpleStreamOptions,
+  ) => AssistantMessageEventStream,
 ): ApiStreamSimpleFunction {
   return (model, context, options) => {
     if (model.api !== api) {
@@ -102,10 +110,15 @@ export function unregisterApiProviders(sourceId: string): void {
   }
 }
 
-export function registerFauxProvider(options: RegisterFauxProviderOptions = {}): FauxProviderRegistration {
+export function registerFauxProvider(
+  options: RegisterFauxProviderOptions = {},
+): FauxProviderRegistration {
   const core = createFauxCore(options);
   const sourceId = `faux-provider-${Math.random().toString(36).slice(2, 10)}`;
-  registerApiProvider({ api: core.api, stream: core.stream, streamSimple: core.streamSimple }, sourceId);
+  registerApiProvider(
+    { api: core.api, stream: core.stream, streamSimple: core.streamSimple },
+    sourceId,
+  );
   return {
     api: core.api,
     models: core.models,
@@ -205,7 +218,10 @@ export function isContextOverflow(error: unknown): boolean {
   return error.message.includes("context") && error.message.includes("overflow");
 }
 
-export function isRetryableAssistantError(msg: { stopReason?: string; errorMessage?: string }): boolean {
+export function isRetryableAssistantError(msg: {
+  stopReason?: string;
+  errorMessage?: string;
+}): boolean {
   if (msg.stopReason !== "error") return false;
   const err = msg.errorMessage ?? "";
   return err.includes("overloaded") || err.includes("rate_limit") || err.includes("timeout");
@@ -221,7 +237,14 @@ export function getSupportedThinkingLevels(model: Model<Api>): string[] {
   return ["off", "minimal", "low", "medium", "high"];
 }
 
-export type { ProviderStreamOptions, ApiStreamOptions };
+export type {
+  AssistantMessage,
+  AssistantMessageEventStream,
+  Context,
+  Model,
+  SimpleStreamOptions,
+  ToolResultMessage,
+} from "./types.ts";
 export { EventStream } from "./utils/event-stream.ts";
 export { validateToolArguments } from "./utils/validation.ts";
-export type { AssistantMessage, AssistantMessageEventStream, Context, Model, SimpleStreamOptions, ToolResultMessage } from "./types.ts";
+export type { ApiStreamOptions, ProviderStreamOptions };

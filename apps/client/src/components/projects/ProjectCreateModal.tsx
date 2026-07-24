@@ -1,27 +1,19 @@
 // SPDX-License-Identifier: MIT
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { useLiterals } from "@/lib";
-import { literals as u } from "./ProjectCreateModal.literals";
-import { Button } from "@/components/ui/Button";
 import { AvatarUploadField } from "@/components/shared/AvatarUploadField";
+import { Button } from "@/components/ui/Button";
+import { useLiterals } from "@/lib";
 import { DEFAULT_AVATAR_PREFIX } from "@/lib/defaultAvatars";
+import { motion } from "framer-motion";
+import { useState } from "react";
+import { literals as u } from "./ProjectCreateModal.literals";
 
 interface ProjectCreateModalProps {
   onClose: () => void;
-  onSubmit: (data: {
-    name: string;
-    cloneUrl?: string;
-    avatarUrl?: string;
-  }) => Promise<any>;
+  onSubmit: (data: { name: string; cloneUrl?: string; avatarUrl?: string }) => Promise<any>;
   onUploadAvatar?: (id: string, file: File) => Promise<string>;
 }
 
-export function ProjectCreateModal({
-  onClose,
-  onSubmit,
-  onUploadAvatar,
-}: ProjectCreateModalProps) {
+export function ProjectCreateModal({ onClose, onSubmit, onUploadAvatar }: ProjectCreateModalProps) {
   const l = useLiterals(u);
   const [name, setName] = useState("");
   const [cloneUrl, setCloneUrl] = useState("");
@@ -104,7 +96,11 @@ export function ProjectCreateModal({
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-card-hover transition-colors cursor-pointer"
           >
             <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              <path
+                fillRule="evenodd"
+                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              />
             </svg>
           </button>
         </div>

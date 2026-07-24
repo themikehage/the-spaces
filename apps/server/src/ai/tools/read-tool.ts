@@ -1,21 +1,22 @@
 // SPDX-License-Identifier: MIT
-import { access, readFile } from "node:fs/promises";
 import { constants } from "node:fs";
-import { resolveSafePath } from "./path-safety";
+import { access, readFile } from "node:fs/promises";
 import { truncateHead } from "../vendor/agent/src/harness/utils/truncate";
+import { resolveSafePath } from "./path-safety";
 
 export function createReadToolDefinition(cwd: string, allowedDirs?: string[]) {
   return {
     name: "read",
-    description: "Read the contents of a text file. Supports offset and limit parameters for paginating large files.",
+    description:
+      "Read the contents of a text file. Supports offset and limit parameters for paginating large files.",
     schema: {
       type: "object",
       properties: {
         path: { type: "string", description: "Path to the file to read (relative or absolute)" },
         offset: { type: "number", description: "Line number to start reading from (1-indexed)" },
-        limit: { type: "number", description: "Maximum number of lines to read" }
+        limit: { type: "number", description: "Maximum number of lines to read" },
       },
-      required: ["path"]
+      required: ["path"],
     },
     execute: async (toolCallId: string, args: any, signal?: AbortSignal) => {
       const { path: filePath, offset, limit } = args;
@@ -34,8 +35,13 @@ export function createReadToolDefinition(cwd: string, allowedDirs?: string[]) {
       // Check if binary
       if (textContent.includes("\u0000")) {
         return {
-          content: [{ type: "text", text: "[Binary file detected. Reading binary files directly is not supported by this tool.]" }],
-          details: { isBinary: true }
+          content: [
+            {
+              type: "text",
+              text: "[Binary file detected. Reading binary files directly is not supported by this tool.]",
+            },
+          ],
+          details: { isBinary: true },
         };
       }
 
@@ -63,7 +69,9 @@ export function createReadToolDefinition(cwd: string, allowedDirs?: string[]) {
       } else if (truncation.truncated) {
         const endLineDisplay = startLineDisplay + truncation.outputLines - 1;
         const nextOffset = endLineDisplay + 1;
-        outputText = truncation.content + `\n\n[Output truncated due to size limits. Use offset=${nextOffset} to continue reading.]`;
+        outputText =
+          truncation.content +
+          `\n\n[Output truncated due to size limits. Use offset=${nextOffset} to continue reading.]`;
       }
 
       return {
@@ -71,9 +79,9 @@ export function createReadToolDefinition(cwd: string, allowedDirs?: string[]) {
         details: {
           totalLines: allLines.length,
           outputLines: truncation.outputLines,
-          truncated: truncation.truncated
-        }
+          truncated: truncation.truncated,
+        },
       };
-    }
+    },
   };
 }

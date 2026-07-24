@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-import { Menu, Plus } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import type { ConnectionState } from "@/lib/ws-client";
+import { Menu, Plus } from "lucide-react";
 
 interface MobileTopbarProps {
   isMobile: boolean;
@@ -43,7 +43,9 @@ export function MobileTopbar({
         {isHome ? (
           <div className="flex items-center gap-2">
             <Logo size={20} className="w-[20px] h-[20px]" />
-            <span className="text-base font-semibold text-foreground">{l.breadFactory || "Spaces"}</span>
+            <span className="text-base font-semibold text-foreground">
+              {l.breadFactory || "Spaces"}
+            </span>
           </div>
         ) : (
           <h1 className="text-base font-semibold text-foreground truncate max-w-[200px]">
@@ -54,10 +56,13 @@ export function MobileTopbar({
 
       <div className="flex items-center gap-1.5 flex-shrink-0">
         <span
-          className={`w-2 h-2 rounded-full mr-1 flex-shrink-0 ${wsState === "connected" ? "bg-success" :
-              wsState === "connecting" ? "bg-warning animate-pulse" :
-                "bg-error"
-            }`}
+          className={`w-2 h-2 rounded-full mr-1 flex-shrink-0 ${
+            wsState === "connected"
+              ? "bg-success"
+              : wsState === "connecting"
+                ? "bg-warning animate-pulse"
+                : "bg-error"
+          }`}
           title={`WebSocket: ${wsState}`}
         />
         <button
@@ -65,7 +70,16 @@ export function MobileTopbar({
           className="w-11 h-11 flex items-center justify-center text-muted-foreground hover:text-foreground rounded-lg active:bg-surface-hover transition-colors cursor-pointer"
           aria-label="Session Board"
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <rect x="3" y="3" width="7" height="7" />
             <rect x="14" y="3" width="7" height="7" />
             <rect x="3" y="14" width="7" height="7" />

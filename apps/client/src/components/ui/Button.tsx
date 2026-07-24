@@ -11,7 +11,8 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variants: Record<Variant, string> = {
-  solid: "bg-background text-foreground border border-border hover:bg-primary/10 hover:border-primary/30",
+  solid:
+    "bg-background text-foreground border border-border hover:bg-primary/10 hover:border-primary/30",
   outline: "bg-transparent text-foreground border border-border hover:bg-primary/10",
   ghost: "bg-transparent text-foreground hover:bg-primary/10",
   destructive: "bg-destructive text-destructive-foreground hover:opacity-90",
@@ -27,7 +28,8 @@ const sizes: Record<Size, string> = {
   icon: "p-1.5 rounded-lg",
 };
 
-const base = "inline-flex items-center justify-center gap-1.5 font-semibold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed select-none";
+const base =
+  "inline-flex items-center justify-center gap-1.5 font-semibold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed select-none";
 
 export const Button = forwardRef<HTMLButtonElement, Props>(
   ({ variant = "solid", size = "md", className = "", children, ...props }, ref) => (
@@ -38,7 +40,7 @@ export const Button = forwardRef<HTMLButtonElement, Props>(
     >
       {children}
     </button>
-  )
+  ),
 );
 
 Button.displayName = "Button";

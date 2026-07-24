@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import type { ModelRegistry, AvailableModel } from "../../ai/model-registry";
-import type { ModelResolver, ModelResolutionContext } from "../ports/model-resolver";
+import type { AvailableModel, ModelRegistry } from "../../ai/model-registry";
+import type { ModelResolutionContext, ModelResolver } from "../ports/model-resolver";
 
 export class DefaultModelResolver implements ModelResolver {
   constructor(private modelRegistry: ModelRegistry) {}
@@ -21,7 +21,7 @@ export class DefaultModelResolver implements ModelResolver {
 
     for (const modelCandidate of chain) {
       const found = available.find(
-        (m) => m.id === modelCandidate || `${m.provider}/${m.id}` === modelCandidate
+        (m) => m.id === modelCandidate || `${m.provider}/${m.id}` === modelCandidate,
       );
       if (found) {
         return found;

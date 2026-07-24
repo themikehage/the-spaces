@@ -1,25 +1,19 @@
 // SPDX-License-Identifier: MIT
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import {
-  getUserDir,
-  getEnvPath,
-  getSettingsPath,
-  getCredentialsPath,
-  getAuthPath,
-} from "shared";
+import { getAuthPath, getCredentialsPath, getEnvPath, getSettingsPath, getUserDir } from "shared";
 import { AuthStorage, ModelRegistry } from "../../ai";
-import { registerQwenProvider } from "../providers/qwen-provider";
-import { registerOpenCodeGoProvider } from "../providers/opencode-go-provider";
-import { registerOpenAIProvider } from "../providers/openai-provider";
-import { registerGoogleProvider } from "../providers/google-provider";
-import { registerXAIProvider } from "../providers/xai-provider";
+import { auth } from "../../auth/index";
+import { decryptEnv, encryptEnv } from "../../lib/env-crypto";
 import { registerDeepSeekProvider } from "../providers/deepseek-provider";
+import { registerGoogleProvider } from "../providers/google-provider";
 import { registerGroqProvider } from "../providers/groq-provider";
 import { registerMistralProvider } from "../providers/mistral-provider";
+import { registerOpenAIProvider } from "../providers/openai-provider";
+import { registerOpenCodeGoProvider } from "../providers/opencode-go-provider";
 import { registerOpenRouterProvider } from "../providers/openrouter-provider";
 import { saveProviderModels } from "../providers/provider-persistence";
-import { encryptEnv, decryptEnv } from "../../lib/env-crypto";
-import { auth } from "../../auth/index";
+import { registerQwenProvider } from "../providers/qwen-provider";
+import { registerXAIProvider } from "../providers/xai-provider";
 
 export interface UserContext {
   authStorage: AuthStorage;
@@ -109,9 +103,13 @@ export class UserConfigManager {
         if (!authStorage.hasAuth(providerId)) return;
         const current = modelRegistry.getAll().filter((m) => m.provider === providerId);
         const isStale =
-          current.length > 0 && current.every((m) => !m.contextWindow || m.contextWindow === 128000);
+          current.length > 0 &&
+          current.every((m) => !m.contextWindow || m.contextWindow === 128000);
         if (current.length === 0 || isStale) {
-          if (isStale) console.log(`[UserConfig] Detected stale cache for ${providerId} (all 128K), forcing refresh`);
+          if (isStale)
+            console.log(
+              `[UserConfig] Detected stale cache for ${providerId} (all 128K), forcing refresh`,
+            );
           modelRegistry
             .refreshProviderModels(providerId)
             .then((models) => {
@@ -157,14 +155,18 @@ export class UserConfigManager {
         current.length > 0 && current.every((m) => !m.contextWindow || m.contextWindow === 128000);
       if (current.length > 0 && !isStale) return;
       if (isStale) {
-        console.log(`[UserConfig] Detected stale cache for ${providerId} (all 128K), forcing refresh`);
+        console.log(
+          `[UserConfig] Detected stale cache for ${providerId} (all 128K), forcing refresh`,
+        );
       }
       modelRegistry
         .refreshProviderModels(providerId)
         .then((models) => {
           if (models.length > 0) {
             saveProviderModels(username, providerId, models);
-            console.log(`[UserConfig] Refreshed ${models.length} models for ${providerId} from models.dev enriched data`);
+            console.log(
+              `[UserConfig] Refreshed ${models.length} models for ${providerId} from models.dev enriched data`,
+            );
           }
         })
         .catch((err) => {

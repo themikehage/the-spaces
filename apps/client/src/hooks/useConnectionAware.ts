@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: MIT
-import { useEffect, useRef } from "react";
 import { wsClient } from "@/lib/ws-client";
+import { useEffect, useRef } from "react";
 
-export function useConnectionAwareEffect(
-  action: () => void,
-  deps: React.DependencyList
-): void {
+export function useConnectionAwareEffect(action: () => void, deps: React.DependencyList): void {
   const actionRef = useRef(action);
   actionRef.current = action;
 

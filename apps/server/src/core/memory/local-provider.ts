@@ -50,20 +50,27 @@ export class LocalMemoryProvider implements MemoryProvider {
     }
   }
 
-  async store(content: string, type: MemoryType, importance = 0.5, tags: string[] = [], sessionId?: string): Promise<void> {
+  async store(
+    content: string,
+    type: MemoryType,
+    importance = 0.5,
+    tags: string[] = [],
+    sessionId?: string,
+  ): Promise<void> {
     const id = crypto.randomUUID();
     const tagsJson = JSON.stringify(tags);
     const now = Date.now();
 
     this.db.run(
       "INSERT INTO memories (id, content, type, importance, tags, session_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      [id, content, type, importance, tagsJson, sessionId || null, now]
+      [id, content, type, importance, tagsJson, sessionId || null, now],
     );
 
-    this.db.run(
-      "INSERT INTO memories_fts (id, content, tags) VALUES (?, ?, ?)",
-      [id, content, tagsJson]
-    );
+    this.db.run("INSERT INTO memories_fts (id, content, tags) VALUES (?, ?, ?)", [
+      id,
+      content,
+      tagsJson,
+    ]);
   }
 
   async recall(query: string, opts?: RecallOptions): Promise<RecalledMemory[]> {
@@ -72,7 +79,14 @@ export class LocalMemoryProvider implements MemoryProvider {
     const sessionId = opts?.sessionId;
     const excludeSessionId = opts?.excludeSessionId;
 
-    let rows: Array<{ id: string; content: string; type: string; importance: number; tags: string; session_id?: string | null }>;
+    let rows: Array<{
+      id: string;
+      content: string;
+      type: string;
+      importance: number;
+      tags: string;
+      session_id?: string | null;
+    }>;
 
     if (query.trim().length > 0) {
       const sanitizedQuery = query
@@ -156,9 +170,7 @@ export class LocalMemoryProvider implements MemoryProvider {
 
     if (memories.length === 0) return "";
 
-    const lines = memories
-      .map((m, i) => `${i + 1}. [${m.type}] ${m.content}`)
-      .join("\n");
+    const lines = memories.map((m, i) => `${i + 1}. [${m.type}] ${m.content}`).join("\n");
 
     return `--- Memories from previous sessions (historical context only — do not resume or re-execute past tasks unless explicitly asked) ---\n${lines}`;
   }

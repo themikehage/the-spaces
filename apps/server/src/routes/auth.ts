@@ -17,7 +17,11 @@ import {
 export const authRouter = new Hono();
 
 const RegisterSchema = z.object({
-  username: z.string().min(3).max(32).regex(/^[a-zA-Z0-9_-]+$/),
+  username: z
+    .string()
+    .min(3)
+    .max(32)
+    .regex(/^[a-zA-Z0-9_-]+$/),
   password: z.string().min(8),
   email: z.string().email().optional(),
 });
@@ -53,7 +57,10 @@ authRouter.post("/register", zValidator("json", RegisterSchema), async (c) => {
 
   const needsSetup = await isFirstRun();
   if (!needsSetup) {
-    throw new ForbiddenError("REGISTRATION_CLOSED", "Registration is closed. An account already exists.");
+    throw new ForbiddenError(
+      "REGISTRATION_CLOSED",
+      "Registration is closed. An account already exists.",
+    );
   }
 
   const internalEmail = email || `${username}@spaces.internal`;
@@ -91,7 +98,10 @@ authRouter.post("/register", zValidator("json", RegisterSchema), async (c) => {
   } catch (err: any) {
     if (err?.statusCode) throw err;
     const message = err?.message || "Registration failed";
-    if (message.toLowerCase().includes("already exists") || message.toLowerCase().includes("unique")) {
+    if (
+      message.toLowerCase().includes("already exists") ||
+      message.toLowerCase().includes("unique")
+    ) {
       throw new ConflictError("USERNAME_TAKEN", "Username already taken");
     }
     throw new InternalError("REGISTRATION_ERROR", message);
@@ -142,28 +152,36 @@ authRouter.get("/me", sessionMiddleware, (c) => {
   return c.json({ user: payload });
 });
 
-authRouter.post("/password", sessionMiddleware, zValidator("json", ChangePasswordSchema), async (c) => {
-  const { currentPassword, newPassword } = c.req.valid("json");
-  const { username } = getAuthPayload(c);
+authRouter.post(
+  "/password",
+  sessionMiddleware,
+  zValidator("json", ChangePasswordSchema),
+  async (c) => {
+    const { currentPassword, newPassword } = c.req.valid("json");
+    const { username } = getAuthPayload(c);
 
-  const user = await getUserByUsername(username);
-  if (!user) {
-    throw new NotFoundError("USER_NOT_FOUND", "User not found");
-  }
-
-  try {
-    const result = await auth.api.changePassword({
-      body: { currentPassword, newPassword, revokeOtherSessions: false },
-      headers: c.req.raw.headers,
-    });
-
-    if (!result) {
-      throw new UnauthorizedError("INCORRECT_PASSWORD", "Current password is incorrect");
+    const user = await getUserByUsername(username);
+    if (!user) {
+      throw new NotFoundError("USER_NOT_FOUND", "User not found");
     }
 
-    return c.json({ ok: true, user: { username } });
-  } catch (err: any) {
-    if (err?.statusCode) throw err;
-    throw new BadRequestError("PASSWORD_CHANGE_FAILED", err?.message || "Failed to change password");
-  }
-});
+    try {
+      const result = await auth.api.changePassword({
+        body: { currentPassword, newPassword, revokeOtherSessions: false },
+        headers: c.req.raw.headers,
+      });
+
+      if (!result) {
+        throw new UnauthorizedError("INCORRECT_PASSWORD", "Current password is incorrect");
+      }
+
+      return c.json({ ok: true, user: { username } });
+    } catch (err: any) {
+      if (err?.statusCode) throw err;
+      throw new BadRequestError(
+        "PASSWORD_CHANGE_FAILED",
+        err?.message || "Failed to change password",
+      );
+    }
+  },
+);

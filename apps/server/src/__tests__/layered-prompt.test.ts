@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-import { expect, test, describe } from "bun:test";
-import { promptFragmentRegistry } from "../core/prompts/registry";
+import { describe, expect, test } from "bun:test";
 import { promptComposer, type DeploymentContext } from "../core/prompts/composer";
+import { promptFragmentRegistry } from "../core/prompts/registry";
 
 describe("Layered Prompt System Tests", () => {
   test("PromptFragmentRegistry - default fragments registered", () => {
@@ -22,10 +22,10 @@ describe("Layered Prompt System Tests", () => {
     const agentDef = {
       name: "CEO",
       role: "Chief Executive Officer",
-      systemPrompt: "Define startup strategies."
+      systemPrompt: "Define startup strategies.",
     };
     const deployment: DeploymentContext = {
-      mode: "solo"
+      mode: "solo",
     };
 
     const result = promptComposer.compose(agentDef, deployment);
@@ -43,16 +43,16 @@ describe("Layered Prompt System Tests", () => {
     const agentDef = {
       name: "Dev",
       role: "Frontend Developer",
-      systemPrompt: "Build UI components."
+      systemPrompt: "Build UI components.",
     };
     const deployment: DeploymentContext = {
       mode: "broadcast",
       agentRole: "member",
       members: [
         { agentId: "ceo", agentName: "CEO", role: "lead", replyMode: "broadcast" },
-        { agentId: "dev", agentName: "Dev", role: "member", replyMode: "broadcast" }
+        { agentId: "dev", agentName: "Dev", role: "member", replyMode: "broadcast" },
       ],
-      selfReplyMode: "broadcast"
+      selfReplyMode: "broadcast",
     };
 
     const result = promptComposer.compose(agentDef, deployment);
@@ -69,21 +69,31 @@ describe("Layered Prompt System Tests", () => {
     expect(result.composed).toContain("- @Dev (id: dev, role: member, replyMode: broadcast)");
   });
 
-
-
   test("PromptComposer - Orchestration Team Context", () => {
     const agentDef = {
       name: "Coordinator",
       role: "Technical Lead",
-      systemPrompt: "Coordinate the delivery."
+      systemPrompt: "Coordinate the delivery.",
     };
     const deployment: DeploymentContext = {
       mode: "orchestration",
       agentRole: "lead",
       members: [
-        { agentId: "researcher", agentName: "Researcher", role: "member", replyMode: "none", capability: "Research technical options" },
-        { agentId: "builder", agentName: "Builder", role: "member", replyMode: "none", capability: "Implement and verify changes" }
-      ]
+        {
+          agentId: "researcher",
+          agentName: "Researcher",
+          role: "member",
+          replyMode: "none",
+          capability: "Research technical options",
+        },
+        {
+          agentId: "builder",
+          agentName: "Builder",
+          role: "member",
+          replyMode: "none",
+          capability: "Implement and verify changes",
+        },
+      ],
     };
 
     const result = promptComposer.compose(agentDef, deployment);
@@ -93,27 +103,27 @@ describe("Layered Prompt System Tests", () => {
     expect(result.applied).not.toContain("role.leader.delegation");
     expect(result.applied).not.toContain("instance.channel.roster");
     expect(result.composed).toContain("delegate_task");
-    expect(result.composed).toContain("Researcher (id: researcher, role: member, capability: Research technical options)");
+    expect(result.composed).toContain(
+      "Researcher (id: researcher, role: member, capability: Research technical options)",
+    );
     expect(result.composed).toContain("No uses menciones `@Nombre`");
     expect(result.composed).toContain("ambient broadcast channel");
   });
-
-
 
   test("PromptComposer - Senior Role Context", () => {
     const agentDef = {
       name: "SeniorDev",
       role: "Senior Developer",
-      systemPrompt: "Architect solutions."
+      systemPrompt: "Architect solutions.",
     };
     const deployment: DeploymentContext = {
       mode: "broadcast",
       agentRole: "senior",
       members: [
         { agentId: "ceo", agentName: "CEO", role: "lead", replyMode: "broadcast" },
-        { agentId: "sdev", agentName: "SeniorDev", role: "senior", replyMode: "broadcast" }
+        { agentId: "sdev", agentName: "SeniorDev", role: "senior", replyMode: "broadcast" },
       ],
-      selfReplyMode: "broadcast"
+      selfReplyMode: "broadcast",
     };
 
     const result = promptComposer.compose(agentDef, deployment);
@@ -126,16 +136,16 @@ describe("Layered Prompt System Tests", () => {
     const agentDef = {
       name: "Auditor",
       role: "Observer Auditor",
-      systemPrompt: "Audit logs."
+      systemPrompt: "Audit logs.",
     };
     const deployment: DeploymentContext = {
       mode: "broadcast",
       agentRole: "observer",
       members: [
         { agentId: "ceo", agentName: "CEO", role: "lead", replyMode: "broadcast" },
-        { agentId: "auditor", agentName: "Auditor", role: "observer", replyMode: "mention-only" }
+        { agentId: "auditor", agentName: "Auditor", role: "observer", replyMode: "mention-only" },
       ],
-      selfReplyMode: "mention-only"
+      selfReplyMode: "mention-only",
     };
 
     const result = promptComposer.compose(agentDef, deployment);

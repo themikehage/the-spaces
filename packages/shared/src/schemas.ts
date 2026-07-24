@@ -50,12 +50,37 @@ export const ModelSettingsSchema = z.object({
 });
 
 export const AVAILABLE_TOOLS = [
-  "read", "write", "edit", "bash", "grep", "find", "ls",
-  "request_approval", "ask_question", "render_images", "render_chart", "render_html", "share_file", "refresh_ui",
-  "manage_delegations", "exa_search", "web_fetch", "decompose_tasks", "update_task_status", "complete_task_list",
-  "memory_store", "memory_recall", "memory_forget", "create_experiment", "vision", "generate_image", "manage_factory", "manage_pipelines", "manage_preview"
+  "read",
+  "write",
+  "edit",
+  "bash",
+  "grep",
+  "find",
+  "ls",
+  "request_approval",
+  "ask_question",
+  "render_images",
+  "render_chart",
+  "render_html",
+  "share_file",
+  "refresh_ui",
+  "manage_delegations",
+  "exa_search",
+  "web_fetch",
+  "decompose_tasks",
+  "update_task_status",
+  "complete_task_list",
+  "memory_store",
+  "memory_recall",
+  "memory_forget",
+  "create_experiment",
+  "vision",
+  "generate_image",
+  "manage_factory",
+  "manage_pipelines",
+  "manage_preview",
 ] as const;
-export type ToolName = typeof AVAILABLE_TOOLS[number];
+export type ToolName = (typeof AVAILABLE_TOOLS)[number];
 
 export const TOOL_GROUPS = {
   fs: ["read", "write", "edit", "grep", "find", "ls"],
@@ -83,14 +108,27 @@ export const SetApiKeySchema = z.object({
 });
 
 export const SetEnvVarSchema = z.object({
-  key: z.string().min(1).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, "Invalid environment variable name. Must start with a letter or underscore and contain only alphanumeric characters or underscores."),
+  key: z
+    .string()
+    .min(1)
+    .regex(
+      /^[a-zA-Z_][a-zA-Z0-9_]*$/,
+      "Invalid environment variable name. Must start with a letter or underscore and contain only alphanumeric characters or underscores.",
+    ),
   value: z.string().min(1),
 });
 
 export const TaskStatusSchema = z.enum(["pending", "running", "done", "failed"]);
 export type TaskStatus = z.infer<typeof TaskStatusSchema>;
 
-export const RunnerStatusSchema = z.enum(["idle", "decomposing", "running", "paused", "completed", "failed"]);
+export const RunnerStatusSchema = z.enum([
+  "idle",
+  "decomposing",
+  "running",
+  "paused",
+  "completed",
+  "failed",
+]);
 export type RunnerStatus = z.infer<typeof RunnerStatusSchema>;
 
 export const TaskSchema = z.object({
@@ -144,7 +182,15 @@ export const ChangePasswordSchema = z.object({
 });
 export type ChangePassword = z.infer<typeof ChangePasswordSchema>;
 
-export const FrameworkPresetSchema = z.enum(["auto", "vite", "next", "nuxt", "astro", "html", "custom"]);
+export const FrameworkPresetSchema = z.enum([
+  "auto",
+  "vite",
+  "next",
+  "nuxt",
+  "astro",
+  "html",
+  "custom",
+]);
 export type FrameworkPreset = z.infer<typeof FrameworkPresetSchema>;
 
 export const PreviewConfigSchema = z.object({
@@ -219,7 +265,10 @@ export const AgentScopeTargetSchema = z.discriminatedUnion("type", [
 export type AgentScopeTarget = z.infer<typeof AgentScopeTargetSchema>;
 
 export const AgentDefinitionSchema = z.object({
-  id: z.string().min(1).regex(/^[a-z0-9-]+$/, "id must be lowercase alphanumeric with dashes"),
+  id: z
+    .string()
+    .min(1)
+    .regex(/^[a-z0-9-]+$/, "id must be lowercase alphanumeric with dashes"),
   name: z.string().min(1),
   role: z.string().min(1),
   systemPrompt: z.string().min(1),
@@ -276,7 +325,16 @@ export interface GlobalLogEvent {
   sourceType: "session" | "channel";
   sourceId: string;
   sourceName: string;
-  eventType: "agent_start" | "agent_end" | "text_delta" | "thinking_delta" | "tool_start" | "tool_end" | "user_message" | "agent_message" | "error";
+  eventType:
+    | "agent_start"
+    | "agent_end"
+    | "text_delta"
+    | "thinking_delta"
+    | "tool_start"
+    | "tool_end"
+    | "user_message"
+    | "agent_message"
+    | "error";
   agentName?: string;
   detail?: any;
 }
@@ -288,11 +346,13 @@ export const AgentExecutionSchema = z.object({
   toolCalls: z.array(z.any()),
   errors: z.array(z.string()),
   durationMs: z.number().optional(),
-  tokenUsage: z.object({
-    promptTokens: z.number(),
-    completionTokens: z.number(),
-    totalTokens: z.number(),
-  }).optional(),
+  tokenUsage: z
+    .object({
+      promptTokens: z.number(),
+      completionTokens: z.number(),
+      totalTokens: z.number(),
+    })
+    .optional(),
   createdAt: z.string(),
 });
 export type AgentExecution = z.infer<typeof AgentExecutionSchema>;
@@ -336,12 +396,14 @@ export const VariantRunResultSchema = z.object({
     globalScore: z.number(),
     judgeReasoning: z.string().optional(),
     criteriaScores: z.record(z.number()).optional(),
-    efficiencyDetail: z.object({
-      numAgents: z.number(),
-      effectiveRounds: z.number(),
-      adjustedDuration: z.number(),
-      adjustedTokens: z.number(),
-    }).optional(),
+    efficiencyDetail: z
+      .object({
+        numAgents: z.number(),
+        effectiveRounds: z.number(),
+        adjustedDuration: z.number(),
+        adjustedTokens: z.number(),
+      })
+      .optional(),
   }),
 });
 export type VariantRunResult = z.infer<typeof VariantRunResultSchema>;
@@ -359,10 +421,12 @@ export const LabTestCaseSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string(),
-  goldAnswer: z.object({
-    fichas: z.number().optional(),
-    dias: z.number().optional(),
-  }).optional(),
+  goldAnswer: z
+    .object({
+      fichas: z.number().optional(),
+      dias: z.number().optional(),
+    })
+    .optional(),
   taskPrompt: z.string().optional(),
 });
 export type LabTestCase = z.infer<typeof LabTestCaseSchema>;
@@ -371,38 +435,52 @@ export const LabBlueprintSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string().optional(),
-  agents: z.array(z.object({
-    id: z.string(),
-    name: z.string(),
-    role: z.string(),
-    systemPromptTemplate: z.string(),
-    leader: z.boolean().optional(),
-    replyMode: ReplyModeSchema.optional(),
-  })),
-  channelConfig: z.object({
-    name: z.string(),
-    negotiationProtocol: z.object({
-      agreementPattern: z.string(),
-      counterPattern: z.string().optional(),
-      rejectPattern: z.string().optional(),
-      maxRounds: z.number().int().min(1).max(20).default(3),
-      arbiterAgentId: z.string().optional(),
-    }).optional(),
-    delegationPattern: DelegationPatternSchema.optional(),
-    context: z.array(z.object({
-      key: z.string(),
-      value: z.string(),
-    })).optional(),
-  }).optional(),
-  testCases: z.array(LabTestCaseSchema),
-  scoringConfig: z.object({
-    metrics: z.array(z.object({
+  agents: z.array(
+    z.object({
       id: z.string(),
       name: z.string(),
-      weight: z.number(),
-      type: z.enum(["numeric-deviation", "llm-judge", "custom-script"]),
-    })),
-  }).optional(),
+      role: z.string(),
+      systemPromptTemplate: z.string(),
+      leader: z.boolean().optional(),
+      replyMode: ReplyModeSchema.optional(),
+    }),
+  ),
+  channelConfig: z
+    .object({
+      name: z.string(),
+      negotiationProtocol: z
+        .object({
+          agreementPattern: z.string(),
+          counterPattern: z.string().optional(),
+          rejectPattern: z.string().optional(),
+          maxRounds: z.number().int().min(1).max(20).default(3),
+          arbiterAgentId: z.string().optional(),
+        })
+        .optional(),
+      delegationPattern: DelegationPatternSchema.optional(),
+      context: z
+        .array(
+          z.object({
+            key: z.string(),
+            value: z.string(),
+          }),
+        )
+        .optional(),
+    })
+    .optional(),
+  testCases: z.array(LabTestCaseSchema),
+  scoringConfig: z
+    .object({
+      metrics: z.array(
+        z.object({
+          id: z.string(),
+          name: z.string(),
+          weight: z.number(),
+          type: z.enum(["numeric-deviation", "llm-judge", "custom-script"]),
+        }),
+      ),
+    })
+    .optional(),
 });
 export type LabBlueprint = z.infer<typeof LabBlueprintSchema>;
 
@@ -435,7 +513,10 @@ export const LabExperimentSchema = z.object({
   blueprintId: z.string().optional(),
   activeRunIndex: z.number().optional(),
   activeRunId: z.string().optional(),
-  activeVariant: z.enum(["single", "multiNoLeader", "multiWithLeader", "judging"]).nullable().optional(),
+  activeVariant: z
+    .enum(["single", "multiNoLeader", "multiWithLeader", "judging"])
+    .nullable()
+    .optional(),
 });
 export type LabExperiment = z.infer<typeof LabExperimentSchema>;
 
@@ -582,7 +663,9 @@ export const CreateTeamSchema = z.object({
 });
 export type CreateTeam = z.infer<typeof CreateTeamSchema>;
 
-export const UpdateTeamSchema = CreateTeamSchema.omit({ teamType: true, id: true }).partial().strict();
+export const UpdateTeamSchema = CreateTeamSchema.omit({ teamType: true, id: true })
+  .partial()
+  .strict();
 export type UpdateTeam = z.infer<typeof UpdateTeamSchema>;
 
 export const TeamMessageRoleSchema = z.enum(["user", "agent", "system"]);
@@ -700,10 +783,12 @@ export const PipelineRunSchema = z.object({
   startedAt: z.string(),
   finishedAt: z.string().optional(),
   stageResults: z.array(StageResultSchema),
-  error: z.object({
-    stageId: z.string(),
-    message: z.string(),
-  }).optional(),
+  error: z
+    .object({
+      stageId: z.string(),
+      message: z.string(),
+    })
+    .optional(),
 });
 export type PipelineRun = z.infer<typeof PipelineRunSchema>;
 
@@ -719,13 +804,15 @@ export const BenchmarkVariantResultSchema = z.object({
   divergenceEventsCount: z.number().optional(),
   arbitrationRoundsCount: z.number().optional(),
   protocolActivationRate: z.number().optional(),
-  scores: z.object({
-    taskQuality: z.number(),
-    efficiencyScore: z.number(),
-    globalScore: z.number(),
-    judgeReasoning: z.string().optional(),
-    criteriaScores: z.record(z.number()).optional(),
-  }).optional(),
+  scores: z
+    .object({
+      taskQuality: z.number(),
+      efficiencyScore: z.number(),
+      globalScore: z.number(),
+      judgeReasoning: z.string().optional(),
+      criteriaScores: z.record(z.number()).optional(),
+    })
+    .optional(),
 });
 export type BenchmarkVariantResult = z.infer<typeof BenchmarkVariantResultSchema>;
 
@@ -779,5 +866,3 @@ export type Project = z.infer<typeof ProjectSchema>;
 
 export const AutonomyLevelSchema = z.enum(["auto", "propose", "suggest"]);
 export type AutonomyLevel = z.infer<typeof AutonomyLevelSchema>;
-
-

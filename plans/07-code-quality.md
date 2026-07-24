@@ -8,21 +8,21 @@
 
 ## Contexto: estado actual
 
-| Indicador | Spaces actual | Google ADK |
-|---|---|---|
-| Tests unitarios | 15 tests en `apps/server/src/__tests__/` | 20+ subdirectorios con suites paralelas |
-| Tests de integración | Cero | Fixtures JSON/YAML + mock LLM responses |
-| Tests E2E | Cero | Contra modelos Gemini reales |
-| Test runner | No instalado (sin `vitest`, sin scripts) | Vitest con 6 suites paralelas |
-| Coverage | Sin tooling, sin thresholds | 86%+ enforceado en CI |
-| Linter | Sin config (ni ESLint, ni Biome, ni Prettier) | ESLint v9 flat config + tseslint recommended |
-| Formateador | Sin config | Prettier con organize-imports plugin |
-| Git hooks | Sin hooks (sin Husky, sin lefthook) | Husky + lint-staged pre-commit |
-| `any` en código | 100+ usos (AGENTS.md lo prohíbe) | Prácticamente cero en código propio |
-| Error handling | `c.json({ error: String(err) }, 500)` inline en cada ruta | Structured error types + plugin hooks |
-| Request IDs | No existen | — |
-| API docs | Sin OpenAPI, sin TypeDoc, sin CHANGELOG | TypeDoc + typedoc-theme-fresh + release-please |
-| EditorConfig | No existe | Configuración canónica |
+| Indicador            | Spaces actual                                             | Google ADK                                     |
+| -------------------- | --------------------------------------------------------- | ---------------------------------------------- |
+| Tests unitarios      | 15 tests en `apps/server/src/__tests__/`                  | 20+ subdirectorios con suites paralelas        |
+| Tests de integración | Cero                                                      | Fixtures JSON/YAML + mock LLM responses        |
+| Tests E2E            | Cero                                                      | Contra modelos Gemini reales                   |
+| Test runner          | No instalado (sin `vitest`, sin scripts)                  | Vitest con 6 suites paralelas                  |
+| Coverage             | Sin tooling, sin thresholds                               | 86%+ enforceado en CI                          |
+| Linter               | Sin config (ni ESLint, ni Biome, ni Prettier)             | ESLint v9 flat config + tseslint recommended   |
+| Formateador          | Sin config                                                | Prettier con organize-imports plugin           |
+| Git hooks            | Sin hooks (sin Husky, sin lefthook)                       | Husky + lint-staged pre-commit                 |
+| `any` en código      | 100+ usos (AGENTS.md lo prohíbe)                          | Prácticamente cero en código propio            |
+| Error handling       | `c.json({ error: String(err) }, 500)` inline en cada ruta | Structured error types + plugin hooks          |
+| Request IDs          | No existen                                                | —                                              |
+| API docs             | Sin OpenAPI, sin TypeDoc, sin CHANGELOG                   | TypeDoc + typedoc-theme-fresh + release-please |
+| EditorConfig         | No existe                                                 | Configuración canónica                         |
 
 ---
 
@@ -57,12 +57,12 @@ Los 15 tests que existen son exclusivamente unitarios, cubren lógica interna de
 
 ### Herramientas a instalar
 
-| Paquete | Propósito |
-|---|---|
-| `vitest` | Test runner |
+| Paquete               | Propósito                                   |
+| --------------------- | ------------------------------------------- |
+| `vitest`              | Test runner                                 |
 | `@vitest/coverage-v8` | Coverage (nativo, sin dependencia Istanbul) |
-| `@vitest/ui` | UI opcional para debugging local |
-| `vite-tsconfig-paths` | Resolver aliases `@/` en tests |
+| `@vitest/ui`          | UI opcional para debugging local            |
+| `vite-tsconfig-paths` | Resolver aliases `@/` en tests              |
 
 ---
 
@@ -111,15 +111,15 @@ No existe configuración de ESLint, Prettier, ni Biome en ninguna parte del mono
 
 ### Herramientas a instalar
 
-| Paquete | Propósito |
-|---|---|
-| `eslint` ^9 | Linter con flat config |
-| `typescript-eslint` | Reglas de TS para ESLint |
-| `eslint-plugin-react-hooks` | Reglas de hooks para frontend |
-| `prettier` | Formateador |
-| `prettier-plugin-organize-imports` | Orden automático de imports |
-| `lefthook` | Git hooks multiplataforma |
-| `@commitlint/cli` + `@commitlint/config-conventional` | Validación de commits |
+| Paquete                                               | Propósito                     |
+| ----------------------------------------------------- | ----------------------------- |
+| `eslint` ^9                                           | Linter con flat config        |
+| `typescript-eslint`                                   | Reglas de TS para ESLint      |
+| `eslint-plugin-react-hooks`                           | Reglas de hooks para frontend |
+| `prettier`                                            | Formateador                   |
+| `prettier-plugin-organize-imports`                    | Orden automático de imports   |
+| `lefthook`                                            | Git hooks multiplataforma     |
+| `@commitlint/cli` + `@commitlint/config-conventional` | Validación de commits         |
 
 ---
 
@@ -127,18 +127,18 @@ No existe configuración de ESLint, Prettier, ni Biome en ninguna parte del mono
 
 ### Diagnóstico
 
-El archivo `AGENTS.md` establece como convención: *"TypeScript strict mode, no `any` types"*. La realidad es que hay más de 100 usos de `any` en el código del server. Los focos más críticos:
+El archivo `AGENTS.md` establece como convención: _"TypeScript strict mode, no `any` types"_. La realidad es que hay más de 100 usos de `any` en el código del server. Los focos más críticos:
 
-| Archivo | Usos de `any` | Contexto |
-|---|---|---|
-| `agent-session.ts` | ~15 | `(this.agent.state as any)` repetido para acceder a estado interno |
-| `bash-tool.ts` | En firma de `execute` | El parámetro `params` y el `output` no están tipados |
-| `agent-registry.ts` | Registry tipado como `customTools: any[]` | El registro de tools no tiene tipo genérico |
-| `ws/handler.ts` | 12+ | `(ctx as any).id`, handlers de eventos sin tipos |
-| `ws/factory.ts` | 10+ | `(agentEvent as any)`, `data.images as any[]`, iteración de tools |
-| `core/agent-utils.ts` | 10+ | Callbacks, bridge del handler WebSocket, `getLastAssistantText` |
-| `core/approvals/approval-manager.ts` | 5 | `reason: any`, `timeoutId: any`, `payload: Record<string, any>` |
-| `routes/files.ts` | 15+ | `catch (err: any)` en cada handler, parámetros `c: any` |
+| Archivo                              | Usos de `any`                             | Contexto                                                           |
+| ------------------------------------ | ----------------------------------------- | ------------------------------------------------------------------ |
+| `agent-session.ts`                   | ~15                                       | `(this.agent.state as any)` repetido para acceder a estado interno |
+| `bash-tool.ts`                       | En firma de `execute`                     | El parámetro `params` y el `output` no están tipados               |
+| `agent-registry.ts`                  | Registry tipado como `customTools: any[]` | El registro de tools no tiene tipo genérico                        |
+| `ws/handler.ts`                      | 12+                                       | `(ctx as any).id`, handlers de eventos sin tipos                   |
+| `ws/factory.ts`                      | 10+                                       | `(agentEvent as any)`, `data.images as any[]`, iteración de tools  |
+| `core/agent-utils.ts`                | 10+                                       | Callbacks, bridge del handler WebSocket, `getLastAssistantText`    |
+| `core/approvals/approval-manager.ts` | 5                                         | `reason: any`, `timeoutId: any`, `payload: Record<string, any>`    |
+| `routes/files.ts`                    | 15+                                       | `catch (err: any)` en cada handler, parámetros `c: any`            |
 
 ### Lo que falta
 
@@ -181,6 +181,7 @@ try {
 ```
 
 Problemas de este enfoque:
+
 - `String(err)` expone mensajes internos al cliente (paths del filesystem, detalles de SQLite, stack traces).
 - No hay códigos de error estandarizados — el cliente no puede reaccionar programáticamente.
 - No hay request IDs — imposible correlacionar un error en el frontend con el log del server.
@@ -204,12 +205,34 @@ Problemas de este enfoque:
     }
   }
 
-  class HttpError extends AppError { /* statusCode derivado de HTTP status */ }
-  class BadRequestError extends HttpError { constructor(code, msg, details?) { super(400, code, msg, details); } }
-  class UnauthorizedError extends HttpError { constructor(code, msg, details?) { super(401, code, msg, details); } }
-  class NotFoundError extends HttpError { constructor(code, msg, details?) { super(404, code, msg, details); } }
-  class ConflictError extends HttpError { constructor(code, msg, details?) { super(409, code, msg, details); } }
-  class InternalError extends AppError { constructor(code, msg, details?) { super(500, code, msg, details); } }
+  class HttpError extends AppError {
+    /* statusCode derivado de HTTP status */
+  }
+  class BadRequestError extends HttpError {
+    constructor(code, msg, details?) {
+      super(400, code, msg, details);
+    }
+  }
+  class UnauthorizedError extends HttpError {
+    constructor(code, msg, details?) {
+      super(401, code, msg, details);
+    }
+  }
+  class NotFoundError extends HttpError {
+    constructor(code, msg, details?) {
+      super(404, code, msg, details);
+    }
+  }
+  class ConflictError extends HttpError {
+    constructor(code, msg, details?) {
+      super(409, code, msg, details);
+    }
+  }
+  class InternalError extends AppError {
+    constructor(code, msg, details?) {
+      super(500, code, msg, details);
+    }
+  }
   ```
 - Implementar **middleware de request ID** en Hono:
   - Generar `X-Request-Id` vía `crypto.randomUUID()` al inicio de cada request.
@@ -224,25 +247,25 @@ Problemas de este enfoque:
 
 ### Archivos a modificar (todos los catch inline)
 
-| Archivo | Handlers afectados |
-|---|---|
-| `routes/auth.ts` | login, register, refresh, logout, session |
-| `routes/sessions.ts` | create, list, get, update, delete, stop |
-| `routes/files.ts` | ~15 handlers con `catch (err: any)` |
-| `routes/agents.ts` | register, list, get, update, delete |
-| `routes/teams.ts` | create, list, get, update, delete, orchestrate |
-| `routes/factory.ts` | CRUD de skills, tools, modelos |
-| `routes/backup.ts` | create, restore |
-| `routes/approvals.ts` | list, approve, reject |
-| `routes/providers.ts` | CRUD de providers |
-| `routes/settings.ts` | get, update |
-| `routes/mcp.ts` | CRUD de servidores MCP |
-| `routes/models.ts` | list, get, set-default |
-| `routes/gallery.ts` | list, install |
-| `routes/env.ts` | get, set |
-| `routes/logs.ts` | list, get |
-| `routes/preview.ts` | start, stop, status |
-| `routes/skills.ts` | list, get, create, update, delete |
+| Archivo               | Handlers afectados                             |
+| --------------------- | ---------------------------------------------- |
+| `routes/auth.ts`      | login, register, refresh, logout, session      |
+| `routes/sessions.ts`  | create, list, get, update, delete, stop        |
+| `routes/files.ts`     | ~15 handlers con `catch (err: any)`            |
+| `routes/agents.ts`    | register, list, get, update, delete            |
+| `routes/teams.ts`     | create, list, get, update, delete, orchestrate |
+| `routes/factory.ts`   | CRUD de skills, tools, modelos                 |
+| `routes/backup.ts`    | create, restore                                |
+| `routes/approvals.ts` | list, approve, reject                          |
+| `routes/providers.ts` | CRUD de providers                              |
+| `routes/settings.ts`  | get, update                                    |
+| `routes/mcp.ts`       | CRUD de servidores MCP                         |
+| `routes/models.ts`    | list, get, set-default                         |
+| `routes/gallery.ts`   | list, install                                  |
+| `routes/env.ts`       | get, set                                       |
+| `routes/logs.ts`      | list, get                                      |
+| `routes/preview.ts`   | start, stop, status                            |
+| `routes/skills.ts`    | list, get, create, update, delete              |
 
 ---
 
@@ -274,25 +297,25 @@ Spaces tiene 17 archivos de rutas con endpoints REST + WebSocket sin documentaci
 
 ### Endpoints a documentar (17 grupos)
 
-| # | Grupo | Archivo | Endpoints estimados |
-|---|---|---|---|
-| 1 | Auth | `routes/auth.ts` | ~5 (login, register, refresh, logout, session) |
-| 2 | Sessions | `routes/sessions.ts` | ~6 (CRUD + stop) |
-| 3 | Agents | `routes/agents.ts` | ~5 (CRUD) |
-| 4 | Teams | `routes/teams.ts` | ~6 (CRUD + orchestrate) |
-| 5 | Factory | `routes/factory.ts` | ~9 (skills, tools, models CRUD) |
-| 6 | Files | `routes/files.ts` | ~8 (workspace CRUD + file ops) |
-| 7 | Approvals | `routes/approvals.ts` | ~3 (list, approve, reject) |
-| 8 | Providers | `routes/providers.ts` | ~5 (CRUD) |
-| 9 | Settings | `routes/settings.ts` | ~2 (get, update) |
-| 10 | MCP | `routes/mcp.ts` | ~5 (CRUD) |
-| 11 | Models | `routes/models.ts` | ~3 (list, get, set-default) |
-| 12 | Gallery | `routes/gallery.ts` | ~2 (list, install) |
-| 13 | Env | `routes/env.ts` | ~2 (get, set) |
-| 14 | Logs | `routes/logs.ts` | ~2 (list, get) |
-| 15 | Preview | `routes/preview.ts` | ~3 (start, stop, status) |
-| 16 | Backup | `routes/backup.ts` | ~2 (create, restore) |
-| 17 | Skills | `routes/skills.ts` | ~5 (CRUD) |
+| #   | Grupo     | Archivo               | Endpoints estimados                            |
+| --- | --------- | --------------------- | ---------------------------------------------- |
+| 1   | Auth      | `routes/auth.ts`      | ~5 (login, register, refresh, logout, session) |
+| 2   | Sessions  | `routes/sessions.ts`  | ~6 (CRUD + stop)                               |
+| 3   | Agents    | `routes/agents.ts`    | ~5 (CRUD)                                      |
+| 4   | Teams     | `routes/teams.ts`     | ~6 (CRUD + orchestrate)                        |
+| 5   | Factory   | `routes/factory.ts`   | ~9 (skills, tools, models CRUD)                |
+| 6   | Files     | `routes/files.ts`     | ~8 (workspace CRUD + file ops)                 |
+| 7   | Approvals | `routes/approvals.ts` | ~3 (list, approve, reject)                     |
+| 8   | Providers | `routes/providers.ts` | ~5 (CRUD)                                      |
+| 9   | Settings  | `routes/settings.ts`  | ~2 (get, update)                               |
+| 10  | MCP       | `routes/mcp.ts`       | ~5 (CRUD)                                      |
+| 11  | Models    | `routes/models.ts`    | ~3 (list, get, set-default)                    |
+| 12  | Gallery   | `routes/gallery.ts`   | ~2 (list, install)                             |
+| 13  | Env       | `routes/env.ts`       | ~2 (get, set)                                  |
+| 14  | Logs      | `routes/logs.ts`      | ~2 (list, get)                                 |
+| 15  | Preview   | `routes/preview.ts`   | ~3 (start, stop, status)                       |
+| 16  | Backup    | `routes/backup.ts`    | ~2 (create, restore)                           |
+| 17  | Skills    | `routes/skills.ts`    | ~5 (CRUD)                                      |
 
 ---
 
@@ -352,12 +375,12 @@ Calidad de código — 07:
 
 ### Cronograma estimado
 
-| Área | Esfuerzo | Dependencias | Se puede paralelizar con |
-|---|---|---|---|
-| 2 · Tooling | 2-3 días | Ninguna | — |
-| 4 · Errors | 3-4 días | Área 2 (ESLint + CI) | Área 3 (archivos distintos) |
-| 3 · No any | 5-7 días | Área 2 (ESLint + CI) | Área 4 (archivos distintos) |
-| 1 · Testing | 8-12 días | Área 2 (vitest + CI) | Áreas 3 y 4 parcialmente |
-| 5 · API docs | 5-7 días | Área 2 (CI para build de docs) | Áreas 1, 3, 4 |
+| Área         | Esfuerzo  | Dependencias                   | Se puede paralelizar con    |
+| ------------ | --------- | ------------------------------ | --------------------------- |
+| 2 · Tooling  | 2-3 días  | Ninguna                        | —                           |
+| 4 · Errors   | 3-4 días  | Área 2 (ESLint + CI)           | Área 3 (archivos distintos) |
+| 3 · No any   | 5-7 días  | Área 2 (ESLint + CI)           | Área 4 (archivos distintos) |
+| 1 · Testing  | 8-12 días | Área 2 (vitest + CI)           | Áreas 3 y 4 parcialmente    |
+| 5 · API docs | 5-7 días  | Área 2 (CI para build de docs) | Áreas 1, 3, 4               |
 
 **Total estimado**: ~4-6 semanas con una persona full-time, o ~2-3 semanas con dos personas trabajando en áreas paralelizables.

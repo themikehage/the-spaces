@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { type FC, type ReactNode, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { type FC, type ReactNode, useCallback, useEffect } from "react";
 
 interface Props {
   open: boolean;
@@ -11,9 +11,12 @@ interface Props {
 }
 
 export const Modal: FC<Props> = ({ open, onClose, title, children, footer }) => {
-  const handleEscape = useCallback((e: KeyboardEvent) => {
-    if (e.key === "Escape") onClose();
-  }, [onClose]);
+  const handleEscape = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    },
+    [onClose],
+  );
 
   useEffect(() => {
     if (open) {
@@ -49,14 +52,16 @@ export const Modal: FC<Props> = ({ open, onClose, title, children, footer }) => 
                   className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer p-1"
                 >
                   <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    <path
+                      fillRule="evenodd"
+                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </button>
               </header>
             )}
-            <div className="flex-1 overflow-y-auto">
-              {children}
-            </div>
+            <div className="flex-1 overflow-y-auto">{children}</div>
             {footer && (
               <footer className="px-4 py-2.5 border-t border-input bg-card flex justify-end gap-2 flex-shrink-0">
                 {footer}

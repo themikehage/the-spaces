@@ -42,7 +42,7 @@ function resolveContext(context: SessionContext): ResolvedContext {
 
 export function buildCreateSessionBody(
   sessionName: string,
-  context: SessionContext
+  context: SessionContext,
 ): CreateSessionBody {
   const resolved = resolveContext(context);
   switch (resolved.type) {
@@ -58,8 +58,13 @@ export function buildCreateSessionBody(
 }
 
 export function getSessionContextPredicate(
-  context: SessionContext
-): (session: { projectId?: string; agentId?: string; teamId?: string; experimentId?: string }) => boolean {
+  context: SessionContext,
+): (session: {
+  projectId?: string;
+  agentId?: string;
+  teamId?: string;
+  experimentId?: string;
+}) => boolean {
   const resolved = resolveContext(context);
   return (session) => {
     switch (resolved.type) {
@@ -71,11 +76,7 @@ export function getSessionContextPredicate(
         }
         return session.agentId === resolved.id && !session.teamId;
       case "project":
-        return (
-          session.projectId === resolved.id &&
-          !session.agentId &&
-          !session.teamId
-        );
+        return session.projectId === resolved.id && !session.agentId && !session.teamId;
       case "global":
         return !session.projectId && !session.agentId && !session.teamId;
     }

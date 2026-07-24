@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { motion, AnimatePresence } from "framer-motion";
-import { X, FileText } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { FileText, X } from "lucide-react";
 
 export interface Attachment {
   id: string;
@@ -14,10 +14,7 @@ interface AttachmentPreviewProps {
   onRemove: (id: string) => void;
 }
 
-export function AttachmentPreview({
-  attachments,
-  onRemove,
-}: AttachmentPreviewProps) {
+export function AttachmentPreview({ attachments, onRemove }: AttachmentPreviewProps) {
   if (attachments.length === 0) return null;
 
   return (

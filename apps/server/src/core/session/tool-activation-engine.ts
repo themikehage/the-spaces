@@ -31,10 +31,7 @@ export function resolveActiveTools({
     activeTools = activeTools.filter((t) => t !== "exa_search");
   }
 
-  const alwaysOnTools = [
-    ...DEFAULT_ALWAYS_ON_TOOLS,
-    ...extraAlwaysOnTools,
-  ];
+  const alwaysOnTools = [...DEFAULT_ALWAYS_ON_TOOLS, ...extraAlwaysOnTools];
 
   if (toolOverrides?.add) {
     alwaysOnTools.push(...toolOverrides.add);
@@ -60,7 +57,7 @@ export function resolveActiveTools({
   const merged = new Set<string>([
     ...activeTools,
     ...alwaysOnTools,
-    ...(memoryEnabled ? ["memory_store", "memory_recall", "memory_forget"] as const : []),
+    ...(memoryEnabled ? (["memory_store", "memory_recall", "memory_forget"] as const) : []),
     ...customToolNames,
   ]);
 
@@ -71,7 +68,7 @@ export function resolveActiveTools({
   // we still include it if it's in customToolNames (enabled in storage) but we don't force-remove.
   // The filtering below ensures only defined names pass.
 
-  // If persistedTools is set and does NOT contain a custom tool, it means user might have disabled it? 
+  // If persistedTools is set and does NOT contain a custom tool, it means user might have disabled it?
   // But customToolNames only contains enabled ones, so we keep them.
   // For strict respect of persistedTools containing custom names, we still add enabled ones.
   // If user explicitly removed from permissions, they'd need to toggle off.
@@ -79,6 +76,7 @@ export function resolveActiveTools({
   const removeSet = new Set(toolOverrides?.remove || []);
 
   return Array.from(merged).filter(
-    (tName) => (definedToolNames.has(tName) || enabledCustomSet.has(tName)) && !removeSet.has(tName)
+    (tName) =>
+      (definedToolNames.has(tName) || enabledCustomSet.has(tName)) && !removeSet.has(tName),
   );
 }

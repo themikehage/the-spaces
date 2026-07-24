@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MIT
 import { Hono } from "hono";
-import { authMiddleware, getAuthPayload } from "../middleware/auth";
+import { existsSync, mkdirSync, readdirSync, unlinkSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { getUserDir, getWorkspaceDir } from "shared";
+import { getAppConfig } from "../config/app-config";
+import { applyCacheHeaders } from "../core/cache-headers";
 import { sessionManager } from "../core/session-manager";
-import { runVisionModel } from "../core/tools/vision-tool";
 import { runImageGenModel } from "../core/tools/image-gen-tool";
 import { runVideoGenModel } from "../core/tools/video-gen-tool";
-import { getWorkspaceDir, getUserDir } from "shared";
-import { getAppConfig } from "../config/app-config";
+import { runVisionModel } from "../core/tools/vision-tool";
 import { getUsername } from "../lib/auth-helpers";
-import { join } from "node:path";
-import { existsSync, readdirSync, unlinkSync, writeFileSync, mkdirSync } from "node:fs";
-import { applyCacheHeaders } from "../core/cache-headers";
+import { authMiddleware, getAuthPayload } from "../middleware/auth";
 
 export const settingsRouter = new Hono();
 
@@ -57,9 +57,10 @@ settingsRouter.get("/", (c) => {
     imageGenModel: settings.imageGenModel ?? "",
     videoGenModel: settings.videoGenModel ?? "",
     videoGenEnabled: settings.videoGenEnabled ?? true,
-    subagentMaxDepth: settings.subagentMaxDepth !== undefined
-      ? Number(settings.subagentMaxDepth)
-      : appConfig.subagent.maxDepth,
+    subagentMaxDepth:
+      settings.subagentMaxDepth !== undefined
+        ? Number(settings.subagentMaxDepth)
+        : appConfig.subagent.maxDepth,
     factoryName: settings.factoryName ?? "Spaces",
     factoryAvatarUrl: settings.factoryAvatarUrl ?? null,
     factorySystemPrompt: settings.factorySystemPrompt ?? "",
@@ -125,7 +126,10 @@ settingsRouter.patch("/", async (c) => {
 
     sessionManager.userConfig.saveUserSettings(username, updates);
 
-    return c.json({ ok: true, settings: { ...sessionManager.userConfig.getUserSettings(username) } });
+    return c.json({
+      ok: true,
+      settings: { ...sessionManager.userConfig.getUserSettings(username) },
+    });
   } catch (e) {
     return c.json({ error: "Invalid request body" }, 400);
   }
@@ -151,7 +155,7 @@ settingsRouter.post("/avatar", async (c) => {
         unlinkSync(join(userDir, f));
       }
     }
-  } catch { }
+  } catch {}
 
   const ext = file.name.split(".").pop() || "png";
   const avatarPath = join(userDir, `factory-avatar.${ext}`);
@@ -177,7 +181,7 @@ settingsRouter.delete("/avatar", async (c) => {
           unlinkSync(join(userDir, f));
         }
       }
-    } catch { }
+    } catch {}
   }
 
   sessionManager.userConfig.saveUserSettings(username, { factoryAvatarUrl: null });
@@ -200,7 +204,8 @@ settingsRouter.post("/test-vision", async (c) => {
     }
 
     const prompt = body.prompt || "Describe this image in one word";
-    const defaultImage = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+    const defaultImage =
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
     const base64Data = body.image || defaultImage;
     const mimeType = body.mimeType || "image/png";
 
@@ -229,12 +234,22 @@ settingsRouter.post("/test-image-gen", async (c) => {
 
     const { authStorage } = sessionManager.userConfig.getUserContext(username);
     const userEnv = sessionManager.userConfig.getUserEnv(username);
-    const apiKey = authStorage.getApiKey("qwen") || userEnv.DASHSCOPE_API_KEY || process.env.DASHSCOPE_API_KEY || "";
+    const apiKey =
+      authStorage.getApiKey("qwen") ||
+      userEnv.DASHSCOPE_API_KEY ||
+      process.env.DASHSCOPE_API_KEY ||
+      "";
 
     const workspaceDir = getWorkspaceDir(username);
     const size = body.size || "1024x1024";
 
-    const localPath = await runImageGenModel(username, body.modelId, body.prompt, size, workspaceDir);
+    const localPath = await runImageGenModel(
+      username,
+      body.modelId,
+      body.prompt,
+      size,
+      workspaceDir,
+    );
     return c.json({ ok: true, imageUrl: `/api/workspace/${localPath.replace(/\\/g, "/")}` });
   } catch (err: any) {
     console.error(`[DIAGNOSTIC TEST-IMAGE-GEN] Error: ${err.message || String(err)}`);
@@ -261,7 +276,11 @@ settingsRouter.post("/test-video-gen", async (c) => {
 
     const { authStorage } = sessionManager.userConfig.getUserContext(username);
     const userEnv = sessionManager.userConfig.getUserEnv(username);
-    const apiKey = authStorage.getApiKey("openrouter") || userEnv.OPENROUTER_API_KEY || process.env.OPENROUTER_API_KEY || "";
+    const apiKey =
+      authStorage.getApiKey("openrouter") ||
+      userEnv.OPENROUTER_API_KEY ||
+      process.env.OPENROUTER_API_KEY ||
+      "";
 
     const workspaceDir = getWorkspaceDir(username);
     const localPath = await runVideoGenModel(
@@ -270,7 +289,7 @@ settingsRouter.post("/test-video-gen", async (c) => {
       body.prompt,
       body.aspectRatio || "16:9",
       body.duration || 5,
-      workspaceDir
+      workspaceDir,
     );
     return c.json({ ok: true, videoUrl: `/api/workspace/${localPath.replace(/\\/g, "/")}` });
   } catch (err: any) {
@@ -278,4 +297,3 @@ settingsRouter.post("/test-video-gen", async (c) => {
     return c.json({ error: err.message || String(err) }, 500);
   }
 });
-

@@ -1,4 +1,5 @@
 <!-- SPDX-License-Identifier: MIT -->
+
 # Changelog
 
 All notable changes to **Spaces** will be documented in this file.
@@ -9,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2026-07-24
 
 ### Added
+
 - Open-Source Foundations release.
 - Added MIT License and SPDX headers across all source files.
 - Added GitHub Actions CI pipeline (`ci.yml`) and Release pipeline (`release.yml`).

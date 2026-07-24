@@ -1,18 +1,30 @@
 // SPDX-License-Identifier: MIT
-import { apiFetch } from "@/lib/api";
-import { useState, useRef, useEffect, useCallback, type KeyboardEvent } from "react";
-import { useLiterals, type ContextUsage } from "@/lib";
-import { literals as u } from "./ChatInput.literals";
 import { useToast } from "@/contexts/ToastContext";
+import { useLiterals, type ContextUsage } from "@/lib";
+import { apiFetch } from "@/lib/api";
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { AutocompletePopover } from "./AutocompletePopover";
+import { literals as u } from "./ChatInput.literals";
 import { InputCard } from "./InputCard";
 import { InputToolbar } from "./InputToolbar";
-import { AutocompletePopover } from "./AutocompletePopover";
 import type { SkillInfo } from "./SkillsSelector";
 
 const DEFAULT_TOOLS = [
-  "read", "write", "edit", "bash", "grep", "find", "ls",
-  "request_approval", "ask_question", "render_images", "render_chart", "render_html", "refresh_ui",
-  "spawn_subagent", "delegate_task"
+  "read",
+  "write",
+  "edit",
+  "bash",
+  "grep",
+  "find",
+  "ls",
+  "request_approval",
+  "ask_question",
+  "render_images",
+  "render_chart",
+  "render_html",
+  "refresh_ui",
+  "spawn_subagent",
+  "delegate_task",
 ];
 
 export interface MentionTarget {
@@ -52,9 +64,34 @@ export function fileToBase64(file: File): Promise<string> {
 function isTextFile(file: File): boolean {
   if (file.type.startsWith("text/")) return true;
   const textExtensions = [
-    ".js", ".ts", ".jsx", ".tsx", ".py", ".go", ".rs", ".java", ".c", ".cpp",
-    ".h", ".hpp", ".cs", ".sh", ".bash", ".sql", ".yaml", ".yml", ".json",
-    ".md", ".txt", ".ini", ".conf", ".cfg", ".xml", ".css", ".html", ".htm"
+    ".js",
+    ".ts",
+    ".jsx",
+    ".tsx",
+    ".py",
+    ".go",
+    ".rs",
+    ".java",
+    ".c",
+    ".cpp",
+    ".h",
+    ".hpp",
+    ".cs",
+    ".sh",
+    ".bash",
+    ".sql",
+    ".yaml",
+    ".yml",
+    ".json",
+    ".md",
+    ".txt",
+    ".ini",
+    ".conf",
+    ".cfg",
+    ".xml",
+    ".css",
+    ".html",
+    ".htm",
   ];
   const name = file.name.toLowerCase();
   return textExtensions.some((ext) => name.endsWith(ext));
@@ -94,13 +131,14 @@ function getMarkdownLanguage(fileName: string): string {
     ".sql": "sql",
     ".sh": "bash",
     ".bash": "bash",
-    ".xml": "xml"};
+    ".xml": "xml",
+  };
   return map[ext] || "";
 }
 
 export async function processAttachments(
   files: File[],
-  scope: AttachmentScope
+  scope: AttachmentScope,
 ): Promise<{
   extraText: string;
   images: Array<{ type: "image"; data: string; mimeType: string }>;
@@ -117,7 +155,8 @@ export async function processAttachments(
       imagesToPass.push({
         type: "image",
         data: base64Data,
-        mimeType: file.type});
+        mimeType: file.type,
+      });
 
       const formData = new FormData();
       formData.append("file", file);
@@ -130,7 +169,8 @@ export async function processAttachments(
 
       const res = await apiFetch(url, {
         method: "POST",
-        body: formData});
+        body: formData,
+      });
 
       if (res.ok) {
         const data = await res.json();
@@ -157,7 +197,8 @@ export async function processAttachments(
 
       const res = await apiFetch(url, {
         method: "POST",
-        body: formData});
+        body: formData,
+      });
 
       if (res.ok) {
         const data = await res.json();
@@ -186,7 +227,7 @@ interface Props {
     message: string,
     option?: "steer" | "follow_up",
     tools?: string[],
-    images?: Array<{ type: "image"; data: string; mimeType: string }>
+    images?: Array<{ type: "image"; data: string; mimeType: string }>,
   ) => void;
   onAbort: () => void;
   streaming: boolean;
@@ -225,7 +266,9 @@ export function ChatInput({
   const { addToast } = useToast();
   const [input, setInput] = useState("");
   const [activeTools, setActiveTools] = useState<string[]>(DEFAULT_TOOLS);
-  const [executionMode, setExecutionMode] = useState<"readonly" | "standard" | "autonomous" | undefined>(undefined);
+  const [executionMode, setExecutionMode] = useState<
+    "readonly" | "standard" | "autonomous" | undefined
+  >(undefined);
   const [toolStatus, setToolStatus] = useState<Record<string, "available" | "missing_key">>({});
   const [skills, setSkills] = useState<SkillInfo[]>([]);
   const [skillsLoading, setSkillsLoading] = useState(false);
@@ -242,11 +285,11 @@ export function ChatInput({
   const [autocompleteSelectedIndex, setAutocompleteSelectedIndex] = useState(0);
 
   const filteredMentions = mentionTargets.filter((t) =>
-    t.name.toLowerCase().includes(autocompleteSearch.toLowerCase())
+    t.name.toLowerCase().includes(autocompleteSearch.toLowerCase()),
   );
 
   const filteredSkills = skills.filter((s) =>
-    s.name.toLowerCase().includes(autocompleteSearch.toLowerCase())
+    s.name.toLowerCase().includes(autocompleteSearch.toLowerCase()),
   );
 
   const filteredItems =
@@ -284,7 +327,10 @@ export function ChatInput({
     const cursorPosition = textarea.selectionStart;
     const textBeforeCursor = input.slice(0, cursorPosition);
     const textAfterCursor = input.slice(cursorPosition);
-    const replaced = textBeforeCursor.replace(/(?:^|(\s))@\S*$/, (_, space) => `${space ?? ""}@${targetName} `);
+    const replaced = textBeforeCursor.replace(
+      /(?:^|(\s))@\S*$/,
+      (_, space) => `${space ?? ""}@${targetName} `,
+    );
     const newVal = replaced + textAfterCursor;
     setInput(newVal);
     setAutocompleteMode(null);
@@ -301,7 +347,7 @@ export function ChatInput({
     const cursorPosition = textarea.selectionStart;
     const textBeforeCursor = input.slice(0, cursorPosition);
     const textAfterCursor = input.slice(cursorPosition);
-    
+
     // Check if there is an active slash command prefix being typed at the cursor
     const hasSlashMatch = textBeforeCursor.match(/(\/\S*)$/);
     let textBeforeCursorReplaced;
@@ -331,7 +377,8 @@ export function ChatInput({
         id: Math.random().toString(36).substring(2, 9),
         file,
         type: isImg ? ("image" as const) : ("document" as const),
-        previewUrl: isImg ? URL.createObjectURL(file) : undefined};
+        previewUrl: isImg ? URL.createObjectURL(file) : undefined,
+      };
     });
     setAttachments((prev) => [...prev, ...newAttachments]);
     e.target.value = "";
@@ -352,10 +399,19 @@ export function ChatInput({
 
     try {
       const files = attachments.map((a) => a.file);
-      const result = await processAttachments(files, { activeProjectName, activeAgentId, activeChannelId });
+      const result = await processAttachments(files, {
+        activeProjectName,
+        activeAgentId,
+        activeChannelId,
+      });
 
       const finalMessage = input + result.extraText;
-      onSend(finalMessage, option, activeTools, result.images.length > 0 ? result.images : undefined);
+      onSend(
+        finalMessage,
+        option,
+        activeTools,
+        result.images.length > 0 ? result.images : undefined,
+      );
 
       attachments.forEach((a) => {
         if (a.previewUrl) URL.revokeObjectURL(a.previewUrl);
@@ -377,7 +433,9 @@ export function ChatInput({
       }
       if (e.key === "ArrowUp") {
         e.preventDefault();
-        setAutocompleteSelectedIndex((prev) => (prev - 1 + filteredItems.length) % filteredItems.length);
+        setAutocompleteSelectedIndex(
+          (prev) => (prev - 1 + filteredItems.length) % filteredItems.length,
+        );
         return;
       }
       if (e.key === "Enter" || e.key === "Tab") {
@@ -412,7 +470,10 @@ export function ChatInput({
     }
   };
 
-  const handleToolsChange = async (tools: string[], nextMode?: "readonly" | "standard" | "autonomous") => {
+  const handleToolsChange = async (
+    tools: string[],
+    nextMode?: "readonly" | "standard" | "autonomous",
+  ) => {
     setActiveTools(tools);
     if (nextMode) {
       setExecutionMode(nextMode);
@@ -423,8 +484,10 @@ export function ChatInput({
       await apiFetch(`/api/sessions/${sessionId}/tools`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"},
-        body: JSON.stringify({ tools, executionMode: nextMode || executionMode })});
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ tools, executionMode: nextMode || executionMode }),
+      });
     } catch {}
   };
 
@@ -508,8 +571,8 @@ export function ChatInput({
   const placeholderText = runnerActive
     ? l.placeholderRunnerActive
     : streaming
-    ? l.placeholderSteer
-    : l.placeholderSend;
+      ? l.placeholderSteer
+      : l.placeholderSend;
 
   return (
     <div className="relative p-3 sm:p-4">

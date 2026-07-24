@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
+import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/api";
-import { useState, useEffect } from "react";
+import { resolveFileUrl } from "@/lib/file-urls";
+import { useEffect, useState } from "react";
 import { HtmlPreview } from "./HtmlPreview";
 import { ImageGrid } from "./ImageGrid";
-import { resolveFileUrl } from "@/lib/file-urls";
-import { useAuth } from "@/contexts/AuthContext";
 
 interface Props {
   toolName: string;
@@ -29,7 +29,8 @@ export function getFileType(url: string): MediaType {
   if (ext === "pdf") return "pdf";
   if (["mp3", "wav", "ogg", "m4a", "aac"].includes(ext)) return "audio";
   if (["mp4", "webm", "ogv", "avi", "mov"].includes(ext)) return "video";
-  if (["doc", "docx", "xls", "xlsx", "ppt", "pptx", "csv", "txt", "md"].includes(ext)) return "office";
+  if (["doc", "docx", "xls", "xlsx", "ppt", "pptx", "csv", "txt", "md"].includes(ext))
+    return "office";
   return "other";
 }
 
@@ -68,7 +69,8 @@ export function extractFileMarkers(text: string): FileMarker[] {
   }
 
   // Local filesystem paths with image extensions
-  const localImageRegex = /(?:[a-zA-Z]:[\\/]|[\/])(?:[\w.-]+[\\/])+\w+\.(?:jpg|jpeg|png|webp|gif|svg)/gi;
+  const localImageRegex =
+    /(?:[a-zA-Z]:[\\/]|[\/])(?:[\w.-]+[\\/])+\w+\.(?:jpg|jpeg|png|webp|gif|svg)/gi;
   const localMatches = text.match(localImageRegex) ?? [];
   for (const path of localMatches) {
     if (!isDuplicate(path)) {
@@ -103,14 +105,15 @@ export function HtmlFileFetcher({
   sessionId,
   activeProjectName,
   activeAgentId = null,
-  activeChannelId = null }: {
-    url: string;
-    title: string;
-    sessionId: string | null;
-    activeProjectName?: string | null;
-    activeAgentId?: string | null;
-    activeChannelId?: string | null;
-  }) {
+  activeChannelId = null,
+}: {
+  url: string;
+  title: string;
+  sessionId: string | null;
+  activeProjectName?: string | null;
+  activeAgentId?: string | null;
+  activeChannelId?: string | null;
+}) {
   const [html, setHtml] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -128,9 +131,7 @@ export function HtmlFileFetcher({
     setError(null);
 
     apiFetch(resolvedUrl, {
-      headers: resolvedUrl.startsWith("/api/") && token
-        ? { Authorization: `Bearer ${token}` }
-        : {}
+      headers: resolvedUrl.startsWith("/api/") && token ? { Authorization: `Bearer ${token}` } : {},
     })
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -149,7 +150,9 @@ export function HtmlFileFetcher({
         }
       });
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [resolvedUrl]);
 
   if (loading) {
@@ -181,13 +184,14 @@ function MediaRenderer({
   sessionId,
   activeProjectName,
   activeAgentId = null,
-  activeChannelId = null }: {
-    markers: FileMarker[];
-    sessionId: string | null;
-    activeProjectName?: string | null;
-    activeAgentId?: string | null;
-    activeChannelId?: string | null;
-  }) {
+  activeChannelId = null,
+}: {
+  markers: FileMarker[];
+  sessionId: string | null;
+  activeProjectName?: string | null;
+  activeAgentId?: string | null;
+  activeChannelId?: string | null;
+}) {
   const imageMarkers = markers.filter((m) => m.type === "image");
   const htmlMarkers = markers.filter((m) => m.type === "html");
   const pdfMarkers = markers.filter((m) => m.type === "pdf");
@@ -223,10 +227,18 @@ function MediaRenderer({
       )}
 
       {pdfMarkers.map((m, i) => {
-        const resolved = resolveFileUrl(m.url, sessionId, { project: activeProjectName, agentId: activeAgentId, channelId: activeChannelId });
-        const fileUrl = resolved.startsWith("/api/") && token ? `${resolved}&token=${token}` : resolved;
+        const resolved = resolveFileUrl(m.url, sessionId, {
+          project: activeProjectName,
+          agentId: activeAgentId,
+          channelId: activeChannelId,
+        });
+        const fileUrl =
+          resolved.startsWith("/api/") && token ? `${resolved}&token=${token}` : resolved;
         return (
-          <div key={`pdf-${i}`} className="w-full h-96 rounded-lg border border-input overflow-hidden bg-card flex flex-col font-sans">
+          <div
+            key={`pdf-${i}`}
+            className="w-full h-96 rounded-lg border border-input overflow-hidden bg-card flex flex-col font-sans"
+          >
             <div className="bg-card-hover/50 px-3 py-1.5 border-b border-input flex items-center justify-between text-[11px] text-muted-foreground">
               <span className="font-medium truncate">PDF Preview: {m.title || "Document"}</span>
               <a
@@ -248,41 +260,71 @@ function MediaRenderer({
       })}
 
       {audioMarkers.map((m, i) => {
-        const resolved = resolveFileUrl(m.url, sessionId, { project: activeProjectName, agentId: activeAgentId, channelId: activeChannelId });
-        const fileUrl = resolved.startsWith("/api/") && token ? `${resolved}&token=${token}` : resolved;
+        const resolved = resolveFileUrl(m.url, sessionId, {
+          project: activeProjectName,
+          agentId: activeAgentId,
+          channelId: activeChannelId,
+        });
+        const fileUrl =
+          resolved.startsWith("/api/") && token ? `${resolved}&token=${token}` : resolved;
         return (
-          <div key={`audio-${i}`} className="w-full p-3 bg-card border border-input rounded-lg flex flex-col gap-1.5 font-sans">
-            <span className="text-[11px] font-semibold text-muted-foreground truncate">{m.title || "Audio output"}</span>
+          <div
+            key={`audio-${i}`}
+            className="w-full p-3 bg-card border border-input rounded-lg flex flex-col gap-1.5 font-sans"
+          >
+            <span className="text-[11px] font-semibold text-muted-foreground truncate">
+              {m.title || "Audio output"}
+            </span>
             <audio controls src={fileUrl} className="w-full h-8 outline-none" />
           </div>
         );
       })}
 
       {videoMarkers.map((m, i) => {
-        const resolved = resolveFileUrl(m.url, sessionId, { project: activeProjectName, agentId: activeAgentId, channelId: activeChannelId });
-        const fileUrl = resolved.startsWith("/api/") && token ? `${resolved}&token=${token}` : resolved;
+        const resolved = resolveFileUrl(m.url, sessionId, {
+          project: activeProjectName,
+          agentId: activeAgentId,
+          channelId: activeChannelId,
+        });
+        const fileUrl =
+          resolved.startsWith("/api/") && token ? `${resolved}&token=${token}` : resolved;
         return (
-          <div key={`video-${i}`} className="w-full p-2 bg-card border border-input rounded-lg flex flex-col gap-1.5 font-sans">
-            <span className="text-[11px] font-semibold text-muted-foreground truncate">{m.title || "Video output"}</span>
+          <div
+            key={`video-${i}`}
+            className="w-full p-2 bg-card border border-input rounded-lg flex flex-col gap-1.5 font-sans"
+          >
+            <span className="text-[11px] font-semibold text-muted-foreground truncate">
+              {m.title || "Video output"}
+            </span>
             <video controls src={fileUrl} className="w-full rounded border border-input max-h-96" />
           </div>
         );
       })}
 
       {officeMarkers.map((m, i) => {
-        const resolved = resolveFileUrl(m.url, sessionId, { project: activeProjectName, agentId: activeAgentId, channelId: activeChannelId });
-        const fileUrl = resolved.startsWith("/api/") && token ? `${resolved}&token=${token}` : resolved;
+        const resolved = resolveFileUrl(m.url, sessionId, {
+          project: activeProjectName,
+          agentId: activeAgentId,
+          channelId: activeChannelId,
+        });
+        const fileUrl =
+          resolved.startsWith("/api/") && token ? `${resolved}&token=${token}` : resolved;
         const filename = m.title || m.url.split(/[\\/]/).pop() || "file";
         const extension = m.url.split(".").pop() || "file";
         return (
-          <div key={`file-${i}`} className="flex items-center justify-between p-3 bg-card border border-input rounded-lg font-sans">
+          <div
+            key={`file-${i}`}
+            className="flex items-center justify-between p-3 bg-card border border-input rounded-lg font-sans"
+          >
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-9 h-9 rounded bg-primary/15 flex items-center justify-center text-primary text-xs font-extrabold select-none shrink-0 border border-primary/20 uppercase">
                 {extension.substring(0, 3)}
               </div>
               <div className="flex flex-col min-w-0">
                 <span className="text-xs font-semibold text-foreground truncate">{filename}</span>
-                <span className="text-xs text-muted-foreground uppercase font-mono">{extension}</span>
+                <span className="text-xs text-muted-foreground uppercase font-mono">
+                  {extension}
+                </span>
               </div>
             </div>
             <a
@@ -316,12 +358,11 @@ export function ToolResultInspector({
   sessionId,
   activeProjectName,
   activeAgentId = null,
-  activeChannelId = null }: Props) {
+  activeChannelId = null,
+}: Props) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const resultStr = typeof result === "string"
-    ? result
-    : JSON.stringify(result, null, 2) ?? "";
+  const resultStr = typeof result === "string" ? result : (JSON.stringify(result, null, 2) ?? "");
 
   const markers = extractFileMarkers(resultStr);
   const htmlOutput = isHtml(resultStr) ? resultStr : null;
@@ -358,8 +399,7 @@ export function ToolResultInspector({
         <div className="border-t border-input">
           {args && Object.keys(args).length > 0 && (
             <div className="px-3 py-1.5 bg-muted border-b border-input/40 text-xs text-muted-foreground font-mono break-words">
-              <span className="text-muted-foreground">params:</span>{" "}
-              {JSON.stringify(args)}
+              <span className="text-muted-foreground">params:</span> {JSON.stringify(args)}
             </div>
           )}
 

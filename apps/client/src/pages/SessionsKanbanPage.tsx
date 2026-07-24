@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { useLiterals } from "@/lib";
-import { literals as u } from "./SessionsKanbanPage.literals";
-import { useSessions, type KanbanColumn, type SessionItem } from "@/contexts/SessionsContext";
-import { Trash2, Archive, RotateCcw } from "lucide-react";
-import { apiFetch } from "@/lib/api";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { useSessions, type KanbanColumn, type SessionItem } from "@/contexts/SessionsContext";
+import { useLiterals } from "@/lib";
+import { apiFetch } from "@/lib/api";
+import { Archive, RotateCcw, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { literals as u } from "./SessionsKanbanPage.literals";
 
 interface Props {
   onNavigate: (path: string) => void;
@@ -95,14 +95,10 @@ function SessionCard({
         </div>
         <span className="flex items-center gap-1 shrink-0">
           <span className={`w-1.5 h-1.5 rounded-full ${statusDot}`} />
-          <span className="text-[10px] font-semibold text-muted-foreground">
-            {statusLabel}
-          </span>
+          <span className="text-[10px] font-semibold text-muted-foreground">{statusLabel}</span>
         </span>
       </div>
-      <div className="text-[10px] text-muted-foreground/70 font-medium">
-        {badgeText}
-      </div>
+      <div className="text-[10px] text-muted-foreground/70 font-medium">{badgeText}</div>
       <div className="flex items-center justify-between pt-1 border-t border-input/20 text-[10px] text-muted-foreground">
         <span>{session.messageCount} mensajes</span>
         <div className="flex items-center gap-2">
@@ -183,11 +179,7 @@ export function SessionsKanbanPage({ onNavigate }: Props) {
     for (const s of activeSessions) {
       if (s.isExecution) {
         done.push(s);
-      } else if (
-        s.status === "streaming" ||
-        s.status === "active" ||
-        s.status === "task-running"
-      ) {
+      } else if (s.status === "streaming" || s.status === "active" || s.status === "task-running") {
         working.push(s);
       } else {
         idle.push(s);
@@ -216,9 +208,7 @@ export function SessionsKanbanPage({ onNavigate }: Props) {
   };
 
   const handleToggleSelect = (id: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
 
   const handleArchive = async (id: string, isCurrentlyArchived?: boolean) => {
@@ -306,9 +296,7 @@ export function SessionsKanbanPage({ onNavigate }: Props) {
                   <span className="text-xs font-bold text-foreground uppercase tracking-wider">
                     {l[titleKey]}
                   </span>
-                  <span className="text-[10px] text-muted-foreground">
-                    {l[descKey]}
-                  </span>
+                  <span className="text-[10px] text-muted-foreground">{l[descKey]}</span>
                 </div>
                 <span className="text-xs font-bold text-muted-foreground bg-card-hover px-2 py-0.5 rounded-full">
                   {columnsData[key].length}

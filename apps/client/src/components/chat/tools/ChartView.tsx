@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: MIT
 import {
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  AreaChart,
   Area,
-  PieChart,
-  Pie,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
   Cell,
+  Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
 } from "recharts";
 
 interface Props {
@@ -87,7 +87,7 @@ export function ChartView({
     // Averiguar las claves numéricas dinámicas para las variables del gráfico
     const sample = data[0] || {};
     const dataKeys = Object.keys(sample).filter(
-      (k) => k !== "label" && typeof sample[k] === "number"
+      (k) => k !== "label" && typeof sample[k] === "number",
     );
 
     // Si no se encuentran claves numéricas, usar la primera propiedad numérica o "value" por defecto
@@ -104,21 +104,48 @@ export function ChartView({
               fontSize={10}
               tickLine={false}
               axisLine={false}
-              label={xLabel ? { value: xLabel, position: "insideBottom", offset: -5, fill: "#a2a2a2", fontSize: 10 } : undefined}
+              label={
+                xLabel
+                  ? {
+                      value: xLabel,
+                      position: "insideBottom",
+                      offset: -5,
+                      fill: "#a2a2a2",
+                      fontSize: 10,
+                    }
+                  : undefined
+              }
             />
             <YAxis
               stroke="#a2a2a2"
               fontSize={10}
               tickLine={false}
               axisLine={false}
-              label={yLabel ? { value: yLabel, angle: -90, position: "insideLeft", offset: 10, fill: "#a2a2a2", fontSize: 10 } : undefined}
+              label={
+                yLabel
+                  ? {
+                      value: yLabel,
+                      angle: -90,
+                      position: "insideLeft",
+                      offset: 10,
+                      fill: "#a2a2a2",
+                      fontSize: 10,
+                    }
+                  : undefined
+              }
             />
             <Tooltip
-              contentStyle={{ backgroundColor: "#171717", borderColor: "#313131", borderRadius: "8px" }}
+              contentStyle={{
+                backgroundColor: "#171717",
+                borderColor: "#313131",
+                borderRadius: "8px",
+              }}
               itemStyle={{ fontSize: "11px" }}
               labelStyle={{ fontSize: "11px", fontWeight: "bold", color: "#e2e8f0" }}
             />
-            {keysToRender.length > 1 && <Legend wrapperStyle={{ fontSize: "10px", marginTop: "10px" }} />}
+            {keysToRender.length > 1 && (
+              <Legend wrapperStyle={{ fontSize: "10px", marginTop: "10px" }} />
+            )}
             {keysToRender.map((key, index) => (
               <Line
                 key={key}
@@ -141,7 +168,14 @@ export function ChartView({
               {keysToRender.map((key, index) => {
                 const color = colors[index % colors.length];
                 return (
-                  <linearGradient key={`grad-${key}`} id={`grad-${key}`} x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient
+                    key={`grad-${key}`}
+                    id={`grad-${key}`}
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
                     <stop offset="5%" stopColor={color} stopOpacity={0.4} />
                     <stop offset="95%" stopColor={color} stopOpacity={0.0} />
                   </linearGradient>
@@ -149,14 +183,26 @@ export function ChartView({
               })}
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
-            <XAxis dataKey="label" stroke="#a2a2a2" fontSize={10} tickLine={false} axisLine={false} />
+            <XAxis
+              dataKey="label"
+              stroke="#a2a2a2"
+              fontSize={10}
+              tickLine={false}
+              axisLine={false}
+            />
             <YAxis stroke="#a2a2a2" fontSize={10} tickLine={false} axisLine={false} />
             <Tooltip
-              contentStyle={{ backgroundColor: "#171717", borderColor: "#313131", borderRadius: "8px" }}
+              contentStyle={{
+                backgroundColor: "#171717",
+                borderColor: "#313131",
+                borderRadius: "8px",
+              }}
               itemStyle={{ fontSize: "11px" }}
               labelStyle={{ fontSize: "11px", fontWeight: "bold", color: "#e2e8f0" }}
             />
-            {keysToRender.length > 1 && <Legend wrapperStyle={{ fontSize: "10px", marginTop: "10px" }} />}
+            {keysToRender.length > 1 && (
+              <Legend wrapperStyle={{ fontSize: "10px", marginTop: "10px" }} />
+            )}
             {keysToRender.map((key, index) => (
               <Area
                 key={key}
@@ -192,10 +238,19 @@ export function ChartView({
               ))}
             </Pie>
             <Tooltip
-              contentStyle={{ backgroundColor: "#171717", borderColor: "#313131", borderRadius: "8px" }}
+              contentStyle={{
+                backgroundColor: "#171717",
+                borderColor: "#313131",
+                borderRadius: "8px",
+              }}
               itemStyle={{ fontSize: "11px" }}
             />
-            <Legend wrapperStyle={{ fontSize: "10px" }} layout="horizontal" verticalAlign="bottom" align="center" />
+            <Legend
+              wrapperStyle={{ fontSize: "10px" }}
+              layout="horizontal"
+              verticalAlign="bottom"
+              align="center"
+            />
           </PieChart>
         );
 
@@ -204,14 +259,26 @@ export function ChartView({
         return (
           <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
-            <XAxis dataKey="label" stroke="#a2a2a2" fontSize={10} tickLine={false} axisLine={false} />
+            <XAxis
+              dataKey="label"
+              stroke="#a2a2a2"
+              fontSize={10}
+              tickLine={false}
+              axisLine={false}
+            />
             <YAxis stroke="#a2a2a2" fontSize={10} tickLine={false} axisLine={false} />
             <Tooltip
-              contentStyle={{ backgroundColor: "#171717", borderColor: "#313131", borderRadius: "8px" }}
+              contentStyle={{
+                backgroundColor: "#171717",
+                borderColor: "#313131",
+                borderRadius: "8px",
+              }}
               itemStyle={{ fontSize: "11px" }}
               labelStyle={{ fontSize: "11px", fontWeight: "bold", color: "#e2e8f0" }}
             />
-            {keysToRender.length > 1 && <Legend wrapperStyle={{ fontSize: "10px", marginTop: "10px" }} />}
+            {keysToRender.length > 1 && (
+              <Legend wrapperStyle={{ fontSize: "10px", marginTop: "10px" }} />
+            )}
             {keysToRender.map((key, index) => (
               <Bar
                 key={key}

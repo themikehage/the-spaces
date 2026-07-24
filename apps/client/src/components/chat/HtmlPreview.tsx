@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { useState } from "react";
 import { motion } from "framer-motion";
+import { useState } from "react";
 
 interface Props {
   html: string;
@@ -44,9 +44,7 @@ export function HtmlPreview({ html, title, fullBleed = false }: Props) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = extractedTitle
-      ? `${extractedTitle.trim() || "output"}.html`
-      : "output.html";
+    a.download = extractedTitle ? `${extractedTitle.trim() || "output"}.html` : "output.html";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -59,9 +57,7 @@ export function HtmlPreview({ html, title, fullBleed = false }: Props) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
       className={`overflow-hidden font-sans w-full ${
-        fullBleed
-          ? ""
-          : "my-4 rounded-xl border border-border shadow-xl bg-card"
+        fullBleed ? "" : "my-4 rounded-xl border border-border shadow-xl bg-card"
       }`}
     >
       <div className="flex items-center gap-2 px-4 py-2.5 bg-card-hover/30 border-b border-border">
@@ -71,9 +67,29 @@ export function HtmlPreview({ html, title, fullBleed = false }: Props) {
           <div className="w-3 h-3 rounded-full bg-[#28c840]" />
         </div>
         <div className="flex-1 flex items-center bg-muted rounded-md border border-border h-7 px-3 mx-2 min-w-0">
-          <svg width="10" height="10" viewBox="0 0 16 16" fill="none" className="flex-shrink-0 opacity-40 mr-2">
-            <rect x="1.5" y="1.5" width="13" height="13" rx="3" stroke="currentColor" strokeWidth="1.5" />
-            <path d="M5 8.5l-1 1L6.5 12l5-6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <svg
+            width="10"
+            height="10"
+            viewBox="0 0 16 16"
+            fill="none"
+            className="flex-shrink-0 opacity-40 mr-2"
+          >
+            <rect
+              x="1.5"
+              y="1.5"
+              width="13"
+              height="13"
+              rx="3"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            />
+            <path
+              d="M5 8.5l-1 1L6.5 12l5-6.5"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
           <span className="text-[12px] text-muted-foreground truncate select-none">
             {displayUrl}
@@ -106,7 +122,11 @@ export function HtmlPreview({ html, title, fullBleed = false }: Props) {
             title="Download as .html"
           >
             <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+              <path
+                fillRule="evenodd"
+                d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              />
             </svg>
             Download
           </button>
@@ -114,7 +134,9 @@ export function HtmlPreview({ html, title, fullBleed = false }: Props) {
       </div>
 
       {showHtml ? (
-        <div className={`bg-white w-full ${fullBleed ? "h-[85vh] min-h-[35rem]" : "h-[70vh] min-h-[30rem]"}`}>
+        <div
+          className={`bg-white w-full ${fullBleed ? "h-[85vh] min-h-[35rem]" : "h-[70vh] min-h-[30rem]"}`}
+        >
           <iframe
             srcDoc={previewHtml}
             title={displayTitle}
@@ -123,7 +145,9 @@ export function HtmlPreview({ html, title, fullBleed = false }: Props) {
           />
         </div>
       ) : (
-        <pre className={`p-4 overflow-y-auto overflow-x-auto text-xs text-muted-foreground font-mono leading-relaxed bg-muted whitespace-pre-wrap ${fullBleed ? "h-[85vh] min-h-[35rem]" : "h-[70vh] min-h-[30rem]"}`}>
+        <pre
+          className={`p-4 overflow-y-auto overflow-x-auto text-xs text-muted-foreground font-mono leading-relaxed bg-muted whitespace-pre-wrap ${fullBleed ? "h-[85vh] min-h-[35rem]" : "h-[70vh] min-h-[30rem]"}`}
+        >
           {html}
         </pre>
       )}

@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 import { AsyncLocalStorage } from "node:async_hooks";
-import { type CustomToolDefinition } from "./schemas";
 import { type PipelineContext, executePipeline, resolveVariables } from "./pipeline-engine";
+import { type CustomToolDefinition } from "./schemas";
 
 export const pipelineExecutionStack = new AsyncLocalStorage<string[]>();
 
 export function createCustomToolRuntime(
   definition: CustomToolDefinition,
-  context: PipelineContext
+  context: PipelineContext,
 ): any {
   return {
     name: definition.name,
@@ -18,7 +18,7 @@ export function createCustomToolRuntime(
       toolCallId: string,
       params: Record<string, any>,
       signal?: AbortSignal,
-      onUpdate?: (partialResult: any) => void
+      onUpdate?: (partialResult: any) => void,
     ) => {
       const executeDef = definition.execute;
       switch (executeDef.type) {
@@ -26,7 +26,12 @@ export function createCustomToolRuntime(
           const currentStack = pipelineExecutionStack.getStore() || [];
           if (currentStack.includes(definition.name)) {
             return {
-              content: [{ type: "text", text: `Circular dependency detected: ${currentStack.join(" -> ")} -> ${definition.name}` }],
+              content: [
+                {
+                  type: "text",
+                  text: `Circular dependency detected: ${currentStack.join(" -> ")} -> ${definition.name}`,
+                },
+              ],
               isError: true,
             };
           }
@@ -62,14 +67,16 @@ export function createCustomToolRuntime(
                   content: [{ type: "text", text: `Step ${step}/${total}: ${desc}` }],
                   details: { step, total },
                 });
-              }
+              },
             );
             const scope = result.scope || {};
             const resolvedUi = definition.ui ? resolveVariables(definition.ui, scope) : undefined;
             result.details = {
               ...result.details,
               ...(resolvedUi ? { ui: resolvedUi } : {}),
-              ...(definition.presentation ? { presentation: definition.presentation } : { presentation: { defaultExpanded: true, accordionDefaultOpen: true } }),
+              ...(definition.presentation
+                ? { presentation: definition.presentation }
+                : { presentation: { defaultExpanded: true, accordionDefaultOpen: true } }),
             };
             delete result.scope;
             return result;
@@ -81,14 +88,19 @@ export function createCustomToolRuntime(
             content: [{ type: "text", text: `UI rendered for custom tool ${definition.name}` }],
             details: {
               ui: definition.ui,
-              presentation: definition.presentation || { defaultExpanded: true, accordionDefaultOpen: true },
+              presentation: definition.presentation || {
+                defaultExpanded: true,
+                accordionDefaultOpen: true,
+              },
             },
             isError: false,
           };
 
         default:
           return {
-            content: [{ type: "text", text: `Unsupported execution mode for tool ${definition.name}` }],
+            content: [
+              { type: "text", text: `Unsupported execution mode for tool ${definition.name}` },
+            ],
             isError: true,
           };
       }

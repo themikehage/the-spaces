@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-import { Hono } from "hono";
-import { authMiddleware, getAuthPayload } from "../middleware/auth";
-import { approvalManager } from "../core/approvals/approval-manager";
-import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
+import { Hono } from "hono";
+import { z } from "zod";
+import { approvalManager } from "../core/approvals/approval-manager";
+import { authMiddleware, getAuthPayload } from "../middleware/auth";
 
 export const approvalsRouter = new Hono();
 

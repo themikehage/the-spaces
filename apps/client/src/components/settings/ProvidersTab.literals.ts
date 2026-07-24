@@ -23,7 +23,8 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     infoBtn: "Info",
     syncBtn: "Sincronizar",
     modalTitle: "Modelos de {provider}",
-    modalSubtitle: "Catálogo de modelos disponibles y capacidades de ejecución configuradas en Spaces.",
+    modalSubtitle:
+      "Catálogo de modelos disponibles y capacidades de ejecución configuradas en Spaces.",
     thName: "Nombre",
     thId: "ID",
     thContext: "Contexto",

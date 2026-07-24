@@ -96,9 +96,11 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     destructiveOverwrite: "Destructive Overwrite Action",
     overwriteWarning1: "You are about to restore a backup using",
     overwriteModeLabel: "Overwrite",
-    overwriteWarning2: "mode. This will permanently delete all your existing configuration, credentials, agents, channels, and projects.",
+    overwriteWarning2:
+      "mode. This will permanently delete all your existing configuration, credentials, agents, channels, and projects.",
     safeRecommendation: "Safe Recommendation:",
-    backupRecommendation: "We highly recommend exporting and downloading a backup of your current setup before overwriting.",
+    backupRecommendation:
+      "We highly recommend exporting and downloading a backup of your current setup before overwriting.",
     downloadBackupNow: "Download Backup Now",
     typeOverwriteConfirm: 'Type "OVERWRITE" to confirm',
     overwritePlaceholder: "OVERWRITE",
@@ -107,7 +109,8 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     mergeMode: "Merge (Keep current, update matching)",
     subagents: "Subagents",
     subagentMaxDepth: "Maximum Nesting Depth",
-    subagentMaxDepthDesc: "Limit how deep subagents can recursively spawn or delegate. A value of 1 restricts execution to direct subagents only.",
+    subagentMaxDepthDesc:
+      "Limit how deep subagents can recursively spawn or delegate. A value of 1 restricts execution to direct subagents only.",
     warningMaxDepth: "Higher values can lead to exponential token usage and resource consumption.",
     noSubagents: "0 - No subagents allowed",
     directSubagentsOnly: "1 - Direct subagents only (recommended)",
@@ -207,9 +210,11 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     destructiveOverwrite: "Accion de Sobrescritura Destructiva",
     overwriteWarning1: "Estas por restaurar un backup usando el modo",
     overwriteModeLabel: "Sobrescritura",
-    overwriteWarning2: "Esto eliminara permanentemente toda tu configuracion existente, credenciales, agentes, canales y proyectos.",
+    overwriteWarning2:
+      "Esto eliminara permanentemente toda tu configuracion existente, credenciales, agentes, canales y proyectos.",
     safeRecommendation: "Recomendacion Segura:",
-    backupRecommendation: "Recomendamos exportar y descargar un backup de tu configuracion actual antes de sobrescribir.",
+    backupRecommendation:
+      "Recomendamos exportar y descargar un backup de tu configuracion actual antes de sobrescribir.",
     downloadBackupNow: "Descargar Backup Ahora",
     typeOverwriteConfirm: 'Escribi "OVERWRITE" para confirmar',
     overwritePlaceholder: "OVERWRITE",
@@ -218,7 +223,8 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     mergeMode: "Combinar (Mantener actual, actualizar coincidencias)",
     subagents: "Subagentes",
     subagentMaxDepth: "Profundidad Máxima de Anidamiento",
-    subagentMaxDepthDesc: "Limita qué tan profundo pueden los subagentes spawnear o delegar recursivamente. Un valor de 1 restringe la ejecución a subagentes directos.",
+    subagentMaxDepthDesc:
+      "Limita qué tan profundo pueden los subagentes spawnear o delegar recursivamente. Un valor de 1 restringe la ejecución a subagentes directos.",
     warningMaxDepth: "Valores altos pueden causar consumo exponencial de tokens y recursos.",
     noSubagents: "0 - Sin subagentes",
     directSubagentsOnly: "1 - Solo subagentes directos (recomendado)",

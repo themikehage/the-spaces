@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
-import type { ModelRegistry } from "../ai";
-import type { EnvelopeResult, DelegationNotificationDetails } from "shared";
+import type { DelegationNotificationDetails, EnvelopeResult } from "shared";
 import { DELEGATION_NOTIFICATION_TYPE } from "shared";
-
+import type { ModelRegistry } from "../ai";
 
 /**
  * Parses the structured output envelope (status, executive_summary, artifacts, risks)
@@ -31,7 +30,9 @@ export function parseEnvelope(text: string): EnvelopeResult {
       const val = match[2].trim();
       if (key === "status") {
         const validStatuses = ["success", "partial", "blocked", "error"] as const;
-        result.status = validStatuses.includes(val as typeof validStatuses[number]) ? (val as typeof validStatuses[number]) : "success";
+        result.status = validStatuses.includes(val as (typeof validStatuses)[number])
+          ? (val as (typeof validStatuses)[number])
+          : "success";
         hasStatus = true;
       } else if (key === "executive_summary" || key === "summary") {
         result.executive_summary = val;
@@ -45,10 +46,7 @@ export function parseEnvelope(text: string): EnvelopeResult {
   }
 
   if (!hasStatus && !hasSummary) {
-    const cleanSummary = cleanText
-      .replace(/---/g, "")
-      .trim()
-      .slice(0, 300);
+    const cleanSummary = cleanText.replace(/---/g, "").trim().slice(0, 300);
     result.executive_summary = cleanSummary;
   }
 
@@ -63,23 +61,25 @@ export function forwardSubagentEvents(
   subSession: { subscribe: (fn: (evt: any) => void) => () => void },
   parentSessionId: string,
   subagentSessionId: string,
-  toolCallId: string
+  toolCallId: string,
 ): () => void {
   let unsub: (() => void) | undefined;
   try {
     unsub = subSession.subscribe((evt: any) => {
       try {
-        import("../ws/handler").then(({ broadcastToSession }) => {
-          broadcastToSession(parentSessionId, {
-            type: "subagent_event",
-            sessionId: parentSessionId,
-            subagentSessionId,
-            toolCallId,
-            event: evt,
+        import("../ws/handler")
+          .then(({ broadcastToSession }) => {
+            broadcastToSession(parentSessionId, {
+              type: "subagent_event",
+              sessionId: parentSessionId,
+              subagentSessionId,
+              toolCallId,
+              event: evt,
+            });
+          })
+          .catch((err) => {
+            console.error("[Subagent Event Forwarding Import Error]:", err);
           });
-        }).catch(err => {
-          console.error("[Subagent Event Forwarding Import Error]:", err);
-        });
       } catch (err) {
         console.error("[Subagent Event Forwarding Error]:", err);
       }
@@ -98,8 +98,6 @@ export function setWsHandlerBridge(registerInterceptor: any, broadcastSession: a
   registerChannelInterceptorFn = registerInterceptor;
   broadcastToSessionFn = broadcastSession;
 }
-
-
 
 /**
  * Extracts and cleans the text content from the last assistant message.
@@ -126,7 +124,7 @@ export function getLastAssistantText(messages: any[]): string {
  */
 export function resolveModelWithFallback(
   modelId: string | undefined,
-  modelRegistry: ModelRegistry
+  modelRegistry: ModelRegistry,
 ): string | undefined {
   const configuredModels = modelRegistry.getAvailable();
   if (!modelId) {
@@ -135,7 +133,9 @@ export function resolveModelWithFallback(
     }
     return undefined;
   }
-  const foundModel = configuredModels.find(m => m.id === modelId || `${m.provider}/${m.id}` === modelId);
+  const foundModel = configuredModels.find(
+    (m) => m.id === modelId || `${m.provider}/${m.id}` === modelId,
+  );
   if (!foundModel && configuredModels.length > 0) {
     return `${configuredModels[0].provider}/${configuredModels[0].id}`;
   }
@@ -150,7 +150,7 @@ export function formatDelegationResultMessage(
   toolName: string,
   envelope: EnvelopeResult,
   subagentSessionId: string,
-  outputText?: string
+  outputText?: string,
 ): any {
   const details: DelegationNotificationDetails = {
     type: DELEGATION_NOTIFICATION_TYPE,
@@ -195,12 +195,14 @@ export function formatDelegationResultMessage(
  * Utilizes channel messages as primary source and falls back to agent session stats.
  */
 export function collectChannelTokens(
-  channelStore: { getMessages: (username: string, channelId: string, limit: number, sessionId?: string) => any[] },
+  channelStore: {
+    getMessages: (username: string, channelId: string, limit: number, sessionId?: string) => any[];
+  },
   agentRegistry: { get: (agentId: string) => any },
   username: string,
   channelId: string,
   sessionId: string,
-  agentIds: string[]
+  agentIds: string[],
 ): { tokensIn: number; tokensOut: number } {
   let tokensIn = 0;
   let tokensOut = 0;
@@ -239,7 +241,10 @@ export function collectChannelTokens(
           }
         }
       } catch (err) {
-        console.error(`[collectChannelTokens] Fallback stats lookup failed for agent ${agentId}:`, err);
+        console.error(
+          `[collectChannelTokens] Fallback stats lookup failed for agent ${agentId}:`,
+          err,
+        );
       }
     }
   }
@@ -292,13 +297,21 @@ export async function handleDelegationCompletion(opts: {
   }
 
   if (parent) {
-    const toolResultMsg = formatDelegationResultMessage(toolCallId, toolName, envelope, subagentSessionId, lastText);
+    const toolResultMsg = formatDelegationResultMessage(
+      toolCallId,
+      toolName,
+      envelope,
+      subagentSessionId,
+      lastText,
+    );
     if (includeFullHistory && executionResultText) {
       const baseText = toolResultMsg.content[0].text;
-      toolResultMsg.content = [{
-        type: "text",
-        text: `${baseText}\n\n=== FULL CONVERSATION HISTORY ===\n\n${executionResultText}`
-      }];
+      toolResultMsg.content = [
+        {
+          type: "text",
+          text: `${baseText}\n\n=== FULL CONVERSATION HISTORY ===\n\n${executionResultText}`,
+        },
+      ];
     }
     parent.addDelegationResult(toolResultMsg);
 
@@ -336,9 +349,8 @@ export async function handleDelegationCompletion(opts: {
       }
     }
   } else {
-    console.warn(`[Delegation] Parent session ${parentSessionId} not found for toolCallId ${toolCallId} — delegation result discarded`);
+    console.warn(
+      `[Delegation] Parent session ${parentSessionId} not found for toolCallId ${toolCallId} — delegation result discarded`,
+    );
   }
 }
-
-
-

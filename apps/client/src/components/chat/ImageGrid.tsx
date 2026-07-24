@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-import { apiFetch } from "@/lib/api";
-import { useCallback, useState, useEffect, useRef } from "react";
-import { resolveFileUrl } from "@/lib/file-urls";
 import { useAuth } from "@/contexts/AuthContext";
+import { apiFetch } from "@/lib/api";
+import { resolveFileUrl } from "@/lib/file-urls";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface ImageItem {
   url: string;
@@ -24,7 +24,7 @@ export function resolveImageUrl(
   activeProjectName?: string | null,
   activeAgentId?: string | null,
   activeChannelId?: string | null,
-  activeTeamId?: string | null
+  activeTeamId?: string | null,
 ): string {
   return resolveFileUrl(url, sessionId, {
     project: activeProjectName,
@@ -54,22 +54,33 @@ export function AuthenticatedImage({ src, alt, className, ...props }: Authentica
           observer.disconnect();
         }
       },
-      { rootMargin: "200px" }
+      { rootMargin: "200px" },
     );
 
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
 
-  const imgSrc = !src.startsWith("/api/") || !token
-    ? src
-    : `${src}${src.includes("?") ? "&" : "?"}token=${token}`;
+  const imgSrc =
+    !src.startsWith("/api/") || !token
+      ? src
+      : `${src}${src.includes("?") ? "&" : "?"}token=${token}`;
 
   return (
     <div ref={containerRef} className="w-full h-full">
       {!inView ? (
         <div className="w-full h-full flex items-center justify-center bg-card animate-pulse">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="text-muted-foreground"
+          >
             <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
             <circle cx="8.5" cy="8.5" r="1.5" />
             <polyline points="21 15 16 10 5 21" />
@@ -103,48 +114,51 @@ export function ImageGrid({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [previewUrl]);
 
-  const downloadImage = useCallback(async (resolvedUrl: string, filename?: string) => {
-    setDownloading(resolvedUrl);
-    try {
-      const res = await apiFetch(resolvedUrl, {
-        headers: resolvedUrl.startsWith("/api/") && token
-          ? { Authorization: `Bearer ${token}` }
-          : {}});
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const blob = await res.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = blobUrl;
+  const downloadImage = useCallback(
+    async (resolvedUrl: string, filename?: string) => {
+      setDownloading(resolvedUrl);
+      try {
+        const res = await apiFetch(resolvedUrl, {
+          headers:
+            resolvedUrl.startsWith("/api/") && token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = blobUrl;
 
-      const ext = blob.type.split("/")[1] || "png";
-      let downloadName = filename || "image";
-      const hasExt = /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(downloadName);
-      if (!hasExt) {
-        downloadName = `${downloadName}.${ext}`;
+        const ext = blob.type.split("/")[1] || "png";
+        let downloadName = filename || "image";
+        const hasExt = /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(downloadName);
+        if (!hasExt) {
+          downloadName = `${downloadName}.${ext}`;
+        }
+
+        a.download = downloadName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+      } catch {
+        const a = document.createElement("a");
+        a.href = resolvedUrl;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.click();
+      } finally {
+        setDownloading(null);
       }
-
-      a.download = downloadName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(blobUrl);
-    } catch {
-      const a = document.createElement("a");
-      a.href = resolvedUrl;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-      a.click();
-    } finally {
-      setDownloading(null);
-    }
-  }, [token]);
+    },
+    [token],
+  );
 
   const openImageInNewTab = async (resolvedUrl: string) => {
     try {
       const res = await apiFetch(resolvedUrl, {
-        headers: resolvedUrl.startsWith("/api/") && token
-          ? { Authorization: `Bearer ${token}` }
-          : {}});
+        headers:
+          resolvedUrl.startsWith("/api/") && token ? { Authorization: `Bearer ${token}` } : {},
+      });
       if (!res.ok) throw new Error("Failed to load image");
       const blob = await res.blob();
       const blobUrl = URL.createObjectURL(blob);
@@ -156,10 +170,25 @@ export function ImageGrid({
 
   const downloadAll = useCallback(async () => {
     for (const img of images) {
-      const resolved = resolveImageUrl(img.url, sessionId, activeProjectName, activeAgentId, activeChannelId, activeTeamId);
+      const resolved = resolveImageUrl(
+        img.url,
+        sessionId,
+        activeProjectName,
+        activeAgentId,
+        activeChannelId,
+        activeTeamId,
+      );
       await downloadImage(resolved, img.title);
     }
-  }, [images, sessionId, activeProjectName, activeAgentId, activeChannelId, activeTeamId, downloadImage]);
+  }, [
+    images,
+    sessionId,
+    activeProjectName,
+    activeAgentId,
+    activeChannelId,
+    activeTeamId,
+    downloadImage,
+  ]);
 
   if (images.length === 0) return null;
 
@@ -178,79 +207,125 @@ export function ImageGrid({
                        transition-colors disabled:opacity-50 cursor-pointer"
           >
             <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+              <path
+                fillRule="evenodd"
+                d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              />
             </svg>
             Download All
           </button>
         </div>
       )}
-      {images.length === 1 ? (() => {
-        const img = images[0];
-        const resolved = resolveImageUrl(img.url, sessionId, activeProjectName, activeAgentId, activeChannelId, activeTeamId);
-        const isDownloading = downloading === resolved;
-        return (
-          <div
-            onClick={() => setPreviewUrl(resolved)}
-            className="group relative rounded-lg overflow-hidden border border-input bg-card hover:border-primary/40 shadow-sm transition-all cursor-pointer max-w-full"
-          >
-            <div className="w-full overflow-hidden bg-black/10 flex items-center justify-center">
-              <AuthenticatedImage
-                src={resolved}
-                alt={img.title || "Image content"}
-                loading="lazy"
-                onError={(e) => {
-                  (e.target as HTMLElement).style.display = "none";
-                }}
-                className="w-full h-auto object-contain max-h-[70vh] transition-transform group-hover:scale-[1.02]"
-              />
-            </div>
-
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  downloadImage(resolved, img.title);
-                }}
-                disabled={isDownloading}
-                className="p-1.5 bg-white/20 rounded-full hover:bg-white/40 transition-colors disabled:opacity-50 cursor-pointer"
-                title="Download image"
-              >
-                {isDownloading ? (
-                  <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" className="animate-spin text-white">
-                    <path fillRule="evenodd" d="M4 10a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1z" clipRule="evenodd" />
-                  </svg>
-                ) : (
-                  <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" className="text-white">
-                    <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
-                )}
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openImageInNewTab(resolved);
-                }}
-                className="p-1.5 bg-white/20 rounded-full hover:bg-white/40 transition-colors cursor-pointer"
-                title="Open in new tab"
-              >
-                <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" className="text-white">
-                  <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
-                  <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
-                </svg>
-              </button>
-            </div>
-
-            {img.title && (
-              <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-2 py-1 text-xs text-foreground truncate">
-                {img.title}
+      {images.length === 1 ? (
+        (() => {
+          const img = images[0];
+          const resolved = resolveImageUrl(
+            img.url,
+            sessionId,
+            activeProjectName,
+            activeAgentId,
+            activeChannelId,
+            activeTeamId,
+          );
+          const isDownloading = downloading === resolved;
+          return (
+            <div
+              onClick={() => setPreviewUrl(resolved)}
+              className="group relative rounded-lg overflow-hidden border border-input bg-card hover:border-primary/40 shadow-sm transition-all cursor-pointer max-w-full"
+            >
+              <div className="w-full overflow-hidden bg-black/10 flex items-center justify-center">
+                <AuthenticatedImage
+                  src={resolved}
+                  alt={img.title || "Image content"}
+                  loading="lazy"
+                  onError={(e) => {
+                    (e.target as HTMLElement).style.display = "none";
+                  }}
+                  className="w-full h-auto object-contain max-h-[70vh] transition-transform group-hover:scale-[1.02]"
+                />
               </div>
-            )}
-          </div>
-        );
-      })() : (
+
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    downloadImage(resolved, img.title);
+                  }}
+                  disabled={isDownloading}
+                  className="p-1.5 bg-white/20 rounded-full hover:bg-white/40 transition-colors disabled:opacity-50 cursor-pointer"
+                  title="Download image"
+                >
+                  {isDownloading ? (
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      className="animate-spin text-white"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M4 10a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      className="text-white"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  )}
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openImageInNewTab(resolved);
+                  }}
+                  className="p-1.5 bg-white/20 rounded-full hover:bg-white/40 transition-colors cursor-pointer"
+                  title="Open in new tab"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    className="text-white"
+                  >
+                    <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+                    <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
+                  </svg>
+                </button>
+              </div>
+
+              {img.title && (
+                <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-2 py-1 text-xs text-foreground truncate">
+                  {img.title}
+                </div>
+              )}
+            </div>
+          );
+        })()
+      ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-w-full">
           {images.map((img, i) => {
-            const resolved = resolveImageUrl(img.url, sessionId, activeProjectName, activeAgentId, activeChannelId, activeTeamId);
+            const resolved = resolveImageUrl(
+              img.url,
+              sessionId,
+              activeProjectName,
+              activeAgentId,
+              activeChannelId,
+              activeTeamId,
+            );
             const isDownloading = downloading === resolved;
             return (
               <div
@@ -281,12 +356,32 @@ export function ImageGrid({
                     title="Download image"
                   >
                     {isDownloading ? (
-                      <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" className="animate-spin text-white">
-                        <path fillRule="evenodd" d="M4 10a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1z" clipRule="evenodd" />
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        className="animate-spin text-white"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M4 10a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                     ) : (
-                      <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" className="text-white">
-                        <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        className="text-white"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                     )}
                   </button>
@@ -298,7 +393,13 @@ export function ImageGrid({
                     className="p-1.5 bg-white/20 rounded-full hover:bg-white/40 transition-colors cursor-pointer"
                     title="Open in new tab"
                   >
-                    <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" className="text-white">
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      className="text-white"
+                    >
                       <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
                       <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
                     </svg>
@@ -325,8 +426,18 @@ export function ImageGrid({
             onClick={() => setPreviewUrl(null)}
             className="fixed top-4 right-4 z-[60] p-2 bg-black/50 hover:bg-black/70 rounded-full transition-colors cursor-pointer"
           >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" className="text-white">
-              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="text-white"
+            >
+              <path
+                fillRule="evenodd"
+                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              />
             </svg>
           </button>
           <div className="relative max-w-[90vw] max-h-[90vh]" onClick={(e) => e.stopPropagation()}>

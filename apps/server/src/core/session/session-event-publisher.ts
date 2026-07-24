@@ -7,7 +7,11 @@ export interface SubscribeSessionEventsParams {
   username: string;
   sessionId: string;
   metadataStore: {
-    saveSessionMetadata: (username: string, sessionId: string, data: Record<string, unknown>) => void;
+    saveSessionMetadata: (
+      username: string,
+      sessionId: string,
+      data: Record<string, unknown>,
+    ) => void;
     getSessionMetadata: (username: string, sessionId: string) => Record<string, any> | null;
     computeAndPersistMetrics?: (username: string, sessionId: string, session: any) => void;
   };
@@ -83,7 +87,10 @@ export function subscribeSessionEvents({
           eventType: "text_delta",
           detail: ev.assistantMessageEvent.delta,
         });
-      } else if (ev.assistantMessageEvent?.type === "thinking_delta" && ev.assistantMessageEvent.delta) {
+      } else if (
+        ev.assistantMessageEvent?.type === "thinking_delta" &&
+        ev.assistantMessageEvent.delta
+      ) {
         eventBroker.publishEvent(username, {
           sourceType: "session",
           sourceId: sessionId,
@@ -106,7 +113,12 @@ export function subscribeSessionEvents({
         sourceId: sessionId,
         sourceName: cachedSessionName,
         eventType: "tool_end",
-        detail: { toolName: ev.toolName, result: ev.result, isError: ev.isError, toolCallId: ev.toolCallId },
+        detail: {
+          toolName: ev.toolName,
+          result: ev.result,
+          isError: ev.isError,
+          toolCallId: ev.toolCallId,
+        },
       });
     } else if (evt.type === "agent_error") {
       eventBroker.publishEvent(username, {

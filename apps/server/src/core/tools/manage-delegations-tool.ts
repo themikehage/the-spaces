@@ -1,30 +1,29 @@
 // SPDX-License-Identifier: MIT
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { createProgrammaticSessionSync } from "../../auth/onboarding";
-import {
-  AuthStorage,
-  ModelRegistry,
-  DefaultResourceLoader,
-  createBashToolDefinition,
-} from "../../ai";
-import { createUiTools } from "./ui-tools";
-import { sessionManager } from "../session-manager";
-import { filterSecretsFromOutput } from "../bash-output-filter";
-import { assemblePromptAppends, wrapDelegationTask } from "../prompts/prompt-assembly";
 import { SessionPrefix } from "shared";
 import {
-  parseEnvelope,
+  AuthStorage,
+  DefaultResourceLoader,
+  ModelRegistry,
+  createBashToolDefinition,
+} from "../../ai";
+import { createProgrammaticSessionSync } from "../../auth/onboarding";
+import { getAppConfig } from "../../config/app-config";
+import { AbortToken } from "../abort-token";
+import {
   forwardSubagentEvents,
   getLastAssistantText,
   handleDelegationCompletion,
+  parseEnvelope,
 } from "../agent-utils";
+import { filterSecretsFromOutput } from "../bash-output-filter";
 import { delegationRegistry } from "../delegation-registry";
-import { AbortToken } from "../abort-token";
-import { getAppConfig } from "../../config/app-config";
-import { getSubagentDepth } from "../session/session-depth";
+import { assemblePromptAppends, wrapDelegationTask } from "../prompts/prompt-assembly";
 import { buildSubagentRules } from "../sandbox";
-import type { DelegationRegistry } from "../delegation-registry";
+import { sessionManager } from "../session-manager";
+import { getSubagentDepth } from "../session/session-depth";
+import { createUiTools } from "./ui-tools";
 
 export interface ManageDelegationsOptions {
   workspaceDir: string;
@@ -68,7 +67,8 @@ Use 'delegate' to delegate to a specific target.`,
         action: {
           type: "string",
           enum: ["spawn", "delegate"],
-          description: "Whether to spawn an isolated subagent or delegate a task to a specific target.",
+          description:
+            "Whether to spawn an isolated subagent or delegate a task to a specific target.",
         },
         targetType: {
           type: "string",
@@ -77,7 +77,8 @@ Use 'delegate' to delegate to a specific target.`,
         },
         targetId: {
           type: "string",
-          description: "Required when action is 'delegate'. The ID/name of the target agent, project, team, or session.",
+          description:
+            "Required when action is 'delegate'. The ID/name of the target agent, project, team, or session.",
         },
         task: {
           type: "string",
@@ -90,7 +91,8 @@ Use 'delegate' to delegate to a specific target.`,
         subagentType: {
           type: "string",
           enum: ["explorer", "builder", "autonomous"],
-          description: "Optional execution mode for subagent. explorer is read-only, builder requires confirmation, autonomous runs autonomously. Defaults to builder.",
+          description:
+            "Optional execution mode for subagent. explorer is read-only, builder requires confirmation, autonomous runs autonomously. Defaults to builder.",
         },
         maxSteps: {
           type: "number",
@@ -98,7 +100,8 @@ Use 'delegate' to delegate to a specific target.`,
         },
         includeFullHistory: {
           type: "boolean",
-          description: "For delegation: if true, appends the full sub-session conversation history to the parent. Defaults to false.",
+          description:
+            "For delegation: if true, appends the full sub-session conversation history to the parent. Defaults to false.",
         },
         model: {
           type: "string",
@@ -111,7 +114,8 @@ Use 'delegate' to delegate to a specific target.`,
         },
         payload: {
           type: "object",
-          description: "Optional structured input payload or context variables for the delegation target.",
+          description:
+            "Optional structured input payload or context variables for the delegation target.",
         },
       },
       required: ["action", "task"],
@@ -121,40 +125,52 @@ Use 'delegate' to delegate to a specific target.`,
 
       const userSettings = sessionManager.userConfig.getUserSettings(username);
       const appConfig = getAppConfig();
-      const maxDepth = userSettings.subagentMaxDepth !== undefined
-        ? Number(userSettings.subagentMaxDepth)
-        : appConfig.subagent.maxDepth;
+      const maxDepth =
+        userSettings.subagentMaxDepth !== undefined
+          ? Number(userSettings.subagentMaxDepth)
+          : appConfig.subagent.maxDepth;
 
       const currentDepth = getSubagentDepth(username, parentSessionId);
-      const effectiveDepth = (action === "delegate" && targetType === "team") ? currentDepth : currentDepth + 1;
+      const effectiveDepth =
+        action === "delegate" && targetType === "team" ? currentDepth : currentDepth + 1;
 
       if (effectiveDepth > maxDepth) {
         throw new Error(
-          `Delegation depth limit reached (${maxDepth}). Current depth: ${currentDepth}. Cannot create sub-delegation.`
+          `Delegation depth limit reached (${maxDepth}). Current depth: ${currentDepth}. Cannot create sub-delegation.`,
         );
       }
 
       if (action === "spawn") {
         const subagentSessionId = `${SessionPrefix.SUBAGENT}${toolCallId}`;
         const userDir = sessionManager.userConfig.ensureUserDir(username);
-        const subagentDir = join(userDir, "sessions", parentSessionId, "subagents", subagentSessionId);
+        const subagentDir = join(
+          userDir,
+          "sessions",
+          parentSessionId,
+          "subagents",
+          subagentSessionId,
+        );
         mkdirSync(subagentDir, { recursive: true });
 
-        const parentMeta = activeSessionManager.metadataStore.getSessionMetadata(username, parentSessionId) || {};
+        const parentMeta =
+          activeSessionManager.metadataStore.getSessionMetadata(username, parentSessionId) || {};
         const parentExecutionMode = parentMeta.executionMode;
-        const resolvedSubagentType = args.subagentType || (parentExecutionMode === "autonomous" ? "autonomous" : "builder");
+        const resolvedSubagentType =
+          args.subagentType || (parentExecutionMode === "autonomous" ? "autonomous" : "builder");
 
         const effectiveRules = buildSubagentRules(
           username,
           subagentSessionId,
           parentSessionId,
-          resolvedSubagentType
+          resolvedSubagentType,
         );
 
         const derivedExecutionMode =
-          resolvedSubagentType === "explorer" ? "readonly"
-          : resolvedSubagentType === "autonomous" ? "autonomous"
-          : "standard";
+          resolvedSubagentType === "explorer"
+            ? "readonly"
+            : resolvedSubagentType === "autonomous"
+              ? "autonomous"
+              : "standard";
 
         let parentEntityType = "global";
         let parentEntityId: string | null = null;
@@ -183,7 +199,11 @@ Use 'delegate' to delegate to a specific target.`,
           subagentDepth: effectiveDepth,
           teamId: parentMeta.teamId || null,
         };
-        writeFileSync(join(subagentDir, "metadata.json"), JSON.stringify(metadata, null, 2), "utf-8");
+        writeFileSync(
+          join(subagentDir, "metadata.json"),
+          JSON.stringify(metadata, null, 2),
+          "utf-8",
+        );
 
         const customBashTool = createBashToolDefinition(workspaceDir, {
           spawnHook: (context) => {
@@ -232,11 +252,11 @@ Use 'delegate' to delegate to a specific target.`,
           undefined,
           {
             resourceLoader: subResourceLoader,
-            customTools: [customBashTool as any, ...uiTools as any],
+            customTools: [customBashTool as any, ...(uiTools as any)],
             workspaceDir,
             skipMcpTools: true,
             skipMemory: true,
-          }
+          },
         );
 
         const parentSession = activeSessionManager.getSession(username, parentSessionId);
@@ -245,15 +265,17 @@ Use 'delegate' to delegate to a specific target.`,
         }
 
         const childToken = new AbortToken(parentSignal, `spawn:${subagentSessionId}`);
-        childToken.register(
-          () => {
-            subSession.abort();
-            activeDelegationRegistry.abortAllRecursive(subagentSessionId);
-          },
-          `session:${subagentSessionId}`
-        );
+        childToken.register(() => {
+          subSession.abort();
+          activeDelegationRegistry.abortAllRecursive(subagentSessionId);
+        }, `session:${subagentSessionId}`);
 
-        const subagentUnsub = forwardSubagentEvents(subSession, parentSessionId, subagentSessionId, toolCallId);
+        const subagentUnsub = forwardSubagentEvents(
+          subSession,
+          parentSessionId,
+          subagentSessionId,
+          toolCallId,
+        );
 
         activeDelegationRegistry.register(
           username,
@@ -270,14 +292,15 @@ Use 'delegate' to delegate to a specific target.`,
           },
           () => {
             childToken.abortAll();
-          }
+          },
         );
 
         const effectiveTask = args.payload
           ? `${task}\n\nInput Payload:\n\`\`\`json\n${JSON.stringify(args.payload, null, 2)}\n\`\`\``
           : task;
 
-        subSession.prompt(effectiveTask)
+        subSession
+          .prompt(effectiveTask)
           .then(async () => {
             let status: "success" | "error" | "blocked" = "success";
             const lastText = getLastAssistantText(subSession.messages);
@@ -286,7 +309,8 @@ Use 'delegate' to delegate to a specific target.`,
             if (parentSignal?.aborted) {
               status = "blocked";
               envelope.status = "blocked";
-              envelope.executive_summary = "Subagent execution was aborted by the parent orchestrator.";
+              envelope.executive_summary =
+                "Subagent execution was aborted by the parent orchestrator.";
             } else {
               status = envelope.status as any;
             }
@@ -294,7 +318,11 @@ Use 'delegate' to delegate to a specific target.`,
             metadata.status = status;
             metadata.completedAt = new Date().toISOString();
             try {
-              writeFileSync(join(subagentDir, "metadata.json"), JSON.stringify(metadata, null, 2), "utf-8");
+              writeFileSync(
+                join(subagentDir, "metadata.json"),
+                JSON.stringify(metadata, null, 2),
+                "utf-8",
+              );
             } catch (e) {
               console.error("Failed to write subagent metadata.json", e);
             }
@@ -322,7 +350,11 @@ Use 'delegate' to delegate to a specific target.`,
             metadata.status = "error";
             metadata.completedAt = new Date().toISOString();
             try {
-              writeFileSync(join(subagentDir, "metadata.json"), JSON.stringify(metadata, null, 2), "utf-8");
+              writeFileSync(
+                join(subagentDir, "metadata.json"),
+                JSON.stringify(metadata, null, 2),
+                "utf-8",
+              );
             } catch (e) {}
 
             await handleDelegationCompletion({
@@ -341,25 +373,33 @@ Use 'delegate' to delegate to a specific target.`,
           });
 
         return {
-          content: [{ type: "text", text: `Subagent delegation started. Subagent session ID: ${subagentSessionId}` }],
+          content: [
+            {
+              type: "text",
+              text: `Subagent delegation started. Subagent session ID: ${subagentSessionId}`,
+            },
+          ],
           details: { status: "delegated", subagentSessionId, task },
           terminate: true,
         };
       } else if (action === "delegate") {
         if (!targetType || !targetId) {
-          throw new Error("Parameters 'targetType' and 'targetId' are required when action is 'delegate'.");
+          throw new Error(
+            "Parameters 'targetType' and 'targetId' are required when action is 'delegate'.",
+          );
         }
 
         if (targetType === "agent" && permittedAgentIds && !permittedAgentIds.has(targetId)) {
           throw new Error(
-            `Agent "${targetId}" is not a permitted delegate in this Team context. Allowed targets: ${[...permittedAgentIds].join(", ")}`
+            `Agent "${targetId}" is not a permitted delegate in this Team context. Allowed targets: ${[...permittedAgentIds].join(", ")}`,
           );
         }
 
         const delegateSessionId = `${SessionPrefix.DELEGATE}${toolCallId}`;
         const childToken = new AbortToken(parentSignal, `delegate:${delegateSessionId}`);
 
-        const parentMeta = activeSessionManager.metadataStore.getSessionMetadata(username, parentSessionId) || {};
+        const parentMeta =
+          activeSessionManager.metadataStore.getSessionMetadata(username, parentSessionId) || {};
         const resolvedExecutionMode = args.autonomyMode || parentMeta.executionMode || undefined;
 
         activeSessionManager.metadataStore.saveSessionMetadata(username, delegateSessionId, {
@@ -385,7 +425,9 @@ Use 'delegate' to delegate to a specific target.`,
             if (targetType === "agent") {
               const entry = activeAgentRegistry.get(targetId, username);
               if (!entry) {
-                throw new Error(`Programmatic Agent "${targetId}" not found for user "${username}"`);
+                throw new Error(
+                  `Programmatic Agent "${targetId}" not found for user "${username}"`,
+                );
               }
 
               const session = await activeSessionManager.getOrCreateSession(
@@ -394,7 +436,7 @@ Use 'delegate' to delegate to a specific target.`,
                 undefined,
                 targetId,
                 undefined,
-                { workspaceDir: inheritedWorkspaceDir || workspaceDir }
+                { workspaceDir: inheritedWorkspaceDir || workspaceDir },
               );
 
               let resolvedModel = parentModel || null;
@@ -409,11 +451,17 @@ Use 'delegate' to delegate to a specific target.`,
 
               if (args.model) {
                 try {
-                  const { modelRegistry: userModelReg } = activeSessionManager.userConfig.getUserContext(username);
+                  const { modelRegistry: userModelReg } =
+                    activeSessionManager.userConfig.getUserContext(username);
                   userModelReg.refresh();
                   const found = userModelReg
                     .getAvailable()
-                    .find((m: any) => m.id === args.model || `${m.provider}/${m.id}` === args.model || m.name === args.model);
+                    .find(
+                      (m: any) =>
+                        m.id === args.model ||
+                        `${m.provider}/${m.id}` === args.model ||
+                        m.name === args.model,
+                    );
                   if (found) {
                     resolvedModel = found;
                   }
@@ -426,7 +474,10 @@ Use 'delegate' to delegate to a specific target.`,
                 try {
                   await session.setModel(resolvedModel);
                 } catch (e) {
-                  console.error(`[Delegate Action] Failed to set model on delegate session ${delegateSessionId}:`, e);
+                  console.error(
+                    `[Delegate Action] Failed to set model on delegate session ${delegateSessionId}:`,
+                    e,
+                  );
                 }
               }
 
@@ -435,7 +486,12 @@ Use 'delegate' to delegate to a specific target.`,
                 activeDelegationRegistry.abortAllRecursive(delegateSessionId);
               }, `agent:${targetId}`);
 
-              const unsub = forwardSubagentEvents(session, parentSessionId, delegateSessionId, toolCallId);
+              const unsub = forwardSubagentEvents(
+                session,
+                parentSessionId,
+                delegateSessionId,
+                toolCallId,
+              );
 
               try {
                 await session.prompt(wrapDelegationTask(task, targetType));
@@ -447,16 +503,18 @@ Use 'delegate' to delegate to a specific target.`,
               parsedEnvelope = parseEnvelope(lastText);
               if (args.includeFullHistory) {
                 executionResultText = session.messages
-                  .map((m: any) => `[${m.role.toUpperCase()}]: ${typeof m.content === "string" ? m.content : JSON.stringify(m.content)}`)
+                  .map(
+                    (m: any) =>
+                      `[${m.role.toUpperCase()}]: ${typeof m.content === "string" ? m.content : JSON.stringify(m.content)}`,
+                  )
                   .join("\n\n")
                   .slice(0, 4000);
               }
-
             } else if (targetType === "project") {
               const session = await activeSessionManager.getOrCreateSession(
                 username,
                 delegateSessionId,
-                targetId
+                targetId,
               );
 
               let resolvedModel = parentModel || null;
@@ -471,11 +529,17 @@ Use 'delegate' to delegate to a specific target.`,
 
               if (args.model) {
                 try {
-                  const { modelRegistry: userModelReg } = activeSessionManager.userConfig.getUserContext(username);
+                  const { modelRegistry: userModelReg } =
+                    activeSessionManager.userConfig.getUserContext(username);
                   userModelReg.refresh();
                   const found = userModelReg
                     .getAvailable()
-                    .find((m: any) => m.id === args.model || `${m.provider}/${m.id}` === args.model || m.name === args.model);
+                    .find(
+                      (m: any) =>
+                        m.id === args.model ||
+                        `${m.provider}/${m.id}` === args.model ||
+                        m.name === args.model,
+                    );
                   if (found) {
                     resolvedModel = found;
                   }
@@ -488,7 +552,10 @@ Use 'delegate' to delegate to a specific target.`,
                 try {
                   await session.setModel(resolvedModel);
                 } catch (e) {
-                  console.error(`[Delegate Action] Failed to set model on delegate session ${delegateSessionId}:`, e);
+                  console.error(
+                    `[Delegate Action] Failed to set model on delegate session ${delegateSessionId}:`,
+                    e,
+                  );
                 }
               }
 
@@ -497,7 +564,12 @@ Use 'delegate' to delegate to a specific target.`,
                 activeDelegationRegistry.abortAllRecursive(delegateSessionId);
               }, `project:${targetId}`);
 
-              const unsub = forwardSubagentEvents(session, parentSessionId, delegateSessionId, toolCallId);
+              const unsub = forwardSubagentEvents(
+                session,
+                parentSessionId,
+                delegateSessionId,
+                toolCallId,
+              );
 
               try {
                 await session.prompt(wrapDelegationTask(task, targetType));
@@ -509,11 +581,13 @@ Use 'delegate' to delegate to a specific target.`,
               parsedEnvelope = parseEnvelope(lastText);
               if (args.includeFullHistory) {
                 executionResultText = session.messages
-                  .map((m: any) => `[${m.role.toUpperCase()}]: ${typeof m.content === "string" ? m.content : JSON.stringify(m.content)}`)
+                  .map(
+                    (m: any) =>
+                      `[${m.role.toUpperCase()}]: ${typeof m.content === "string" ? m.content : JSON.stringify(m.content)}`,
+                  )
                   .join("\n\n")
                   .slice(0, 4000);
               }
-
             } else if (targetType === "team") {
               const { teamStore } = await import("../../teams/team-store");
               const { teamOrchestrator } = await import("../../teams/team-orchestrator");
@@ -528,20 +602,32 @@ Use 'delegate' to delegate to a specific target.`,
                 activeDelegationRegistry.abortAllRecursive(delegateSessionId);
               }, `team:${targetId}`);
 
-              await teamOrchestrator.dispatchUserMessage(username, targetId, task, delegateSessionId);
+              await teamOrchestrator.dispatchUserMessage(
+                username,
+                targetId,
+                task,
+                delegateSessionId,
+              );
 
-              const teamMessages = teamStore.getMessages(username, targetId, 100, delegateSessionId);
-              const lastAgentMsg = [...teamMessages].reverse().find(m => m.role === "agent");
+              const teamMessages = teamStore.getMessages(
+                username,
+                targetId,
+                100,
+                delegateSessionId,
+              );
+              const lastAgentMsg = [...teamMessages].reverse().find((m) => m.role === "agent");
               lastText = lastAgentMsg?.content || "";
 
               parsedEnvelope = parseEnvelope(lastText);
               if (args.includeFullHistory) {
                 executionResultText = teamMessages
-                  .map(m => `[${m.role === "agent" ? m.agentName || "Agent" : "User"}]: ${m.content}`)
+                  .map(
+                    (m) =>
+                      `[${m.role === "agent" ? m.agentName || "Agent" : "User"}]: ${m.content}`,
+                  )
                   .join("\n\n")
                   .slice(0, 4000);
               }
-
             } else if (targetType === "session") {
               const session = await activeSessionManager.getOrCreateSession(username, targetId);
 
@@ -562,7 +648,10 @@ Use 'delegate' to delegate to a specific target.`,
               parsedEnvelope = parseEnvelope(lastText);
               if (args.includeFullHistory) {
                 executionResultText = session.messages
-                  .map((m: any) => `[${m.role.toUpperCase()}]: ${typeof m.content === "string" ? m.content : JSON.stringify(m.content)}`)
+                  .map(
+                    (m: any) =>
+                      `[${m.role.toUpperCase()}]: ${typeof m.content === "string" ? m.content : JSON.stringify(m.content)}`,
+                  )
                   .join("\n\n")
                   .slice(0, 4000);
               }
@@ -620,7 +709,7 @@ Use 'delegate' to delegate to a specific target.`,
           },
           () => {
             childToken.abortAll();
-          }
+          },
         );
 
         runPromise().catch((err) => {
@@ -628,7 +717,12 @@ Use 'delegate' to delegate to a specific target.`,
         });
 
         return {
-          content: [{ type: "text", text: `Delegation started for target ${targetType}:${targetId}. Session ID: ${delegateSessionId}` }],
+          content: [
+            {
+              type: "text",
+              text: `Delegation started for target ${targetType}:${targetId}. Session ID: ${delegateSessionId}`,
+            },
+          ],
           details: { status: "delegated", subagentSessionId: delegateSessionId, task },
           terminate: true,
         };

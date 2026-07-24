@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-import { useState, useEffect, useRef, useMemo } from "react";
-import { useLiterals } from "@/lib";
-import { literals as u } from "@/pages/LogsConsolePage.literals";
-import type { GlobalLogEvent } from "shared";
 import { Dropdown } from "@/components/ui/Dropdown";
+import { useLiterals } from "@/lib";
 import { apiFetch } from "@/lib/api";
+import { literals as u } from "@/pages/LogsConsolePage.literals";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { GlobalLogEvent } from "shared";
 
 function groupConsecutiveDeltas(events: GlobalLogEvent[]): GlobalLogEvent[] {
   const result: GlobalLogEvent[] = [];
@@ -121,7 +121,11 @@ export function SessionConsoleView() {
   const renderLogLine = (log: GlobalLogEvent, idx: number) => {
     const sourceColor = log.sourceType === "channel" ? "text-purple-400" : "text-blue-400";
     const sourceLabel = log.sourceType === "channel" ? l.labelSourceChannel : l.labelSourceSession;
-    const timestamp = new Date(log.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    const timestamp = new Date(log.timestamp).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
     const sourceName = log.sourceName || log.sourceId.substring(0, 8);
 
     const renderContent = () => {
@@ -129,13 +133,15 @@ export function SessionConsoleView() {
         case "user_message":
           return (
             <span>
-              <span className="font-semibold text-muted-foreground">{l.labelUser}</span>: "{log.detail}"
+              <span className="font-semibold text-muted-foreground">{l.labelUser}</span>: "
+              {log.detail}"
             </span>
           );
         case "agent_message":
           return (
             <span>
-              <span className="font-semibold text-purple-400">{l.labelResponse}</span>: "{log.detail}"
+              <span className="font-semibold text-purple-400">{l.labelResponse}</span>: "
+              {log.detail}"
             </span>
           );
         case "agent_start":
@@ -145,7 +151,8 @@ export function SessionConsoleView() {
         case "text_delta":
           return (
             <span>
-              <span className="font-semibold text-muted-foreground">{l.labelWriting}</span>: {log.detail}
+              <span className="font-semibold text-muted-foreground">{l.labelWriting}</span>:{" "}
+              {log.detail}
             </span>
           );
         case "thinking_delta":
@@ -157,15 +164,30 @@ export function SessionConsoleView() {
         case "tool_start":
           return (
             <span className="text-warning/80">
-              <span className="font-bold">{l.labelToolStart}</span>: <span className="text-warning font-mono">{log.detail.toolName}</span>
+              <span className="font-bold">{l.labelToolStart}</span>:{" "}
+              <span className="text-warning font-mono">{log.detail.toolName}</span>
               <span className="text-muted-foreground"> ({JSON.stringify(log.detail.args)})</span>
             </span>
           );
         case "tool_end":
           return (
             <span className={log.detail.isError ? "text-destructive/80" : "text-success/80"}>
-              <span className="font-bold">{l.labelToolEnd}</span>: <span className={log.detail.isError ? "text-destructive font-mono" : "text-success font-mono"}>{log.detail.toolName}</span>
-              <span className="text-muted-foreground"> ({log.detail.isError ? l.toolError : l.toolSuccess}{!log.detail.isError && log.detail.result ? ` - ${typeof log.detail.result === "string" ? log.detail.result.slice(0, 120) : JSON.stringify(log.detail.result).slice(0, 120)}` : ""}{log.detail.isError && log.detail.result ? ` - ${String(log.detail.result)}` : ""})</span>
+              <span className="font-bold">{l.labelToolEnd}</span>:{" "}
+              <span
+                className={
+                  log.detail.isError ? "text-destructive font-mono" : "text-success font-mono"
+                }
+              >
+                {log.detail.toolName}
+              </span>
+              <span className="text-muted-foreground">
+                {" "}
+                ({log.detail.isError ? l.toolError : l.toolSuccess}
+                {!log.detail.isError && log.detail.result
+                  ? ` - ${typeof log.detail.result === "string" ? log.detail.result.slice(0, 120) : JSON.stringify(log.detail.result).slice(0, 120)}`
+                  : ""}
+                {log.detail.isError && log.detail.result ? ` - ${String(log.detail.result)}` : ""})
+              </span>
             </span>
           );
         case "error":
@@ -178,7 +200,9 @@ export function SessionConsoleView() {
     return (
       <div key={idx} className="hover:bg-card-hover/15 px-3 py-1 text-[11px] leading-relaxed">
         <span className="text-muted-foreground select-none">[{timestamp}]</span>{" "}
-        <span className={`font-bold ${sourceColor} select-none`}>[{sourceLabel}: {sourceName}]</span>{" "}
+        <span className={`font-bold ${sourceColor} select-none`}>
+          [{sourceLabel}: {sourceName}]
+        </span>{" "}
         {log.agentName && (
           <span className="bg-purple-400/10 text-purple-400 px-1 py-0.5 rounded text-[10px] font-semibold select-none mr-1">
             @{log.agentName}
@@ -242,8 +266,12 @@ export function SessionConsoleView() {
 
         <div className="flex items-center gap-3 ml-auto">
           <div className="flex items-center gap-1.5 select-none">
-            <span className={`w-2 h-2 rounded-full ${wsConnected ? "bg-primary animate-pulse" : "bg-destructive"}`} />
-            <span className="text-xs font-mono">{wsConnected ? "ws-connected" : "ws-disconnected"}</span>
+            <span
+              className={`w-2 h-2 rounded-full ${wsConnected ? "bg-primary animate-pulse" : "bg-destructive"}`}
+            />
+            <span className="text-xs font-mono">
+              {wsConnected ? "ws-connected" : "ws-disconnected"}
+            </span>
           </div>
 
           <button

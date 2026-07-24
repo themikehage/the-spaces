@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-import { useState } from "react";
-import { motion } from "framer-motion";
-import type { TeamContextItem } from "shared";
 import { useLiterals } from "@/lib";
+import { motion } from "framer-motion";
+import { useState } from "react";
+import type { TeamContextItem } from "shared";
 import { literals as u } from "./TeamContextModal.literals";
 
 interface Props {
@@ -14,7 +14,7 @@ interface Props {
 
 export function TeamContextModal({ teamName, context, onClose, onSave }: Props) {
   const l = useLiterals(u);
-  const [items, setItems] = useState<TeamContextItem[]>(() => context ? [...context] : []);
+  const [items, setItems] = useState<TeamContextItem[]>(() => (context ? [...context] : []));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -67,16 +67,18 @@ export function TeamContextModal({ teamName, context, onClose, onSave }: Props) 
               <span>Variables de Contexto</span>
               <span className="text-xs text-primary font-normal">({teamName})</span>
             </h2>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {l.description}
-            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">{l.description}</p>
           </div>
           <button
             onClick={onClose}
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-card-hover transition-colors"
           >
             <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              <path
+                fillRule="evenodd"
+                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              />
             </svg>
           </button>
         </div>
@@ -84,9 +86,7 @@ export function TeamContextModal({ teamName, context, onClose, onSave }: Props) 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
           <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
             {items.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground text-xs">
-                {l.emptyContext}
-              </div>
+              <div className="text-center py-8 text-muted-foreground text-xs">{l.emptyContext}</div>
             )}
 
             {items.map((item, index) => (
@@ -112,7 +112,11 @@ export function TeamContextModal({ teamName, context, onClose, onSave }: Props) 
                   title={l.deleteVar}
                 >
                   <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                    <path
+                      fillRule="evenodd"
+                      d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </button>
               </div>
@@ -124,7 +128,11 @@ export function TeamContextModal({ teamName, context, onClose, onSave }: Props) 
               className="w-full py-2 border border-dashed border-input hover:border-primary/40 rounded-lg text-xs text-muted-foreground hover:text-primary transition-colors flex items-center justify-center gap-1 mt-2"
             >
               <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                  clipRule="evenodd"
+                />
               </svg>
               {l.addVar}
             </button>

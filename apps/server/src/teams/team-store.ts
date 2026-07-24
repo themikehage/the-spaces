@@ -1,8 +1,29 @@
 // SPDX-License-Identifier: MIT
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync, appendFileSync, statSync, openSync, fstatSync, readSync, closeSync, renameSync } from "node:fs";
+import {
+  appendFileSync,
+  closeSync,
+  existsSync,
+  fstatSync,
+  mkdirSync,
+  openSync,
+  readFileSync,
+  readSync,
+  readdirSync,
+  renameSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { join } from "node:path";
-import type { Team, TeamMember, TeamMessage, CreateTeam, UpdateTeam, TeamContextItem } from "shared";
-import { getTeamsDir, getTeamDir, getTeamMessagesPath } from "shared";
+import type {
+  CreateTeam,
+  Team,
+  TeamContextItem,
+  TeamMember,
+  TeamMessage,
+  UpdateTeam,
+} from "shared";
+import { getTeamDir, getTeamMessagesPath, getTeamsDir } from "shared";
 
 // --- Store ---
 
@@ -171,10 +192,15 @@ class TeamStore {
     }
   }
 
-  getMessages(username: string, teamId: string, limit: number = 100, sessionId?: string): TeamMessage[] {
+  getMessages(
+    username: string,
+    teamId: string,
+    limit: number = 100,
+    sessionId?: string,
+  ): TeamMessage[] {
     const messagesPath = getTeamMessagesPath(username, teamId);
     if (!existsSync(messagesPath)) return [];
-    
+
     let fd: number | null = null;
     try {
       fd = openSync(messagesPath, "r");
@@ -195,9 +221,9 @@ class TeamStore {
 
         let chunk = buffer.toString("utf-8", 0, readLength) + leftover;
         const chunkLines = chunk.split("\n");
-        
+
         leftover = chunkLines[0];
-        
+
         for (let i = chunkLines.length - 1; i >= 1; i--) {
           const line = chunkLines[i].trim();
           if (!line) continue;
@@ -228,12 +254,12 @@ class TeamStore {
       return [];
     } finally {
       if (fd !== null) {
-        try { closeSync(fd); } catch {}
+        try {
+          closeSync(fd);
+        } catch {}
       }
     }
   }
-
-
 }
 
 export const teamStore = new TeamStore();

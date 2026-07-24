@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 import { join } from "node:path";
-import { existsSync, readFileSync } from "node:fs";
 
 export interface ProjectContextParams {
   projectId: string;

@@ -17,41 +17,41 @@
 export const MAX_PROVIDER_ERROR_BODY_CHARS = 4000;
 
 export interface NormalizedProviderError {
-	/** HTTP status code, when one could be extracted from the SDK error object. */
-	status?: number;
-	/** Raw HTTP body reason, already trimmed and truncated to the cap. */
-	body?: string;
-	/** `error.message`, or `safeJsonStringify(error)` for a non-`Error` throw. */
-	message: string;
-	/** True when `message` already contains the body (no separate body to add). */
-	messageCarriesBody: boolean;
+  /** HTTP status code, when one could be extracted from the SDK error object. */
+  status?: number;
+  /** Raw HTTP body reason, already trimmed and truncated to the cap. */
+  body?: string;
+  /** `error.message`, or `safeJsonStringify(error)` for a non-`Error` throw. */
+  message: string;
+  /** True when `message` already contains the body (no separate body to add). */
+  messageCarriesBody: boolean;
 }
 
 type SdkErrorShape = Error & {
-	statusCode?: unknown;
-	status?: unknown;
-	body?: unknown;
-	error?: unknown;
-	$metadata?: { httpStatusCode?: unknown };
-	$response?: { statusCode?: unknown; body?: unknown };
+  statusCode?: unknown;
+  status?: unknown;
+  body?: unknown;
+  error?: unknown;
+  $metadata?: { httpStatusCode?: unknown };
+  $response?: { statusCode?: unknown; body?: unknown };
 };
 
 export function normalizeProviderError(error: unknown): NormalizedProviderError {
-	if (!(error instanceof Error)) {
-		return { message: safeJsonStringify(error), messageCarriesBody: false };
-	}
+  if (!(error instanceof Error)) {
+    return { message: safeJsonStringify(error), messageCarriesBody: false };
+  }
 
-	const sdkError = error as SdkErrorShape;
-	const status = extractStatus(sdkError);
-	const body = extractBody(sdkError);
-	const messageCarriesBody = body === undefined || error.message.includes(body);
+  const sdkError = error as SdkErrorShape;
+  const status = extractStatus(sdkError);
+  const body = extractBody(sdkError);
+  const messageCarriesBody = body === undefined || error.message.includes(body);
 
-	return {
-		status,
-		body,
-		message: error.message,
-		messageCarriesBody,
-	} satisfies NormalizedProviderError;
+  return {
+    status,
+    body,
+    message: error.message,
+    messageCarriesBody,
+  } satisfies NormalizedProviderError;
 }
 
 /**
@@ -60,11 +60,11 @@ export function normalizeProviderError(error: unknown): NormalizedProviderError 
  * `$metadata.httpStatusCode` (Bedrock) → `$response.statusCode` (Bedrock).
  */
 function extractStatus(error: SdkErrorShape): number | undefined {
-	if (typeof error.statusCode === "number") return error.statusCode;
-	if (typeof error.status === "number") return error.status;
-	if (typeof error.$metadata?.httpStatusCode === "number") return error.$metadata.httpStatusCode;
-	if (typeof error.$response?.statusCode === "number") return error.$response.statusCode;
-	return undefined;
+  if (typeof error.statusCode === "number") return error.statusCode;
+  if (typeof error.status === "number") return error.status;
+  if (typeof error.$metadata?.httpStatusCode === "number") return error.$metadata.httpStatusCode;
+  if (typeof error.$response?.statusCode === "number") return error.$response.statusCode;
+  return undefined;
 }
 
 /**
@@ -75,24 +75,24 @@ function extractStatus(error: SdkErrorShape): number | undefined {
  * truncated to the cap.
  */
 function extractBody(error: SdkErrorShape): string | undefined {
-	const bodyText = pickBodyText(error);
-	if (bodyText === undefined) return undefined;
-	const trimmed = bodyText.trim();
-	if (trimmed.length === 0) return undefined;
-	return truncateErrorText(trimmed, MAX_PROVIDER_ERROR_BODY_CHARS);
+  const bodyText = pickBodyText(error);
+  if (bodyText === undefined) return undefined;
+  const trimmed = bodyText.trim();
+  if (trimmed.length === 0) return undefined;
+  return truncateErrorText(trimmed, MAX_PROVIDER_ERROR_BODY_CHARS);
 }
 
 function pickBodyText(error: SdkErrorShape): string | undefined {
-	if (typeof error.body === "string") return error.body;
-	if (isNonEmptyObject(error.error)) return safeJsonStringify(error.error);
-	const responseBody = error.$response?.body;
-	if (typeof responseBody === "string") return responseBody;
-	if (isNonEmptyObject(responseBody)) return safeJsonStringify(responseBody);
-	return undefined;
+  if (typeof error.body === "string") return error.body;
+  if (isNonEmptyObject(error.error)) return safeJsonStringify(error.error);
+  const responseBody = error.$response?.body;
+  if (typeof responseBody === "string") return responseBody;
+  if (isNonEmptyObject(responseBody)) return safeJsonStringify(responseBody);
+  return undefined;
 }
 
 function isNonEmptyObject(value: unknown): boolean {
-	return typeof value === "object" && value !== null && Object.keys(value).length > 0;
+  return typeof value === "object" && value !== null && Object.keys(value).length > 0;
 }
 
 /**
@@ -105,37 +105,40 @@ function isNonEmptyObject(value: unknown): boolean {
  * - prefix:    `"<prefix> (<status>): <body>"`
  */
 export function formatProviderError(norm: NormalizedProviderError, prefix?: string): string {
-	if (norm.messageCarriesBody || norm.status === undefined || norm.body === undefined) {
-		return prefix !== undefined && norm.status !== undefined
-			? `${prefix} (${norm.status}): ${norm.message}`
-			: norm.message;
-	}
-	return prefix !== undefined ? `${prefix} (${norm.status}): ${norm.body}` : `${norm.status}: ${norm.body}`;
+  if (norm.messageCarriesBody || norm.status === undefined || norm.body === undefined) {
+    return prefix !== undefined && norm.status !== undefined
+      ? `${prefix} (${norm.status}): ${norm.message}`
+      : norm.message;
+  }
+  return prefix !== undefined
+    ? `${prefix} (${norm.status}): ${norm.body}`
+    : `${norm.status}: ${norm.body}`;
 }
 
 export function truncateErrorText(text: string, maxChars: number): string {
-	if (text.length <= maxChars) return text;
-	return `${text.slice(0, maxChars)}... [truncated ${text.length - maxChars} chars]`;
+  if (text.length <= maxChars) return text;
+  return `${text.slice(0, maxChars)}... [truncated ${text.length - maxChars} chars]`;
 }
 
 export function safeJsonStringify(value: unknown): string {
-	try {
-		const serialized = JSON.stringify(value);
-		return serialized === undefined ? String(value) : serialized;
-	} catch {
-		return String(value);
-	}
+  try {
+    const serialized = JSON.stringify(value);
+    return serialized === undefined ? String(value) : serialized;
+  } catch {
+    return String(value);
+  }
 }
 
 export function sanitizeUserErrorMessage(raw: string): string {
-	if (raw.includes("403")) return "Authentication failed. Check your API key.";
-	if (raw.includes("429") || raw.includes("rate limit")) return "Rate limit exceeded. Please wait before trying again.";
-	if (raw.includes("401")) return "Invalid API key. Update it in Settings.";
-	if (raw.includes("insufficient_quota")) return "API quota exceeded. Check your billing.";
-	if (raw.includes("content_filter")) return "Response blocked by content safety filter.";
-	if (raw.includes("timeout") || raw.includes("timed out")) return "Request timed out. The model may be overloaded.";
-	// Generic fallback: mask keys (sk-...)
-	const clean = raw.replace(/\b(sk-[a-zA-Z0-9]{10,})/g, "sk-***");
-	return clean.length > 200 ? clean.slice(0, 200) + "..." : clean;
+  if (raw.includes("403")) return "Authentication failed. Check your API key.";
+  if (raw.includes("429") || raw.includes("rate limit"))
+    return "Rate limit exceeded. Please wait before trying again.";
+  if (raw.includes("401")) return "Invalid API key. Update it in Settings.";
+  if (raw.includes("insufficient_quota")) return "API quota exceeded. Check your billing.";
+  if (raw.includes("content_filter")) return "Response blocked by content safety filter.";
+  if (raw.includes("timeout") || raw.includes("timed out"))
+    return "Request timed out. The model may be overloaded.";
+  // Generic fallback: mask keys (sk-...)
+  const clean = raw.replace(/\b(sk-[a-zA-Z0-9]{10,})/g, "sk-***");
+  return clean.length > 200 ? clean.slice(0, 200) + "..." : clean;
 }
-

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
+import { useLiterals } from "@/lib";
 import { motion } from "framer-motion";
 import { ArrowRight, Square } from "lucide-react";
-import { useLiterals } from "@/lib";
 import { literals as u } from "./ChatInput.literals";
 
 interface SendStopButtonProps {
@@ -11,12 +11,7 @@ interface SendStopButtonProps {
   onStop: () => void;
 }
 
-export function SendStopButton({
-  streaming,
-  disabled,
-  onSend,
-  onStop,
-}: SendStopButtonProps) {
+export function SendStopButton({ streaming, disabled, onSend, onStop }: SendStopButtonProps) {
   const l = useLiterals(u);
 
   const handleClick = (e: React.MouseEvent) => {

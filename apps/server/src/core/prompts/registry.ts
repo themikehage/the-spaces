@@ -2,13 +2,13 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { identityFragments } from "./fragments/identity";
+import { instanceFragments } from "./fragments/instance";
+import { outputFormatFragments } from "./fragments/output-format";
+import { protocolFragments } from "./fragments/protocol";
 import { leaderFragments } from "./fragments/role-leader";
 import { memberFragments } from "./fragments/role-member";
-import { seniorFragments } from "./fragments/role-senior";
 import { observerFragments } from "./fragments/role-observer";
-import { instanceFragments } from "./fragments/instance";
-import { protocolFragments } from "./fragments/protocol";
-import { outputFormatFragments } from "./fragments/output-format";
+import { seniorFragments } from "./fragments/role-senior";
 
 export interface PromptFragment {
   key: string;

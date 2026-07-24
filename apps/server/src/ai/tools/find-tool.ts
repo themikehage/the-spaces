@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-import { execSync, spawn } from "node:child_process";
-import { readdir, stat, readFile } from "node:fs/promises";
-import { join, relative, basename } from "node:path";
-import { existsSync } from "node:fs";
 import ignore from "ignore";
+import { execSync, spawn } from "node:child_process";
+import { existsSync } from "node:fs";
+import { readdir, readFile, stat } from "node:fs/promises";
+import { basename, join, relative } from "node:path";
 import { resolveSafePath } from "./path-safety";
 
 function isFdAvailable(): boolean {
@@ -17,22 +17,33 @@ function isFdAvailable(): boolean {
 
 function globToRegex(glob: string): RegExp {
   const escaped = glob.replace(/[.+^${}()|[\]\\]/g, "\\$&");
-  const regexStr = "^" + escaped.replace(/\*\*/g, ".*").replace(/\*/g, "[^/]*").replace(/\?/g, ".") + "$";
+  const regexStr =
+    "^" + escaped.replace(/\*\*/g, ".*").replace(/\*/g, "[^/]*").replace(/\?/g, ".") + "$";
   return new RegExp(regexStr, "i");
 }
 
 export function createFindToolDefinition(cwd: string, allowedDirs?: string[]) {
   return {
     name: "find",
-    description: "Search for files by glob pattern. Returns matching file paths relative to the search directory. Respects .gitignore.",
+    description:
+      "Search for files by glob pattern. Returns matching file paths relative to the search directory. Respects .gitignore.",
     schema: {
       type: "object",
       properties: {
-        pattern: { type: "string", description: "Glob pattern to match files, e.g. '*.ts' or 'src/**/*.json'" },
-        path: { type: "string", description: "Directory to search in (default: current directory)" },
-        limit: { type: "number", description: "Maximum number of results to return (default: 1000)" }
+        pattern: {
+          type: "string",
+          description: "Glob pattern to match files, e.g. '*.ts' or 'src/**/*.json'",
+        },
+        path: {
+          type: "string",
+          description: "Directory to search in (default: current directory)",
+        },
+        limit: {
+          type: "number",
+          description: "Maximum number of results to return (default: 1000)",
+        },
       },
-      required: ["pattern"]
+      required: ["pattern"],
     },
     execute: async (toolCallId: string, args: any, signal?: AbortSignal) => {
       const { pattern, path: searchDir, limit } = args;
@@ -52,14 +63,14 @@ export function createFindToolDefinition(cwd: string, allowedDirs?: string[]) {
       }
 
       return runNativeFind(cwd, searchPath, pattern, { limit: effectiveLimit, signal });
-    }
+    },
   };
 }
 
 async function runFd(
   searchPath: string,
   pattern: string,
-  opts: { limit: number; signal?: AbortSignal }
+  opts: { limit: number; signal?: AbortSignal },
 ): Promise<any> {
   return new Promise((resolve, reject) => {
     const args = ["--glob", "--color=never", "--max-results", String(opts.limit)];
@@ -115,11 +126,14 @@ async function runFd(
       });
 
       if (results.length === 0) {
-        resolve({ content: [{ type: "text", text: "No files found matching pattern" }], details: { count: 0 } });
+        resolve({
+          content: [{ type: "text", text: "No files found matching pattern" }],
+          details: { count: 0 },
+        });
       } else {
         resolve({
           content: [{ type: "text", text: results.join("\n") }],
-          details: { count: results.length }
+          details: { count: results.length },
         });
       }
     });
@@ -137,7 +151,7 @@ async function runNativeFind(
   workspaceDir: string,
   searchPath: string,
   pattern: string,
-  opts: { limit: number; signal?: AbortSignal }
+  opts: { limit: number; signal?: AbortSignal },
 ): Promise<any> {
   const ig = ignore();
   ig.add(["node_modules", ".git", ".atl", "pnpm-lock.yaml", "bun.lockb", "dist", "build"]);
@@ -191,11 +205,14 @@ async function runNativeFind(
   }
 
   if (results.length === 0) {
-    return { content: [{ type: "text", text: "No files found matching pattern" }], details: { count: 0 } };
+    return {
+      content: [{ type: "text", text: "No files found matching pattern" }],
+      details: { count: 0 },
+    };
   }
 
   return {
     content: [{ type: "text", text: results.join("\n") }],
-    details: { count: results.length }
+    details: { count: results.length },
   };
 }

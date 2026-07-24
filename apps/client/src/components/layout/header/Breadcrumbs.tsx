@@ -87,7 +87,9 @@ export function Breadcrumbs({
         return (
           <div key={index} className="flex items-center gap-1 sm:gap-1.5">
             {index > 0 && (
-              <span className="text-muted-foreground font-normal select-none px-0.5 sm:px-1">/</span>
+              <span className="text-muted-foreground font-normal select-none px-0.5 sm:px-1">
+                /
+              </span>
             )}
             {item.path && !isLast ? (
               <button
@@ -98,8 +100,9 @@ export function Breadcrumbs({
               </button>
             ) : (
               <span
-                className={`${isLast ? "font-semibold text-foreground" : "text-muted-foreground font-medium"
-                  }`}
+                className={`${
+                  isLast ? "font-semibold text-foreground" : "text-muted-foreground font-medium"
+                }`}
               >
                 {item.label}
               </span>

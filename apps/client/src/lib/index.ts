@@ -1,4 +1,10 @@
 // SPDX-License-Identifier: MIT
-export { LiteralsProvider, LiteralsContext } from "./LiteralsContext";
+export { LiteralsContext, LiteralsProvider } from "./LiteralsContext";
+export type {
+  ContextUsage,
+  LiteralsContextValue,
+  LiteralsRecord,
+  MessageUsage,
+  SupportedLocale,
+} from "./types";
 export { useLiterals } from "./useLiterals";
-export type { SupportedLocale, LiteralsRecord, LiteralsContextValue, MessageUsage, ContextUsage } from "./types";

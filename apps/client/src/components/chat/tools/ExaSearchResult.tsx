@@ -47,9 +47,13 @@ export function ExaSearchResult({ text, details, l }: Props) {
   return (
     <div className="flex flex-col gap-2 font-mono text-[11px]">
       <div className="flex items-center gap-2 flex-wrap text-xs text-muted-foreground">
-        <span className="text-highlight font-semibold">{totalResults} {l.resExaResults}</span>
+        <span className="text-highlight font-semibold">
+          {totalResults} {l.resExaResults}
+        </span>
         {searchType && (
-          <span className="px-1.5 py-0.5 rounded bg-surface text-text-secondary text-[10px]">{searchType}</span>
+          <span className="px-1.5 py-0.5 rounded bg-surface text-text-secondary text-[10px]">
+            {searchType}
+          </span>
         )}
         {cost != null && cost > 0 && (
           <span className="text-text-secondary text-[10px]">${cost.toFixed(4)}</span>
@@ -60,7 +64,9 @@ export function ExaSearchResult({ text, details, l }: Props) {
         {visibleResults.map((r, i) => (
           <div key={i} className="rounded-md border border-input/40 overflow-hidden">
             <div className="flex items-start gap-2 px-3 py-2 bg-card">
-              <span className="text-muted-foreground flex-shrink-0 w-4 text-right select-none">{i + 1}.</span>
+              <span className="text-muted-foreground flex-shrink-0 w-4 text-right select-none">
+                {i + 1}.
+              </span>
               <div className="flex flex-col gap-0.5 min-w-0 flex-1">
                 <a
                   href={r.url}
@@ -107,9 +113,15 @@ export function ExaSearchResult({ text, details, l }: Props) {
               fill="currentColor"
               className={`text-muted-foreground transition-transform ${synthOpen ? "rotate-90" : ""}`}
             >
-              <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+              <path
+                fillRule="evenodd"
+                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                clipRule="evenodd"
+              />
             </svg>
-            <span className="text-xs text-text-primary font-semibold">{l.bodySynthesizedOutput}</span>
+            <span className="text-xs text-text-primary font-semibold">
+              {l.bodySynthesizedOutput}
+            </span>
           </button>
           {synthOpen && (
             <div className="px-3 py-2 border-t border-input/40 bg-bg text-text-secondary text-[11px] whitespace-pre-wrap leading-relaxed max-h-64 overflow-y-auto">

@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
-import { teamStore } from "./team-store";
-import { type TeamMessage, SessionPrefix } from "shared";
 import { OrchestrationRunner } from "./orchestration/orchestration-runner";
 import type { ActiveTeamStream } from "./team-prompt-runner";
+import { teamStore } from "./team-store";
 
 type TeamBroadcastFn = (teamId: string, data: any) => void;
 let broadcastToTeamFn: TeamBroadcastFn | null = null;
@@ -38,7 +37,7 @@ export class TeamOrchestrator {
     username: string,
     teamId: string,
     userContent: string,
-    sessionId?: string
+    sessionId?: string,
   ): Promise<void> {
     const team = teamStore.getTeam(username, teamId);
     if (!team) throw new Error("Team not found");

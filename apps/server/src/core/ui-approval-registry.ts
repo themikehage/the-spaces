@@ -6,7 +6,7 @@ type PendingApprovalValue = {
   payload?: Record<string, any>;
 };
 
-class UiApprovalRegistry {
+export class UiApprovalRegistry {
   register(toolCallId: string): Promise<PendingApprovalValue> {
     return approvalManager.request({
       username: "default_user",

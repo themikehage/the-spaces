@@ -37,14 +37,23 @@ export function StatsComponent({ stats, title, columns = 3 }: StatsProps) {
       )}
       <div className={`grid gap-3 w-full ${colClass}`}>
         {stats.map((stat, i) => (
-          <div key={i} className="bg-card text-card-foreground border border-border rounded-lg p-4 shadow-sm flex flex-col justify-between min-w-[120px]">
-            <span className="text-[9px] uppercase font-bold tracking-wider text-muted-foreground">{stat.label}</span>
-            <span className="text-xl font-bold tracking-tight text-foreground mt-1">{stat.value}</span>
+          <div
+            key={i}
+            className="bg-card text-card-foreground border border-border rounded-lg p-4 shadow-sm flex flex-col justify-between min-w-[120px]"
+          >
+            <span className="text-[9px] uppercase font-bold tracking-wider text-muted-foreground">
+              {stat.label}
+            </span>
+            <span className="text-xl font-bold tracking-tight text-foreground mt-1">
+              {stat.value}
+            </span>
             {stat.change && (
               <div className="flex items-center gap-1.5 mt-2">
-                <span className={`text-[9px] font-semibold px-1 rounded-sm ${
-                  stat.trend ? trendColors[stat.trend] : "text-muted-foreground bg-muted"
-                }`}>
+                <span
+                  className={`text-[9px] font-semibold px-1 rounded-sm ${
+                    stat.trend ? trendColors[stat.trend] : "text-muted-foreground bg-muted"
+                  }`}
+                >
                   {stat.change}
                 </span>
               </div>

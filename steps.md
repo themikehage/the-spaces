@@ -34,6 +34,7 @@
   - Fase 2 (Errores): Jerarquía centralizada de clases `AppError`, `HttpError`, middleware de `X-Request-Id` e integración global de `onError` en Hono con serialización segura. Refactorizado de `routes/auth.ts`.
   - Fase 3 (Strict TS): Tipado de `bash-tool.ts`, `approval-manager.ts` y eliminación progresiva de `any`.
   - Fase 5 (Docs): Configuración de `typedoc.json` para generación automática de documentación de contratos y API.
+
 # Steps - Project Tasks
 
 ## Base de producto completada
@@ -82,7 +83,12 @@
   - Área 3 (Model Providers): Definición de `BaseLlmProvider`, `LLMRegistry` y `ModelEnrichmentService`. Implementación de `registerAllProviders` orchestrator.
   - Área 4 (Plugin System): Definición de `BasePlugin` y `PluginManager`. Implementación de `AuditLogPlugin`, `WsNotifyPlugin` y `MemoryEnricherPlugin`. Integración en `createAgentRuntime`.
   - Área 5 (SDK Packaging): Creación del paquete de espacio de trabajo `packages/spaces-sdk` re-exportando la superficie pública de extensibilidad.
-- [ ] (Pospuesto por solicitud del usuario) Añadir pruebas de integración para rutas críticas (autenticación, sesiones, archivos, WebSocket) y orquestación.
+- [x] Implementar el Plan 10 de Deuda Técnica Estructural (`plans/10-technical-debt.md`):
+  - [x] Fase A - Área 3: Dual SessionManager Rename (`SessionManager` en `session-persistence.ts` -> `JsonlSessionStore`).
+  - [x] Fase A - Área 1: Singleton Hell -> Dependency Injection (`ServerContext`, constructor injection, interfaces de puertos).
+  - [x] Fase A - Área 2: God Object AgentSession -> Decomposición (EventBus, ToolRegistry, SkillLoader, PromptBuilder, ContextEstimator, CompactionManager, NavigationController).
+  - [x] Fase B - Área 5: WebSocket Typed Contract (`ws-messages.ts` Zod schemas + factory refactor).
+  - [x] Fase B - Área 4: Route Files Split (`routes/sessions/`, `routes/teams/`, `routes/agents/`).
 
 ## Criterio de cierre del sprint
 

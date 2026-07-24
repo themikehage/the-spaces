@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-import { useEffect, useRef, useState, useCallback } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "framer-motion";
 
 interface PortalPopoverProps {
   triggerRef: React.RefObject<HTMLElement | null>;
@@ -152,6 +152,6 @@ export function PortalPopover({
         </motion.div>
       )}
     </AnimatePresence>,
-    document.body
+    document.body,
   );
 }

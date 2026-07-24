@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-import { useState } from "react";
-import type { McpServerConfig } from "shared";
 import { Button } from "@/components/ui/Button";
 import { useLiterals } from "@/lib";
+import { useState } from "react";
+import type { McpServerConfig } from "shared";
 import { literals } from "./MCPCard.literals";
 
 interface MCPCardProps {
@@ -106,46 +106,55 @@ export function MCPCard({
                 <span className="text-primary/70 font-semibold">Cmd:</span> {server.command}
               </div>
               <div className="truncate">
-                <span className="text-primary/70 font-semibold">Args:</span> {JSON.stringify(server.args)}
+                <span className="text-primary/70 font-semibold">Args:</span>{" "}
+                {JSON.stringify(server.args)}
               </div>
             </>
           )}
         </div>
 
         {/* Expandable Tools Section */}
-        {server.installed && server.status === "connected" && server.tools && server.tools.length > 0 && (
-          <div className="pt-1 border-t border-input/10">
-            <button
-              onClick={() => setExpanded(!expanded)}
-              className="flex items-center justify-between w-full text-left text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-            >
-              <span>{l.discoveredTools} ({server.tools.length})</span>
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                className={`transform transition-transform ${expanded ? "rotate-180" : ""}`}
+        {server.installed &&
+          server.status === "connected" &&
+          server.tools &&
+          server.tools.length > 0 && (
+            <div className="pt-1 border-t border-input/10">
+              <button
+                onClick={() => setExpanded(!expanded)}
+                className="flex items-center justify-between w-full text-left text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
               >
-                <path
-                  fillRule="evenodd"
-                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </button>
-            {expanded && (
-              <div className="mt-2 max-h-36 overflow-y-auto space-y-1 p-2 bg-background/80 rounded-lg border border-input/10 font-mono text-xs text-muted-foreground">
-                {server.tools.map((t) => (
-                  <div key={t} className="flex items-center gap-1.5 py-0.5 truncate hover:text-foreground">
-                    <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40" />
-                    <span>{t}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+                <span>
+                  {l.discoveredTools} ({server.tools.length})
+                </span>
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className={`transform transition-transform ${expanded ? "rotate-180" : ""}`}
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+              {expanded && (
+                <div className="mt-2 max-h-36 overflow-y-auto space-y-1 p-2 bg-background/80 rounded-lg border border-input/10 font-mono text-xs text-muted-foreground">
+                  {server.tools.map((t) => (
+                    <div
+                      key={t}
+                      className="flex items-center gap-1.5 py-0.5 truncate hover:text-foreground"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40" />
+                      <span>{t}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
         {server.installed && server.status === "error" && server.error && (
           <div className="p-2.5 bg-destructive/5 border border-destructive/20 rounded-lg text-xs text-error font-mono overflow-x-auto max-h-24 leading-normal">
@@ -157,11 +166,11 @@ export function MCPCard({
 
       {/* Footer Actions */}
       <div className="p-4 bg-background/30 border-t border-input/10 flex items-center justify-between gap-2.5">
-      {!server.installed ? (
-        <Button onClick={onInstall} className="w-full">
-          {l.install}
-        </Button>
-      ) : (
+        {!server.installed ? (
+          <Button onClick={onInstall} className="w-full">
+            {l.install}
+          </Button>
+        ) : (
           <>
             {/* Toggle Enable State */}
             <div className="flex items-center gap-2 select-none">
@@ -204,7 +213,14 @@ export function MCPCard({
                   className="p-1 hover:bg-card-hover/20 text-muted-foreground hover:text-foreground rounded transition-colors cursor-pointer"
                   title={l.editTooltip}
                 >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <svg
+                    width="13"
+                    height="13"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                  >
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                     <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4Z" />
                   </svg>
@@ -217,7 +233,14 @@ export function MCPCard({
                   className="p-1 hover:bg-card-hover/20 text-muted-foreground hover:text-error rounded transition-colors cursor-pointer"
                   title={l.deleteTooltip}
                 >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <svg
+                    width="13"
+                    height="13"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                  >
                     <polyline points="3 6 5 6 21 6" />
                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                   </svg>

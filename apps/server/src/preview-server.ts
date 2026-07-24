@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { resolve, normalize, sep, extname, join } from "node:path";
 import { existsSync } from "node:fs";
+import { extname, join, normalize, resolve, sep } from "node:path";
 import { getProjectWorkspaceDir } from "shared";
 import { resolveProjectDir } from "./core/session/workspace-resolver";
 
@@ -45,7 +45,9 @@ const BUILD_DIRS = ["dist", "build", ".output", "public", "out"] as const;
 
 function resolveBuildDir(username: string, project: string): string {
   const resolved = resolveProjectDir(username, project);
-  const projectDir = resolved ? join(resolved, "workspace") : getProjectWorkspaceDir(username, project);
+  const projectDir = resolved
+    ? join(resolved, "workspace")
+    : getProjectWorkspaceDir(username, project);
   for (const dir of BUILD_DIRS) {
     const candidate = resolve(projectDir, dir);
     if (existsSync(candidate)) return candidate;
@@ -65,10 +67,7 @@ function resolveBuildDir(username: string, project: string): string {
 function rewriteHtml(html: string, username: string, project: string): string {
   const prefix = `/${encodeURIComponent(username)}/${encodeURIComponent(project)}/`;
 
-  let result = html.replace(
-    /<head[^>]*>/i,
-    (m) => `${m}<base href="${prefix}">`
-  );
+  let result = html.replace(/<head[^>]*>/i, (m) => `${m}<base href="${prefix}">`);
 
   result = result.replace(/\s+crossorigin(?:="[^"]*"|='[^']*'|(?=[>\s]))?/gi, "");
 
@@ -79,7 +78,7 @@ function rewriteHtml(html: string, username: string, project: string): string {
         return `${tag}${attr}="${path}"`;
       }
       return `${tag}${attr}="${prefix}${path.replace(/^\//, "")}"`;
-    }
+    },
   );
 
   result = result.replace(
@@ -89,7 +88,7 @@ function rewriteHtml(html: string, username: string, project: string): string {
         return `${tag}${attr}='${path}'`;
       }
       return `${tag}${attr}='${prefix}${path.replace(/^\//, "")}'`;
-    }
+    },
   );
 
   return result;
@@ -184,9 +183,14 @@ export async function handleRequest(req: Request): Promise<Response> {
 
   if (!existsSync(fullPath)) {
     const resolved = resolveProjectDir(username, project);
-    const workspaceDir = resolved ? join(resolved, "workspace") : getProjectWorkspaceDir(username, project);
+    const workspaceDir = resolved
+      ? join(resolved, "workspace")
+      : getProjectWorkspaceDir(username, project);
     const rawPath = resolve(workspaceDir, normalized);
-    if (existsSync(rawPath) && (rawPath === workspaceDir || rawPath.startsWith(workspaceDir + sep))) {
+    if (
+      existsSync(rawPath) &&
+      (rawPath === workspaceDir || rawPath.startsWith(workspaceDir + sep))
+    ) {
       fullPath = rawPath;
     }
   }

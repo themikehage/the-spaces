@@ -7,7 +7,10 @@ export class McpClient {
   private config: McpServerConfig;
   private proc: Subprocess | null = null;
   private nextId = 1;
-  private pendingRequests = new Map<number, { resolve: (val: any) => void; reject: (err: any) => void }>();
+  private pendingRequests = new Map<
+    number,
+    { resolve: (val: any) => void; reject: (err: any) => void }
+  >();
   private stdioBuffer = "";
   private abortController: AbortController | null = null;
   private postUrl: string | null = null;
@@ -50,11 +53,15 @@ export class McpClient {
       this.readStderr();
 
       // Initialize
-      await this.request("initialize", {
-        protocolVersion: "2024-11-05",
-        capabilities: {},
-        clientInfo: { name: "spaces-mcp-client", version: "1.0.0" },
-      }, 30000);
+      await this.request(
+        "initialize",
+        {
+          protocolVersion: "2024-11-05",
+          capabilities: {},
+          clientInfo: { name: "spaces-mcp-client", version: "1.0.0" },
+        },
+        30000,
+      );
 
       this.notify("notifications/initialized");
       console.log(`[MCP Stdio] Started server: ${this.name}`);
@@ -74,7 +81,7 @@ export class McpClient {
     try {
       this.abortController = new AbortController();
       const response = await fetch(this.config.url, {
-        headers: { "Accept": "text/event-stream" },
+        headers: { Accept: "text/event-stream" },
         signal: this.abortController.signal,
       });
 
@@ -92,11 +99,15 @@ export class McpClient {
       await this.waitForPostUrl();
 
       // Send initialize request
-      await this.request("initialize", {
-        protocolVersion: "2024-11-05",
-        capabilities: {},
-        clientInfo: { name: "spaces-mcp-client", version: "1.0.0" },
-      }, 30000);
+      await this.request(
+        "initialize",
+        {
+          protocolVersion: "2024-11-05",
+          capabilities: {},
+          clientInfo: { name: "spaces-mcp-client", version: "1.0.0" },
+        },
+        30000,
+      );
 
       this.notify("notifications/initialized");
       console.log(`[MCP HTTP] Connected to server: ${this.name}`);
@@ -128,7 +139,7 @@ export class McpClient {
         const { done, value } = await reader.read();
         if (done) break;
         this.stdioBuffer += decoder.decode(value, { stream: true });
-        
+
         let lineEndIdx;
         while ((lineEndIdx = this.stdioBuffer.indexOf("\n")) !== -1) {
           const line = this.stdioBuffer.slice(0, lineEndIdx).trim();
@@ -271,7 +282,7 @@ export class McpClient {
       } else {
         const stdin = this.proc?.stdin;
         if (!stdin || typeof stdin === "number") throw new Error("Server not running");
-        
+
         return new Promise((resolve, reject) => {
           this.pendingRequests.set(id, { resolve, reject });
           try {

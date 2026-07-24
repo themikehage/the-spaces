@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-import { execSync, spawn } from "node:child_process";
-import { readFile, readdir, stat } from "node:fs/promises";
-import { join, relative, basename } from "node:path";
-import { existsSync } from "node:fs";
 import ignore from "ignore";
+import { execSync, spawn } from "node:child_process";
+import { existsSync } from "node:fs";
+import { readFile, readdir, stat } from "node:fs/promises";
+import { basename, join, relative } from "node:path";
 import { resolveSafePath } from "./path-safety";
 
 function isRipgrepAvailable(): boolean {
@@ -17,25 +17,36 @@ function isRipgrepAvailable(): boolean {
 
 function globToRegex(glob: string): RegExp {
   const escaped = glob.replace(/[.+^${}()|[\]\\]/g, "\\$&");
-  const regexStr = "^" + escaped.replace(/\*\*/g, ".*").replace(/\*/g, "[^/]*").replace(/\?/g, ".") + "$";
+  const regexStr =
+    "^" + escaped.replace(/\*\*/g, ".*").replace(/\*/g, "[^/]*").replace(/\?/g, ".") + "$";
   return new RegExp(regexStr, "i");
 }
 
 export function createGrepToolDefinition(cwd: string, allowedDirs?: string[]) {
   return {
     name: "grep",
-    description: "Search file contents for a pattern. Returns matching lines with file paths and line numbers. Respects .gitignore.",
+    description:
+      "Search file contents for a pattern. Returns matching lines with file paths and line numbers. Respects .gitignore.",
     schema: {
       type: "object",
       properties: {
         pattern: { type: "string", description: "Search pattern (regex or literal string)" },
-        path: { type: "string", description: "Directory or file to search (default: current directory)" },
+        path: {
+          type: "string",
+          description: "Directory or file to search (default: current directory)",
+        },
         glob: { type: "string", description: "Filter files by glob pattern, e.g. '*.ts'" },
         ignoreCase: { type: "boolean", description: "Case-insensitive search (default: false)" },
-        literal: { type: "boolean", description: "Treat pattern as literal string instead of regex (default: false)" },
-        limit: { type: "number", description: "Maximum number of matches to return (default: 100)" }
+        literal: {
+          type: "boolean",
+          description: "Treat pattern as literal string instead of regex (default: false)",
+        },
+        limit: {
+          type: "number",
+          description: "Maximum number of matches to return (default: 100)",
+        },
       },
-      required: ["pattern"]
+      required: ["pattern"],
     },
     execute: async (toolCallId: string, args: any, signal?: AbortSignal) => {
       const { pattern, path: searchDir, glob: globPattern, ignoreCase, literal, limit } = args;
@@ -48,21 +59,39 @@ export function createGrepToolDefinition(cwd: string, allowedDirs?: string[]) {
 
       if (isRipgrepAvailable()) {
         try {
-          return await runRipgrep(searchPath, pattern, { globPattern, ignoreCase, literal, limit: effectiveLimit, signal });
+          return await runRipgrep(searchPath, pattern, {
+            globPattern,
+            ignoreCase,
+            literal,
+            limit: effectiveLimit,
+            signal,
+          });
         } catch {
           // Fallback to native if spawing fails for some reason
         }
       }
 
-      return runNativeGrep(cwd, searchPath, pattern, { globPattern, ignoreCase, literal, limit: effectiveLimit, signal });
-    }
+      return runNativeGrep(cwd, searchPath, pattern, {
+        globPattern,
+        ignoreCase,
+        literal,
+        limit: effectiveLimit,
+        signal,
+      });
+    },
   };
 }
 
 async function runRipgrep(
   searchPath: string,
   pattern: string,
-  opts: { globPattern?: string; ignoreCase?: boolean; literal?: boolean; limit: number; signal?: AbortSignal }
+  opts: {
+    globPattern?: string;
+    ignoreCase?: boolean;
+    literal?: boolean;
+    limit: number;
+    signal?: AbortSignal;
+  },
 ): Promise<any> {
   return new Promise((resolve, reject) => {
     const args = ["--line-number", "--color=never", "--with-filename", "--no-heading"];
@@ -125,7 +154,7 @@ async function runRipgrep(
       } else {
         resolve({
           content: [{ type: "text", text: matches.join("\n") }],
-          details: { count: matches.length }
+          details: { count: matches.length },
         });
       }
     });
@@ -143,7 +172,13 @@ async function runNativeGrep(
   workspaceDir: string,
   searchPath: string,
   pattern: string,
-  opts: { globPattern?: string; ignoreCase?: boolean; literal?: boolean; limit: number; signal?: AbortSignal }
+  opts: {
+    globPattern?: string;
+    ignoreCase?: boolean;
+    literal?: boolean;
+    limit: number;
+    signal?: AbortSignal;
+  },
 ): Promise<any> {
   const ig = ignore();
   ig.add(["node_modules", ".git", ".atl", "pnpm-lock.yaml", "bun.lockb", "dist", "build"]);
@@ -190,9 +225,7 @@ async function runNativeGrep(
     files.push(searchPath);
   }
 
-  const regex = opts.literal
-    ? null
-    : new RegExp(pattern, opts.ignoreCase ? "i" : "");
+  const regex = opts.literal ? null : new RegExp(pattern, opts.ignoreCase ? "i" : "");
   const lowerPattern = opts.literal && opts.ignoreCase ? pattern.toLowerCase() : pattern;
 
   const matches: string[] = [];
@@ -233,6 +266,6 @@ async function runNativeGrep(
 
   return {
     content: [{ type: "text", text: matches.join("\n") }],
-    details: { count: matches.length }
+    details: { count: matches.length },
   };
 }

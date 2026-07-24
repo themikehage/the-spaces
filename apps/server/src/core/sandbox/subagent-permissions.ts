@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { AVAILABLE_TOOLS } from "shared";
-import { sessionMetadataStore } from "../session/metadata-store";
 import { sessionManager } from "../session-manager";
+import { sessionMetadataStore } from "../session/metadata-store";
 import { userPermissionStore } from "./user-permission-store";
 
 export interface ToolPermissionRule {
@@ -91,7 +91,7 @@ function getBaseRulesForType(subagentType?: string): ToolPermissionRule[] {
   const defaults = DEFAULT_SUBAGENT_PERMISSIONS.rules;
   if (subagentType === "explorer") {
     // Explorer is read-only, deny modification tools
-    return defaults.map(rule => {
+    return defaults.map((rule) => {
       if (["write", "edit", "bash"].includes(rule.toolName)) {
         return { ...rule, action: "deny" as const };
       }
@@ -100,7 +100,7 @@ function getBaseRulesForType(subagentType?: string): ToolPermissionRule[] {
   }
   if (subagentType === "autonomous") {
     // Autonomous allows modification tools without asking
-    return defaults.map(rule => {
+    return defaults.map((rule) => {
       if (["write", "edit", "bash"].includes(rule.toolName)) {
         return { ...rule, action: "allow" as const };
       }
@@ -118,7 +118,7 @@ export function buildSubagentRules(
   username: string,
   subagentSessionId: string,
   parentSessionId?: string,
-  subagentType?: string
+  subagentType?: string,
 ): ToolPermissionRule[] {
   const rules: ToolPermissionRule[] = [];
 
@@ -130,9 +130,11 @@ export function buildSubagentRules(
         resolvedType = meta.subagentType;
       } else if (typeof meta.executionMode === "string") {
         resolvedType =
-          meta.executionMode === "readonly" ? "explorer" :
-          meta.executionMode === "autonomous" ? "autonomous" :
-          "builder";
+          meta.executionMode === "readonly"
+            ? "explorer"
+            : meta.executionMode === "autonomous"
+              ? "autonomous"
+              : "builder";
       }
     }
   }
@@ -167,7 +169,7 @@ export function buildSubagentRules(
         ...parentMeta.permissionRules.map((r: any) => ({
           ...r,
           source: "session-inherited" as const,
-        }))
+        })),
       );
     }
   }
@@ -200,7 +202,7 @@ export function extractSubject(toolName: string, args: Record<string, unknown>):
 export function evaluateSubagentRules(
   toolName: string,
   args: Record<string, unknown>,
-  rules: ToolPermissionRule[]
+  rules: ToolPermissionRule[],
 ): { allow: boolean | "ask"; reason: string } | null {
   const subject = extractSubject(toolName, args);
 
@@ -212,13 +214,22 @@ export function evaluateSubagentRules(
 
   if (matched) {
     if (matched.action === "allow") {
-      return { allow: true, reason: `Allowed by rule: ${matched.toolName} ${matched.pattern} (${matched.source})` };
+      return {
+        allow: true,
+        reason: `Allowed by rule: ${matched.toolName} ${matched.pattern} (${matched.source})`,
+      };
     }
     if (matched.action === "deny") {
-      return { allow: false, reason: `Denied by rule: ${matched.toolName} ${matched.pattern} (${matched.source})` };
+      return {
+        allow: false,
+        reason: `Denied by rule: ${matched.toolName} ${matched.pattern} (${matched.source})`,
+      };
     }
     if (matched.action === "ask") {
-      return { allow: "ask", reason: `Requires approval by rule: ${matched.toolName} ${matched.pattern} (${matched.source})` };
+      return {
+        allow: "ask",
+        reason: `Requires approval by rule: ${matched.toolName} ${matched.pattern} (${matched.source})`,
+      };
     }
   }
 

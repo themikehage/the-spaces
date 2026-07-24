@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { useState, useEffect, useCallback } from "react";
 import { useLiterals } from "@/lib";
+import { useCallback, useEffect, useState } from "react";
 import { literals as u } from "./ThemeToggle.literals";
 
 type Theme = "dark" | "light" | "system";
@@ -16,7 +16,8 @@ export function ThemeToggle() {
   });
 
   const applyTheme = useCallback((t: Theme) => {
-    const isDark = t === "dark" || (t === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    const isDark =
+      t === "dark" || (t === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
     if (isDark) {
       document.documentElement.classList.add("dark");
       document.querySelector('meta[name="theme-color"]')?.setAttribute("content", "#121212");

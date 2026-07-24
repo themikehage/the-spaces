@@ -20,9 +20,11 @@ export const literals = {
     updateError: "Failed to update team settings",
     teamType: "Team Type",
     teamTypeImmutable: "The team type is fixed after creation.",
-    orchestrationDesc: "Orchestration (Leader-Specialist): The leader coordinates work and delegates specific tasks to members.",
+    orchestrationDesc:
+      "Orchestration (Leader-Specialist): The leader coordinates work and delegates specific tasks to members.",
     deleteTeam: "Danger Zone",
-    deleteTeamDescription: "This action is permanent and cannot be undone. All conversation history and team configurations will be deleted.",
+    deleteTeamDescription:
+      "This action is permanent and cannot be undone. All conversation history and team configurations will be deleted.",
     deleteConfirmLabel: "Type the team name '{name}' to confirm:",
     deleteButton: "Delete Team",
     deleting: "Deleting...",
@@ -45,9 +47,11 @@ export const literals = {
     updateError: "Error al actualizar ajustes del equipo",
     teamType: "Tipo de Equipo",
     teamTypeImmutable: "El tipo de equipo queda fijado al crearlo.",
-    orchestrationDesc: "Orquestación (Líder-Especialista): El líder coordina el trabajo y delega tareas específicas a los miembros.",
+    orchestrationDesc:
+      "Orquestación (Líder-Especialista): El líder coordina el trabajo y delega tareas específicas a los miembros.",
     deleteTeam: "Zona de Peligro",
-    deleteTeamDescription: "Esta acción es permanente y no se puede deshacer. Se eliminarán todas las conversaciones y configuraciones del equipo.",
+    deleteTeamDescription:
+      "Esta acción es permanente y no se puede deshacer. Se eliminarán todas las conversaciones y configuraciones del equipo.",
     deleteConfirmLabel: "Escribe el nombre del equipo '{name}' para confirmar:",
     deleteButton: "Eliminar Equipo",
     deleting: "Eliminando...",

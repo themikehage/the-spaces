@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { wsClient } from "@/lib/ws-client";
-import { RichMarkdown } from "../RichMarkdown";
 import { useToast } from "@/contexts/ToastContext";
+import { wsClient } from "@/lib/ws-client";
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { RichMarkdown } from "../RichMarkdown";
 
 interface Props {
   toolCallId: string;
@@ -87,8 +87,18 @@ export function ApprovalForm({ toolCallId, args, result, sessionId }: Props) {
           accentColor: "text-error",
           pulseColor: "bg-error",
           icon: (
-            <svg className="w-5 h-5 text-error shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            <svg
+              className="w-5 h-5 text-error shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
             </svg>
           ),
         };
@@ -100,8 +110,18 @@ export function ApprovalForm({ toolCallId, args, result, sessionId }: Props) {
           accentColor: "text-primary",
           pulseColor: "bg-primary",
           icon: (
-            <svg className="w-5 h-5 text-primary shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <svg
+              className="w-5 h-5 text-primary shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
           ),
         };
@@ -114,8 +134,18 @@ export function ApprovalForm({ toolCallId, args, result, sessionId }: Props) {
           accentColor: "text-warning",
           pulseColor: "bg-warning",
           icon: (
-            <svg className="w-5 h-5 text-warning shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            <svg
+              className="w-5 h-5 text-warning shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
             </svg>
           ),
         };
@@ -131,9 +161,11 @@ export function ApprovalForm({ toolCallId, args, result, sessionId }: Props) {
       transition={{ duration: 0.25, ease: "easeOut" }}
       className={`relative w-full rounded-xl border ${borderClass} ${bgClass} overflow-hidden font-sans shadow-md my-4 transition-all duration-300`}
     >
-      <div className={`absolute left-0 top-0 bottom-0 w-1 ${
-        severity === "critical" ? "bg-error" : severity === "info" ? "bg-primary" : "bg-warning"
-      }`} />
+      <div
+        className={`absolute left-0 top-0 bottom-0 w-1 ${
+          severity === "critical" ? "bg-error" : severity === "info" ? "bg-primary" : "bg-warning"
+        }`}
+      />
 
       <div className="flex items-center justify-between gap-3 pl-5 pr-4 py-3 border-b border-border/40 bg-card/90">
         <div className="flex items-center gap-3 min-w-0">
@@ -141,11 +173,17 @@ export function ApprovalForm({ toolCallId, args, result, sessionId }: Props) {
           <div className="flex flex-col min-w-0">
             <h4 className="text-xs font-bold text-foreground truncate">{title}</h4>
             <div className="flex items-center gap-2 mt-0.5">
-              <span className={`inline-flex items-center gap-1.5 text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md border ${badgeBg}`}>
+              <span
+                className={`inline-flex items-center gap-1.5 text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md border ${badgeBg}`}
+              >
                 {!isResolved && (
                   <span className="relative flex h-1.5 w-1.5">
-                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${pulseColor} opacity-75`}></span>
-                    <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${pulseColor}`}></span>
+                    <span
+                      className={`animate-ping absolute inline-flex h-full w-full rounded-full ${pulseColor} opacity-75`}
+                    ></span>
+                    <span
+                      className={`relative inline-flex rounded-full h-1.5 w-1.5 ${pulseColor}`}
+                    ></span>
                   </span>
                 )}
                 Aprobación requerida
@@ -162,14 +200,26 @@ export function ApprovalForm({ toolCallId, args, result, sessionId }: Props) {
           >
             {resolvedStatus === "confirmed" ? (
               <span className="flex items-center gap-1 text-[11px] font-bold text-success bg-success/10 border border-success/20 px-2.5 py-1 rounded-full">
-                <svg className="w-3.5 h-3.5 text-success shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                <svg
+                  className="w-3.5 h-3.5 text-success shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
                 Aprobado
               </span>
             ) : (
               <span className="flex items-center gap-1 text-[11px] font-bold text-error bg-error/10 border border-error/20 px-2.5 py-1 rounded-full">
-                <svg className="w-3.5 h-3.5 text-error shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                <svg
+                  className="w-3.5 h-3.5 text-error shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
                 Cancelado
@@ -196,7 +246,11 @@ export function ApprovalForm({ toolCallId, args, result, sessionId }: Props) {
                 fill="currentColor"
                 className={`transition-transform duration-200 ${detailsExpanded ? "rotate-180" : ""}`}
               >
-                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
               </svg>
             </button>
             <AnimatePresence initial={false}>

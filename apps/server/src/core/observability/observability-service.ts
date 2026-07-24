@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-﻿import { getToolCallLogs, type ToolCallAuditEvent } from "../audit-log";
+import { getToolCallLogs } from "../audit-log";
 
 export interface ToolMetric {
   toolName: string;
@@ -56,19 +56,20 @@ export class ObservabilityService {
         errorCount: stat.error,
         blockedCount: stat.blocked,
         avgDurationMs: stat.total > 0 ? Math.round(stat.totalDuration / stat.total) : 0,
-        errorRate: stat.total > 0 ? Number(((stat.error + stat.blocked) / stat.total).toFixed(3)) : 0,
+        errorRate:
+          stat.total > 0 ? Number(((stat.error + stat.blocked) / stat.total).toFixed(3)) : 0,
       });
     }
 
     const mostFrequentTools = [...toolMetrics]
       .sort((a, b) => b.totalCalls - a.totalCalls)
       .slice(0, 5)
-      .map(t => ({ toolName: t.toolName, count: t.totalCalls }));
+      .map((t) => ({ toolName: t.toolName, count: t.totalCalls }));
 
     const slowestTools = [...toolMetrics]
       .sort((a, b) => b.avgDurationMs - a.avgDurationMs)
       .slice(0, 5)
-      .map(t => ({ toolName: t.toolName, avgDurationMs: t.avgDurationMs }));
+      .map((t) => ({ toolName: t.toolName, avgDurationMs: t.avgDurationMs }));
 
     return {
       totalToolCalls,

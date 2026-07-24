@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-import { useState, useEffect } from "react";
 import { useLiterals } from "@/lib";
-import { literals as u } from "./PluginsPage.literals";
 import { apiFetch } from "@/lib/api";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { literals as u } from "./PluginsPage.literals";
 
 export function PluginsPage() {
   const l = useLiterals(u);
@@ -144,7 +144,9 @@ export function PluginsPage() {
                   <h2 className="text-lg font-bold text-text-primary">{l.cardMemoryTitle}</h2>
                   <span
                     className={`px-2 py-0.5 rounded text-2xs font-bold font-mono tracking-wide ${
-                      memoryEnabled ? "bg-accent/10 text-accent" : "bg-text-secondary/15 text-text-secondary"
+                      memoryEnabled
+                        ? "bg-accent/10 text-accent"
+                        : "bg-text-secondary/15 text-text-secondary"
                     }`}
                   >
                     {memoryEnabled ? l.statusEnabled : l.statusDisabled}
@@ -163,7 +165,9 @@ export function PluginsPage() {
                     type="checkbox"
                     checked={memoryEnabled}
                     disabled={saving}
-                    onChange={(e) => handleUpdateMemorySettings({ memoryEnabled: e.target.checked })}
+                    onChange={(e) =>
+                      handleUpdateMemorySettings({ memoryEnabled: e.target.checked })
+                    }
                     className="sr-only peer"
                   />
                   <div className="w-10 h-5 bg-border/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-text-primary after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-accent"></div>
@@ -185,7 +189,9 @@ export function PluginsPage() {
                         type="checkbox"
                         checked={memoryAutoStore}
                         disabled={saving}
-                        onChange={(e) => handleUpdateMemorySettings({ memoryAutoStore: e.target.checked })}
+                        onChange={(e) =>
+                          handleUpdateMemorySettings({ memoryAutoStore: e.target.checked })
+                        }
                         className="sr-only peer"
                       />
                       <div className="w-8 h-4.5 bg-border/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-text-primary after:border-border after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-accent"></div>
@@ -224,7 +230,9 @@ export function PluginsPage() {
             <div className="border-t border-border/10 pt-4 space-y-4">
               {hasExaKey ? (
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-text-primary">{l.globalActivation}</span>
+                  <span className="text-sm font-semibold text-text-primary">
+                    {l.globalActivation}
+                  </span>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"

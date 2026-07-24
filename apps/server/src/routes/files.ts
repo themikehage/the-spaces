@@ -1,18 +1,32 @@
 // SPDX-License-Identifier: MIT
 import { Hono } from "hono";
-import { resolve, normalize, sep, join, basename, dirname } from "node:path";
-import { existsSync, readdirSync, statSync, mkdirSync, writeFileSync, unlinkSync, rmSync, renameSync, readFileSync } from "node:fs";
-import { getUsername } from "../lib/auth-helpers";
-import { sessionMiddleware } from "../auth/middleware";
-import { sessionManager } from "../core/session-manager";
 import {
-  getWorkspaceDir, getProjectsDir, getProjectWorkspaceDir,
-  getAgentWorkspaceDir, getTeamWorkspaceDir,
-  getSessionDir, getUserDir, UpdateProjectAssignmentSchema
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  statSync,
+  unlinkSync,
+  writeFileSync,
+} from "node:fs";
+import { basename, dirname, join, normalize, resolve, sep } from "node:path";
+import {
+  getAgentWorkspaceDir,
+  getProjectsDir,
+  getProjectWorkspaceDir,
+  getSessionDir,
+  getTeamWorkspaceDir,
+  getWorkspaceDir,
+  UpdateProjectAssignmentSchema,
 } from "shared";
-import { scopeConfigManager } from "../core/scope";
+import { sessionMiddleware } from "../auth/middleware";
 import { applyCacheHeaders } from "../core/cache-headers";
+import { scopeConfigManager } from "../core/scope";
+import { sessionManager } from "../core/session-manager";
 import { resolveProjectDir } from "../core/session/workspace-resolver";
+import { getUsername } from "../lib/auth-helpers";
 
 export const filesRouter = new Hono();
 
@@ -53,7 +67,13 @@ filesRouter.use("/*", async (c, next) => {
   return sessionMiddleware(c, next);
 });
 
-function validateWorkspacePath(username: string, relativePath: string, projectName?: string, agentId?: string, teamId?: string): string {
+function validateWorkspacePath(
+  username: string,
+  relativePath: string,
+  projectName?: string,
+  agentId?: string,
+  teamId?: string,
+): string {
   const workspaceBase = getWorkspaceDir(username);
   let workspaceDir = workspaceBase;
 
@@ -190,8 +210,8 @@ const handleGetWorkspace = async (c: any) => {
     if (isDir) {
       const entries = readdirSync(fullPath, { withFileTypes: true });
       const children = entries
-        .filter(entry => entry.name !== ".git" && entry.name !== "node_modules")
-        .map(entry => {
+        .filter((entry) => entry.name !== ".git" && entry.name !== "node_modules")
+        .map((entry) => {
           const entryFullPath = join(fullPath, entry.name);
           const entryStat = statSync(entryFullPath);
           const entryRelativePath = relativePath
@@ -227,7 +247,8 @@ const handleGetWorkspace = async (c: any) => {
       const file = Bun.file(fullPath);
 
       if (raw) {
-        const isImmutable = fullPath.includes("/assets/generated/") || fullPath.includes("\\assets\\generated\\");
+        const isImmutable =
+          fullPath.includes("/assets/generated/") || fullPath.includes("\\assets\\generated\\");
         const cacheResponse = applyCacheHeaders(c, fullPath, { immutable: isImmutable });
         if (cacheResponse) return cacheResponse;
 
@@ -254,7 +275,8 @@ const handleGetWorkspace = async (c: any) => {
 
       // Default: Return file metadata and base64 encoded text contents for viewer/editor
       let content = "";
-      if (stat.size < 5 * 1024 * 1024) { // 5MB limit
+      if (stat.size < 5 * 1024 * 1024) {
+        // 5MB limit
         try {
           const buffer = await file.arrayBuffer();
           content = Buffer.from(buffer).toString("base64");
@@ -312,7 +334,22 @@ filesRouter.get("/workspace-projects", async (c) => {
         } else {
           try {
             createdAt = new Date().toISOString();
-            writeFileSync(jsonPath, JSON.stringify({ id: entry.name, name: entry.name, cloneUrl: null, avatarUrl: null, status: "planning", createdAt }, null, 2), "utf-8");
+            writeFileSync(
+              jsonPath,
+              JSON.stringify(
+                {
+                  id: entry.name,
+                  name: entry.name,
+                  cloneUrl: null,
+                  avatarUrl: null,
+                  status: "planning",
+                  createdAt,
+                },
+                null,
+                2,
+              ),
+              "utf-8",
+            );
           } catch {}
         }
         const stat = statSync(entryPath);
@@ -391,15 +428,18 @@ filesRouter.post("/workspace-projects", async (c) => {
     writeFileSync(join(baseDir, "project.json"), JSON.stringify(projectJson, null, 2), "utf-8");
 
     const stat = statSync(targetDir);
-    return c.json({
-      id: projectId,
-      name,
-      path: projectId,
-      cloneUrl: projectJson.cloneUrl,
-      avatarUrl: projectJson.avatarUrl,
-      status: "planning",
-      lastModified: stat.mtime.toISOString(),
-    }, 201);
+    return c.json(
+      {
+        id: projectId,
+        name,
+        path: projectId,
+        cloneUrl: projectJson.cloneUrl,
+        avatarUrl: projectJson.avatarUrl,
+        status: "planning",
+        lastModified: stat.mtime.toISOString(),
+      },
+      201,
+    );
   } catch (err: any) {
     return c.json({ error: err.message || "Failed to create project" }, 500);
   }
@@ -453,7 +493,11 @@ filesRouter.patch("/workspace-projects/:id", async (c) => {
     if (name !== undefined && (typeof name !== "string" || !name.trim())) {
       return c.json({ error: "Invalid project name" }, 400);
     }
-    if (cloneUrl !== undefined && cloneUrl !== null && (typeof cloneUrl !== "string" || (cloneUrl !== "" && !cloneUrl.startsWith("http")))) {
+    if (
+      cloneUrl !== undefined &&
+      cloneUrl !== null &&
+      (typeof cloneUrl !== "string" || (cloneUrl !== "" && !cloneUrl.startsWith("http")))
+    ) {
       return c.json({ error: "Invalid clone URL" }, 400);
     }
     if (avatarUrl !== undefined && avatarUrl !== null && typeof avatarUrl !== "string") {
@@ -634,15 +678,24 @@ filesRouter.put("/workspace-projects/:id/assignment", async (c) => {
     const body = await c.req.json().catch(() => ({}));
     const parseResult = UpdateProjectAssignmentSchema.safeParse(body);
     if (!parseResult.success) {
-      return c.json({ error: "Invalid assignment format", details: parseResult.error.format() }, 400);
+      return c.json(
+        { error: "Invalid assignment format", details: parseResult.error.format() },
+        400,
+      );
     }
 
     const projectJson = JSON.parse(readFileSync(jsonPath, "utf-8"));
     const currentAssignment = projectJson.assignment || { leaderId: null, members: [] };
 
     const updatedAssignment = {
-      leaderId: parseResult.data.leaderId !== undefined ? parseResult.data.leaderId : currentAssignment.leaderId,
-      members: parseResult.data.members !== undefined ? parseResult.data.members : (currentAssignment.members || []),
+      leaderId:
+        parseResult.data.leaderId !== undefined
+          ? parseResult.data.leaderId
+          : currentAssignment.leaderId,
+      members:
+        parseResult.data.members !== undefined
+          ? parseResult.data.members
+          : currentAssignment.members || [],
       updatedAt: new Date().toISOString(),
     };
 
@@ -808,7 +861,10 @@ const handlePostWorkspace = async (c: any) => {
       }
     }
     const resolvedWorkspaceDir = resolve(workspaceDir);
-    if (!resolvedSavePath.startsWith(resolvedWorkspaceDir + sep) && resolvedSavePath !== resolvedWorkspaceDir) {
+    if (
+      !resolvedSavePath.startsWith(resolvedWorkspaceDir + sep) &&
+      resolvedSavePath !== resolvedWorkspaceDir
+    ) {
       return c.json({ error: "Forbidden path traversal in upload" }, 403);
     }
 
@@ -818,7 +874,9 @@ const handlePostWorkspace = async (c: any) => {
 
     return c.json({
       name: basename(resolvedSavePath),
-      path: relativePath ? `${relativePath}/${fileRelativePath || basename(resolvedSavePath)}`.replace(/\\/g, "/") : fileRelativePath || basename(resolvedSavePath),
+      path: relativePath
+        ? `${relativePath}/${fileRelativePath || basename(resolvedSavePath)}`.replace(/\\/g, "/")
+        : fileRelativePath || basename(resolvedSavePath),
       size: file.size,
       mimeType: file.type || "application/octet-stream",
     });

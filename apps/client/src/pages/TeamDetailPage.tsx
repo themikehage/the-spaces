@@ -1,24 +1,24 @@
 // SPDX-License-Identifier: MIT
-import { useState, useMemo, useEffect, useCallback } from "react";
-import { useTeam } from "@/hooks/useTeam";
-import { useAgents } from "@/hooks/useAgents";
-import { TeamMessages } from "@/components/teams/TeamMessages";
-import { TeamInput } from "@/components/teams/TeamInput";
-import { TeamMembersPanel } from "@/components/teams/TeamMembersPanel";
-import { AddTeamMemberModal } from "@/components/teams/TeamMembersModal";
-import { useLiterals } from "@/lib";
-import { literals as u } from "./TeamDetailPage.literals";
 import { EntityAvatar } from "@/components/shared/EntityAvatar";
+import { TeamInput } from "@/components/teams/TeamInput";
+import { AddTeamMemberModal } from "@/components/teams/TeamMembersModal";
+import { TeamMembersPanel } from "@/components/teams/TeamMembersPanel";
+import { TeamMessages } from "@/components/teams/TeamMessages";
+import { useAgents } from "@/hooks/useAgents";
+import { useTeam } from "@/hooks/useTeam";
+import { useLiterals } from "@/lib";
 import { apiFetch } from "@/lib/api";
+import { BarChart, MessageSquare, RefreshCw } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  PieChart,
-  Pie,
   Cell,
-  ResponsiveContainer,
   Tooltip as ChartTooltip,
   Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
 } from "recharts";
-import { MessageSquare, BarChart, RefreshCw } from "lucide-react";
+import { literals as u } from "./TeamDetailPage.literals";
 
 interface Props {
   teamId: string;
@@ -48,7 +48,7 @@ export function TeamDetailPage({ teamId, onNavigate }: Props) {
     sendMessage,
     addMember,
     updateMember,
-    removeMember
+    removeMember,
   } = useTeam(teamId);
 
   const { agents: registeredAgents } = useAgents();
@@ -131,22 +131,23 @@ export function TeamDetailPage({ teamId, onNavigate }: Props) {
               title={l.backToTeams}
             >
               <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                  clipRule="evenodd"
+                />
               </svg>
             </button>
             <div className="flex items-center gap-1.5 min-w-0">
-              <EntityAvatar
-                name={team.name}
-                avatarUrl={team.avatarUrl}
-                size="xs"
-                type="team"
-              />
+              <EntityAvatar name={team.name} avatarUrl={team.avatarUrl} size="xs" type="team" />
               <h2 className="text-sm font-semibold text-foreground truncate">{team.name}</h2>
             </div>
             {team.description && (
               <>
                 <span className="text-muted-foreground select-none hidden sm:inline">|</span>
-                <span className="text-xs text-muted-foreground truncate hidden sm:inline max-w-xs">{team.description}</span>
+                <span className="text-xs text-muted-foreground truncate hidden sm:inline max-w-xs">
+                  {team.description}
+                </span>
               </>
             )}
           </div>
@@ -187,7 +188,11 @@ export function TeamDetailPage({ teamId, onNavigate }: Props) {
         {activeSubTab === "chat" ? (
           <div className="flex-1 flex min-h-0 relative overflow-hidden w-full">
             <div className="flex-1 flex flex-col min-w-0 h-full">
-              <TeamMessages messages={messages} streamingAgents={streamingAgents} agentAvatarMap={agentAvatarMap} />
+              <TeamMessages
+                messages={messages}
+                streamingAgents={streamingAgents}
+                agentAvatarMap={agentAvatarMap}
+              />
               <TeamInput onSend={sendMessage} />
             </div>
 
@@ -231,7 +236,9 @@ export function TeamDetailPage({ teamId, onNavigate }: Props) {
                     <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider block mb-1">
                       {l.kpiTotalSessions}
                     </span>
-                    <span className="text-xl font-bold text-foreground">{analytics.totalSessions}</span>
+                    <span className="text-xl font-bold text-foreground">
+                      {analytics.totalSessions}
+                    </span>
                   </div>
                   <div className="border border-input/60 rounded-xl p-4 bg-card/20 shadow-xs">
                     <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider block mb-1">
@@ -300,7 +307,12 @@ export function TeamDetailPage({ teamId, onNavigate }: Props) {
                               fontSize: "11px",
                             }}
                           />
-                          <Legend verticalAlign="bottom" height={36} iconSize={8} wrapperStyle={{ fontSize: "10px" }} />
+                          <Legend
+                            verticalAlign="bottom"
+                            height={36}
+                            iconSize={8}
+                            wrapperStyle={{ fontSize: "10px" }}
+                          />
                         </PieChart>
                       </ResponsiveContainer>
                     )}

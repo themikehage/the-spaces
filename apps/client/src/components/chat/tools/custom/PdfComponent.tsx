@@ -11,7 +11,7 @@ interface PdfProps {
 
 export function PdfComponent({ src, title, page, scale, sessionId = null }: PdfProps) {
   let pdfUrl = resolveMediaUrl(src, sessionId);
-  
+
   // Append PDF specific parameters for hash navigation if provided
   const hashes: string[] = [];
   if (page) hashes.push(`page=${page}`);

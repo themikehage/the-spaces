@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: MIT
-import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { join } from "node:path";
-import { authMiddleware } from "../middleware/auth.js";
+import { Hono } from "hono";
+import { McpConfigSchema, McpServerConfigSchema, getWorkspaceDir } from "shared";
+import { MCP_CATALOG, mcpRegistry } from "../core/mcp-registry.js";
 import { getUsername } from "../lib/auth-helpers.js";
-import { mcpRegistry, MCP_CATALOG } from "../core/mcp-registry.js";
-import { McpServerConfigSchema, McpConfigSchema, getWorkspaceDir } from "shared";
+import { authMiddleware } from "../middleware/auth.js";
 
 export const mcpRouter = new Hono();
 
@@ -60,13 +59,13 @@ mcpRouter.post("/servers", zValidator("json", McpServerConfigSchema), async (c) 
   try {
     const newServer = c.req.valid("json");
     const config = mcpRegistry.loadConfig(username);
-    
+
     config.mcpServers[newServer.id] = {
       ...newServer,
       installed: true,
       status: "disconnected",
     };
-    
+
     mcpRegistry.saveConfig(username, config);
     return c.json({ success: true, server: config.mcpServers[newServer.id] });
   } catch (e: any) {
@@ -78,22 +77,22 @@ mcpRouter.post("/servers", zValidator("json", McpServerConfigSchema), async (c) 
 mcpRouter.put("/servers/:id", zValidator("json", McpServerConfigSchema), async (c) => {
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
-  
+
   const id = c.req.param("id");
   try {
     const updatedServer = c.req.valid("json");
     const config = mcpRegistry.loadConfig(username);
-    
+
     if (!config.mcpServers[id]) {
       return c.json({ error: "Server not found" }, 404);
     }
-    
+
     config.mcpServers[id] = {
       ...config.mcpServers[id],
       ...updatedServer,
       id, // Preserve URL/Command key id mapping
     };
-    
+
     mcpRegistry.saveConfig(username, config);
     return c.json({ success: true, server: config.mcpServers[id] });
   } catch (e: any) {
@@ -105,13 +104,13 @@ mcpRouter.put("/servers/:id", zValidator("json", McpServerConfigSchema), async (
 mcpRouter.delete("/servers/:id", (c) => {
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
-  
+
   const id = c.req.param("id");
   const config = mcpRegistry.loadConfig(username);
-  
+
   const server = config.mcpServers[id];
   if (!server) return c.json({ error: "Server not found" }, 404);
-  
+
   if (server.isBuiltin) {
     // Builtin servers remain in dictionary but uninstall/disable them
     server.enabled = false;
@@ -120,10 +119,10 @@ mcpRouter.delete("/servers/:id", (c) => {
   } else {
     delete config.mcpServers[id];
   }
-  
+
   mcpRegistry.disconnectGlobalServer(username, id);
   mcpRegistry.saveConfig(username, config);
-  
+
   return c.json({ success: true });
 });
 
@@ -131,7 +130,7 @@ mcpRouter.delete("/servers/:id", (c) => {
 mcpRouter.post("/servers/:id/connect", async (c) => {
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
-  
+
   const id = c.req.param("id");
   const config = mcpRegistry.loadConfig(username);
   const srv = config.mcpServers[id];
@@ -144,7 +143,7 @@ mcpRouter.post("/servers/:id/connect", async (c) => {
   mcpRegistry.connectGlobalServer(username, id).catch((err) => {
     console.error(`[MCP Connect Async] Failed for ${id}:`, err);
   });
-  
+
   return c.json({ success: true, server: srv });
 });
 
@@ -152,7 +151,7 @@ mcpRouter.post("/servers/:id/connect", async (c) => {
 mcpRouter.post("/servers/:id/disconnect", (c) => {
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
-  
+
   const id = c.req.param("id");
   mcpRegistry.disconnectGlobalServer(username, id);
   const config = mcpRegistry.loadConfig(username);
@@ -177,18 +176,17 @@ mcpRouter.post("/servers/test-connection", zValidator("json", McpServerConfigSch
 mcpRouter.post("/catalog/:id/install", async (c) => {
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
-  
+
   const id = c.req.param("id");
   const catalogItem = MCP_CATALOG.find((x) => x.id === id);
   if (!catalogItem) {
     return c.json({ error: "Catalog item not found" }, 404);
   }
-  
+
   const config = mcpRegistry.loadConfig(username);
   const userWorkspace = getWorkspaceDir(username);
-  const processedArgs = catalogItem.args?.map(arg => 
-    arg.replace("$WORKSPACE_DIR", userWorkspace)
-  ) || [];
+  const processedArgs =
+    catalogItem.args?.map((arg) => arg.replace("$WORKSPACE_DIR", userWorkspace)) || [];
 
   const serverConfig = {
     id: catalogItem.id,
@@ -207,15 +205,15 @@ mcpRouter.post("/catalog/:id/install", async (c) => {
     status: "connecting" as const,
     tools: [],
   };
-  
+
   config.mcpServers[id] = serverConfig;
   mcpRegistry.saveConfig(username, config);
-  
+
   // Connect asynchronously in the background to avoid timeouts
   mcpRegistry.connectGlobalServer(username, id).catch((err) => {
     console.error(`[MCP Install Async] Failed to connect for ${id}:`, err);
   });
-  
+
   return c.json({ success: true, server: serverConfig });
 });
 
@@ -231,6 +229,6 @@ mcpRouter.get("/status", (c) => {
     error: srv.error,
     tools: srv.tools || [],
   }));
-  
+
   return c.json({ statuses });
 });

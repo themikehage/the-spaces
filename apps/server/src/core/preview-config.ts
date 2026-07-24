@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { resolve, dirname } from "node:path";
-import { type PreviewConfig, type FrameworkPreset, getProjectWorkspaceDir } from "shared";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { type FrameworkPreset, getProjectWorkspaceDir, type PreviewConfig } from "shared";
 import { resolveProjectDir } from "./session/workspace-resolver";
-import { join } from "node:path";
 
 function getResolvedProjectWorkspaceDir(username: string, projectName: string): string {
   const resolved = resolveProjectDir(username, projectName);
@@ -18,28 +17,73 @@ interface FrameworkPresetDef {
 }
 
 const FRAMEWORK_PRESETS: Record<string, FrameworkPresetDef[]> = {
-  "vite": [
-    { framework: "vite", buildCommand: "npx --yes vite build", outputDir: "dist", detectLabel: "Vite" },
-    { framework: "vite", buildCommand: "npx --yes vue-cli-service build", outputDir: "dist", detectLabel: "Vue CLI" },
+  vite: [
+    {
+      framework: "vite",
+      buildCommand: "npx --yes vite build",
+      outputDir: "dist",
+      detectLabel: "Vite",
+    },
+    {
+      framework: "vite",
+      buildCommand: "npx --yes vue-cli-service build",
+      outputDir: "dist",
+      detectLabel: "Vue CLI",
+    },
   ],
-  "next": [
-    { framework: "next", buildCommand: "npx --yes next build", outputDir: ".next", detectLabel: "Next.js" },
-    { framework: "next", buildCommand: "npx --yes next build && npx --yes next export", outputDir: "out", detectLabel: "Next.js (static)" },
+  next: [
+    {
+      framework: "next",
+      buildCommand: "npx --yes next build",
+      outputDir: ".next",
+      detectLabel: "Next.js",
+    },
+    {
+      framework: "next",
+      buildCommand: "npx --yes next build && npx --yes next export",
+      outputDir: "out",
+      detectLabel: "Next.js (static)",
+    },
   ],
-  "nuxt": [
-    { framework: "nuxt", buildCommand: "npx --yes nuxt build", outputDir: ".output", detectLabel: "Nuxt" },
+  nuxt: [
+    {
+      framework: "nuxt",
+      buildCommand: "npx --yes nuxt build",
+      outputDir: ".output",
+      detectLabel: "Nuxt",
+    },
   ],
-  "astro": [
-    { framework: "astro", buildCommand: "npx --yes astro build", outputDir: "dist", detectLabel: "Astro" },
+  astro: [
+    {
+      framework: "astro",
+      buildCommand: "npx --yes astro build",
+      outputDir: "dist",
+      detectLabel: "Astro",
+    },
   ],
   "react-scripts": [
-    { framework: "custom", buildCommand: "npx --yes react-scripts build", outputDir: "build", detectLabel: "Create React App" },
+    {
+      framework: "custom",
+      buildCommand: "npx --yes react-scripts build",
+      outputDir: "build",
+      detectLabel: "Create React App",
+    },
   ],
-  "parcel": [
-    { framework: "custom", buildCommand: "npx --yes parcel build src/index.html", outputDir: "dist", detectLabel: "Parcel" },
+  parcel: [
+    {
+      framework: "custom",
+      buildCommand: "npx --yes parcel build src/index.html",
+      outputDir: "dist",
+      detectLabel: "Parcel",
+    },
   ],
-  "webpack": [
-    { framework: "custom", buildCommand: "npx --yes webpack --mode production", outputDir: "dist", detectLabel: "Webpack" },
+  webpack: [
+    {
+      framework: "custom",
+      buildCommand: "npx --yes webpack --mode production",
+      outputDir: "dist",
+      detectLabel: "Webpack",
+    },
   ],
 };
 
@@ -123,12 +167,22 @@ function autoDetectFramework(username: string, projectName: string): PreviewConf
       const allDeps = { ...pkg.dependencies, ...pkg.devDependencies };
       const fromDeps = detectFromDeps(allDeps);
       if (fromDeps) {
-        return { framework: fromDeps.framework, buildCommand: fromDeps.buildCommand, outputDir: fromDeps.outputDir, autoDetected: true };
+        return {
+          framework: fromDeps.framework,
+          buildCommand: fromDeps.buildCommand,
+          outputDir: fromDeps.outputDir,
+          autoDetected: true,
+        };
       }
 
       const fromScripts = detectFromScripts(pkg.scripts || {});
       if (fromScripts) {
-        return { framework: fromScripts.framework, buildCommand: fromScripts.buildCommand, outputDir: fromScripts.outputDir, autoDetected: true };
+        return {
+          framework: fromScripts.framework,
+          buildCommand: fromScripts.buildCommand,
+          outputDir: fromScripts.outputDir,
+          autoDetected: true,
+        };
       }
     }
   }
@@ -136,7 +190,12 @@ function autoDetectFramework(username: string, projectName: string): PreviewConf
   // 2. Check config files
   const fromConfig = detectFromConfigFiles(projectDir);
   if (fromConfig) {
-    return { framework: fromConfig.framework, buildCommand: fromConfig.buildCommand, outputDir: fromConfig.outputDir, autoDetected: true };
+    return {
+      framework: fromConfig.framework,
+      buildCommand: fromConfig.buildCommand,
+      outputDir: fromConfig.outputDir,
+      autoDetected: true,
+    };
   }
 
   // 3. Check for index.html (static site fallback)
@@ -167,7 +226,7 @@ export function loadPreviewConfig(username: string, projectName: string): Previe
 export function savePreviewConfig(
   username: string,
   projectName: string,
-  config: { framework?: string; buildCommand?: string; outputDir?: string }
+  config: { framework?: string; buildCommand?: string; outputDir?: string },
 ): PreviewConfig {
   const path = configPath(username, projectName);
   const dir = dirname(path);
@@ -187,7 +246,11 @@ export function savePreviewConfig(
   };
 }
 
-export function getBuildOutputDir(config: PreviewConfig, username: string, projectName: string): string | null {
+export function getBuildOutputDir(
+  config: PreviewConfig,
+  username: string,
+  projectName: string,
+): string | null {
   const projectDir = getResolvedProjectWorkspaceDir(username, projectName);
   const dir = config.outputDir || "dist";
   const candidate = resolve(projectDir, dir);
@@ -196,7 +259,11 @@ export function getBuildOutputDir(config: PreviewConfig, username: string, proje
   return candidate;
 }
 
-export function getBuildCommand(config: PreviewConfig, username: string, projectName: string): string | null {
+export function getBuildCommand(
+  config: PreviewConfig,
+  username: string,
+  projectName: string,
+): string | null {
   const projectDir = getResolvedProjectWorkspaceDir(username, projectName);
   const pkg = readPackageJson(projectDir);
 

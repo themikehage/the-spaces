@@ -2,14 +2,7 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
-import {
-  getUserDir,
-  getSessionsDir,
-  getProjectsDir,
-  getProjectDir,
-  getAgentDir,
-  SessionPrefix,
-} from "shared";
+import { getAgentDir, getProjectDir, getProjectsDir, getSessionsDir, SessionPrefix } from "shared";
 
 export type SessionListItem = {
   id: string;
@@ -53,7 +46,11 @@ export interface SessionListerDeps {
 }
 
 export class SessionLister {
-  async listSessions(username: string, deps: SessionListerDeps, query?: SessionListQuery): Promise<SessionListItem[]> {
+  async listSessions(
+    username: string,
+    deps: SessionListerDeps,
+    query?: SessionListQuery,
+  ): Promise<SessionListItem[]> {
     const userDir = deps.ensureUserDir(username);
     const sessionsDir = getSessionsDir(username);
     if (!existsSync(sessionsDir)) return [];
@@ -61,7 +58,12 @@ export class SessionLister {
     try {
       const entries = await readdir(sessionsDir, { withFileTypes: true });
       const sessionPromises = entries
-        .filter((entry) => entry.isDirectory() && !entry.name.startsWith("plan_") && !entry.name.startsWith(SessionPrefix.SUBAGENT))
+        .filter(
+          (entry) =>
+            entry.isDirectory() &&
+            !entry.name.startsWith("plan_") &&
+            !entry.name.startsWith(SessionPrefix.SUBAGENT),
+        )
         .map(async (entry): Promise<SessionListItem> => {
           const sessionId = entry.name;
           const sessionSubdir = join(sessionsDir, sessionId);
@@ -72,7 +74,7 @@ export class SessionLister {
             try {
               const metaContent = await readFile(metadataPath, "utf-8");
               metadata = JSON.parse(metaContent);
-            } catch { }
+            } catch {}
           }
 
           let messageCount = typeof metadata.messageCount === "number" ? metadata.messageCount : -1;
@@ -94,9 +96,9 @@ export class SessionLister {
                       messageCount++;
                     }
                   }
-                } catch { }
+                } catch {}
               }
-            } catch { }
+            } catch {}
           }
 
           const status = deps.isSessionActive(sessionId);
@@ -108,17 +110,21 @@ export class SessionLister {
             updatedAt: (metadata.updatedAt as string) || new Date(0).toISOString(),
             messageCount,
             status,
-            projectId: ((metadata.projectId ?? metadata.projectName) as string | undefined),
+            projectId: (metadata.projectId ?? metadata.projectName) as string | undefined,
             agentId: metadata.agentId as string | undefined,
             teamId: metadata.teamId as string | undefined,
-            totalTokens: typeof metadata.totalTokens === "number" ? metadata.totalTokens : undefined,
-            toolCallCount: typeof metadata.toolCallCount === "number" ? metadata.toolCallCount : undefined,
+            totalTokens:
+              typeof metadata.totalTokens === "number" ? metadata.totalTokens : undefined,
+            toolCallCount:
+              typeof metadata.toolCallCount === "number" ? metadata.toolCallCount : undefined,
             durationMs: typeof metadata.durationMs === "number" ? metadata.durationMs : undefined,
             modelId: typeof metadata.modelId === "string" ? metadata.modelId : undefined,
             errorCount: typeof metadata.errorCount === "number" ? metadata.errorCount : undefined,
-            executionId: typeof metadata.executionId === "string" ? metadata.executionId : undefined,
+            executionId:
+              typeof metadata.executionId === "string" ? metadata.executionId : undefined,
             turnCount: typeof metadata.turnCount === "number" ? metadata.turnCount : undefined,
-            schedulingMode: typeof metadata.schedulingMode === "string" ? metadata.schedulingMode : undefined,
+            schedulingMode:
+              typeof metadata.schedulingMode === "string" ? metadata.schedulingMode : undefined,
             archived: metadata.archived === true,
           };
         });
@@ -148,14 +154,15 @@ export class SessionLister {
                     status: "sleeping",
                     agentId: agent.id,
                     isExecution: true,
-                    durationMs: typeof summary.durationMs === "number" ? summary.durationMs : undefined,
+                    durationMs:
+                      typeof summary.durationMs === "number" ? summary.durationMs : undefined,
                     errorCount: Array.isArray(summary.errors) ? summary.errors.length : 0,
                     executionId: f,
                     turnCount: 0,
                     archived: false,
                   });
                 }
-              } catch { }
+              } catch {}
             }
           }
         }
@@ -187,14 +194,15 @@ export class SessionLister {
                         status: "sleeping",
                         projectId: entry.name,
                         isExecution: true,
-                        durationMs: typeof summary.durationMs === "number" ? summary.durationMs : undefined,
+                        durationMs:
+                          typeof summary.durationMs === "number" ? summary.durationMs : undefined,
                         errorCount: Array.isArray(summary.errors) ? summary.errors.length : 0,
                         executionId: f,
                         turnCount: 0,
                         archived: false,
                       });
                     }
-                  } catch { }
+                  } catch {}
                 }
               }
             }
@@ -221,8 +229,6 @@ export class SessionLister {
         if (query.agentId) {
           filtered = filtered.filter((s) => s.agentId === query.agentId);
         }
-
-
 
         if (query.teamId) {
           filtered = filtered.filter((s) => s.teamId === query.teamId);

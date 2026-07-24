@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
-import { useState, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useTeams } from "@/hooks/useTeams";
 import { TeamCard } from "@/components/teams/TeamCard";
 import { TeamCreateModal } from "@/components/teams/TeamCreateModal";
-import { useLiterals } from "@/lib";
-import { literals as u } from "./TeamsPage.literals";
 import { Button } from "@/components/ui/Button";
-import { useNavigate } from "react-router-dom";
 import { useAgents } from "@/hooks/useAgents";
+import { useTeams } from "@/hooks/useTeams";
+import { useLiterals } from "@/lib";
 import { buildContextPath } from "@/router/paths";
+import { AnimatePresence, motion } from "framer-motion";
+import { useCallback, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { literals as u } from "./TeamsPage.literals";
 
 export function TeamsPage() {
   const l = useLiterals(u);
@@ -23,14 +23,16 @@ export function TeamsPage() {
     (id: string) => {
       navigate(buildContextPath({ type: "team", id }));
     },
-    [navigate]
+    [navigate],
   );
 
   return (
     <div className="flex-1 flex flex-col h-full bg-background overflow-hidden relative font-sans">
       <div className="h-14 px-6 border-b border-border flex items-center justify-between flex-shrink-0 bg-card/10">
         <div>
-          <h1 className="text-sm font-semibold text-foreground tracking-wide Outfit">{l.pageTitle}</h1>
+          <h1 className="text-sm font-semibold text-foreground tracking-wide Outfit">
+            {l.pageTitle}
+          </h1>
           <p className="text-[11px] text-muted-foreground hidden sm:block">{l.pageSubtitle}</p>
         </div>
         <div className="flex gap-2">
@@ -61,15 +63,16 @@ export function TeamsPage() {
               <p className="font-medium text-foreground text-sm">{l.emptyTitle}</p>
               <p className="text-xs text-muted-foreground mt-1">{l.emptyDescription}</p>
             </div>
-            <Button onClick={() => setShowCreateModal(true)} size="sm" className="mt-2 cursor-pointer">
+            <Button
+              onClick={() => setShowCreateModal(true)}
+              size="sm"
+              className="mt-2 cursor-pointer"
+            >
               {l.emptyButton}
             </Button>
           </div>
         ) : (
-          <motion.div
-            layout
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-          >
+          <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <AnimatePresence mode="popLayout">
               {teams.map((t) => (
                 <TeamCard

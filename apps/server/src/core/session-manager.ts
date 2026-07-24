@@ -1,50 +1,25 @@
 // SPDX-License-Identifier: MIT
-import {
-  createAgentSession,
-  SessionManager as VendoredSessionManager,
-  DefaultResourceLoader,
-  type AgentSession,
-  type AgentSessionEvent,
-} from "../ai";
-import { existsSync, writeFileSync, readdirSync, mkdirSync, readFileSync } from "node:fs";
-import { join, resolve } from "node:path";
-import {
-  getUserDir,
-  getSessionDir,
-  getTeamWorkspaceDir,
-  getMemoryDbPath,
-  SessionPrefix,
-  getAgentWorkspaceDir,
-  getProjectWorkspaceDir,
-} from "shared";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { getSessionDir, getUserDir, SessionPrefix } from "shared";
+import { DefaultResourceLoader, type AgentSession, type AgentSessionEvent } from "../ai";
 import { mcpRegistry } from "./mcp-registry";
 import { memoryRegistry } from "./memory/registry";
-import { userConfigManager } from "./session/user-config";
 import { sessionMetadataStore } from "./session/metadata-store";
-import { sessionPromptBuilder } from "./session/prompt-builder";
-import { sessionToolFactory } from "./session/tool-factory";
-import { sessionLister, type SessionListItem, type SessionListQuery } from "./session/session-lister";
-
 import {
-  getResolvedSkillPaths,
-  ensureWorkspaceStructure,
-  resolveSessionWorkspace,
-  resolveProjectDir,
-} from "./session/workspace-resolver";
-import { resolveAgentDefinition } from "./session/agent-definition-resolver";
-import { resolveActiveTools } from "./session/tool-activation-engine";
-import { subscribeSessionEvents } from "./session/session-event-publisher";
-import { createBeforeToolCallHook } from "./session/before-tool-call-hook";
-import { createAfterToolCallHook } from "./session/after-tool-call-hook";
-import { workspaceConfigLoader } from "./session/workspace-config-loader";
-import { DefaultModelResolver } from "./session/model-resolver";
-import { enrichSessionWithMemory } from "./session/session-memory-enricher";
-import { buildSubagentRules, evaluateSubagentRules } from "./sandbox";
+  sessionLister,
+  type SessionListItem,
+  type SessionListQuery,
+} from "./session/session-lister";
+import { userConfigManager } from "./session/user-config";
 
-export {
-  getResolvedSkillPaths,
-  ensureWorkspaceStructure,
-};
+import { buildSubagentRules, evaluateSubagentRules } from "./sandbox";
+import { subscribeSessionEvents } from "./session/session-event-publisher";
+import { enrichSessionWithMemory } from "./session/session-memory-enricher";
+import { resolveActiveTools } from "./session/tool-activation-engine";
+import { ensureWorkspaceStructure, getResolvedSkillPaths } from "./session/workspace-resolver";
+
+export { ensureWorkspaceStructure, getResolvedSkillPaths };
 
 interface UserSessionEntry {
   session: AgentSession;
@@ -59,7 +34,11 @@ export interface SessionOverrides {
   skipMemory?: boolean;
 }
 
-class SessionManager {
+/**
+ * SessionManager is the application-level orchestrator responsible for session lifecycle,
+ * agent creation, tool assignment, model resolution, workspace setup, and active session caching.
+ */
+export class SessionManager {
   private sessions = new Map<string, UserSessionEntry>();
   private pendingSessions = new Map<string, Promise<AgentSession>>();
 
@@ -79,11 +58,11 @@ class SessionManager {
   subscribeToSession(
     username: string,
     sessionId: string,
-    listener: (event: AgentSessionEvent) => void
+    listener: (event: AgentSessionEvent) => void,
   ): () => void {
     const key = this.getSessionKey(username, sessionId);
     const entry = this.sessions.get(key);
-    if (!entry) return () => { };
+    if (!entry) return () => {};
 
     return entry.session.subscribe(listener);
   }
@@ -91,7 +70,7 @@ class SessionManager {
   subscribeOnce(
     username: string,
     sessionId: string,
-    listener: (event: AgentSessionEvent) => void
+    listener: (event: AgentSessionEvent) => void,
   ): void {
     const key = this.getSessionKey(username, sessionId);
     const entry = this.sessions.get(key);
@@ -203,16 +182,20 @@ class SessionManager {
   }
 
   async listSessions(username: string, query?: SessionListQuery): Promise<SessionListItem[]> {
-    return sessionLister.listSessions(username, {
-      ensureUserDir: (u) => userConfigManager.ensureUserDir(u),
-      isSessionActive: (sId) => {
-        const session = this.sessions.get(this.getSessionKey(username, sId));
-        if (session) {
-          return session.session.isStreaming ? "streaming" : "active";
-        }
-        return "sleeping";
+    return sessionLister.listSessions(
+      username,
+      {
+        ensureUserDir: (u) => userConfigManager.ensureUserDir(u),
+        isSessionActive: (sId) => {
+          const session = this.sessions.get(this.getSessionKey(username, sId));
+          if (session) {
+            return session.session.isStreaming ? "streaming" : "active";
+          }
+          return "sleeping";
+        },
       },
-    }, query);
+      query,
+    );
   }
 
   getLiveStatuses(username: string): Record<string, "streaming" | "active" | "sleeping"> {
@@ -231,7 +214,7 @@ class SessionManager {
     sessionId: string,
     projectId?: string,
     agentId?: string,
-    overrides?: SessionOverrides
+    overrides?: SessionOverrides,
   ): Promise<AgentSession> {
     const key = this.getSessionKey(username, sessionId);
     const existing = this.sessions.get(key);
@@ -264,20 +247,32 @@ class SessionManager {
           skipMemory: overrides?.skipMemory,
           customTools: overrides?.customTools,
           resourceLoader: overrides?.resourceLoader,
-          toolProfile: (sessionId.startsWith(SessionPrefix.SUBAGENT) || sessionId.startsWith(SessionPrefix.DELEGATE)) ? "subagent" : "user-session",
+          toolProfile:
+            sessionId.startsWith(SessionPrefix.SUBAGENT) ||
+            sessionId.startsWith(SessionPrefix.DELEGATE)
+              ? "subagent"
+              : "user-session",
         });
 
         const session = runtime.session;
         const memory = await memoryRegistry.get(
           `session:${sessionId}`,
           runtime.context.memoryDbPath,
-          runtime.context.memoryEnabled
+          runtime.context.memoryEnabled,
         );
 
-        const isSubagent = sessionId.startsWith(SessionPrefix.SUBAGENT) || sessionId.startsWith(SessionPrefix.DELEGATE);
+        const isSubagent =
+          sessionId.startsWith(SessionPrefix.SUBAGENT) ||
+          sessionId.startsWith(SessionPrefix.DELEGATE);
         const metadataPath = join(runtime.context.sessionDir, "metadata.json");
         const existingMeta = existsSync(metadataPath)
-          ? (() => { try { return JSON.parse(readFileSync(metadataPath, "utf-8")); } catch { return {}; } })()
+          ? (() => {
+              try {
+                return JSON.parse(readFileSync(metadataPath, "utf-8"));
+              } catch {
+                return {};
+              }
+            })()
           : {};
 
         const systemTools = sessionMetadataStore.getSessionTools(username, sessionId);
@@ -294,9 +289,9 @@ class SessionManager {
             username,
             sessionId,
             existingMeta ? (existingMeta as any).parentSessionId : undefined,
-            existingMeta ? (existingMeta as any).subagentType : undefined
+            existingMeta ? (existingMeta as any).subagentType : undefined,
           );
-          finalTools = combinedTools.filter(toolName => {
+          finalTools = combinedTools.filter((toolName) => {
             const verdict = evaluateSubagentRules(toolName, {}, effectiveRules);
             return !(verdict && verdict.allow === false);
           });
@@ -322,7 +317,10 @@ class SessionManager {
                 }
               }
             } catch (err) {
-              console.error(`[MCP Dynamic Load] Failed to load MCP tools for session ${sessionId}:`, err);
+              console.error(
+                `[MCP Dynamic Load] Failed to load MCP tools for session ${sessionId}:`,
+                err,
+              );
             }
           })();
         }
@@ -334,7 +332,7 @@ class SessionManager {
           metadataStore: sessionMetadataStore,
         });
 
-        const unsubscribe = session.subscribe(() => { });
+        const unsubscribe = session.subscribe(() => {});
 
         const entry: UserSessionEntry = {
           session,
@@ -363,8 +361,8 @@ class SessionManager {
       const sessions = await this.listSessions(username, { archived: "true" });
       const activeSessions = await this.listSessions(username, { archived: "false" });
       const allSessions = [...sessions, ...activeSessions];
-      
-      const regularSessions = allSessions.filter(s => !s.isExecution);
+
+      const regularSessions = allSessions.filter((s) => !s.isExecution);
 
       const toDelete = new Set<string>();
 
@@ -384,7 +382,9 @@ class SessionManager {
       if (maxCountStr) {
         const maxCount = parseInt(maxCountStr, 10);
         if (!isNaN(maxCount) && maxCount > 0) {
-          const sorted = [...regularSessions].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+          const sorted = [...regularSessions].sort(
+            (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+          );
           if (sorted.length > maxCount) {
             const extra = sorted.slice(maxCount);
             for (const s of extra) {

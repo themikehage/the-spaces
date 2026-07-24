@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
-import type { SpacesHost } from "./ports/spaces-host.port";
-import type { WorkspaceConfig } from "./ports/workspace-config.port";
-import { existsSync, readFileSync, writeFileSync, readdirSync } from "node:fs";
-import { workspaceConfigLoader } from "./session/workspace-config-loader";
-import { resolveProjectDir } from "./session/workspace-resolver";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { agentRegistry } from "../agents";
 import { teamStore } from "../teams/team-store";
 import { delegationRegistry } from "./delegation-registry";
 import { mcpRegistry } from "./mcp-registry";
+import type { SpacesHost } from "./ports/spaces-host.port";
+import type { WorkspaceConfig } from "./ports/workspace-config.port";
+import { workspaceConfigLoader } from "./session/workspace-config-loader";
+import { resolveProjectDir } from "./session/workspace-resolver";
 import { uiApprovalRegistry } from "./ui-approval-registry";
 
-import { FileSessionStore } from "./stores/file-session-store";
 import { FileArtifactStore } from "./stores/file-artifact-store";
+import { FileSessionStore } from "./stores/file-session-store";
 
 export class ServerSpacesHost implements SpacesHost {
   stores = {
@@ -80,7 +80,12 @@ export class ServerSpacesHost implements SpacesHost {
       const list = delegationRegistry.getAll(params.username, params.parentSessionId);
       const found = list.find((d) => d.targetLabel.includes(params.targetAgentId));
       if (found?.result) return found.result;
-      return { status: "success", executive_summary: "Subagent spawned.", artifacts: "none", risks: "None" };
+      return {
+        status: "success",
+        executive_summary: "Subagent spawned.",
+        artifacts: "none",
+        risks: "None",
+      };
     },
     async delegate(params: {
       parentSessionId: string;
@@ -91,7 +96,12 @@ export class ServerSpacesHost implements SpacesHost {
       const list = delegationRegistry.getAll(params.username, params.parentSessionId);
       const found = list.find((d) => d.targetLabel.includes(params.targetAgentId));
       if (found?.result) return found.result;
-      return { status: "success", executive_summary: "Task delegated.", artifacts: "none", risks: "None" };
+      return {
+        status: "success",
+        executive_summary: "Task delegated.",
+        artifacts: "none",
+        risks: "None",
+      };
     },
   };
 

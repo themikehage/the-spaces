@@ -25,7 +25,9 @@ export const globalErrorHandler = (err: Error, c: Context) => {
     {
       error: {
         code: "INTERNAL_ERROR",
-        message: isDev ? err.message || "An unexpected error occurred" : "An unexpected error occurred",
+        message: isDev
+          ? err.message || "An unexpected error occurred"
+          : "An unexpected error occurred",
         requestId,
         ...(isDev && err.stack ? { stack: err.stack } : {}),
       },

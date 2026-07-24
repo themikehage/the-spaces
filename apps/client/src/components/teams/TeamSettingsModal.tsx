@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import type { Team } from "shared";
-import { useLiterals } from "@/lib";
-import { literals as u } from "./TeamSettingsModal.literals";
 import { AvatarUploadField } from "@/components/shared/AvatarUploadField";
-import { DEFAULT_AVATAR_PREFIX, isDefaultAvatar } from "@/lib/defaultAvatars";
 import { Button } from "@/components/ui/Button";
+import { useLiterals } from "@/lib";
+import { DEFAULT_AVATAR_PREFIX, isDefaultAvatar } from "@/lib/defaultAvatars";
+import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import type { Team } from "shared";
+import { literals as u } from "./TeamSettingsModal.literals";
 
 interface Props {
   team: Team;
@@ -164,7 +164,11 @@ export function TeamSettingsModal({
             className="text-muted-foreground hover:text-foreground p-1 rounded-lg hover:bg-card-hover transition-colors cursor-pointer"
           >
             <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              <path
+                fillRule="evenodd"
+                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              />
             </svg>
           </button>
         </div>
@@ -200,7 +204,9 @@ export function TeamSettingsModal({
             </div>
 
             <div>
-              <label className="block text-muted-foreground font-medium mb-1">{l.description}</label>
+              <label className="block text-muted-foreground font-medium mb-1">
+                {l.description}
+              </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -216,7 +222,9 @@ export function TeamSettingsModal({
                 <p className="text-[10px] leading-tight text-muted-foreground mt-1">
                   {l.orchestrationDesc}
                 </p>
-                <p className="text-[10px] leading-tight text-muted-foreground mt-2">{l.teamTypeImmutable}</p>
+                <p className="text-[10px] leading-tight text-muted-foreground mt-2">
+                  {l.teamTypeImmutable}
+                </p>
               </div>
             </div>
 
@@ -272,8 +280,12 @@ export function TeamSettingsModal({
 
           {onDeleteTeam && (
             <div className="pt-4 border-t border-error/20 space-y-3">
-              <h4 className="text-xs font-bold text-error uppercase tracking-wider">{l.deleteTeam}</h4>
-              <p className="text-[11px] text-text-secondary leading-relaxed font-body">{l.deleteTeamDescription}</p>
+              <h4 className="text-xs font-bold text-error uppercase tracking-wider">
+                {l.deleteTeam}
+              </h4>
+              <p className="text-[11px] text-text-secondary leading-relaxed font-body">
+                {l.deleteTeamDescription}
+              </p>
               <form onSubmit={handleDelete} className="space-y-3">
                 <div>
                   <label className="block text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1">

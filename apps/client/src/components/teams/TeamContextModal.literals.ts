@@ -22,6 +22,7 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     saveContext: "Guardar Contexto",
     emptyContext: "No hay variables de contexto configuradas para este equipo.",
     addVar: "Añadir Variable de Contexto",
-    description: "Define variables clave-valor que los agentes conocerán al responder en este equipo",
+    description:
+      "Define variables clave-valor que los agentes conocerán al responder en este equipo",
   },
 };

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { Home, Library, Settings, Terminal, Cpu } from "lucide-react";
 import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
+import { Cpu, Home, Library, Settings, Terminal } from "lucide-react";
 
 interface MobileBottomBarProps {
   currentPage: string;

@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
-import { apiFetch } from "@/lib/api";
-import { useState, useCallback, useEffect } from "react";
-import { useTeam } from "@/hooks/useTeam";
-import { TeamMessageList } from "./TeamMessageList";
-import { ChatInput } from "@/components/chat/ChatInput";
-import type { MentionTarget } from "@/components/chat/ChatInput";
-import { TeamMembersModal } from "./TeamMembersModal";
-import { useNavigate } from "react-router-dom";
-import { getSessionPath } from "@/lib/session-utils";
 import { ChatArea } from "@/components/chat/ChatArea";
-import { TeamContextModal } from "./TeamContextModal";
-import type { TeamMember, AgentInfo, TeamContextItem } from "shared";
+import type { MentionTarget } from "@/components/chat/ChatInput";
+import { ChatInput } from "@/components/chat/ChatInput";
 import { EntityAvatar } from "@/components/shared/EntityAvatar";
+import { useTeam } from "@/hooks/useTeam";
+import { apiFetch } from "@/lib/api";
+import { getSessionPath } from "@/lib/session-utils";
+import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import type { AgentInfo, TeamContextItem, TeamMember } from "shared";
+import { TeamContextModal } from "./TeamContextModal";
+import { TeamMembersModal } from "./TeamMembersModal";
+import { TeamMessageList } from "./TeamMessageList";
 
 interface Props {
   activeTeam: { id: string; name: string; avatarUrl?: string };
@@ -20,7 +20,10 @@ interface Props {
 }
 
 export function TeamChatArea({ activeTeam, sessionId, variantMode = false }: Props) {
-  const { team, messages, streamingAgents, sendMessage, abortDispatch, fetchTeam } = useTeam(activeTeam.id, sessionId);
+  const { team, messages, streamingAgents, sendMessage, abortDispatch, fetchTeam } = useTeam(
+    activeTeam.id,
+    sessionId,
+  );
   const navigate = useNavigate();
 
   const isStreaming = Object.keys(streamingAgents).length > 0;
@@ -42,7 +45,8 @@ export function TeamChatArea({ activeTeam, sessionId, variantMode = false }: Pro
     { id: "__user__", name: "user" },
     ...teamMembers.map((m) => ({
       id: m.agentId,
-      name: registeredAgents.find((a) => a.id === m.agentId)?.name || m.agentId})),
+      name: registeredAgents.find((a) => a.id === m.agentId)?.name || m.agentId,
+    })),
   ];
 
   const loadTeamDetails = useCallback(async () => {
@@ -80,8 +84,9 @@ export function TeamChatArea({ activeTeam, sessionId, variantMode = false }: Pro
   const handleAddMember = async (data: TeamMember) => {
     await apiFetch(`/api/teams/${activeTeam.id}/members`, {
       method: "POST",
-      headers: { "Content-Type": "application/json"},
-      body: JSON.stringify(data)});
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
     await loadTeamDetails();
     await fetchTeam();
   };
@@ -89,21 +94,34 @@ export function TeamChatArea({ activeTeam, sessionId, variantMode = false }: Pro
   const handleUpdateMember = async (agentId: string, data: Partial<TeamMember>) => {
     await apiFetch(`/api/teams/${activeTeam.id}/members/${agentId}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json"},
-      body: JSON.stringify(data)});
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
     await loadTeamDetails();
     await fetchTeam();
   };
 
   const handleRemoveMember = async (agentId: string) => {
     await apiFetch(`/api/teams/${activeTeam.id}/members/${agentId}`, {
-      method: "DELETE"});
+      method: "DELETE",
+    });
     await loadTeamDetails();
     await fetchTeam();
   };
 
-  const handleOpenSubagentConsole = (toolCallId: string, targetType?: string, targetId?: string) => {
-    const prefix = targetType === "delegate" || targetType === "channel" || targetType === "agent" || targetType === "project" || targetType === "session" ? "del" : "sub";
+  const handleOpenSubagentConsole = (
+    toolCallId: string,
+    targetType?: string,
+    targetId?: string,
+  ) => {
+    const prefix =
+      targetType === "delegate" ||
+      targetType === "channel" ||
+      targetType === "agent" ||
+      targetType === "project" ||
+      targetType === "session"
+        ? "del"
+        : "sub";
     const subSessionId = `${prefix}_${toolCallId}`;
 
     let context: any = { activeTeam };
@@ -169,7 +187,11 @@ export function TeamChatArea({ activeTeam, sessionId, variantMode = false }: Pro
                 title={`Contexto (${team?.context?.length ?? 0} variables)`}
               >
                 <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                  <path
+                    fillRule="evenodd"
+                    d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 {(team?.context?.length ?? 0) > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-primary text-background font-bold text-xs rounded-full flex items-center justify-center">
@@ -198,11 +220,7 @@ export function TeamChatArea({ activeTeam, sessionId, variantMode = false }: Pro
 
         {/* Content area */}
         <div className="flex-1 min-h-0 relative">
-          <ChatArea
-            sessionId={sessionId}
-            activeProjectName={null}
-            activeTeam={activeTeam}
-          />
+          <ChatArea sessionId={sessionId} activeProjectName={null} activeTeam={activeTeam} />
         </div>
 
         {showMembersModal && (
@@ -217,8 +235,6 @@ export function TeamChatArea({ activeTeam, sessionId, variantMode = false }: Pro
           />
         )}
 
-
-
         {showContextModal && (
           <TeamContextModal
             teamName={team?.name || activeTeam.name}
@@ -231,12 +247,15 @@ export function TeamChatArea({ activeTeam, sessionId, variantMode = false }: Pro
     );
   }
 
-  const agentAvatarMap = registeredAgents.reduce((acc, agent) => {
-    if (agent.id && agent.avatarUrl) {
-      acc[agent.id] = agent.avatarUrl;
-    }
-    return acc;
-  }, {} as Record<string, string>);
+  const agentAvatarMap = registeredAgents.reduce(
+    (acc, agent) => {
+      if (agent.id && agent.avatarUrl) {
+        acc[agent.id] = agent.avatarUrl;
+      }
+      return acc;
+    },
+    {} as Record<string, string>,
+  );
 
   return (
     <div className="flex-1 flex flex-col h-full bg-background overflow-hidden relative">
@@ -275,7 +294,11 @@ export function TeamChatArea({ activeTeam, sessionId, variantMode = false }: Pro
               title={`Contexto (${team?.context?.length ?? 0} variables)`}
             >
               <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+                  clipRule="evenodd"
+                />
               </svg>
               {(team?.context?.length ?? 0) > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-primary text-background font-bold text-xs rounded-full flex items-center justify-center">
@@ -298,8 +321,6 @@ export function TeamChatArea({ activeTeam, sessionId, variantMode = false }: Pro
                 </span>
               )}
             </button>
-
-
           </div>
         </div>
       )}
@@ -309,7 +330,12 @@ export function TeamChatArea({ activeTeam, sessionId, variantMode = false }: Pro
         <TeamMessageList
           messages={messages}
           streamingAgents={streamingAgents}
-          mentionNames={["user", ...teamMembers.map((m) => registeredAgents.find((a) => a.id === m.agentId)?.name || m.agentId)]}
+          mentionNames={[
+            "user",
+            ...teamMembers.map(
+              (m) => registeredAgents.find((a) => a.id === m.agentId)?.name || m.agentId,
+            ),
+          ]}
           sessionId={sessionId}
           activeTeamId={activeTeam.id}
           onOpenSubagentConsole={handleOpenSubagentConsole}
@@ -339,8 +365,6 @@ export function TeamChatArea({ activeTeam, sessionId, variantMode = false }: Pro
           onRemoveMember={handleRemoveMember}
         />
       )}
-
-
 
       {showContextModal && (
         <TeamContextModal

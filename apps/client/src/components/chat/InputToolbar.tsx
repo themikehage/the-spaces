@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
-import { useState, useRef } from "react";
-import { Paperclip, BookOpen, Sliders } from "lucide-react";
-import { ModelSelector } from "./ModelSelector";
-import { SkillsPopover } from "./SkillsPopover";
-import { ToolsPopover } from "./ToolsPopover";
-import { SendStopButton } from "./SendStopButton";
-import type { SkillInfo } from "./SkillsSelector";
 import { useLiterals, type ContextUsage } from "@/lib";
+import { BookOpen, Paperclip, Sliders } from "lucide-react";
+import { useRef, useState } from "react";
 import { literals as u } from "./ChatInput.literals";
 import { ContextButton } from "./ContextButton";
+import { ModelSelector } from "./ModelSelector";
+import { SendStopButton } from "./SendStopButton";
+import { SkillsPopover } from "./SkillsPopover";
+import type { SkillInfo } from "./SkillsSelector";
+import { ToolsPopover } from "./ToolsPopover";
 
 interface InputToolbarProps {
   sessionId: string | null;
@@ -54,21 +54,22 @@ export function InputToolbar({
   const skillsTriggerRef = useRef<HTMLButtonElement>(null);
   const toolsTriggerRef = useRef<HTMLButtonElement>(null);
 
-  const isReadOnly = executionMode === "readonly" || (
-    activeTools.includes("read") &&
-    activeTools.includes("grep") &&
-    activeTools.includes("find") &&
-    activeTools.includes("ls") &&
-    !activeTools.includes("write") &&
-    !activeTools.includes("edit") &&
-    !activeTools.includes("bash")
-  );
+  const isReadOnly =
+    executionMode === "readonly" ||
+    (activeTools.includes("read") &&
+      activeTools.includes("grep") &&
+      activeTools.includes("find") &&
+      activeTools.includes("ls") &&
+      !activeTools.includes("write") &&
+      !activeTools.includes("edit") &&
+      !activeTools.includes("bash"));
 
   const isAutonomous = executionMode === "autonomous";
   const isStandard = executionMode === "standard" || (!isReadOnly && !isAutonomous);
 
   let toolsLabelText = `${activeTools.length} tools`;
-  if (isAutonomous) toolsLabelText = l.fullAccess; // displays Autonomous
+  if (isAutonomous)
+    toolsLabelText = l.fullAccess; // displays Autonomous
   else if (isStandard) toolsLabelText = l.standard || "Standard";
   else if (isReadOnly) toolsLabelText = l.readOnly;
 
@@ -148,12 +149,7 @@ export function InputToolbar({
 
       {/* Right controls */}
       <div className="flex items-center gap-3">
-        <SendStopButton
-          streaming={streaming}
-          disabled={disabled}
-          onSend={onSend}
-          onStop={onStop}
-        />
+        <SendStopButton streaming={streaming} disabled={disabled} onSend={onSend} onStop={onStop} />
       </div>
     </div>
   );

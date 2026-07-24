@@ -1,4 +1,5 @@
 <!-- SPDX-License-Identifier: MIT -->
+
 # Contributing to Spaces
 
 Thank you for your interest in contributing to **Spaces**! We welcome contributions from developers of all skill levels.
@@ -14,11 +15,13 @@ By participating in this project, you agree to abide by our [Code of Conduct](CO
 ## 2. Development Setup
 
 ### Prerequisites
+
 - [Node.js](https://nodejs.org/) >= 20.x
 - [Bun](https://bun.sh/) >= 1.1
 - [pnpm](https://pnpm.io/) >= 9.x
 
 ### Getting Started
+
 1. Fork and clone the repository:
    ```bash
    git clone https://github.com/YOUR-USERNAME/spaces.git

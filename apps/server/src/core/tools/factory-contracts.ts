@@ -21,7 +21,8 @@ export interface EntityContract {
 export const FACTORY_CONTRACTS: Record<string, EntityContract> = {
   teams: {
     entity: "teams",
-    description: "Structured multi-agent workflows. Two immutable types: Orchestration (persistent leader) and Negotiation (debate rounds).",
+    description:
+      "Structured multi-agent workflows. Two immutable types: Orchestration (persistent leader) and Negotiation (debate rounds).",
     actions: {
       get: {
         description: "List all teams or get one by id",
@@ -30,16 +31,44 @@ export const FACTORY_CONTRACTS: Record<string, EntityContract> = {
         },
       },
       upsert: {
-        description: "Create a new team (teamType is immutable after creation) or update an existing one",
+        description:
+          "Create a new team (teamType is immutable after creation) or update an existing one",
         params: {
           id: { type: "string", required: true, description: "Unique team identifier" },
           name: { type: "string", required: true, description: "Display name" },
-          teamType: { type: "string", required: false, enum: ["Orchestration", "Negotiation"], default: "Negotiation", description: "Immutable after creation" },
-          mode: { type: "string", required: false, enum: ["debate", "vote", "consensus"], description: "Debate mode (Negotiation teams only)" },
-          maxRounds: { type: "number", required: false, description: "Max debate rounds (default 5)" },
-          members: { type: "array", required: false, description: "Array of { agentId, role: lead|member|observer }" },
-          negotiationProtocol: { type: "object", required: false, description: "{ arbiterAgentId?, mode?, quorumThreshold? } — Negotiation teams only" },
-          avatarUrl: { type: "string", required: false, description: "URL or default: prefix for team avatar image" },
+          teamType: {
+            type: "string",
+            required: false,
+            enum: ["Orchestration", "Negotiation"],
+            default: "Negotiation",
+            description: "Immutable after creation",
+          },
+          mode: {
+            type: "string",
+            required: false,
+            enum: ["debate", "vote", "consensus"],
+            description: "Debate mode (Negotiation teams only)",
+          },
+          maxRounds: {
+            type: "number",
+            required: false,
+            description: "Max debate rounds (default 5)",
+          },
+          members: {
+            type: "array",
+            required: false,
+            description: "Array of { agentId, role: lead|member|observer }",
+          },
+          negotiationProtocol: {
+            type: "object",
+            required: false,
+            description: "{ arbiterAgentId?, mode?, quorumThreshold? } — Negotiation teams only",
+          },
+          avatarUrl: {
+            type: "string",
+            required: false,
+            description: "URL or default: prefix for team avatar image",
+          },
         },
       },
       delete: {
@@ -60,7 +89,12 @@ export const FACTORY_CONTRACTS: Record<string, EntityContract> = {
         params: {
           id: { type: "string", required: true, description: "Team ID" },
           agentId: { type: "string", required: true, description: "Agent ID to add/update" },
-          role: { type: "string", required: false, enum: ["lead", "member", "observer"], description: "Member role" },
+          role: {
+            type: "string",
+            required: false,
+            enum: ["lead", "member", "observer"],
+            description: "Member role",
+          },
         },
       },
     },
@@ -80,12 +114,29 @@ export const FACTORY_CONTRACTS: Record<string, EntityContract> = {
         params: {
           id: { type: "string", required: true, description: "Unique agent identifier" },
           name: { type: "string", required: true, description: "Display name for the agent" },
-          role: { type: "string", required: true, description: "Agent role (e.g. reviewer, builder, tester)" },
-          systemPrompt: { type: "string", required: false, description: "System prompt defining agent behavior" },
-          model: { type: "string", required: false, description: "Model identifier (e.g. anthropic/claude-3-5-sonnet-20241022)" },
+          role: {
+            type: "string",
+            required: true,
+            description: "Agent role (e.g. reviewer, builder, tester)",
+          },
+          systemPrompt: {
+            type: "string",
+            required: false,
+            description: "System prompt defining agent behavior",
+          },
+          model: {
+            type: "string",
+            required: false,
+            description: "Model identifier (e.g. anthropic/claude-3-5-sonnet-20241022)",
+          },
           skills: { type: "array", required: false, description: "Array of skill IDs to attach" },
           avatarUrl: { type: "string", required: false, description: "URL for agent avatar image" },
-          scope: { type: "object", required: false, description: "Optional scope configuration: { type: 'global' | 'project', id?: string }" },
+          scope: {
+            type: "object",
+            required: false,
+            description:
+              "Optional scope configuration: { type: 'global' | 'project', id?: string }",
+          },
         },
       },
       delete: {
@@ -104,17 +155,37 @@ export const FACTORY_CONTRACTS: Record<string, EntityContract> = {
       get: {
         description: "List all projects or get one by id",
         params: {
-          id: { type: "string", required: false, description: "Project UUID or name. Omit to list all." },
+          id: {
+            type: "string",
+            required: false,
+            description: "Project UUID or name. Omit to list all.",
+          },
         },
       },
       upsert: {
         description: "Create a new project (empty or clone) or update project metadata/assignment",
         params: {
-          id: { type: "string", required: true, description: "Project name (used as workspace identifier)" },
+          id: {
+            type: "string",
+            required: true,
+            description: "Project name (used as workspace identifier)",
+          },
           name: { type: "string", required: true, description: "Project name" },
-          cloneUrl: { type: "string", required: false, description: "Git URL to clone. Omit to create empty project. Only used on creation." },
-          avatarUrl: { type: "string", required: false, description: "URL or default: prefix for project avatar image" },
-          assignment: { type: "object", required: false, description: "Project agent assignment object: { leaderId, members }" },
+          cloneUrl: {
+            type: "string",
+            required: false,
+            description: "Git URL to clone. Omit to create empty project. Only used on creation.",
+          },
+          avatarUrl: {
+            type: "string",
+            required: false,
+            description: "URL or default: prefix for project avatar image",
+          },
+          assignment: {
+            type: "object",
+            required: false,
+            description: "Project agent assignment object: { leaderId, members }",
+          },
         },
       },
       assign: {
@@ -129,9 +200,17 @@ export const FACTORY_CONTRACTS: Record<string, EntityContract> = {
         description: "Add or update an assigned team member on a project",
         params: {
           id: { type: "string", required: true, description: "Project UUID or name" },
-          agentId: { type: "string", required: true, description: "Agent ID to assign as team member" },
+          agentId: {
+            type: "string",
+            required: true,
+            description: "Agent ID to assign as team member",
+          },
           name: { type: "string", required: false, description: "Display name snapshot" },
-          role: { type: "string", required: false, description: "Member role (e.g. Frontend, QA, Backend)" },
+          role: {
+            type: "string",
+            required: false,
+            description: "Member role (e.g. Frontend, QA, Backend)",
+          },
         },
       },
       delete: {
@@ -142,8 +221,6 @@ export const FACTORY_CONTRACTS: Record<string, EntityContract> = {
       },
     },
   },
-
-
 
   settings: {
     entity: "settings",
@@ -156,9 +233,21 @@ export const FACTORY_CONTRACTS: Record<string, EntityContract> = {
       upsert: {
         description: "Update factory identity settings (name, avatar URL, system prompt)",
         params: {
-          factoryName: { type: "string", required: false, description: "Display name for the Spaces" },
-          factoryAvatarUrl: { type: "string", required: false, description: "URL or default: prefix for the Spaces avatar image" },
-          factorySystemPrompt: { type: "string", required: false, description: "Custom system prompt injected into all global sessions" },
+          factoryName: {
+            type: "string",
+            required: false,
+            description: "Display name for the Spaces",
+          },
+          factoryAvatarUrl: {
+            type: "string",
+            required: false,
+            description: "URL or default: prefix for the Spaces avatar image",
+          },
+          factorySystemPrompt: {
+            type: "string",
+            required: false,
+            description: "Custom system prompt injected into all global sessions",
+          },
         },
       },
     },
@@ -194,14 +283,26 @@ export const FACTORY_CONTRACTS: Record<string, EntityContract> = {
       get: {
         description: "List all env vars (values masked) or reveal one by key",
         params: {
-          key: { type: "string", required: false, description: "Variable key to reveal. Omit to list all (masked)." },
+          key: {
+            type: "string",
+            required: false,
+            description: "Variable key to reveal. Omit to list all (masked).",
+          },
         },
       },
       upsert: {
         description: "Set or update an environment variable",
         params: {
-          key: { type: "string", required: true, description: "Variable name (uppercase, e.g. GITHUB_TOKEN)" },
-          value: { type: "string", required: true, description: "Variable value (stored encrypted at rest)" },
+          key: {
+            type: "string",
+            required: true,
+            description: "Variable name (uppercase, e.g. GITHUB_TOKEN)",
+          },
+          value: {
+            type: "string",
+            required: true,
+            description: "Variable value (stored encrypted at rest)",
+          },
         },
       },
       delete: {
@@ -220,13 +321,21 @@ export const FACTORY_CONTRACTS: Record<string, EntityContract> = {
       get: {
         description: "List all providers with auth status or get one by id",
         params: {
-          id: { type: "string", required: false, description: "Provider ID (e.g. openai, anthropic). Omit to list all." },
+          id: {
+            type: "string",
+            required: false,
+            description: "Provider ID (e.g. openai, anthropic). Omit to list all.",
+          },
         },
       },
       upsert: {
         description: "Set or update an API key for a provider",
         params: {
-          id: { type: "string", required: true, description: "Provider ID (e.g. openai, anthropic, groq)" },
+          id: {
+            type: "string",
+            required: true,
+            description: "Provider ID (e.g. openai, anthropic, groq)",
+          },
           apiKey: { type: "string", required: true, description: "The API key to set" },
         },
       },
@@ -254,8 +363,16 @@ export const FACTORY_CONTRACTS: Record<string, EntityContract> = {
         params: {
           id: { type: "string", required: true, description: "Skill identifier (directory name)" },
           name: { type: "string", required: true, description: "Skill display name" },
-          description: { type: "string", required: true, description: "Short description shown in skill list" },
-          content: { type: "string", required: true, description: "Full markdown skill instructions (SKILL.md body)" },
+          description: {
+            type: "string",
+            required: true,
+            description: "Short description shown in skill list",
+          },
+          content: {
+            type: "string",
+            required: true,
+            description: "Full markdown skill instructions (SKILL.md body)",
+          },
         },
       },
       delete: {

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 import { spawn } from "node:child_process";
+import { join } from "node:path";
+import { type PreviewConfig, getProjectWorkspaceDir } from "shared";
 import { broadcastToUser } from "../ws/handler";
 import { getBuildCommand } from "./preview-config";
-import { type PreviewConfig, getProjectWorkspaceDir } from "shared";
 import { resolveProjectDir } from "./session/workspace-resolver";
-import { join } from "node:path";
 
 const activeBuilds = new Map<string, AbortController>();
 
@@ -19,7 +19,7 @@ export function isBuilding(username: string, projectName: string): boolean {
 export async function runBuild(
   username: string,
   projectName: string,
-  config: PreviewConfig
+  config: PreviewConfig,
 ): Promise<{ success: boolean; exitCode: number | null }> {
   const key = buildKey(username, projectName);
 
@@ -34,7 +34,9 @@ export async function runBuild(
   }
 
   const resolved = resolveProjectDir(username, projectName);
-  const projectDir = resolved ? join(resolved, "workspace") : getProjectWorkspaceDir(username, projectName);
+  const projectDir = resolved
+    ? join(resolved, "workspace")
+    : getProjectWorkspaceDir(username, projectName);
   const command = getBuildCommand(config, username, projectName);
 
   if (!command) {

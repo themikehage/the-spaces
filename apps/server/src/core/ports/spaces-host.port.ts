@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-﻿import type { EnvelopeResult, ISessionStore, IArtifactStore, IMemoryStore } from "shared";
-import type { WorkspaceConfig } from "./workspace-config.port";
+import type { EnvelopeResult, IArtifactStore, IMemoryStore, ISessionStore } from "shared";
 import type { ModelResolutionContext } from "./model-resolver";
+import type { WorkspaceConfig } from "./workspace-config.port";
 
 export interface WorkspaceFs {
   readFile(path: string): Promise<string>;
@@ -59,11 +59,15 @@ export interface McpPort {
 }
 
 export interface AgentDirectoryPort {
-  getAgentDef(agentId: string): Promise<{ name: string; role: string; systemPrompt: string } | null>;
+  getAgentDef(
+    agentId: string,
+  ): Promise<{ name: string; role: string; systemPrompt: string } | null>;
 }
 
 export interface TeamDirectoryPort {
-  getTeamDef(teamId: string): Promise<{ name: string; leaderId: string; memberIds: string[] } | null>;
+  getTeamDef(
+    teamId: string,
+  ): Promise<{ name: string; leaderId: string; memberIds: string[] } | null>;
 }
 
 export interface ScopePort {
@@ -91,4 +95,3 @@ export interface SpacesHost {
   teams?: TeamDirectoryPort;
   scope?: ScopePort;
 }
-

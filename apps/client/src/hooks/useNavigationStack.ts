@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export interface NavigationStackItem {
   type: "home" | "context" | "admin";

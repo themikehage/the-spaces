@@ -23,7 +23,9 @@ Esto significa que **cualquier instalación sin `BETTER_AUTH_SECRET` configurado
 `apps/server/src/routes/settings.ts:232` imprime prefijos y sufijos de API keys a consola:
 
 ```ts
-console.log(`[DIAGNOSTIC TEST-IMAGE-GEN] Resolved key length: ${apiKey.length}. Start: '${apiKey.substring(0, 15)}' End: '${apiKey.substring(apiKey.length - 15)}'`);
+console.log(
+  `[DIAGNOSTIC TEST-IMAGE-GEN] Resolved key length: ${apiKey.length}. Start: '${apiKey.substring(0, 15)}' End: '${apiKey.substring(apiKey.length - 15)}'`,
+);
 ```
 
 Esto es un vector de fuga de credenciales: cualquier log aggregator, sistema de monitoreo, o incluso el stdout del contenedor expone fragmentos de keys. Además, el patrón `[DIAGNOSTIC ...]` sugiere que es código de debugging que nunca debió llegar a producción.
@@ -35,10 +37,12 @@ ADK usa `secretlint` en pre-commit y en CI para detectar API keys de Google Clou
 ### Lo que falta:
 
 - **Eliminar el fallback hardcodeado.** `env-crypto.ts` debe crashear al inicio si `BETTER_AUTH_SECRET` no está definido, con un mensaje de error claro:
+
   ```
   FATAL: BETTER_AUTH_SECRET environment variable is required.
   Generate one with: openssl rand -hex 32
   ```
+
   Alternativa: auto-generar una clave criptográficamente aleatoria si no se provee, persistirla internamente (no hardcodeada), y advertir en el log que se generó una clave efímera.
 
 - **Eliminar todo logging de API keys.** Borrar los `console.log`/`console.error` con `[DIAGNOSTIC TEST-IMAGE-GEN]` en `settings.ts:232,240`. Cualquier logging de diagnóstico que use prefijos/sufijos de secretos debe eliminarse completamente.
@@ -68,14 +72,15 @@ El Área 1 demuestra que el riesgo es real: se commiteó una clave de cifrado ha
 
 ADK usa `secretlint` con `@secretlint/secretlint-rule-preset-recommend` más una regla custom para el formato de API keys de Google Cloud. Corre en dos puntos:
 
-| Punto | Propósito |
-|---|---|
-| Pre-commit (husky/lint-staged) | Bloquear el commit antes de que llegue al repo |
-| CI (GitHub Actions) | Segunda barrera: si alguien esquiva el pre-commit, CI lo detecta |
+| Punto                          | Propósito                                                        |
+| ------------------------------ | ---------------------------------------------------------------- |
+| Pre-commit (husky/lint-staged) | Bloquear el commit antes de que llegue al repo                   |
+| CI (GitHub Actions)            | Segunda barrera: si alguien esquiva el pre-commit, CI lo detecta |
 
 ### Lo que falta:
 
 - Instalar `secretlint` como devDependency en la raíz del monorepo:
+
   ```
   pnpm add -D secretlint @secretlint/secretlint-rule-preset-recommend
   ```
@@ -90,12 +95,14 @@ ADK usa `secretlint` con `@secretlint/secretlint-rule-preset-recommend` más una
     - Cualquier otro formato de provider integrado
 
 - Agregar al workflow de CI existente (`.github/workflows/`) un paso:
+
   ```yaml
   - name: Secret scan
     run: pnpm secretlint "**/*"
   ```
 
 - Agregar a pre-commit hooks (husky o equivalente):
+
   ```
   npx secretlint --maskSecrets "**/*"
   ```
@@ -163,7 +170,7 @@ ADK soporta OAuth 2.0, Service Account y OpenID Connect a través de `AuthHandle
     if (!origin) return null;
     if (allowedOrigins.length === 0) return origin; // dev mode
     return allowedOrigins.includes(origin) ? origin : null;
-  }
+  };
   ```
 
 - **Implementar rate limiting en auth endpoints.** Usar un middleware Hono con store en memoria o con persistencia opcional:
@@ -204,11 +211,11 @@ Esto es razonable como primera línea de defensa, pero insuficiente como sandbox
 
 ADK define tres niveles de ejecución con límites de seguridad explícitos:
 
-| Nivel | Clase ADK | Nivel de aislamiento |
-|---|---|---|
-| Built-in | `BuiltInCodeExecutor` | Sin sandbox, para entornos confiables |
-| Local con riesgos | `UnsafeLocalCodeExecutor` | Documenta explícitamente que es inseguro y solo para dev |
-| Sandbox real | `AgentEngineSandboxCodeExecutor` | Ejecución aislada con sandbox del Agent Engine |
+| Nivel             | Clase ADK                        | Nivel de aislamiento                                     |
+| ----------------- | -------------------------------- | -------------------------------------------------------- |
+| Built-in          | `BuiltInCodeExecutor`            | Sin sandbox, para entornos confiables                    |
+| Local con riesgos | `UnsafeLocalCodeExecutor`        | Documenta explícitamente que es inseguro y solo para dev |
+| Sandbox real      | `AgentEngineSandboxCodeExecutor` | Ejecución aislada con sandbox del Agent Engine           |
 
 El modelo es claro: el developer elige explícitamente qué nivel de riesgo acepta.
 
@@ -220,6 +227,7 @@ El modelo es claro: el developer elige explícitamente qué nivel de riesgo acep
   - Evaluar `ulimit` en Linux o alternativas en otros OS para limitar memoria y CPU.
 
 - **Audit log de comandos bash.** Separado del log general de tool calls, con estructura:
+
   ```ts
   {
     sessionId: string;
@@ -229,20 +237,21 @@ El modelo es claro: el developer elige explícitamente qué nivel de riesgo acep
     startTime: number;
     endTime: number;
     exitCode: number | null;
-    signal: string | null;       // SIGTERM, SIGKILL, etc.
+    signal: string | null; // SIGTERM, SIGKILL, etc.
     outputTruncated: boolean;
     error: string | null;
   }
   ```
 
 - **Evaluar aislamiento real de procesos.** Opciones ordenadas por nivel de esfuerzo:
-  | Solución | Aislamiento | Complejidad |
-  |---|---|---|
-  | `child_process` con `timeout` + `maxBuffer` | Mínimo | ✅ Ya existe parcialmente |
-  | `bubblewrap` (bwrap) | Medio — namespaces Linux, filesystem aislado | Medio |
-  | `nsjail` | Alto — seccomp, cgroups, network isolation | Medio-alto |
-  | Docker/Podman ephemeral containers | Alto — container completo, más lento | Alto |
-  | `gvisor` (runsc) | Muy alto — syscall interception en userspace | Alto |
+
+  | Solución                                    | Aislamiento                                  | Complejidad               |
+  | ------------------------------------------- | -------------------------------------------- | ------------------------- |
+  | `child_process` con `timeout` + `maxBuffer` | Mínimo                                       | ✅ Ya existe parcialmente |
+  | `bubblewrap` (bwrap)                        | Medio — namespaces Linux, filesystem aislado | Medio                     |
+  | `nsjail`                                    | Alto — seccomp, cgroups, network isolation   | Medio-alto                |
+  | Docker/Podman ephemeral containers          | Alto — container completo, más lento         | Alto                      |
+  | `gvisor` (runsc)                            | Muy alto — syscall interception en userspace | Alto                      |
 
   Recomendación: implementar `bubblewrap` para Linux como default cuando esté disponible, con fallback a `child_process` + límites para otros OS. Documentar las limitaciones de cada modo.
 
@@ -277,13 +286,14 @@ ADK expone `Runner.maxLlmCalls` — un límite explícito de cuántas llamadas a
   - **Auth endpoints:** límites más estrictos (ver Área 3c).
 
   Estructura del middleware:
+
   ```ts
   rateLimiter({
-    windowMs: 60000,              // ventana de 1 minuto
-    max: 100,                     // máximo de requests
+    windowMs: 60000, // ventana de 1 minuto
+    max: 100, // máximo de requests
     keyGenerator: (c) => c.req.header("x-forwarded-for") || "unknown",
-    store: memoryStore(),         // o redisStore()
-  })
+    store: memoryStore(), // o redisStore()
+  });
   ```
 
 - **Circuit breaker por proveedor.** Patrón state machine (closed → open → half-open):
@@ -292,11 +302,12 @@ ADK expone `Runner.maxLlmCalls` — un límite explícito de cuántas llamadas a
   - Half-open: permitir 1 request de prueba después de M segundos. Si falla, volver a Open. Si funciona, volver a Closed.
 
   Configuración:
-  | Parámetro | Default | Descripción |
-  |---|---|---|
-  | `failureThreshold` | 5 | Fallos consecutivos antes de abrir el circuito |
-  | `resetTimeout` | 30000 (30s) | Tiempo antes de probar half-open |
-  | `halfOpenMaxRequests` | 1 | Requests permitidos en estado half-open |
+
+  | Parámetro             | Default     | Descripción                                    |
+  | --------------------- | ----------- | ---------------------------------------------- |
+  | `failureThreshold`    | 5           | Fallos consecutivos antes de abrir el circuito |
+  | `resetTimeout`        | 30000 (30s) | Tiempo antes de probar half-open               |
+  | `halfOpenMaxRequests` | 1           | Requests permitidos en estado half-open        |
 
   Implementar como wrapper de provider calls en `apps/server/src/ai/providers/`.
 

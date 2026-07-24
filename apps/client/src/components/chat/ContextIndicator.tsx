@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-import { useMemo } from "react";
-import { Zap } from "lucide-react";
 import { useLiterals, type ContextUsage } from "@/lib";
+import { Zap } from "lucide-react";
+import { useMemo } from "react";
 import { literals as u } from "./ContextMeter.literals";
 
 interface ContextIndicatorProps {
@@ -10,7 +10,11 @@ interface ContextIndicatorProps {
   compacting?: boolean;
 }
 
-export function ContextIndicator({ contextUsage, onCompact, compacting = false }: ContextIndicatorProps) {
+export function ContextIndicator({
+  contextUsage,
+  onCompact,
+  compacting = false,
+}: ContextIndicatorProps) {
   const l = useLiterals(u);
   const show = contextUsage && contextUsage.totalTokens !== null && contextUsage.limit !== null;
 
@@ -58,11 +62,7 @@ export function ContextProgressLine({ contextUsage }: ContextIndicatorProps) {
   const pct = limit > 0 ? (total / limit) * 100 : 0;
   const remainingPct = Math.max(0, 100 - pct);
   const barColor =
-    remainingPct <= 10
-      ? "bg-error"
-      : remainingPct <= 30
-      ? "bg-warning"
-      : "bg-accent";
+    remainingPct <= 10 ? "bg-error" : remainingPct <= 30 ? "bg-warning" : "bg-accent";
 
   return (
     <div className="w-full h-0.5 bg-border/20 overflow-hidden">
@@ -73,4 +73,3 @@ export function ContextProgressLine({ contextUsage }: ContextIndicatorProps) {
     </div>
   );
 }
-

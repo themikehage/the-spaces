@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { isAbsolute, resolve as nodeResolvePath } from "node:path";
 import { homedir } from "node:os";
+import { isAbsolute, resolve as nodeResolvePath } from "node:path";
 
 export function normalizePath(input: string): string {
   if (input.startsWith("~/")) {
@@ -11,5 +11,7 @@ export function normalizePath(input: string): string {
 
 export function resolvePath(input: string, baseDir: string = process.cwd()): string {
   const normalized = normalizePath(input);
-  return isAbsolute(normalized) ? nodeResolvePath(normalized) : nodeResolvePath(baseDir, normalized);
+  return isAbsolute(normalized)
+    ? nodeResolvePath(normalized)
+    : nodeResolvePath(baseDir, normalized);
 }

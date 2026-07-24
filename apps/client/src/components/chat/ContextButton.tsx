@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-import { useRef, useState, useMemo } from "react";
-import { Zap } from "lucide-react";
 import { useLiterals, type ContextUsage } from "@/lib";
+import { Zap } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
 import { literals as u } from "./ContextMeter.literals";
 import { PortalPopover } from "./PortalPopover";
 
@@ -36,8 +36,7 @@ export function ContextButton({
   const angle = pct * 360;
   const remainingPct = 100 - pct * 100;
 
-  const progressColor =
-    remainingPct <= 10 ? "#ca3214" : remainingPct <= 30 ? "#fbbf24" : "#4ade80";
+  const progressColor = remainingPct <= 10 ? "#ca3214" : remainingPct <= 30 ? "#fbbf24" : "#4ade80";
 
   const formatted = useMemo(() => {
     if (!hasData) return { total: "-", limit: "-", pctLabel: "0%" };
@@ -49,8 +48,10 @@ export function ContextButton({
       total: formatter.format(contextUsage!.totalTokens!),
       limit: formatter.format(contextUsage!.limit!),
       pctLabel: `${Math.round(pct * 100)}%`,
-      input: contextUsage!.inputTokens != null ? formatter.format(contextUsage!.inputTokens!) : null,
-      output: contextUsage!.outputTokens != null ? formatter.format(contextUsage!.outputTokens!) : null,
+      input:
+        contextUsage!.inputTokens != null ? formatter.format(contextUsage!.inputTokens!) : null,
+      output:
+        contextUsage!.outputTokens != null ? formatter.format(contextUsage!.outputTokens!) : null,
     };
   }, [contextUsage, hasData, pct]);
 
@@ -82,7 +83,10 @@ export function ContextButton({
             open ? "text-primary bg-[#212121]" : ""
           } ${remainingPct <= 10 ? "text-error" : remainingPct <= 30 ? "text-warning" : ""}`}
         >
-          <Zap size={14} className={`${compacting ? "animate-pulse" : ""} ${pct > 0.7 ? "" : ""}`} />
+          <Zap
+            size={14}
+            className={`${compacting ? "animate-pulse" : ""} ${pct > 0.7 ? "" : ""}`}
+          />
         </button>
       </div>
 
@@ -125,8 +129,6 @@ export function ContextButton({
                 }}
               />
             </div>
-
-
           </div>
 
           <div className="p-3">

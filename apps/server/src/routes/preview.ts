@@ -1,17 +1,14 @@
 // SPDX-License-Identifier: MIT
 import { Hono } from "hono";
-import { resolve, normalize, sep, extname, join } from "node:path";
 import { existsSync } from "node:fs";
-import { getUsername } from "../lib/auth-helpers";
+import { extname, join, normalize, resolve, sep } from "node:path";
+import { getProjectWorkspaceDir } from "shared";
 import { sessionMiddleware } from "../auth/middleware";
+import { abortBuild, runBuild } from "../core/preview-builder";
+import { loadPreviewConfig, savePreviewConfig } from "../core/preview-config";
 import { getPreviewState } from "../core/preview-watcher";
-import {
-  loadPreviewConfig,
-  savePreviewConfig,
-} from "../core/preview-config";
-import { runBuild, abortBuild } from "../core/preview-builder";
-import { getWorkspaceDir, getProjectWorkspaceDir } from "shared";
 import { resolveProjectDir } from "../core/session/workspace-resolver";
+import { getUsername } from "../lib/auth-helpers";
 
 export const previewRouter = new Hono();
 
@@ -63,7 +60,9 @@ const BUILD_DIRS = ["dist", "build", ".output"] as const;
 
 function resolveBuildDir(username: string, projectName: string): string {
   const resolved = resolveProjectDir(username, projectName);
-  const projectDir = resolved ? join(resolved, "workspace") : getProjectWorkspaceDir(username, projectName);
+  const projectDir = resolved
+    ? join(resolved, "workspace")
+    : getProjectWorkspaceDir(username, projectName);
   for (const dir of BUILD_DIRS) {
     const candidate = resolve(projectDir, dir);
     if (existsSync(candidate)) return candidate;
@@ -83,7 +82,9 @@ function validatePreviewPath(username: string, projectName: string, reqPath: str
 
   // Fallback to raw project workspace if file is not found in buildDir
   const resolved = resolveProjectDir(username, projectName);
-  const workspaceDir = resolved ? join(resolved, "workspace") : getProjectWorkspaceDir(username, projectName);
+  const workspaceDir = resolved
+    ? join(resolved, "workspace")
+    : getProjectWorkspaceDir(username, projectName);
   const rawPath = resolve(workspaceDir, normalized);
   if (existsSync(rawPath) && (rawPath === workspaceDir || rawPath.startsWith(workspaceDir + sep))) {
     return rawPath;
@@ -113,10 +114,7 @@ function rewriteHtml(html: string, username: string, projectName: string): strin
   const prefix = `/api/preview/${encodeURIComponent(username)}/${encodeURIComponent(projectName)}/`;
 
   // 1. Inject <base href> so relative paths work correctly
-  let result = html.replace(
-    /<head[^>]*>/i,
-    (match) => `${match}<base href="${prefix}">`
-  );
+  let result = html.replace(/<head[^>]*>/i, (match) => `${match}<base href="${prefix}">`);
 
   // 2. Strip `crossorigin` attribute — it's not needed for same-origin serving
   //    and causes issues with some browsers treating requests as CORS
@@ -130,7 +128,7 @@ function rewriteHtml(html: string, username: string, projectName: string): strin
         return `${tag}${attr}="${path}"`;
       }
       return `${tag}${attr}="${prefix}${path.replace(/^\//, "")}"`;
-    }
+    },
   );
 
   // 4. Rewrite absolute src/href/action attributes (single-quotes)
@@ -141,25 +139,19 @@ function rewriteHtml(html: string, username: string, projectName: string): strin
         return `${tag}${attr}='${path}'`;
       }
       return `${tag}${attr}='${prefix}${path.replace(/^\//, "")}'`;
-    }
+    },
   );
 
   // 5. Rewrite fetch/import calls with absolute paths
-  result = result.replace(
-    /(fetch|import)\s*\(\s*"(\/(?!\/)[^"]*?)"/gi,
-    (_, call, path) => {
-      if (path.startsWith(prefix)) return `${call}("${path}"`;
-      return `${call}("${prefix}${path.replace(/^\//, "")}"`;
-    }
-  );
+  result = result.replace(/(fetch|import)\s*\(\s*"(\/(?!\/)[^"]*?)"/gi, (_, call, path) => {
+    if (path.startsWith(prefix)) return `${call}("${path}"`;
+    return `${call}("${prefix}${path.replace(/^\//, "")}"`;
+  });
 
-  result = result.replace(
-    /(fetch|import)\s*\(\s*'(\/(?!\/)[^']*?)'/gi,
-    (_, call, path) => {
-      if (path.startsWith(prefix)) return `${call}('${path}'`;
-      return `${call}('${prefix}${path.replace(/^\//, "")}'`;
-    }
-  );
+  result = result.replace(/(fetch|import)\s*\(\s*'(\/(?!\/)[^']*?)'/gi, (_, call, path) => {
+    if (path.startsWith(prefix)) return `${call}('${path}'`;
+    return `${call}('${prefix}${path.replace(/^\//, "")}'`;
+  });
 
   return result;
 }
@@ -270,9 +262,12 @@ previewRouter.get("/:username/:project/*", async (c) => {
   const projectName = c.req.param("project");
 
   if (
-    !username || !projectName ||
-    username.includes("..") || username.includes("/") ||
-    projectName.includes("..") || projectName.includes("/")
+    !username ||
+    !projectName ||
+    username.includes("..") ||
+    username.includes("/") ||
+    projectName.includes("..") ||
+    projectName.includes("/")
   ) {
     return c.text("Bad Request", 400);
   }

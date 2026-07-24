@@ -4,7 +4,8 @@ import type { MemoryProvider, MemoryType } from "./types";
 export function createMemoryTools(memory: MemoryProvider) {
   const memoryStoreTool = {
     name: "memory_store",
-    description: "Store a fact, event, or code/architectural pattern into the agent's long-term persistent memory.",
+    description:
+      "Store a fact, event, or code/architectural pattern into the agent's long-term persistent memory.",
     parameters: {
       type: "object",
       properties: {
@@ -12,7 +13,8 @@ export function createMemoryTools(memory: MemoryProvider) {
         type: {
           type: "string",
           enum: ["semantic", "episodic", "procedural"],
-          description: "Type of memory. semantic=facts, episodic=events/interactions, procedural=patterns/procedures.",
+          description:
+            "Type of memory. semantic=facts, episodic=events/interactions, procedural=patterns/procedures.",
           default: "semantic",
         },
         importance: {
@@ -39,7 +41,12 @@ export function createMemoryTools(memory: MemoryProvider) {
         await memory.store(args.content, type, importance, tags);
 
         return {
-          content: [{ type: "text", text: `Memory successfully stored: [${type}] "${args.content.slice(0, 80)}..."` }],
+          content: [
+            {
+              type: "text",
+              text: `Memory successfully stored: [${type}] "${args.content.slice(0, 80)}..."`,
+            },
+          ],
           details: { status: "success", type, importance, tags },
         };
       } catch (e) {
@@ -53,7 +60,8 @@ export function createMemoryTools(memory: MemoryProvider) {
 
   const memoryRecallTool = {
     name: "memory_recall",
-    description: "Search and retrieve query-relevant facts or interactions from the agent's long-term memory.",
+    description:
+      "Search and retrieve query-relevant facts or interactions from the agent's long-term memory.",
     parameters: {
       type: "object",
       properties: {
@@ -81,7 +89,10 @@ export function createMemoryTools(memory: MemoryProvider) {
         }
 
         const formatted = memories
-          .map((m, i) => `${i + 1}. [${m.type}] (Importance: ${m.importance}) ID: ${m.id}\n   "${m.content}"`)
+          .map(
+            (m, i) =>
+              `${i + 1}. [${m.type}] (Importance: ${m.importance}) ID: ${m.id}\n   "${m.content}"`,
+          )
           .join("\n\n");
 
         return {
@@ -111,7 +122,9 @@ export function createMemoryTools(memory: MemoryProvider) {
       try {
         await memory.forget(args.id);
         return {
-          content: [{ type: "text", text: `Memory ID "${args.id}" deleted successfully (if existed).` }],
+          content: [
+            { type: "text", text: `Memory ID "${args.id}" deleted successfully (if existed).` },
+          ],
           details: { status: "success", deletedId: args.id },
         };
       } catch (e) {

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 import { useMemo } from "react";
 import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
+import remarkGfm from "remark-gfm";
 
 interface Props {
   content: string;
@@ -13,8 +13,10 @@ function replaceWorkspacePathsWithLinks(text: string): string {
   if (typeof text !== "string") return text;
 
   // Match absolute workspace paths on windows or unix format
-  const winRegex = /[a-zA-Z]:\\tmp\\pi-web-users\\[a-zA-Z0-9_-]+\\workspace\\([a-zA-Z0-9_./\\-~%@$#+!]+)/gi;
-  const nixRegex = /(?:[a-zA-Z]:)?\/tmp\/pi-web-users\/[a-zA-Z0-9_-]+\/workspace\/([a-zA-Z0-9_./\\-~%@$#+!]+)/gi;
+  const winRegex =
+    /[a-zA-Z]:\\tmp\\pi-web-users\\[a-zA-Z0-9_-]+\\workspace\\([a-zA-Z0-9_./\\-~%@$#+!]+)/gi;
+  const nixRegex =
+    /(?:[a-zA-Z]:)?\/tmp\/pi-web-users\/[a-zA-Z0-9_-]+\/workspace\/([a-zA-Z0-9_./\\-~%@$#+!]+)/gi;
 
   let result = text.replace(winRegex, (_, relPath) => {
     const cleaned = relPath.replace(/\\/g, "/");
@@ -69,12 +71,22 @@ export function RichMarkdown({ content }: Props) {
               return (
                 <div className="my-3 rounded-lg overflow-x-auto border border-input shadow-md font-mono text-xs">
                   <div className="bg-card px-3 py-1.5 border-b border-input text-xs text-muted-foreground flex items-center gap-1.5">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0">
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="shrink-0"
+                    >
                       <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
                     </svg>
                     <span>File Tree</span>
                   </div>
-                  <pre className="m-0 p-3 bg-muted whitespace-pre-wrap break-words">{codeString}</pre>
+                  <pre className="m-0 p-3 bg-muted whitespace-pre-wrap break-words">
+                    {codeString}
+                  </pre>
                 </div>
               );
             }
@@ -134,9 +146,7 @@ export function RichMarkdown({ content }: Props) {
           table({ children }) {
             return (
               <div className="overflow-x-auto my-3 rounded-lg border border-input shadow-sm">
-                <table className="min-w-full border-collapse text-xs">
-                  {children}
-                </table>
+                <table className="min-w-full border-collapse text-xs">{children}</table>
               </div>
             );
           },
@@ -170,7 +180,7 @@ export function RichMarkdown({ content }: Props) {
                     e.preventDefault();
                     e.stopPropagation();
                     window.dispatchEvent(
-                      new CustomEvent("openWorkspaceFile", { detail: { path: relPath } })
+                      new CustomEvent("openWorkspaceFile", { detail: { path: relPath } }),
                     );
                   }}
                   className="text-primary hover:underline font-mono bg-primary/5 hover:bg-primary/10 px-1.5 py-0.5 rounded transition-all inline cursor-pointer text-xs"

@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
-import {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  useEffect,
-  useMemo,
-  type ReactNode,
-} from "react";
 import { apiFetch } from "@/lib/api";
 import { wsClient } from "@/lib/ws-client";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 
 export type SessionStatus = "active" | "streaming" | "task-running" | "sleeping";
 
@@ -93,9 +93,7 @@ export function SessionsProvider({ children }: { children: ReactNode }) {
       const d = data as { sessionId: string; status: SessionStatus };
       setStatuses((prev) => ({ ...prev, [d.sessionId]: d.status }));
       setSessions((prev) =>
-        prev.map((s) =>
-          s.id === d.sessionId ? { ...s, status: d.status } : s
-        )
+        prev.map((s) => (s.id === d.sessionId ? { ...s, status: d.status } : s)),
       );
     });
     return unsub;
@@ -123,7 +121,6 @@ export function SessionsProvider({ children }: { children: ReactNode }) {
     });
   }, [sessions]);
 
-
   const mergedSessions = useMemo(() => {
     return sessions.map((s) => ({
       ...s,
@@ -138,11 +135,7 @@ export function SessionsProvider({ children }: { children: ReactNode }) {
     for (const s of mergedSessions) {
       if (s.isExecution) {
         done.push(s);
-      } else if (
-        s.status === "streaming" ||
-        s.status === "active" ||
-        s.status === "task-running"
-      ) {
+      } else if (s.status === "streaming" || s.status === "active" || s.status === "task-running") {
         working.push(s);
       } else {
         idle.push(s);
@@ -161,22 +154,15 @@ export function SessionsProvider({ children }: { children: ReactNode }) {
 
   const getAgentStatus = useCallback(
     (agentId: string): SessionStatus | null => {
-      const agentSessions = mergedSessions.filter(
-        (s) => s.agentId === agentId
-      );
+      const agentSessions = mergedSessions.filter((s) => s.agentId === agentId);
       if (agentSessions.length === 0) return null;
-      const priority: SessionStatus[] = [
-        "streaming",
-        "task-running",
-        "active",
-        "sleeping",
-      ];
+      const priority: SessionStatus[] = ["streaming", "task-running", "active", "sleeping"];
       for (const p of priority) {
         if (agentSessions.some((s) => s.status === p)) return p;
       }
       return "sleeping";
     },
-    [mergedSessions]
+    [mergedSessions],
   );
 
   const getAgentKanbanStatus = useCallback(
@@ -185,21 +171,21 @@ export function SessionsProvider({ children }: { children: ReactNode }) {
       if (!status || status === "sleeping") return "idle";
       return "working";
     },
-    [getAgentStatus]
+    [getAgentStatus],
   );
 
   const getChannelMemberStatus = useCallback(
     (memberId: string): SessionStatus | null => {
       return getAgentStatus(memberId);
     },
-    [getAgentStatus]
+    [getAgentStatus],
   );
 
   const getChannelMemberKanbanStatus = useCallback(
     (memberId: string): KanbanColumn | "unknown" => {
       return getAgentKanbanStatus(memberId);
     },
-    [getAgentKanbanStatus]
+    [getAgentKanbanStatus],
   );
 
   const value: SessionsContextType = useMemo(
@@ -226,14 +212,10 @@ export function SessionsProvider({ children }: { children: ReactNode }) {
       getAgentKanbanStatus,
       getChannelMemberStatus,
       getChannelMemberKanbanStatus,
-    ]
+    ],
   );
 
-  return (
-    <SessionsContext.Provider value={value}>
-      {children}
-    </SessionsContext.Provider>
-  );
+  return <SessionsContext.Provider value={value}>{children}</SessionsContext.Provider>;
 }
 
 export function useSessions(): SessionsContextType {

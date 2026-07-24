@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { agentRegistry } from "../../agents";
 import { type TeamMember, type TeamMessage } from "shared";
+import { agentRegistry } from "../../agents";
 
 export function buildAgentNameMap(members: TeamMember[]): Map<string, string> {
   const map = new Map<string, string>();
@@ -16,7 +16,7 @@ export function buildAgentNameMap(members: TeamMember[]): Map<string, string> {
 export function buildAgentPrompt(
   incomingMsg: TeamMessage,
   recentHistory: TeamMessage[],
-  contextItems: { key: string; value: string }[] = []
+  contextItems: { key: string; value: string }[] = [],
 ): string {
   let historyText = "";
   for (const msg of recentHistory) {

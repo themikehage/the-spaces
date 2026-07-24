@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { type IArtifactStore, type ArtifactMetadata } from "shared";
+import { type ArtifactMetadata, type IArtifactStore } from "shared";
 
 export class MemoryArtifactStore implements IArtifactStore {
   private artifacts = new Map<string, { content: Buffer; metadata: ArtifactMetadata }>();

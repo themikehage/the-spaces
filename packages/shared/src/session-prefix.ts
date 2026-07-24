@@ -7,4 +7,4 @@ export const SessionPrefix = {
   GENERATE: "generate_",
 } as const;
 
-export type SessionPrefixValue = typeof SessionPrefix[keyof typeof SessionPrefix];
+export type SessionPrefixValue = (typeof SessionPrefix)[keyof typeof SessionPrefix];

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 type EventHandler = (data: unknown) => void;
-export type ConnectionState = "disconnected" | "connecting" | "connected" | "permanently_disconnected";
+export type ConnectionState =
+  "disconnected" | "connecting" | "connected" | "permanently_disconnected";
 type StateHandler = (state: ConnectionState) => void;
 
 class WsClient {
@@ -75,7 +76,7 @@ class WsClient {
       const dropped = this.offlineQueue.shift();
       console.warn(
         `[wsClient] Offline queue full (${WsClient.MAX_QUEUE_SIZE}), dropping oldest message:`,
-        dropped?.type ?? "unknown"
+        dropped?.type ?? "unknown",
       );
     }
     this.offlineQueue.push(data);
@@ -107,11 +108,15 @@ class WsClient {
     }
     const handlers = this.messageHandlers.get(type)!;
     handlers.add(handler);
-    console.log(`[wsClient] Subscribed to "${type}". Active handlers for "${type}": ${handlers.size}`);
+    console.log(
+      `[wsClient] Subscribed to "${type}". Active handlers for "${type}": ${handlers.size}`,
+    );
     if (this.state === "disconnected") this.connect();
     return () => {
       const exists = handlers.delete(handler);
-      console.log(`[wsClient] Unsubscribed from "${type}". Existed: ${exists}. Active handlers for "${type}": ${handlers.size}`);
+      console.log(
+        `[wsClient] Unsubscribed from "${type}". Existed: ${exists}. Active handlers for "${type}": ${handlers.size}`,
+      );
     };
   }
 
@@ -133,7 +138,9 @@ class WsClient {
       this.ws = null;
       if (!this.intentionalClose) {
         if (this.reconnectAttempts >= WsClient.MAX_RETRIES) {
-          console.error(`[wsClient] Max reconnection attempts (${WsClient.MAX_RETRIES}) reached. Giving up.`);
+          console.error(
+            `[wsClient] Max reconnection attempts (${WsClient.MAX_RETRIES}) reached. Giving up.`,
+          );
           this.setState("permanently_disconnected");
           return;
         }
@@ -191,7 +198,9 @@ class WsClient {
         }
 
         if (data.type === "entity-updated") {
-          window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: data.entityType } }));
+          window.dispatchEvent(
+            new CustomEvent("entity-updated", { detail: { type: data.entityType } }),
+          );
           return;
         }
 
@@ -201,20 +210,26 @@ class WsClient {
     };
 
     ws.onclose = (event) => {
-      console.warn(`[wsClient] WebSocket closed. intentionalClose: ${this.intentionalClose}, code: ${event.code}, reason: ${event.reason}`);
+      console.warn(
+        `[wsClient] WebSocket closed. intentionalClose: ${this.intentionalClose}, code: ${event.code}, reason: ${event.reason}`,
+      );
       this.ws = null;
       this.stopPingTimer();
       if (this.intentionalClose) return;
       this.setState("disconnected");
       if (this.reconnectAttempts >= WsClient.MAX_RETRIES) {
-        console.error(`[wsClient] Max reconnection attempts (${WsClient.MAX_RETRIES}) reached. Giving up.`);
+        console.error(
+          `[wsClient] Max reconnection attempts (${WsClient.MAX_RETRIES}) reached. Giving up.`,
+        );
         this.setState("permanently_disconnected");
         return;
       }
       const baseDelay = Math.min(1000 * 2 ** this.reconnectAttempts, 30000);
       const jitter = Math.random() * 1000;
       const delay = baseDelay + jitter;
-      console.log(`[wsClient] Scheduling reconnect in ${delay}ms (attempt: ${this.reconnectAttempts})`);
+      console.log(
+        `[wsClient] Scheduling reconnect in ${delay}ms (attempt: ${this.reconnectAttempts})`,
+      );
       this.reconnectAttempts++;
       this.reconnectTimeout = setTimeout(() => {
         this.reconnectTimeout = null;

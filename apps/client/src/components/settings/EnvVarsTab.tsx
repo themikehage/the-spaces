@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-import { useState } from "react";
-import { useLiterals } from "@/lib";
-import { literals as u } from "./EnvVarsTab.literals";
 import { Button } from "@/components/ui/Button";
+import { useLiterals } from "@/lib";
 import { apiFetch } from "@/lib/api";
+import { useState } from "react";
+import { literals as u } from "./EnvVarsTab.literals";
 
 interface EnvVar {
   key: string;
@@ -25,7 +25,7 @@ export function EnvVarsTab({
   setEnvError,
   fetchEnvVars,
 }: EnvVarsTabProps) {
-const l = useLiterals(u);
+  const l = useLiterals(u);
   const [isAddingEnv, setIsAddingEnv] = useState(false);
   const [newEnvKey, setNewEnvKey] = useState("");
   const [newEnvVal, setNewEnvVal] = useState("");
@@ -40,7 +40,9 @@ const l = useLiterals(u);
     if (!formattedKey || !newEnvVal.trim()) return;
 
     if (!/^[A-Z_][A-Z0-9_]*$/.test(formattedKey)) {
-      setEnvError("Invalid variable name. Must start with a letter or underscore and contain only letters, numbers, or underscores.");
+      setEnvError(
+        "Invalid variable name. Must start with a letter or underscore and contain only letters, numbers, or underscores.",
+      );
       return;
     }
 
@@ -100,7 +102,7 @@ const l = useLiterals(u);
 
   const handleRevealKey = async (key: string) => {
     if (revealedVars[key]) {
-      setRevealedVars(prev => {
+      setRevealedVars((prev) => {
         const copy = { ...prev };
         delete copy[key];
         return copy;
@@ -114,7 +116,7 @@ const l = useLiterals(u);
       const res = await apiFetch(`/api/env/reveal/${key}`);
       if (!res.ok) throw new Error("Failed to reveal secret");
       const data = await res.json();
-      setRevealedVars(prev => ({
+      setRevealedVars((prev) => ({
         ...prev,
         [key]: data.value,
       }));
@@ -146,10 +148,14 @@ const l = useLiterals(u);
         const value = line.slice(eqIdx + 1).trim();
 
         if (!/^[A-Z_][A-Z0-9_]*$/.test(key)) {
-          throw new Error(`Invalid key on line ${i + 1}: "${key}". Names must start with a letter or underscore and contain only alphanumeric characters or underscores.`);
+          throw new Error(
+            `Invalid key on line ${i + 1}: "${key}". Names must start with a letter or underscore and contain only alphanumeric characters or underscores.`,
+          );
         }
         if (!value) {
-          throw new Error(`Value for key "${key}" cannot be empty. If you want to delete this variable, completely remove the line.`);
+          throw new Error(
+            `Value for key "${key}" cannot be empty. If you want to delete this variable, completely remove the line.`,
+          );
         }
         variables[key] = value;
       }
@@ -186,7 +192,8 @@ const l = useLiterals(u);
         <div>
           <h2 className="text-foreground font-semibold text-base">{l.title}</h2>
           <p className="text-muted-foreground text-[11px] mt-0.5">
-            Configure custom environment variables (e.g., GITHUB_TOKEN, NOTION_TOKEN) for your agent's shell activities.
+            Configure custom environment variables (e.g., GITHUB_TOKEN, NOTION_TOKEN) for your
+            agent's shell activities.
           </p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -215,9 +222,7 @@ const l = useLiterals(u);
         </div>
       </div>
 
-      {envError && (
-        <p className="text-destructive text-sm p-3 bg-card rounded-lg">{envError}</p>
-      )}
+      {envError && <p className="text-destructive text-sm p-3 bg-card rounded-lg">{envError}</p>}
 
       {isLoading ? (
         <div className="flex justify-center py-8">
@@ -247,16 +252,22 @@ const l = useLiterals(u);
             />
             <div className="text-[11px] text-muted-foreground space-y-1">
               <p>• Edit variables in KEY=value format, one per line.</p>
-              <p>• Existing secrets are masked as ••••••••. Keep them as is to leave their values unchanged.</p>
+              <p>
+                • Existing secrets are masked as ••••••••. Keep them as is to leave their values
+                unchanged.
+              </p>
               <p>• Completely remove a line to delete that environment variable.</p>
             </div>
           </div>
           <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => {
-              setIsDevView(false);
-              setRevealedVars({});
-              setEnvError("");
-            }}>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setIsDevView(false);
+                setRevealedVars({});
+                setEnvError("");
+              }}
+            >
               Cancel
             </Button>
             <Button onClick={handleSaveBulkEnv} disabled={savingEnv}>
@@ -271,7 +282,10 @@ const l = useLiterals(u);
       ) : (
         <div className="space-y-3">
           {envVars.map((v) => (
-            <div key={v.key} className="bg-card rounded-lg p-3 sm:p-4 flex items-center justify-between border border-input/10">
+            <div
+              key={v.key}
+              className="bg-card rounded-lg p-3 sm:p-4 flex items-center justify-between border border-input/10"
+            >
               <div className="min-w-0 flex-1 mr-4">
                 <div className="text-foreground text-sm font-mono font-semibold truncate">
                   {v.key}
@@ -302,12 +316,12 @@ const l = useLiterals(u);
       {isAddingEnv && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-card rounded-lg w-full max-w-sm p-4 sm:p-6 space-y-4 border border-input/30">
-            <h3 className="text-foreground font-semibold text-sm">
-              Add Environment Variable
-            </h3>
+            <h3 className="text-foreground font-semibold text-sm">Add Environment Variable</h3>
             <div className="space-y-3">
               <div>
-                <label className="text-muted-foreground text-[11px] block mb-1">Variable Name</label>
+                <label className="text-muted-foreground text-[11px] block mb-1">
+                  Variable Name
+                </label>
                 <input
                   type="text"
                   value={newEnvKey}

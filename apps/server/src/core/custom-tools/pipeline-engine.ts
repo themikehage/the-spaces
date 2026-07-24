@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { type PipelineStep, type CustomToolDefinition } from "./schemas";
 import { type AgentSession } from "../../ai";
+import { type PipelineStep } from "./schemas";
 
 export interface PipelineContext {
   cwd: string;
@@ -15,7 +15,11 @@ function getNestedValue(obj: Record<string, any>, path: string): any {
   for (const key of keys) {
     if (current === null || current === undefined) return undefined;
     if (typeof current === "string") {
-      try { current = JSON.parse(current); } catch { return undefined; }
+      try {
+        current = JSON.parse(current);
+      } catch {
+        return undefined;
+      }
     }
     if (typeof current !== "object") return undefined;
     current = current[key];
@@ -34,7 +38,7 @@ export function resolveVariables(template: any, scope: Record<string, any>): any
     });
   }
   if (Array.isArray(template)) {
-    return template.map(item => resolveVariables(item, scope));
+    return template.map((item) => resolveVariables(item, scope));
   }
   if (typeof template === "object" && template !== null) {
     const result: Record<string, any> = {};
@@ -52,10 +56,17 @@ export async function executePipeline(
   context: PipelineContext,
   onError: "stop" | "continue" = "stop",
   signal?: AbortSignal,
-  onProgress?: (step: number, total: number, description: string) => void
+  onProgress?: (step: number, total: number, description: string) => void,
 ): Promise<any> {
   const scope: Record<string, any> = { ...toolParams };
-  const stepLogs: Array<{ step: number; tool: string; description?: string; status: "success" | "failed"; output?: string; error?: string }> = [];
+  const stepLogs: Array<{
+    step: number;
+    tool: string;
+    description?: string;
+    status: "success" | "failed";
+    output?: string;
+    error?: string;
+  }> = [];
   let lastOutput = "";
 
   const total = steps.length;
@@ -63,7 +74,7 @@ export async function executePipeline(
     const step = steps[i];
     const stepNum = i + 1;
     const desc = step.description || `Executing ${step.tool}`;
-    
+
     onProgress?.(stepNum, total, desc);
 
     if (signal?.aborted) {
@@ -78,14 +89,22 @@ export async function executePipeline(
     const tool = sessionAny.allToolsMap?.get(step.tool);
     if (!tool) {
       const errorMsg = `Tool "${step.tool}" not found in session tools map`;
-      stepLogs.push({ step: stepNum, tool: step.tool, description: step.description, status: "failed", error: errorMsg });
+      stepLogs.push({
+        step: stepNum,
+        tool: step.tool,
+        description: step.description,
+        status: "failed",
+        error: errorMsg,
+      });
       if (onError === "stop") {
-          return {
-            content: [{ type: "text", text: `Pipeline failed at step ${stepNum} (${desc}): ${errorMsg}` }],
-            details: { stepLogs, lastOutput },
-            isError: true,
-            scope,
-          };
+        return {
+          content: [
+            { type: "text", text: `Pipeline failed at step ${stepNum} (${desc}): ${errorMsg}` },
+          ],
+          details: { stepLogs, lastOutput },
+          isError: true,
+          scope,
+        };
       }
       continue;
     }
@@ -94,15 +113,23 @@ export async function executePipeline(
     try {
       const toolCallId = `step_${stepNum}_${Date.now()}`;
       const result = await tool.execute(toolCallId, resolvedParams, signal);
-      
+
       const isError = result.isError || false;
       const textResult = result.content?.[0]?.text || "";
 
       if (isError) {
-        stepLogs.push({ step: stepNum, tool: step.tool, description: step.description, status: "failed", error: textResult });
+        stepLogs.push({
+          step: stepNum,
+          tool: step.tool,
+          description: step.description,
+          status: "failed",
+          error: textResult,
+        });
         if (onError === "stop") {
           return {
-            content: [{ type: "text", text: `Pipeline failed at step ${stepNum} (${desc}): ${textResult}` }],
+            content: [
+              { type: "text", text: `Pipeline failed at step ${stepNum} (${desc}): ${textResult}` },
+            ],
             details: { stepLogs, lastOutput },
             isError: true,
             scope,
@@ -113,14 +140,31 @@ export async function executePipeline(
         if (step.output) {
           scope[step.output] = textResult;
         }
-        stepLogs.push({ step: stepNum, tool: step.tool, description: step.description, status: "success", output: textResult });
+        stepLogs.push({
+          step: stepNum,
+          tool: step.tool,
+          description: step.description,
+          status: "success",
+          output: textResult,
+        });
       }
     } catch (err: any) {
       const errorMsg = err?.message || String(err);
-      stepLogs.push({ step: stepNum, tool: step.tool, description: step.description, status: "failed", error: errorMsg });
+      stepLogs.push({
+        step: stepNum,
+        tool: step.tool,
+        description: step.description,
+        status: "failed",
+        error: errorMsg,
+      });
       if (onError === "stop") {
         return {
-          content: [{ type: "text", text: `Pipeline failed at step ${stepNum} (${desc}) with exception: ${errorMsg}` }],
+          content: [
+            {
+              type: "text",
+              text: `Pipeline failed at step ${stepNum} (${desc}) with exception: ${errorMsg}`,
+            },
+          ],
           details: { stepLogs, lastOutput },
           isError: true,
           scope,

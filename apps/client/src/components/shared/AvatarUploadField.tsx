@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-import { useLiterals } from "@/lib";
-import { literals as u } from "./AvatarUploadField.literals";
 import { AgentAvatar } from "@/components/shared/AgentAvatar";
 import { EntityAvatar } from "@/components/shared/EntityAvatar";
+import { useLiterals } from "@/lib";
 import { DEFAULT_AVATARS } from "@/lib/defaultAvatars";
+import { literals as u } from "./AvatarUploadField.literals";
 
 interface AvatarUploadFieldProps {
   preview: string | null;
@@ -42,11 +42,7 @@ export function AvatarUploadField({
     <div className="space-y-3">
       <div className="flex items-center gap-3">
         {avatarType === "agent" ? (
-          <AgentAvatar
-            name={entityName || "Agent"}
-            avatarUrl={preview}
-            size="lg"
-          />
+          <AgentAvatar name={entityName || "Agent"} avatarUrl={preview} size="lg" />
         ) : (
           <EntityAvatar
             name={entityName || "Entity"}
@@ -56,7 +52,9 @@ export function AvatarUploadField({
           />
         )}
         <div className="flex-1">
-          <label className="text-xs font-medium text-muted-foreground block mb-1">{l.avatarLabel}</label>
+          <label className="text-xs font-medium text-muted-foreground block mb-1">
+            {l.avatarLabel}
+          </label>
           <div className="flex items-center gap-2">
             <input
               type="file"
@@ -78,7 +76,9 @@ export function AvatarUploadField({
       </div>
 
       <div>
-        <label className="text-xs font-medium text-muted-foreground block mb-2">{l.defaultAvatarsLabel}</label>
+        <label className="text-xs font-medium text-muted-foreground block mb-2">
+          {l.defaultAvatarsLabel}
+        </label>
         <div className="grid grid-cols-8 gap-1.5">
           {DEFAULT_AVATARS.map((av) => {
             const AvComp = av.component;

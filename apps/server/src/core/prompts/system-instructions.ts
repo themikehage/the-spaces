@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-export const HTML_PREVIEW_INSTRUCTIONS = 
+export const HTML_PREVIEW_INSTRUCTIONS =
   `\n\nAdditional Instructions for HTML Visual Preview and Image Rendering:\n` +
   `- When generating web pages, HTML layouts, mockups, or visual documents, always output them as complete HTML files starting with "<!DOCTYPE html>" or "<html>" to enable a live browser-based preview.\n` +
   `- When generating plots, charts, diagrams, or images, save them to a file and output their file paths or URLs on a separate line using this exact format:\n` +
@@ -9,7 +9,7 @@ export const HTML_PREVIEW_INSTRUCTIONS =
   `assets/output.png\n` +
   `This enables the UI to automatically parse and render them in a gallery grid.\n`;
 
-export const AG_UI_INSTRUCTIONS = 
+export const AG_UI_INSTRUCTIONS =
   `\n\nInteractive UI Components (AG-UI Protocol):\n` +
   `You have native interactive UI tools. Prefer using them over custom scripts or general output formats when suitable:\n` +
   `- render_chart: Use this tool to display bar, line, area, or pie charts to visualize quantitative data, metrics, or analytical trends. Avoid writing Python/matplotlib scripts or generating image files for charts if they can be represented using this tool.\n` +
@@ -22,7 +22,7 @@ export const AG_UI_INSTRUCTIONS =
   `- generate_image: Generate a graphic/image from a text description. The image is saved to the workspace and displayed in the chat.\n` +
   `- vision: Analyze local image files (e.g. uploaded screenshots or generated designs) located in the workspace, providing answers to questions about them.\n`;
 
-export const PERSISTENT_MEMORY_INSTRUCTIONS = 
+export const PERSISTENT_MEMORY_INSTRUCTIONS =
   `\n\nPersistent Memory Tools (memory_store, memory_recall, memory_forget):\n` +
   `You have access to long-term persistent memory tools that help you remember facts, decisions, patterns, and interactions across sessions.\n` +
   `- memory_store: Save a fact, event, or code/architectural pattern into your long-term persistent memory. Use this to remember user preferences, project conventions, bug fixes, architecture decisions, and important discoveries.\n` +
@@ -37,7 +37,7 @@ export const PERSISTENT_MEMORY_INSTRUCTIONS =
   `  * id: The unique memory ID to be deleted (required).\n` +
   `IMPORTANT: Use memory_store proactively after completing significant work (bug fixes, architecture decisions, discoveries, new patterns). Always use memory_recall before starting work on a topic that may have prior context.\n`;
 
-export const SUBAGENT_DELEGATION_INSTRUCTIONS = 
+export const SUBAGENT_DELEGATION_INSTRUCTIONS =
   `\n\nSubagent Delegation (spawn_subagent tool):\n` +
   `You have a spawn_subagent tool to delegate focused, self-contained tasks to worker agents with fresh context. You are the ORCHESTRATOR, they are the EXECUTORS.\n` +
   `Use spawn_subagent when:\n` +
@@ -47,17 +47,15 @@ export const SUBAGENT_DELEGATION_INSTRUCTIONS =
   `Do NOT delegate simple one-line changes, git status reads, or trivial file lookups.\n` +
   `Every subagent is a pure EXECUTOR and must be given all context (relative file paths, code snippets, requirements) in the "task" argument. It has no memory of this parent conversation.\n`;
 
-export const ENVIRONMENT_INSTRUCTIONS = 
+export const ENVIRONMENT_INSTRUCTIONS =
   `\n\nConstraint — No long-running processes:\n` +
   `Do NOT start servers, dev watchers, or daemons (e.g. \`npm run dev\`, \`bun run dev\`, \`docker compose up\`, ngrok, live-reload, etc.).\n` +
   `Run builds, linting, type-checking, tests, and git operations instead. The app is already deployed and running.\n`;
 
-export const TASK_DELEGATION_INSTRUCTIONS = 
+export const TASK_DELEGATION_INSTRUCTIONS =
   `\n\nTask Delegation (delegate_task tool):\n` +
   `You have a delegate_task tool to prompt and execute tasks on programmatic agents, channels, projects, or existing sessions.\n` +
   `Use delegate_task when you need to coordinate or ask another entity to do work (e.g. asking a search agent to search images, asking a channel team to build a plan, prompting a project build/test loop).\n` +
   `- CRITICAL: ALWAYS use this tool to communicate with other agents, channels, or projects. DO NOT run bash commands (like curl, Invoke-RestMethod, or scripts/delegate.ts) to send prompts or communicate. Communicating with other agents via bash/HTTP endpoints is strictly prohibited and will cause permission/sandbox errors.\n` +
   `- Target Type mapping: targetType must be "agent" | "project" | "channel" | "session".\n` +
   `- For agent targets, it triggers a clean isolated session bound to the target agent. For project targets, it invokes the project executor. For channel targets, it coordinates multi-agent chains and awaits agreement/negotiation completion.\n`;
-
-

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
+import { ZodError } from "zod";
+import { sessionManager } from "../session-manager";
+import { createCustomToolRuntime } from "./runtime";
 import { type CustomToolDefinition, CustomToolDefinitionSchema } from "./schemas";
 import { customToolStorage } from "./storage";
-import { createCustomToolRuntime } from "./runtime";
-import { sessionManager } from "../session-manager";
-import { ZodError } from "zod";
 
 export interface ManageCustomToolsOptions {
   username: string;
@@ -70,7 +70,9 @@ export function createManageCustomToolsTool(options: ManageCustomToolsOptions) {
           case "upsert": {
             if (!tool) {
               return {
-                content: [{ type: "text", text: "Parameter 'tool' is required for action 'upsert'." }],
+                content: [
+                  { type: "text", text: "Parameter 'tool' is required for action 'upsert'." },
+                ],
                 isError: true,
               };
             }
@@ -81,10 +83,12 @@ export function createManageCustomToolsTool(options: ManageCustomToolsOptions) {
             } catch (err) {
               if (err instanceof ZodError) {
                 const issues = err.issues
-                  .map(issue => `- Path [${issue.path.join(".")}]: ${issue.message}`)
+                  .map((issue) => `- Path [${issue.path.join(".")}]: ${issue.message}`)
                   .join("\n");
                 return {
-                  content: [{ type: "text", text: `Schema validation failed for custom tool:\n${issues}` }],
+                  content: [
+                    { type: "text", text: `Schema validation failed for custom tool:\n${issues}` },
+                  ],
                   isError: true,
                 };
               }
@@ -103,7 +107,9 @@ export function createManageCustomToolsTool(options: ManageCustomToolsOptions) {
                 sessionId,
               });
 
-              const filtered = (session.customTools || []).filter((t: any) => t.name !== parsedTool.name);
+              const filtered = (session.customTools || []).filter(
+                (t: any) => t.name !== parsedTool.name,
+              );
               const nextTools = parsedTool.enabled ? [...filtered, runtime] : filtered;
               session.customTools = nextTools;
               (session as any)._customTools = nextTools;
@@ -125,7 +131,12 @@ export function createManageCustomToolsTool(options: ManageCustomToolsOptions) {
             }
 
             return {
-              content: [{ type: "text", text: `Custom tool "${parsedTool.name}" successfully saved and updated in session.` }],
+              content: [
+                {
+                  type: "text",
+                  text: `Custom tool "${parsedTool.name}" successfully saved and updated in session.`,
+                },
+              ],
               details: { tool: parsedTool },
             };
           }
@@ -133,7 +144,9 @@ export function createManageCustomToolsTool(options: ManageCustomToolsOptions) {
           case "delete": {
             if (!name) {
               return {
-                content: [{ type: "text", text: "Parameter 'name' is required for action 'delete'." }],
+                content: [
+                  { type: "text", text: "Parameter 'name' is required for action 'delete'." },
+                ],
                 isError: true,
               };
             }
@@ -171,7 +184,12 @@ export function createManageCustomToolsTool(options: ManageCustomToolsOptions) {
           case "toggle": {
             if (!name || enabled === undefined) {
               return {
-                content: [{ type: "text", text: "Parameters 'name' and 'enabled' are required for action 'toggle'." }],
+                content: [
+                  {
+                    type: "text",
+                    text: "Parameters 'name' and 'enabled' are required for action 'toggle'.",
+                  },
+                ],
                 isError: true,
               };
             }
@@ -211,7 +229,9 @@ export function createManageCustomToolsTool(options: ManageCustomToolsOptions) {
             }
 
             return {
-              content: [{ type: "text", text: `Custom tool "${name}" enabled status set to ${enabled}.` }],
+              content: [
+                { type: "text", text: `Custom tool "${name}" enabled status set to ${enabled}.` },
+              ],
               details: { name, enabled },
             };
           }

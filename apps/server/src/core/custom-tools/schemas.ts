@@ -104,7 +104,7 @@ export const StepsSchema = z.object({
       label: z.string(),
       status: z.enum(["done", "active", "pending", "error"]),
       description: z.string().optional(),
-    })
+    }),
   ),
   direction: z.enum(["horizontal", "vertical"]).default("vertical"),
 });
@@ -117,7 +117,7 @@ export const StatsSchema = z.object({
       value: z.string(),
       change: z.string().optional(),
       trend: z.enum(["up", "down", "neutral"]).optional(),
-    })
+    }),
   ),
   title: z.string().optional(),
   columns: z.number().min(1).max(4).default(3),
@@ -131,7 +131,7 @@ export const TimelineSchema = z.object({
       title: z.string(),
       description: z.string().optional(),
       status: z.enum(["success", "warning", "error", "info"]).optional(),
-    })
+    }),
   ),
   title: z.string().optional(),
 });
@@ -149,7 +149,7 @@ export const TabsSchema = z.object({
     z.object({
       label: z.string(),
       content: z.array(z.lazy(() => UiComponentSchema)),
-    })
+    }),
   ),
   defaultTab: z.number().min(0).default(0),
 });
@@ -161,7 +161,7 @@ export const AccordionSchema = z.object({
       title: z.string(),
       content: z.array(z.lazy(() => UiComponentSchema)),
       defaultOpen: z.boolean().default(true),
-    })
+    }),
   ),
 });
 
@@ -194,7 +194,7 @@ export const UiComponentSchema: z.ZodType<any> = z.lazy(() =>
     StepsSchema,
     StatsSchema,
     TimelineSchema,
-  ])
+  ]),
 );
 
 // --- Execution Mode Schemas ---
@@ -222,8 +222,14 @@ export const ExecutionModeSchema = z.discriminatedUnion("type", [
 
 // --- Presentation / Display Options ---
 export const PresentationSchema = z.object({
-  defaultExpanded: z.boolean().default(true).describe("Whether the tool result container is expanded by default in chat"),
-  accordionDefaultOpen: z.boolean().default(true).describe("Default open state for accordion items when not specified per item"),
+  defaultExpanded: z
+    .boolean()
+    .default(true)
+    .describe("Whether the tool result container is expanded by default in chat"),
+  accordionDefaultOpen: z
+    .boolean()
+    .default(true)
+    .describe("Default open state for accordion items when not specified per item"),
 });
 
 export type PresentationOptions = z.infer<typeof PresentationSchema>;
@@ -244,7 +250,8 @@ export const ToolScopeTargetSchema = z.discriminatedUnion("type", [
 export type ToolScopeTarget = z.infer<typeof ToolScopeTargetSchema>;
 
 export const CustomToolDefinitionSchema = z.object({
-  name: z.string()
+  name: z
+    .string()
     .regex(/^[a-z][a-z0-9_]+$/, "Must be snake_case, lowercase letters/numbers/underscores")
     .max(64),
   label: z.string().max(64).optional(),
@@ -252,7 +259,9 @@ export const CustomToolDefinitionSchema = z.object({
   parameters: JSONSchemaLiteral,
   execute: ExecutionModeSchema,
   ui: z.union([UiComponentSchema, z.array(UiComponentSchema)]).optional(),
-  presentation: PresentationSchema.optional().describe("UI presentation preferences for how the tool appears in chat"),
+  presentation: PresentationSchema.optional().describe(
+    "UI presentation preferences for how the tool appears in chat",
+  ),
   enabled: z.boolean().default(true),
   scope: ToolScopeTargetSchema.optional(),
   createdAt: z.string().optional(),

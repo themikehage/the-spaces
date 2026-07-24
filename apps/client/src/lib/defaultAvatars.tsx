@@ -65,7 +65,13 @@ const Owl: FC<AvatarSvgProps> = (props) => (
     <circle cx="25" cy="19" r="4" fill="#fff" />
     <circle cx="15" cy="19" r="2" fill="#121212" />
     <circle cx="25" cy="19" r="2" fill="#121212" />
-    <path d="M18 25 L20 27 L22 25" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path
+      d="M18 25 L20 27 L22 25"
+      stroke="#fbbf24"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
     <path d="M10 12 L14 16 L8 16 Z" fill="#a78bfa" />
     <path d="M30 12 L26 16 L32 16 Z" fill="#a78bfa" />
   </svg>
@@ -104,7 +110,16 @@ const GeoHex: FC<AvatarSvgProps> = (props) => (
 const GeoDiamond: FC<AvatarSvgProps> = (props) => (
   <svg viewBox="0 0 40 40" fill="none" {...props}>
     <rect x="8" y="8" width="24" height="24" rx="2" fill="#e879f9" transform="rotate(45 20 20)" />
-    <rect x="14" y="14" width="12" height="12" rx="1" fill="#121212" opacity="0.25" transform="rotate(45 20 20)" />
+    <rect
+      x="14"
+      y="14"
+      width="12"
+      height="12"
+      rx="1"
+      fill="#121212"
+      opacity="0.25"
+      transform="rotate(45 20 20)"
+    />
     <circle cx="20" cy="20" r="3" fill="#fff" />
   </svg>
 );
@@ -136,7 +151,13 @@ const GradGreen: FC<AvatarSvgProps> = (props) => {
         </linearGradient>
       </defs>
       <circle cx="20" cy="20" r="14" fill={`url(#${gradId})`} />
-      <path d="M15 20 L18 23 L25 16" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M15 20 L18 23 L25 16"
+        stroke="#fff"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 };
@@ -153,7 +174,13 @@ const GradBlue: FC<AvatarSvgProps> = (props) => {
         </linearGradient>
       </defs>
       <circle cx="20" cy="20" r="14" fill={`url(#${gradId})`} />
-      <path d="M14 17 L20 14 L26 17 L26 23 L20 26 L14 23 Z" stroke="#fff" strokeWidth="2" strokeLinejoin="round" fill="none" />
+      <path
+        d="M14 17 L20 14 L26 17 L26 23 L20 26 L14 23 Z"
+        stroke="#fff"
+        strokeWidth="2"
+        strokeLinejoin="round"
+        fill="none"
+      />
     </svg>
   );
 };
@@ -170,7 +197,10 @@ const GradPink: FC<AvatarSvgProps> = (props) => {
         </linearGradient>
       </defs>
       <circle cx="20" cy="20" r="14" fill={`url(#${gradId})`} />
-      <path d="M20 13 L22 18 L27 18 L23 21 L25 27 L20 23 L15 27 L17 21 L13 18 L18 18 Z" fill="#fff" />
+      <path
+        d="M20 13 L22 18 L27 18 L23 21 L25 27 L20 23 L15 27 L17 21 L13 18 L18 18 Z"
+        fill="#fff"
+      />
     </svg>
   );
 };
@@ -238,7 +268,10 @@ export function pickDefaultAvatar(name: string): DefaultAvatar {
   return DEFAULT_AVATARS[index];
 }
 
-export function getAvatarComponent(avatarUrl: string | null | undefined, name: string): FC<AvatarSvgProps> {
+export function getAvatarComponent(
+  avatarUrl: string | null | undefined,
+  name: string,
+): FC<AvatarSvgProps> {
   const id = getDefaultAvatarId(avatarUrl);
   if (id) {
     const found = DEFAULT_AVATARS.find((a) => a.id === id);

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { createContext, useState, useEffect, useCallback, type ReactNode } from "react";
-import type { SupportedLocale, LiteralsContextValue } from "./types";
+import { createContext, useCallback, useEffect, useState, type ReactNode } from "react";
+import type { LiteralsContextValue, SupportedLocale } from "./types";
 
 const LOCALE_STORAGE_KEY = "locale";
 
@@ -38,8 +38,6 @@ export function LiteralsProvider({ children }: { children: ReactNode }) {
   }, [locale]);
 
   return (
-    <LiteralsContext.Provider value={{ locale, setLocale }}>
-      {children}
-    </LiteralsContext.Provider>
+    <LiteralsContext.Provider value={{ locale, setLocale }}>{children}</LiteralsContext.Provider>
   );
 }

@@ -127,8 +127,6 @@ class WsRegistry {
     }
   }
 
-
-
   addTeamSocket(teamId: string, ws: WSContext): void {
     let set = this.teamSockets.get(teamId);
     if (!set) {

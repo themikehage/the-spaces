@@ -19,7 +19,13 @@ export function StepsComponent({ steps, direction = "vertical" }: StepsProps) {
       border: "border-success",
       text: "text-success",
       icon: (
-        <svg className="w-3 h-3 text-success-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+        <svg
+          className="w-3 h-3 text-success-foreground"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth="3"
+        >
           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
         </svg>
       ),
@@ -35,7 +41,13 @@ export function StepsComponent({ steps, direction = "vertical" }: StepsProps) {
       border: "border-error",
       text: "text-error",
       icon: (
-        <svg className="w-3 h-3 text-error-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+        <svg
+          className="w-3 h-3 text-error-foreground"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth="3"
+        >
           <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
         </svg>
       ),
@@ -58,20 +70,28 @@ export function StepsComponent({ steps, direction = "vertical" }: StepsProps) {
           return (
             <div key={i} className="flex-1 flex items-center gap-2 min-w-[120px]">
               <div className="flex flex-col items-center gap-1">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center border ${cfg.bg} ${cfg.border} text-xs font-bold`}>
+                <div
+                  className={`w-6 h-6 rounded-full flex items-center justify-center border ${cfg.bg} ${cfg.border} text-xs font-bold`}
+                >
                   {cfg.icon}
                 </div>
                 <div className="text-center">
-                  <span className={`text-[10px] font-semibold block truncate ${cfg.text}`}>{step.label}</span>
+                  <span className={`text-[10px] font-semibold block truncate ${cfg.text}`}>
+                    {step.label}
+                  </span>
                   {step.description && (
-                    <span className="text-[8px] text-muted-foreground block max-w-[100px] truncate">{step.description}</span>
+                    <span className="text-[8px] text-muted-foreground block max-w-[100px] truncate">
+                      {step.description}
+                    </span>
                   )}
                 </div>
               </div>
               {!isLast && (
-                <div className={`flex-1 h-0.5 border-t-2 border-dashed ${
-                  step.status === "done" ? "border-success/50" : "border-border"
-                } mx-2`} />
+                <div
+                  className={`flex-1 h-0.5 border-t-2 border-dashed ${
+                    step.status === "done" ? "border-success/50" : "border-border"
+                  } mx-2`}
+                />
               )}
             </div>
           );
@@ -91,13 +111,17 @@ export function StepsComponent({ steps, direction = "vertical" }: StepsProps) {
           <div key={i} className="flex gap-3 relative items-start">
             {/* Left dot + line */}
             <div className="flex flex-col items-center flex-shrink-0 relative">
-              <div className={`w-5 h-5 rounded-full flex items-center justify-center border ${cfg.bg} ${cfg.border}`}>
+              <div
+                className={`w-5 h-5 rounded-full flex items-center justify-center border ${cfg.bg} ${cfg.border}`}
+              >
                 {cfg.icon}
               </div>
               {!isLast && (
-                <div className={`w-0.5 absolute top-5 bottom-[-16px] border-l-2 ${
-                  step.status === "done" ? "border-success/30" : "border-border"
-                }`} />
+                <div
+                  className={`w-0.5 absolute top-5 bottom-[-16px] border-l-2 ${
+                    step.status === "done" ? "border-success/30" : "border-border"
+                  }`}
+                />
               )}
             </div>
 
@@ -105,7 +129,9 @@ export function StepsComponent({ steps, direction = "vertical" }: StepsProps) {
             <div className="flex flex-col min-w-0">
               <span className={`text-xs font-semibold ${cfg.text}`}>{step.label}</span>
               {step.description && (
-                <span className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed">{step.description}</span>
+                <span className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed">
+                  {step.description}
+                </span>
               )}
             </div>
           </div>

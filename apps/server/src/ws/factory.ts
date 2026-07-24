@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: MIT
 import type { WSContext, WSMessageReceive } from "hono/ws";
-import { wsRegistry } from "./registry";
-import { wsLogger } from "./logger";
+import { existsSync, readFileSync } from "node:fs";
+import { SessionPrefix, getSessionMetadataPath } from "shared";
+import { approvalManager } from "../core/approvals/approval-manager";
+import { ensureWatcher, setBuilding, setError, setReady } from "../core/preview-watcher";
+import { sessionManager } from "../core/session-manager";
+import { uiApprovalRegistry } from "../core/ui-approval-registry";
 import {
   resolveUsernameFromCookieHeader,
   resolveUsernameFromToken,
   validateSessionFromHeaders,
 } from "../lib/auth-helpers";
 import type { AuthPayload } from "../middleware/auth";
-import { existsSync, readFileSync } from "node:fs";
-import { sessionManager } from "../core/session-manager";
-import { SessionPrefix, getSessionMetadataPath } from "shared";
-import { setBuilding, setReady, setError, ensureWatcher } from "../core/preview-watcher";
 import { teamOrchestrator } from "../teams";
-import { uiApprovalRegistry } from "../core/ui-approval-registry";
-import { approvalManager } from "../core/approvals/approval-manager";
+import { wsLogger } from "./logger";
+import { wsRegistry } from "./registry";
 
 function getProjectNameForSession(username: string, sessionId: string): string | undefined {
   const p = getSessionMetadataPath(username, sessionId);
@@ -38,7 +38,7 @@ async function subscribeWsToSession(
   wsId: string,
   ws: WSContext,
   user: AuthPayload,
-  sessionId: string
+  sessionId: string,
 ): Promise<void> {
   if (sessionId.startsWith(SessionPrefix.EXEC)) {
     return;
@@ -108,7 +108,7 @@ async function subscribeWsToSession(
               sessionId,
               contextUsage,
               sessionStats,
-            })
+            }),
           );
         }
       } catch (err) {
@@ -173,7 +173,7 @@ async function subscribeWsToSession(
           sessionId,
           contextUsage,
           sessionStats,
-        })
+        }),
       );
     }
   } catch (err) {
@@ -280,7 +280,7 @@ export function createWsContext(): WsConnectionContext {
         const sessionToken = (data.token as string) || "";
         wsLogger.info(
           `Auth request token prefix: ${sessionToken ? sessionToken.slice(0, 8) : "none"}...`,
-          { wsId: id }
+          { wsId: id },
         );
 
         try {
@@ -363,7 +363,7 @@ export function createWsContext(): WsConnectionContext {
               type: "agent_error",
               sessionId,
               error: "Esta sesion de ejecucion es de solo lectura y no acepta prompts.",
-            })
+            }),
           );
           return;
         }
@@ -422,7 +422,10 @@ export function createWsContext(): WsConnectionContext {
           const exaActive = currentActive.filter((tName) => tName === "exa_search");
           const webFetchActive = currentActive.filter((tName) => tName === "web_fetch");
           const customActive = currentActive.filter(
-            (tName) => !tName.startsWith("mcp_") && !tName.startsWith("memory_") && !BUILTIN_AND_ALWAYS.has(tName)
+            (tName) =>
+              !tName.startsWith("mcp_") &&
+              !tName.startsWith("memory_") &&
+              !BUILTIN_AND_ALWAYS.has(tName),
           );
 
           let enabledCustomFromStorage: string[] = [];
@@ -446,8 +449,8 @@ export function createWsContext(): WsConnectionContext {
                 ...webFetchActive,
                 ...mergedCustom,
                 ...ALWAYS_ON,
-              ])
-            )
+              ]),
+            ),
           );
         }
 
@@ -467,7 +470,10 @@ export function createWsContext(): WsConnectionContext {
             try {
               await session.setModel(available[0]);
             } catch (error) {
-              safeSend(ws, JSON.stringify({ type: "agent_error", sessionId, error: String(error) }));
+              safeSend(
+                ws,
+                JSON.stringify({ type: "agent_error", sessionId, error: String(error) }),
+              );
               return;
             }
           } else {
@@ -477,7 +483,7 @@ export function createWsContext(): WsConnectionContext {
                 type: "agent_error",
                 sessionId,
                 error: "No providers configured. Go to Settings to add an API key.",
-              })
+              }),
             );
             return;
           }
@@ -507,7 +513,9 @@ export function createWsContext(): WsConnectionContext {
         const message = data.message as string;
         const session = sessionManager.getSession(user.username, sessionId);
         if (session) {
-          const followUpMsg = message.startsWith("[Follow-up] ") ? message : `[Follow-up] ${message}`;
+          const followUpMsg = message.startsWith("[Follow-up] ")
+            ? message
+            : `[Follow-up] ${message}`;
           session.followUp(followUpMsg);
         }
         return;
@@ -538,13 +546,11 @@ export function createWsContext(): WsConnectionContext {
           const sessionStats = session.getSessionStats();
           safeSend(
             ws,
-            JSON.stringify({ type: "context_usage", sessionId, contextUsage, sessionStats })
+            JSON.stringify({ type: "context_usage", sessionId, contextUsage, sessionStats }),
           );
         }
         return;
       }
-
-
 
       if (data.type === "team_join") {
         const teamId = data.teamId as string;
@@ -589,8 +595,6 @@ export function createWsContext(): WsConnectionContext {
         return;
       }
 
-
-
       if (data.type === "approvals_get") {
         const pending = approvalManager.getAll(user.username);
         safeSend(ws, JSON.stringify({ type: "approvals_pending", items: pending }));
@@ -612,7 +616,7 @@ export function createWsContext(): WsConnectionContext {
                 type: "ui_action_error",
                 componentId,
                 error: "Approval request not found or already completed",
-              })
+              }),
             );
           }
         }
@@ -630,7 +634,7 @@ export function createWsContext(): WsConnectionContext {
             type: "agent_error",
             error: String(err),
             sessionId: (data as any)?.sessionId,
-          })
+          }),
         );
       } catch {}
     }

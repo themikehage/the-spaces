@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { join, basename } from "node:path";
+import { join } from "node:path";
 
 export interface Skill {
   name: string;
@@ -22,29 +22,36 @@ export interface LoadSkillsOptions {
   includeDefaults?: boolean;
 }
 
-function parseSimpleFrontmatter(content: string): { name?: string; description?: string; disableModelInvocation?: boolean } {
+function parseSimpleFrontmatter(content: string): {
+  name?: string;
+  description?: string;
+  disableModelInvocation?: boolean;
+} {
   const result: { name?: string; description?: string; disableModelInvocation?: boolean } = {};
-  
+
   if (!content.startsWith("---")) return result;
-  
+
   const endIdx = content.indexOf("---", 3);
   if (endIdx === -1) return result;
-  
+
   const yamlContent = content.slice(3, endIdx);
   const lines = yamlContent.split("\n");
-  
+
   for (const line of lines) {
     const colonIdx = line.indexOf(":");
     if (colonIdx === -1) continue;
-    
+
     const key = line.slice(0, colonIdx).trim();
     let value = line.slice(colonIdx + 1).trim();
-    
+
     // Quitar comillas si tiene
-    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
       value = value.slice(1, -1);
     }
-    
+
     if (key === "name") {
       result.name = value;
     } else if (key === "description") {
@@ -53,7 +60,7 @@ function parseSimpleFrontmatter(content: string): { name?: string; description?:
       result.disableModelInvocation = value === "true";
     }
   }
-  
+
   return result;
 }
 

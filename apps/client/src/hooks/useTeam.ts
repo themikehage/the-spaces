@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 import { apiFetch } from "@/lib/api";
-import { useState, useEffect, useCallback, useRef } from "react";
-import type { Team, TeamMessage, TeamMember, UpdateTeam } from "shared";
 import { wsClient } from "@/lib/ws-client";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { Team, TeamMember, TeamMessage, UpdateTeam } from "shared";
 import { useConnectionAwareEffect } from "./useConnectionAware";
 
 export interface StreamingAgentState {
@@ -77,8 +77,12 @@ export function useTeam(teamId: string | null, sessionId?: string | null) {
             merged[agentId] = {
               ...s,
               text: merged[agentId].text.length > s.text.length ? merged[agentId].text : s.text,
-              thinking: (merged[agentId].thinking?.length || 0) > (s.thinking?.length || 0) ? merged[agentId].thinking : s.thinking,
-              toolCalls: { ...s.toolCalls, ...merged[agentId].toolCalls }};
+              thinking:
+                (merged[agentId].thinking?.length || 0) > (s.thinking?.length || 0)
+                  ? merged[agentId].thinking
+                  : s.thinking,
+              toolCalls: { ...s.toolCalls, ...merged[agentId].toolCalls },
+            };
           } else {
             merged[agentId] = s;
           }
@@ -108,7 +112,9 @@ export function useTeam(teamId: string | null, sessionId?: string | null) {
     }
     prevTeamIdRef.current = teamId;
 
-    Promise.all([fetchTeam(), fetchMessages(), fetchActiveStreamings()]).finally(() => setLoading(false));
+    Promise.all([fetchTeam(), fetchMessages(), fetchActiveStreamings()]).finally(() =>
+      setLoading(false),
+    );
   }, [teamId, sessionId, fetchTeam, fetchMessages, fetchActiveStreamings]);
 
   useConnectionAwareEffect(() => {
@@ -135,24 +141,33 @@ export function useTeam(teamId: string | null, sessionId?: string | null) {
       } else if (data.type === "team_agent_start") {
         setStreamingAgents((prev) => ({
           ...prev,
-          [data.agentId]: { agentId: data.agentId, agentName: data.agentName, text: "" }}));
+          [data.agentId]: { agentId: data.agentId, agentName: data.agentName, text: "" },
+        }));
       } else if (data.type === "team_agent_token") {
         setStreamingAgents((prev) => {
           const current = prev[data.agentId] || { agentId: data.agentId, text: "" };
-          const newText = data.fullText !== undefined ? data.fullText : (current.text + data.token);
+          const newText = data.fullText !== undefined ? data.fullText : current.text + data.token;
           return { ...prev, [data.agentId]: { ...current, text: newText } };
         });
       } else if (data.type === "team_agent_thinking") {
         setStreamingAgents((prev) => {
           const current = prev[data.agentId] || { agentId: data.agentId, text: "" };
-          const newThinking = data.fullThinking !== undefined ? data.fullThinking : ((current.thinking || "") + data.token);
+          const newThinking =
+            data.fullThinking !== undefined
+              ? data.fullThinking
+              : (current.thinking || "") + data.token;
           return { ...prev, [data.agentId]: { ...current, thinking: newThinking } };
         });
       } else if (data.type === "team_agent_tool_start") {
         setStreamingAgents((prev) => {
           const current = prev[data.agentId] || { agentId: data.agentId, text: "" };
           const tools = { ...(current.toolCalls || {}) };
-          tools[data.toolCallId] = { toolName: data.toolName, args: data.args, result: null, isError: false };
+          tools[data.toolCallId] = {
+            toolName: data.toolName,
+            args: data.args,
+            result: null,
+            isError: false,
+          };
           return { ...prev, [data.agentId]: { ...current, toolCalls: tools } };
         });
       } else if (data.type === "team_agent_tool_end") {
@@ -164,9 +179,13 @@ export function useTeam(teamId: string | null, sessionId?: string | null) {
               ...tools[data.toolCallId],
               result: {
                 toolName: data.toolName,
-                content: Array.isArray(data.result) ? data.result : [{ type: "text", text: String(data.result) }],
-                isError: data.isError},
-              isError: data.isError};
+                content: Array.isArray(data.result)
+                  ? data.result
+                  : [{ type: "text", text: String(data.result) }],
+                isError: data.isError,
+              },
+              isError: data.isError,
+            };
           }
           return { ...prev, [data.agentId]: { ...current, toolCalls: tools } };
         });
@@ -191,11 +210,12 @@ export function useTeam(teamId: string | null, sessionId?: string | null) {
       if (!sent) {
         await apiFetch(`/api/teams/${teamId}/send`, {
           method: "POST",
-          headers: { "Content-Type": "application/json"},
-          body: JSON.stringify({ message: content, sessionId })});
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: content, sessionId }),
+        });
       }
     },
-    [teamId, sessionId]
+    [teamId, sessionId],
   );
 
   const abortDispatch = useCallback(async () => {
@@ -205,8 +225,9 @@ export function useTeam(teamId: string | null, sessionId?: string | null) {
     if (!sent) {
       await apiFetch(`/api/teams/${teamId}/abort`, {
         method: "POST",
-        headers: { "Content-Type": "application/json"},
-        body: JSON.stringify({ sessionId })});
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId }),
+      });
     }
   }, [teamId, sessionId]);
 
@@ -215,8 +236,9 @@ export function useTeam(teamId: string | null, sessionId?: string | null) {
       if (!teamId) return;
       const res = await apiFetch(`/api/teams/${teamId}/members`, {
         method: "POST",
-        headers: { "Content-Type": "application/json"},
-        body: JSON.stringify(data)});
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: "Failed to add member" }));
         throw new Error(err.error || `HTTP ${res.status}`);
@@ -224,7 +246,7 @@ export function useTeam(teamId: string | null, sessionId?: string | null) {
       const updated = await res.json();
       setTeam(updated);
     },
-    [teamId]
+    [teamId],
   );
 
   const updateMember = useCallback(
@@ -232,25 +254,27 @@ export function useTeam(teamId: string | null, sessionId?: string | null) {
       if (!teamId) return;
       const res = await apiFetch(`/api/teams/${teamId}/members/${agentId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json"},
-        body: JSON.stringify(data)});
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const updated = await res.json();
       setTeam(updated);
     },
-    [teamId]
+    [teamId],
   );
 
   const removeMember = useCallback(
     async (agentId: string) => {
       if (!teamId) return;
       const res = await apiFetch(`/api/teams/${teamId}/members/${agentId}`, {
-        method: "DELETE"});
+        method: "DELETE",
+      });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const updated = await res.json();
       setTeam(updated);
     },
-    [teamId]
+    [teamId],
   );
 
   const updateTeam = useCallback(
@@ -258,14 +282,15 @@ export function useTeam(teamId: string | null, sessionId?: string | null) {
       if (!teamId) return;
       const res = await apiFetch(`/api/teams/${teamId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json"},
-        body: JSON.stringify(data)});
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const updated = await res.json();
       setTeam(updated);
       window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "team" } }));
     },
-    [teamId]
+    [teamId],
   );
 
   return {
@@ -280,5 +305,6 @@ export function useTeam(teamId: string | null, sessionId?: string | null) {
     updateTeam,
     addMember,
     updateMember,
-    removeMember};
+    removeMember,
+  };
 }

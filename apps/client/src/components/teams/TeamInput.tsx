@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { useState } from "react";
 import { useLiterals } from "@/lib";
+import { useState } from "react";
 import { literals as u } from "./TeamInput.literals";
 
 interface Props {

@@ -15,5 +15,5 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     loading: "Cargando línea de tiempo...",
     title: "Timeline de la Sesión",
     subtitle: "Detalle de hitos y turnos de ejecución de herramientas",
-  }
+  },
 };

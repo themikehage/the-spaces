@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-import { useState, useEffect, useRef } from "react";
-import type { SkillInfo } from "./SkillsSelector";
-import { PortalPopover } from "./PortalPopover";
 import { useLiterals } from "@/lib";
+import { useEffect, useRef, useState } from "react";
 import { literals as u } from "./ChatInput.literals";
+import { PortalPopover } from "./PortalPopover";
+import type { SkillInfo } from "./SkillsSelector";
 
 interface SkillsPopoverProps {
   skills: SkillInfo[];
@@ -30,7 +30,7 @@ export function SkillsPopover({
   const filtered = skills.filter(
     (s) =>
       s.name.toLowerCase().includes(search.toLowerCase()) ||
-      s.description.toLowerCase().includes(search.toLowerCase())
+      s.description.toLowerCase().includes(search.toLowerCase()),
   );
 
   useEffect(() => {

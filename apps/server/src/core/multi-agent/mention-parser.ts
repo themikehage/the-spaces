@@ -19,7 +19,7 @@ function escapeRegex(str: string): string {
 export function parseMentions(
   content: string,
   members: TeamMember[],
-  agentNames: Map<string, string>
+  agentNames: Map<string, string>,
 ): string[] {
   const mentioned = new Set<string>();
 
@@ -41,5 +41,3 @@ export function parseMentions(
 
   return Array.from(mentioned);
 }
-
-

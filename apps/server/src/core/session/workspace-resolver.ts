@@ -1,22 +1,21 @@
 // SPDX-License-Identifier: MIT
-import { existsSync, mkdirSync, writeFileSync, readdirSync, readFileSync } from "node:fs";
-import { join, resolve, dirname } from "node:path";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 import {
+  getAgentWorkspaceDir,
+  getProjectsDir,
+  getProjectWorkspaceDir,
+  getSessionDir,
+  getTeamWorkspaceDir,
   getUserDir,
   getWorkspaceDir,
   getWorkspaceSkillsDir,
-  getProjectsDir,
-  getSessionsDir,
-  getSessionDir,
-  getProjectWorkspaceDir,
-  getTeamWorkspaceDir,
-  getAgentWorkspaceDir,
   SessionPrefix,
 } from "shared";
 import { DEFAULT_AGENTS_MD, DEFAULT_FACTORY_SKILLS } from "../default-factory-skills";
-import { userConfigManager } from "./user-config";
-import { sessionMetadataStore } from "./metadata-store";
 import { scopeConfigManager } from "../scope";
+import { sessionMetadataStore } from "./metadata-store";
+import { userConfigManager } from "./user-config";
 
 export function getResolvedSkillPaths(cwd: string, username?: string): string[] {
   const paths: string[] = [];
@@ -163,15 +162,15 @@ export function resolveProjectId(username: string, nameOrId: string): string | n
   return null;
 }
 
-
 export function resolveSessionWorkspace(
   username: string,
   sessionId: string,
   projectId?: string,
   agentId?: string,
-  teamId?: string
+  teamId?: string,
 ): { sessionDir: string; workspaceDir: string } {
-  const sessionDir = resolveSubagentSessionDir(username, sessionId) ?? getSessionDir(username, sessionId);
+  const sessionDir =
+    resolveSubagentSessionDir(username, sessionId) ?? getSessionDir(username, sessionId);
 
   ensureWorkspaceStructure(username);
 
@@ -236,7 +235,9 @@ export function resolveSessionAllowedWriteDir(username: string, sessionId: strin
 
   if (resolvedProjectId) {
     const resolved = resolveProjectDir(username, resolvedProjectId);
-    return resolved ? join(resolved, "workspace") : getProjectWorkspaceDir(username, resolvedProjectId);
+    return resolved
+      ? join(resolved, "workspace")
+      : getProjectWorkspaceDir(username, resolvedProjectId);
   }
 
   if (metadata.agentId) {
@@ -245,4 +246,3 @@ export function resolveSessionAllowedWriteDir(username: string, sessionId: strin
 
   return getUserDir(username);
 }
-

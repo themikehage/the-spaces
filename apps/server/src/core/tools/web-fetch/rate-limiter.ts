@@ -11,15 +11,16 @@ export class RateLimiter {
   }
 
   async acquire(hostname: string, signal?: AbortSignal): Promise<void> {
-    const delay = (ms: number) => new Promise<void>((resolve, reject) => {
-      const timer = setTimeout(resolve, ms);
-      if (signal) {
-        signal.addEventListener("abort", () => {
-          clearTimeout(timer);
-          reject(new Error("Fetch aborted by client"));
-        });
-      }
-    });
+    const delay = (ms: number) =>
+      new Promise<void>((resolve, reject) => {
+        const timer = setTimeout(resolve, ms);
+        if (signal) {
+          signal.addEventListener("abort", () => {
+            clearTimeout(timer);
+            reject(new Error("Fetch aborted by client"));
+          });
+        }
+      });
 
     while (true) {
       if (signal?.aborted) {
@@ -34,7 +35,7 @@ export class RateLimiter {
       const now = Date.now();
       const timestamps = this.requestHistory.get(hostname) || [];
       const windowStart = now - 60 * 1000;
-      const recentTimestamps = timestamps.filter(t => t > windowStart);
+      const recentTimestamps = timestamps.filter((t) => t > windowStart);
       this.requestHistory.set(hostname, recentTimestamps);
 
       if (recentTimestamps.length >= this.maxRequestsPerMinute) {

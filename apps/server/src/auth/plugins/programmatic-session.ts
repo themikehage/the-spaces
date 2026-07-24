@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { createAuthEndpoint } from "better-auth/api";
 import type { BetterAuthPlugin } from "better-auth";
+import { createAuthEndpoint } from "better-auth/api";
 
 export const programmaticSessionPlugin = () => {
   return {
@@ -25,11 +25,11 @@ export const programmaticSessionPlugin = () => {
               ? {
                   expiresAt: new Date(Date.now() + body.expiresIn * 1000),
                 }
-              : undefined
+              : undefined,
           );
 
           return ctx.json({ token: session.token, id: session.id });
-        }
+        },
       ),
     },
   } satisfies BetterAuthPlugin;

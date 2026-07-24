@@ -88,7 +88,10 @@ Do NOT delegate simple one-line changes, git status reads, or trivial file looku
 Every subagent is a pure EXECUTOR and must be given all context (relative file paths, code snippets, requirements) in the \`task\` argument. It has no memory of this parent conversation.
 `;
 
-export const DEFAULT_FACTORY_SKILLS: Record<string, { name: string; description: string; content: string }> = {
+export const DEFAULT_FACTORY_SKILLS: Record<
+  string,
+  { name: string; description: string; content: string }
+> = {
   "factory-pipelines": {
     name: "factory-pipelines",
     description: "Create, run, and monitor deterministic linear execution pipelines.",
@@ -168,7 +171,7 @@ Call \`manage_pipelines(action: "abort", id: "my-pipeline", params: { "runId": "
 2. Read the failing script: \`manage_pipelines(action: "read_script", id: "my-pipeline", params: { "scriptName": "lint.sh" })\`.
 3. Patch the script: \`manage_pipelines(action: "patch_script", id: "my-pipeline", params: { "scriptName": "lint.sh", "content": "fixed-content" })\`.
 4. Re-run execution: \`manage_pipelines(action: "run", id: "my-pipeline")\`.
-`
+`,
   },
   "factory-teams": {
     name: "factory-teams",
@@ -237,11 +240,12 @@ Teams are structured multi-agent workflows. The \`teamType\` is IMMUTABLE after 
 
 ### Delete a team
 \`manage_factory("teams", "delete", "team-id")\`
-`
+`,
   },
   "factory-self-improvement": {
     name: "factory-self-improvement",
-    description: "Run a structured self-evaluation suite that exercises each factory capability with real prompts, then analyzes results to produce an actionable improvement report.",
+    description:
+      "Run a structured self-evaluation suite that exercises each factory capability with real prompts, then analyzes results to produce an actionable improvement report.",
     content: `---
 name: factory-self-improvement
 description: Run a structured self-evaluation suite that exercises each factory capability with real prompts, then analyzes results to produce an actionable improvement report.
@@ -428,6 +432,6 @@ If you want to offload the execution to a subagent and only handle the analysis 
 2. Give it this exact task: "Execute all 10 exercises in the factory-self-improvement skill. For each exercise, record: what you did, whether it succeeded, and any issues encountered. Return a structured log with one entry per exercise."
 3. Wait for the subagent to return its result envelope.
 4. Use the subagent's log as input to Phase 2 (Analysis) and Phase 3 (Report).
-`
-  }
+`,
+  },
 };

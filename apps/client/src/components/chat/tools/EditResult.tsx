@@ -55,7 +55,11 @@ export function EditResult({ text, filePath, details, isError }: Props) {
     return (
       <div className="flex items-center gap-2 text-destructive text-xs font-mono">
         <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+          <path
+            fillRule="evenodd"
+            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+            clipRule="evenodd"
+          />
         </svg>
         {text}
       </div>
@@ -100,17 +104,18 @@ export function EditResult({ text, filePath, details, isError }: Props) {
             );
           }
           const bgClass =
-            line.type === "add" ? "bg-primary/8 border-l-2 border-success/50" :
-              line.type === "remove" ? "bg-destructive/8 border-l-2 border-error/50" :
-                "border-l-2 border-transparent";
+            line.type === "add"
+              ? "bg-primary/8 border-l-2 border-success/50"
+              : line.type === "remove"
+                ? "bg-destructive/8 border-l-2 border-error/50"
+                : "border-l-2 border-transparent";
           const textClass =
-            line.type === "add" ? "text-primary" :
-              line.type === "remove" ? "text-destructive/80" :
-                "text-muted-foreground";
-          const prefix =
-            line.type === "add" ? "+" :
-              line.type === "remove" ? "−" :
-                " ";
+            line.type === "add"
+              ? "text-primary"
+              : line.type === "remove"
+                ? "text-destructive/80"
+                : "text-muted-foreground";
+          const prefix = line.type === "add" ? "+" : line.type === "remove" ? "−" : " ";
 
           return (
             <div key={i} className={`flex items-start gap-2 px-3 py-0.5 ${bgClass}`}>

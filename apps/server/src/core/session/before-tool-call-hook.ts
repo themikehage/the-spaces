@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-import { permissionEngine, userPermissionStore, extractSubject } from "../sandbox";
-import { approvalManager } from "../approvals/approval-manager";
 import { SessionPrefix } from "shared";
+import { approvalManager } from "../approvals/approval-manager";
+import { extractSubject, permissionEngine, userPermissionStore } from "../sandbox";
 import { sessionMetadataStore } from "./metadata-store";
 import { resolveSessionAllowedWriteDir } from "./workspace-resolver";
 
@@ -13,8 +13,17 @@ export interface CreateBeforeToolCallHookParams {
   executionMode?: "readonly" | "standard" | "autonomous";
 }
 
-export function createBeforeToolCallHook({ sessionId, isSubagent, parentSessionId, username, executionMode }: CreateBeforeToolCallHookParams) {
-  const resolvedIsSubagent = isSubagent || sessionId.startsWith(SessionPrefix.SUBAGENT) || sessionId.startsWith(SessionPrefix.DELEGATE);
+export function createBeforeToolCallHook({
+  sessionId,
+  isSubagent,
+  parentSessionId,
+  username,
+  executionMode,
+}: CreateBeforeToolCallHookParams) {
+  const resolvedIsSubagent =
+    isSubagent ||
+    sessionId.startsWith(SessionPrefix.SUBAGENT) ||
+    sessionId.startsWith(SessionPrefix.DELEGATE);
 
   return async (context: any, signal?: AbortSignal): Promise<any> => {
     const { toolCall, args } = context;
@@ -22,16 +31,21 @@ export function createBeforeToolCallHook({ sessionId, isSubagent, parentSessionI
 
     const resolvedUsername = username || "default_user";
 
-    const resolvedAutonomy = (sessionMetadataStore.getSessionMetadata(resolvedUsername, sessionId)?.autonomyLevel as any)
-      ?? "auto";
+    const resolvedAutonomy =
+      (sessionMetadataStore.getSessionMetadata(resolvedUsername, sessionId)
+        ?.autonomyLevel as any) ?? "auto";
 
-    const resolvedMode = (sessionMetadataStore.getSessionMetadata(resolvedUsername, sessionId)?.executionMode as any)
-      ?? executionMode;
+    const resolvedMode =
+      (sessionMetadataStore.getSessionMetadata(resolvedUsername, sessionId)
+        ?.executionMode as any) ?? executionMode;
 
     if (resolvedAutonomy === "suggest") {
       const harmlessTools = ["ask_question", "request_approval"];
       if (!harmlessTools.includes(toolName)) {
-        return { block: true, reason: `[Autonomy: Suggest Mode] Tool execution blocked. Suggested action: ${toolName} with arguments ${JSON.stringify(args)}` };
+        return {
+          block: true,
+          reason: `[Autonomy: Suggest Mode] Tool execution blocked. Suggested action: ${toolName} with arguments ${JSON.stringify(args)}`,
+        };
       }
     }
 
@@ -50,7 +64,9 @@ export function createBeforeToolCallHook({ sessionId, isSubagent, parentSessionI
     }
 
     const harmlessTools = ["ask_question", "request_approval", "memory_recall"];
-    const needsApproval = verdict.allow === "ask" || (resolvedAutonomy === "propose" && !harmlessTools.includes(toolName));
+    const needsApproval =
+      verdict.allow === "ask" ||
+      (resolvedAutonomy === "propose" && !harmlessTools.includes(toolName));
 
     if (needsApproval) {
       const toolCallId = toolCall.id;
@@ -61,7 +77,10 @@ export function createBeforeToolCallHook({ sessionId, isSubagent, parentSessionI
         toolCallId,
         toolName,
         args: args as Record<string, unknown>,
-        reason: ("reason" in verdict && typeof verdict.reason === "string") ? verdict.reason : "Enforced by Propose autonomy level",
+        reason:
+          "reason" in verdict && typeof verdict.reason === "string"
+            ? verdict.reason
+            : "Enforced by Propose autonomy level",
       });
 
       const onAbort = () => {
@@ -79,14 +98,16 @@ export function createBeforeToolCallHook({ sessionId, isSubagent, parentSessionI
         const result = await approvalPromise;
         if (result.action === "deny") {
           if (result.payload?.persist) {
-            const pattern = result.payload.pattern || extractSubject(toolName, args as Record<string, unknown>);
+            const pattern =
+              result.payload.pattern || extractSubject(toolName, args as Record<string, unknown>);
             userPermissionStore.saveDecision(resolvedUsername, toolName, pattern, "deny");
           }
           return { block: true, reason: `[Permission Denied] Rejected by user` };
         }
 
         if (result.payload?.persist) {
-          const pattern = result.payload.pattern || extractSubject(toolName, args as Record<string, unknown>);
+          const pattern =
+            result.payload.pattern || extractSubject(toolName, args as Record<string, unknown>);
           userPermissionStore.saveDecision(resolvedUsername, toolName, pattern, "allow");
         }
         return undefined; // Approved

@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
-import { useState, useEffect, useCallback } from "react";
-import { apiFetch } from "@/lib/api";
-import { useLiterals } from "@/lib";
 import { MCPCard } from "@/components/mcp/MCPCard";
 import { MCPCustomForm } from "@/components/mcp/MCPCustomForm";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useToast } from "@/contexts/ToastContext";
-import { motion, AnimatePresence } from "framer-motion";
-import type { McpServerConfig, McpCatalogItem } from "shared";
+import { useLiterals } from "@/lib";
+import { apiFetch } from "@/lib/api";
+import { AnimatePresence, motion } from "framer-motion";
+import { useCallback, useEffect, useState } from "react";
+import type { McpCatalogItem, McpServerConfig } from "shared";
 import { literals } from "./MCPMarketplacePage.literals";
 
 export function MCPMarketplacePage() {
@@ -109,7 +109,7 @@ export function MCPMarketplacePage() {
       });
       if (!res.ok) throw new Error("Fallo al instalar el servidor incorporado");
       const data = await res.json();
-      
+
       // Update servers array with the newly installed server
       setServers((prev) => {
         const filtered = prev.filter((s) => s.id !== catalogId);
@@ -129,9 +129,7 @@ export function MCPMarketplacePage() {
     if (!srv) return;
 
     // Optimistic UI update
-    setServers((prev) =>
-      prev.map((s) => (s.id === serverId ? { ...s, enabled } : s))
-    );
+    setServers((prev) => prev.map((s) => (s.id === serverId ? { ...s, enabled } : s)));
 
     try {
       const res = await apiFetch(`/api/mcp/servers/${serverId}`, {
@@ -141,16 +139,12 @@ export function MCPMarketplacePage() {
       });
       if (!res.ok) throw new Error("Error al actualizar estado del servidor");
       const data = await res.json();
-      
-      setServers((prev) =>
-        prev.map((s) => (s.id === serverId ? data.server : s))
-      );
+
+      setServers((prev) => prev.map((s) => (s.id === serverId ? data.server : s)));
       addToast("info", `${srv.name} ha sido ${enabled ? "habilitado" : "deshabilitado"}.`);
     } catch (err: any) {
       // Revert optimistic update
-      setServers((prev) =>
-        prev.map((s) => (s.id === serverId ? { ...s, enabled: !enabled } : s))
-      );
+      setServers((prev) => prev.map((s) => (s.id === serverId ? { ...s, enabled: !enabled } : s)));
       addToast("error", err.message || "Error al actualizar estado");
     }
   };
@@ -163,10 +157,8 @@ export function MCPMarketplacePage() {
       });
       if (!res.ok) throw new Error("Error al conectar con el servidor");
       const data = await res.json();
-      
-      setServers((prev) =>
-        prev.map((s) => (s.id === serverId ? data.server : s))
-      );
+
+      setServers((prev) => prev.map((s) => (s.id === serverId ? data.server : s)));
       addToast("info", `Conectando con ${srv?.name || serverId}...`);
     } catch (err: any) {
       addToast("error", err.message || "Error de conexión");
@@ -181,10 +173,8 @@ export function MCPMarketplacePage() {
       });
       if (!res.ok) throw new Error("Error al desconectar el servidor");
       const data = await res.json();
-      
-      setServers((prev) =>
-        prev.map((s) => (s.id === serverId ? data.server : s))
-      );
+
+      setServers((prev) => prev.map((s) => (s.id === serverId ? data.server : s)));
       addToast("info", `${srv?.name || serverId} desconectado.`);
     } catch (err: any) {
       addToast("error", err.message || "Error al desconectar");
@@ -199,11 +189,15 @@ export function MCPMarketplacePage() {
         method: "DELETE",
       });
       if (!res.ok) throw new Error("Error al eliminar el servidor");
-      
-      const srv = servers.find(s => s.id === pendingDeleteServerId);
+
+      const srv = servers.find((s) => s.id === pendingDeleteServerId);
       if (srv && srv.isBuiltin) {
         setServers((prev) =>
-          prev.map((s) => (s.id === pendingDeleteServerId ? { ...s, installed: false, enabled: false, status: "disconnected" } : s))
+          prev.map((s) =>
+            s.id === pendingDeleteServerId
+              ? { ...s, installed: false, enabled: false, status: "disconnected" }
+              : s,
+          ),
         );
       } else {
         setServers((prev) => prev.filter((s) => s.id !== pendingDeleteServerId));
@@ -241,15 +235,12 @@ export function MCPMarketplacePage() {
     try {
       const data = await handleTestConnection(server);
       if (data.success) {
-        addToast(
-          "success",
-          `${l.validationSuccess} ${data.tools.join(", ")}`
-        );
+        addToast("success", `${l.validationSuccess} ${data.tools.join(", ")}`);
         fetchData();
       } else {
         addToast(
           "error",
-          `${l.validationFailed} ${server.name}: ${data.error || "El proceso no respondió."}`
+          `${l.validationFailed} ${server.name}: ${data.error || "El proceso no respondió."}`,
         );
       }
     } catch (err: any) {
@@ -290,9 +281,7 @@ export function MCPMarketplacePage() {
       });
       if (!res.ok) throw new Error("Error al actualizar servidor");
       const data = await res.json();
-      setServers((prev) =>
-        prev.map((s) => (s.id === targetId ? data.server : s))
-      );
+      setServers((prev) => prev.map((s) => (s.id === targetId ? data.server : s)));
       setEditingCustomId(null);
       addToast("success", `${data.server.name} actualizado.`);
     } catch (err: any) {
@@ -370,7 +359,7 @@ export function MCPMarketplacePage() {
   // --- RENDERS ---
 
   const filteredCatalog = catalog.filter(
-    (item) => selectedCategory === "All" || item.category === selectedCategory
+    (item) => selectedCategory === "All" || item.category === selectedCategory,
   );
 
   return (
@@ -410,7 +399,17 @@ export function MCPMarketplacePage() {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline mr-1.5 -mt-0.5">
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="inline mr-1.5 -mt-0.5"
+            >
               <polyline points="16 18 22 12 16 6" />
               <polyline points="8 6 2 12 8 18" />
             </svg>
@@ -426,12 +425,13 @@ export function MCPMarketplacePage() {
           </div>
         )}
 
-
-
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-card/50 border border-input/10 h-48 rounded-xl animate-pulse p-5 space-y-4">
+              <div
+                key={i}
+                className="bg-card/50 border border-input/10 h-48 rounded-xl animate-pulse p-5 space-y-4"
+              >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-muted/20" />
                   <div className="space-y-2 flex-1">
@@ -506,21 +506,29 @@ export function MCPMarketplacePage() {
                           onDisconnect={() => handleDisconnect(item.id)}
                           onDelete={() => handleDeleteServer(item.id)}
                           onTest={() => handleTestServer(serverConfig)}
-                          onEdit={activeConfig ? () => {
-                            setEditingCustomId(item.id);
-                            setActiveTab("custom");
-                          } : undefined}
+                          onEdit={
+                            activeConfig
+                              ? () => {
+                                  setEditingCustomId(item.id);
+                                  setActiveTab("custom");
+                                }
+                              : undefined
+                          }
                         />
                         {isInstalling && (
                           <div className="absolute inset-0 bg-background/60 backdrop-blur-xs flex flex-col items-center justify-center rounded-xl border border-input/25 z-10 space-y-2 animate-fade-in">
                             <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                            <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{l.installing}</span>
+                            <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
+                              {l.installing}
+                            </span>
                           </div>
                         )}
                         {isTesting && (
                           <div className="absolute inset-0 bg-background/60 backdrop-blur-xs flex flex-col items-center justify-center rounded-xl border border-input/25 z-10 space-y-2 animate-fade-in">
                             <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                            <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{l.validating}</span>
+                            <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
+                              {l.validating}
+                            </span>
                           </div>
                         )}
                       </div>
@@ -543,7 +551,9 @@ export function MCPMarketplacePage() {
                 {/* Add / Edit Form */}
                 {(isAddingCustom || editingCustomId) && (
                   <MCPCustomForm
-                    initialConfig={editingCustomId ? servers.find((s) => s.id === editingCustomId) || null : null}
+                    initialConfig={
+                      editingCustomId ? servers.find((s) => s.id === editingCustomId) || null : null
+                    }
                     onSubmit={editingCustomId ? handleEditCustom : handleAddCustom}
                     onCancel={handleCancelCustom}
                     onTest={handleTestConnection}
@@ -554,9 +564,7 @@ export function MCPMarketplacePage() {
                 {!isAddingCustom && !editingCustomId && (
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-foreground font-semibold text-sm">
-                        {l.customServers}
-                      </h3>
+                      <h3 className="text-foreground font-semibold text-sm">{l.customServers}</h3>
                       <p className="text-muted-foreground text-[11px] mt-0.5">
                         {customServers.length === 1
                           ? "1 servidor personalizado configurado."
@@ -567,7 +575,16 @@ export function MCPMarketplacePage() {
                       onClick={() => setIsAddingCustom(true)}
                       className="px-4 py-2 text-xs font-semibold rounded-lg bg-primary text-white hover:bg-primary/90 transition-all cursor-pointer flex items-center gap-1.5"
                     >
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
                         <line x1="12" y1="5" x2="12" y2="19" />
                         <line x1="5" y1="12" x2="19" y2="12" />
                       </svg>
@@ -602,7 +619,10 @@ export function MCPMarketplacePage() {
                       const isTesting = testingId === srv.id;
                       const isEditing = editingCustomId === srv.id;
                       return (
-                        <div key={srv.id} className={`relative ${isEditing ? "ring-2 ring-primary/40 rounded-xl" : ""}`}>
+                        <div
+                          key={srv.id}
+                          className={`relative ${isEditing ? "ring-2 ring-primary/40 rounded-xl" : ""}`}
+                        >
                           <MCPCard
                             server={srv}
                             onToggleEnabled={(enabled) => handleToggleEnabled(srv.id, enabled)}
@@ -615,7 +635,9 @@ export function MCPMarketplacePage() {
                           {isTesting && (
                             <div className="absolute inset-0 bg-background/60 backdrop-blur-xs flex flex-col items-center justify-center rounded-xl border border-input/25 z-10 space-y-2 animate-fade-in">
                               <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                              <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{l.validating}</span>
+                              <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
+                                {l.validating}
+                              </span>
                             </div>
                           )}
                         </div>
@@ -659,7 +681,10 @@ export function MCPMarketplacePage() {
 
                   <div className="flex items-center justify-end gap-3">
                     <button
-                      onClick={() => { setRawConfigStr("{}"); setRawConfigError(""); }}
+                      onClick={() => {
+                        setRawConfigStr("{}");
+                        setRawConfigError("");
+                      }}
                       className="px-4 py-2 text-xs font-semibold rounded-lg bg-card-hover/20 text-muted-foreground hover:text-foreground transition-all cursor-pointer border border-input/20"
                     >
                       Reiniciar

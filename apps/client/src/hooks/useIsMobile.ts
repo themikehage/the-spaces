@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export interface UseIsMobileReturn {
   isMobile: boolean;
@@ -10,7 +10,8 @@ export interface UseIsMobileReturn {
 export function useIsMobile(): UseIsMobileReturn {
   const [breakpoints, setBreakpoints] = useState<UseIsMobileReturn>({
     isMobile: typeof window !== "undefined" ? window.innerWidth < 768 : false,
-    isTablet: typeof window !== "undefined" ? (window.innerWidth >= 768 && window.innerWidth <= 1024) : false,
+    isTablet:
+      typeof window !== "undefined" ? window.innerWidth >= 768 && window.innerWidth <= 1024 : false,
     isDesktop: typeof window !== "undefined" ? window.innerWidth > 1024 : true,
   });
 

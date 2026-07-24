@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
-import { apiFetch } from "@/lib/api";
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { AnimatePresence } from "framer-motion";
+import { ProjectSettingsModal } from "@/components/projects/ProjectSettingsModal";
+import { EntityAvatar } from "@/components/shared/EntityAvatar";
+import { DashboardSkeleton } from "@/components/skeletons/DashboardSkeleton";
+import { Button } from "@/components/ui/Button";
+import { useSessions, type SessionItem } from "@/contexts/SessionsContext";
 import { useToast } from "@/contexts/ToastContext";
 import { useLiterals } from "@/lib";
+import { apiFetch } from "@/lib/api";
+import { AnimatePresence } from "framer-motion";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { literals as dashboardLiterals } from "./DashboardPage.literals";
-import { Button } from "@/components/ui/Button";
-import { EntityAvatar } from "@/components/shared/EntityAvatar";
-import { useSessions, type SessionItem } from "@/contexts/SessionsContext";
-import { ProjectSettingsModal } from "@/components/projects/ProjectSettingsModal";
-import { DashboardSkeleton } from "@/components/skeletons/DashboardSkeleton";
 
 interface RepoItem {
   id?: string;
@@ -229,7 +229,9 @@ export function DashboardPage({ onNavigate, onSelectProject }: Props) {
 
   const activeSessions = useMemo(() => {
     return sessions
-      .filter((s) => s.status === "streaming" || s.status === "active" || s.status === "task-running")
+      .filter(
+        (s) => s.status === "streaming" || s.status === "active" || s.status === "task-running",
+      )
       .slice(0, 6);
   }, [sessions]);
 
@@ -336,13 +338,15 @@ export function DashboardPage({ onNavigate, onSelectProject }: Props) {
                         type="agent"
                         className="group-hover:scale-105 transition-transform duration-300 border border-input/20 shadow-md"
                       />
-                      <span className={`absolute bottom-0.5 right-1 w-3 h-3 rounded-full border-2 border-surface ${
-                        agent.status === "streaming" || agent.status === "task-running"
-                          ? "bg-warning animate-pulse"
-                          : agent.status === "idle"
-                            ? "bg-accent"
-                            : "bg-text-secondary/30"
-                      }`} />
+                      <span
+                        className={`absolute bottom-0.5 right-1 w-3 h-3 rounded-full border-2 border-surface ${
+                          agent.status === "streaming" || agent.status === "task-running"
+                            ? "bg-warning animate-pulse"
+                            : agent.status === "idle"
+                              ? "bg-accent"
+                              : "bg-text-secondary/30"
+                        }`}
+                      />
                     </div>
                     <h3 className="font-extrabold text-[11px] text-foreground truncate w-full group-hover:text-accent transition-colors leading-tight">
                       {agent.name}
@@ -365,16 +369,26 @@ export function DashboardPage({ onNavigate, onSelectProject }: Props) {
             <div id="sessions-sec" className="order-1 space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-foreground font-bold text-base tracking-tight font-display">{l.sessionsSection}</h2>
+                  <h2 className="text-foreground font-bold text-base tracking-tight font-display">
+                    {l.sessionsSection}
+                  </h2>
                   <p className="text-[11px] text-text-secondary mt-0.5">{l.operationalNow}</p>
                 </div>
-                {onNavigate && <button onClick={() => onNavigate("/sessions")} className="text-xs text-primary hover:underline font-semibold">{l.viewAll || "View All"}</button>}
+                {onNavigate && (
+                  <button
+                    onClick={() => onNavigate("/sessions")}
+                    className="text-xs text-primary hover:underline font-semibold"
+                  >
+                    {l.viewAll || "View All"}
+                  </button>
+                )}
               </div>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {activeSessions.map((session) => {
                   let statusColor = "bg-text-secondary/40";
                   if (session.status === "streaming") statusColor = "bg-warning animate-pulse";
-                  else if (session.status === "task-running") statusColor = "bg-primary animate-pulse";
+                  else if (session.status === "task-running")
+                    statusColor = "bg-primary animate-pulse";
                   else if (session.status === "active") statusColor = "bg-accent";
 
                   return (
@@ -399,7 +413,11 @@ export function DashboardPage({ onNavigate, onSelectProject }: Props) {
                           {session.name}
                         </h3>
                         <p className="text-[10px] text-text-secondary truncate mt-0.5 font-medium">
-                          {session.projectId ? `Project: ${session.projectId}` : session.teamId ? "Team" : "Agent"}
+                          {session.projectId
+                            ? `Project: ${session.projectId}`
+                            : session.teamId
+                              ? "Team"
+                              : "Agent"}
                         </p>
                         <div className="flex items-center gap-1.5 mt-0.5">
                           <span className={`w-1.5 h-1.5 rounded-full ${statusColor}`} />
@@ -425,12 +443,26 @@ export function DashboardPage({ onNavigate, onSelectProject }: Props) {
             <div id="projects-sec" className="order-2 space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-foreground font-bold text-base tracking-tight font-display">{l.projectsSection}</h2>
+                  <h2 className="text-foreground font-bold text-base tracking-tight font-display">
+                    {l.projectsSection}
+                  </h2>
                   <p className="text-[11px] text-text-secondary mt-0.5">{l.recentWorkspaces}</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  {onNavigate && <button onClick={() => onNavigate("/projects")} className="text-xs text-primary hover:underline font-semibold">{l.viewAll || "View All"}</button>}
-                  <button onClick={() => setShowModal(true)} className="text-xs bg-primary text-primary-foreground px-3 py-1.5 rounded-md font-semibold">+ {l.newProject.replace("+ New ", "").replace("+ Nuevo ", "")}</button>
+                  {onNavigate && (
+                    <button
+                      onClick={() => onNavigate("/projects")}
+                      className="text-xs text-primary hover:underline font-semibold"
+                    >
+                      {l.viewAll || "View All"}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowModal(true)}
+                    className="text-xs bg-primary text-primary-foreground px-3 py-1.5 rounded-md font-semibold"
+                  >
+                    + {l.newProject.replace("+ New ", "").replace("+ Nuevo ", "")}
+                  </button>
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -450,15 +482,26 @@ export function DashboardPage({ onNavigate, onSelectProject }: Props) {
                         />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h3 className="font-semibold text-xs text-foreground truncate leading-tight">{repo.name}</h3>
-                        <p className="text-[10px] text-text-secondary mt-1">{formatTime(repo.lastModified)}</p>
+                        <h3 className="font-semibold text-xs text-foreground truncate leading-tight">
+                          {repo.name}
+                        </h3>
+                        <p className="text-[10px] text-text-secondary mt-1">
+                          {formatTime(repo.lastModified)}
+                        </p>
                       </div>
                       <button
                         onClick={() => handleStartInfo(repo)}
                         className="p-2 text-text-secondary hover:text-foreground hover:bg-surface-hover rounded-md transition-colors cursor-pointer"
                         title={l.infoModalTitle}
                       >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
                           <circle cx="12" cy="12" r="9" />
                           <path d="M12 11v5M12 8h.01" />
                         </svg>
@@ -468,11 +511,23 @@ export function DashboardPage({ onNavigate, onSelectProject }: Props) {
                         className="p-2 text-text-secondary hover:text-error hover:bg-error/10 rounded-md transition-colors cursor-pointer"
                         title={l.deleteTooltip}
                       >
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <svg
+                          width="13"
+                          height="13"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
                           <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
                         </svg>
                       </button>
-                      <button onClick={() => onSelectProject(repo.id || repo.name, repo.name)} className="px-3 py-1.5 bg-primary text-primary-foreground hover:opacity-90 rounded-md text-[11px] font-semibold transition-colors cursor-pointer">{l.open}</button>
+                      <button
+                        onClick={() => onSelectProject(repo.id || repo.name, repo.name)}
+                        className="px-3 py-1.5 bg-primary text-primary-foreground hover:opacity-90 rounded-md text-[11px] font-semibold transition-colors cursor-pointer"
+                      >
+                        {l.open}
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -494,8 +549,15 @@ export function DashboardPage({ onNavigate, onSelectProject }: Props) {
             <div id="teams-sec" className="order-3 space-y-3">
               <div className="flex justify-between items-center">
                 <div>
-                  <h2 className="text-foreground font-bold text-base tracking-tight font-display">{l.teamsSection}</h2>
-                  <p className="text-[11px] text-text-secondary mt-0.5">{l.membersCount.replace("{count}", String(teams.reduce((total, team) => total + (team.members?.length || 0), 0)))}</p>
+                  <h2 className="text-foreground font-bold text-base tracking-tight font-display">
+                    {l.teamsSection}
+                  </h2>
+                  <p className="text-[11px] text-text-secondary mt-0.5">
+                    {l.membersCount.replace(
+                      "{count}",
+                      String(teams.reduce((total, team) => total + (team.members?.length || 0), 0)),
+                    )}
+                  </p>
                 </div>
                 {onNavigate && (
                   <button
@@ -513,17 +575,21 @@ export function DashboardPage({ onNavigate, onSelectProject }: Props) {
                     className="bg-surface/55 hover:bg-surface border border-input/60 hover:border-primary/40 rounded-xl px-3 py-3 flex items-center gap-3 transition-colors"
                   >
                     <div className="w-10 h-10 shrink-0 relative rounded-lg overflow-hidden bg-surface-hover">
-                        <EntityAvatar
-                          name={team.name}
-                          avatarUrl={team.avatarUrl}
-                          size="full"
-                          type="team"
-                          className="rounded-none w-full h-full object-cover"
-                        />
+                      <EntityAvatar
+                        name={team.name}
+                        avatarUrl={team.avatarUrl}
+                        size="full"
+                        type="team"
+                        className="rounded-none w-full h-full object-cover"
+                      />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h3 className="font-semibold text-xs text-foreground truncate leading-tight">{team.name}</h3>
-                      <p className="text-[10px] text-text-secondary mt-1 truncate">{team.description || team.teamType || l.teamsSection}</p>
+                      <h3 className="font-semibold text-xs text-foreground truncate leading-tight">
+                        {team.name}
+                      </h3>
+                      <p className="text-[10px] text-text-secondary mt-1 truncate">
+                        {team.description || team.teamType || l.teamsSection}
+                      </p>
                     </div>
                     {onNavigate && (
                       <button
@@ -543,7 +609,6 @@ export function DashboardPage({ onNavigate, onSelectProject }: Props) {
                 )}
               </div>
             </div>
-
           </div>
         )}
       </div>
@@ -600,13 +665,17 @@ export function DashboardPage({ onNavigate, onSelectProject }: Props) {
               )}
 
               <div className="flex justify-end gap-3 mt-6">
-                <Button variant="outline" type="button" onClick={() => {
-                  setShowModal(false);
-                  setRepoName("");
-                  setCloneUrl("");
-                  setAvatarUrl("");
-                  setSubmitError(null);
-                }}>
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={() => {
+                    setShowModal(false);
+                    setRepoName("");
+                    setCloneUrl("");
+                    setAvatarUrl("");
+                    setSubmitError(null);
+                  }}
+                >
                   {l.cancel}
                 </Button>
                 <Button type="submit" disabled={submitting}>
@@ -641,10 +710,14 @@ export function DashboardPage({ onNavigate, onSelectProject }: Props) {
               </div>
 
               <div className="flex justify-end gap-3 mt-6">
-                <Button variant="outline" type="button" onClick={() => {
-                  setDeleteRepo(null);
-                  setConfirmDeleteName("");
-                }}>
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={() => {
+                    setDeleteRepo(null);
+                    setConfirmDeleteName("");
+                  }}
+                >
                   {l.cancel}
                 </Button>
                 <Button

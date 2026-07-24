@@ -1,40 +1,45 @@
 // SPDX-License-Identifier: MIT
-import { access, readFile, writeFile } from "node:fs/promises";
 import { constants } from "node:fs";
-import { resolveSafePath } from "./path-safety";
+import { access, readFile, writeFile } from "node:fs/promises";
 import {
-  stripBom,
-  normalizeToLF,
-  detectLineEnding,
   applyEditsToNormalizedContent,
-  restoreLineEndings,
+  detectLineEnding,
+  Edit,
   generateDiffString,
   generateUnifiedPatch,
-  Edit
+  normalizeToLF,
+  restoreLineEndings,
+  stripBom,
 } from "./edit-diff";
+import { resolveSafePath } from "./path-safety";
 
 export function createEditToolDefinition(cwd: string, allowedDirs?: string[]) {
   return {
     name: "edit",
-    description: "Edit a single text file using exact text block replacements. Multiple disjoint replacements can be executed in one call.",
+    description:
+      "Edit a single text file using exact text block replacements. Multiple disjoint replacements can be executed in one call.",
     schema: {
       type: "object",
       properties: {
         path: { type: "string", description: "Path to the file to edit (relative or absolute)" },
         edits: {
           type: "array",
-          description: "One or more targeted replacements. oldText must match a unique, non-overlapping region of the file exactly.",
+          description:
+            "One or more targeted replacements. oldText must match a unique, non-overlapping region of the file exactly.",
           items: {
             type: "object",
             properties: {
-              oldText: { type: "string", description: "Exact text block to replace. Must be unique in the file." },
-              newText: { type: "string", description: "Replacement text." }
+              oldText: {
+                type: "string",
+                description: "Exact text block to replace. Must be unique in the file.",
+              },
+              newText: { type: "string", description: "Replacement text." },
             },
-            required: ["oldText", "newText"]
-          }
-        }
+            required: ["oldText", "newText"],
+          },
+        },
       },
-      required: ["path", "edits"]
+      required: ["path", "edits"],
     },
     execute: async (toolCallId: string, args: any, signal?: AbortSignal) => {
       const { path: filePath, edits } = args;
@@ -62,7 +67,11 @@ export function createEditToolDefinition(cwd: string, allowedDirs?: string[]) {
       const originalEnding = detectLineEnding(content);
       const normalizedContent = normalizeToLF(content);
 
-      const { baseContent, newContent } = applyEditsToNormalizedContent(normalizedContent, edits as Edit[], filePath);
+      const { baseContent, newContent } = applyEditsToNormalizedContent(
+        normalizedContent,
+        edits as Edit[],
+        filePath,
+      );
 
       if (signal?.aborted) {
         throw new Error("Operation aborted");
@@ -75,14 +84,16 @@ export function createEditToolDefinition(cwd: string, allowedDirs?: string[]) {
       const patch = generateUnifiedPatch(filePath, baseContent, newContent);
 
       return {
-        content: [{ type: "text", text: `Successfully replaced ${edits.length} block(s) in ${filePath}.` }],
+        content: [
+          { type: "text", text: `Successfully replaced ${edits.length} block(s) in ${filePath}.` },
+        ],
         details: {
           path: filePath,
           diff: diffResult.diff,
           patch,
-          firstChangedLine: diffResult.firstChangedLine
-        }
+          firstChangedLine: diffResult.firstChangedLine,
+        },
       };
-    }
+    },
   };
 }

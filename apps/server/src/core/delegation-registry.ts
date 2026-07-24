@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { userConfig } from "./session/user-config";
 import type { EnvelopeResult } from "shared";
+import { userConfig } from "./session/user-config";
 
 export interface PendingDelegation {
   toolCallId: string;
@@ -36,8 +36,11 @@ export type DelegationEvent =
 
 export type DelegationEventListener = (username: string, event: DelegationEvent) => void;
 
-class DelegationRegistry {
-  private activePromises = new Map<string, { abort: () => void; parentSessionId: string; subagentSessionId: string }>();
+export class DelegationRegistry {
+  private activePromises = new Map<
+    string,
+    { abort: () => void; parentSessionId: string; subagentSessionId: string }
+  >();
   private listeners = new Set<DelegationEventListener>();
 
   onEvent(listener: DelegationEventListener): () => void {
@@ -66,19 +69,33 @@ class DelegationRegistry {
     return dir;
   }
 
-  register(username: string, parentSessionId: string, d: PendingDelegation, abortFn: () => void): void {
+  register(
+    username: string,
+    parentSessionId: string,
+    d: PendingDelegation,
+    abortFn: () => void,
+  ): void {
     if (this.activePromises.has(d.toolCallId)) {
-      console.warn(`[DelegationRegistry] toolCallId ${d.toolCallId} already registered — aborting previous`);
+      console.warn(
+        `[DelegationRegistry] toolCallId ${d.toolCallId} already registered — aborting previous`,
+      );
       try {
         this.activePromises.get(d.toolCallId)!.abort();
       } catch (err) {
-        console.error(`[DelegationRegistry] Failed to abort previous toolCallId ${d.toolCallId}:`, err);
+        console.error(
+          `[DelegationRegistry] Failed to abort previous toolCallId ${d.toolCallId}:`,
+          err,
+        );
       }
     }
     const dir = this.getDelegationsDir(username, parentSessionId);
     writeFileSync(join(dir, `${d.toolCallId}.json`), JSON.stringify(d, null, 2), "utf-8");
-    this.activePromises.set(d.toolCallId, { abort: abortFn, parentSessionId, subagentSessionId: d.subagentSessionId });
-    
+    this.activePromises.set(d.toolCallId, {
+      abort: abortFn,
+      parentSessionId,
+      subagentSessionId: d.subagentSessionId,
+    });
+
     this.notify(username, {
       type: "delegation_started",
       parentSessionId,
@@ -89,7 +106,13 @@ class DelegationRegistry {
     });
   }
 
-  complete(username: string, parentSessionId: string, toolCallId: string, status: PendingDelegation["status"], result: EnvelopeResult): void {
+  complete(
+    username: string,
+    parentSessionId: string,
+    toolCallId: string,
+    status: PendingDelegation["status"],
+    result: EnvelopeResult,
+  ): void {
     const dir = this.getDelegationsDir(username, parentSessionId);
     const file = join(dir, `${toolCallId}.json`);
     if (existsSync(file)) {
@@ -119,7 +142,7 @@ class DelegationRegistry {
     const dir = this.getDelegationsDir(username, parentSessionId);
     const list: PendingDelegation[] = [];
     try {
-      const files = readdirSync(dir).filter(f => f.endsWith(".json"));
+      const files = readdirSync(dir).filter((f) => f.endsWith(".json"));
       for (const file of files) {
         const d: PendingDelegation = JSON.parse(readFileSync(join(dir, file), "utf-8"));
         // Robustez: si figura como running pero no está activo en memoria, fue interrumpido
@@ -141,8 +164,12 @@ class DelegationRegistry {
     return list;
   }
 
-  getByToolCallId(username: string, parentSessionId: string, toolCallId: string): PendingDelegation | undefined {
-    return this.getAll(username, parentSessionId).find(d => d.toolCallId === toolCallId);
+  getByToolCallId(
+    username: string,
+    parentSessionId: string,
+    toolCallId: string,
+  ): PendingDelegation | undefined {
+    return this.getAll(username, parentSessionId).find((d) => d.toolCallId === toolCallId);
   }
 
   // Permite abortar en cascada recursiva (BFS) todas las delegaciones del árbol

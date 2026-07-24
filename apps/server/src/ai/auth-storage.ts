@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
-import { encryptEnv, decryptEnv } from "../lib/env-crypto";
 import { auth } from "../auth/index";
+import { decryptEnv, encryptEnv } from "../lib/env-crypto";
 
 export type AuthStatus = {
   configured: boolean;

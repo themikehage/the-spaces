@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-import { describe, it, expect, beforeAll, afterAll } from "bun:test";
-import { permissionEngine } from "../core/sandbox/permission-engine";
-import { resolveSessionAllowedWriteDir } from "../core/session/workspace-resolver";
-import { sessionMetadataStore } from "../core/session/metadata-store";
-import { existsSync, rmSync, mkdirSync } from "node:fs";
+import { afterAll, beforeAll, describe, expect, it } from "bun:test";
+import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { getUserDir, getAgentWorkspaceDir, getProjectWorkspaceDir } from "shared";
+import { getAgentWorkspaceDir, getProjectWorkspaceDir, getUserDir } from "shared";
+import { permissionEngine } from "../core/sandbox/permission-engine";
+import { sessionMetadataStore } from "../core/session/metadata-store";
+import { resolveSessionAllowedWriteDir } from "../core/session/workspace-resolver";
 
 describe("Dynamic Workspaces & Permissions Tests", () => {
   const username = "test_user_perms";
@@ -27,7 +27,12 @@ describe("Dynamic Workspaces & Permissions Tests", () => {
   it("should determine subpath correctly using permissionEngine.isSubpath", () => {
     expect(permissionEngine.isSubpath("/foo", "/foo/bar/baz")).toBe(true);
     expect(permissionEngine.isSubpath("/foo/bar", "/foo/baz")).toBe(false);
-    expect(permissionEngine.isSubpath("c:\\users\\mike\\workspace", "C:\\Users\\Mike\\Workspace\\src\\index.ts")).toBe(true);
+    expect(
+      permissionEngine.isSubpath(
+        "c:\\users\\mike\\workspace",
+        "C:\\Users\\Mike\\Workspace\\src\\index.ts",
+      ),
+    ).toBe(true);
   });
 
   it("should resolve allowedWriteDir correctly for user levels", () => {
@@ -80,45 +85,69 @@ describe("Dynamic Workspaces & Permissions Tests", () => {
     const allowedDir = join(userDir, "agents", "my-agent", "workspace");
 
     // Escribir dentro de allowedWriteDir (ruta absoluta)
-    const verdictInside = permissionEngine.evaluate("write", { path: join(allowedDir, "src", "index.ts") }, {
-      allowedWriteDir: allowedDir,
-      executionMode: "standard",
-    });
+    const verdictInside = permissionEngine.evaluate(
+      "write",
+      { path: join(allowedDir, "src", "index.ts") },
+      {
+        allowedWriteDir: allowedDir,
+        executionMode: "standard",
+      },
+    );
     expect(verdictInside.allow).toBe(true);
 
     // Escribir dentro de allowedWriteDir (ruta relativa como "src/App.jsx")
-    const verdictRelativeInside = permissionEngine.evaluate("edit", { path: "src/App.jsx" }, {
-      allowedWriteDir: allowedDir,
-      executionMode: "standard",
-    });
+    const verdictRelativeInside = permissionEngine.evaluate(
+      "edit",
+      { path: "src/App.jsx" },
+      {
+        allowedWriteDir: allowedDir,
+        executionMode: "standard",
+      },
+    );
     expect(verdictRelativeInside.allow).toBe(true);
 
     // Escribir en temp (/tmp)
-    const verdictTemp = permissionEngine.evaluate("edit", { path: "/tmp/somefile.txt" }, {
-      allowedWriteDir: allowedDir,
-      executionMode: "standard",
-    });
+    const verdictTemp = permissionEngine.evaluate(
+      "edit",
+      { path: "/tmp/somefile.txt" },
+      {
+        allowedWriteDir: allowedDir,
+        executionMode: "standard",
+      },
+    );
     expect(verdictTemp.allow).toBe(true);
 
     // Escribir fuera de allowedWriteDir en modo standard (debe pedir confirmación)
-    const verdictOutside = permissionEngine.evaluate("write", { path: join(userDir, "other-agent", "index.ts") }, {
-      allowedWriteDir: allowedDir,
-      executionMode: "standard",
-    });
+    const verdictOutside = permissionEngine.evaluate(
+      "write",
+      { path: join(userDir, "other-agent", "index.ts") },
+      {
+        allowedWriteDir: allowedDir,
+        executionMode: "standard",
+      },
+    );
     expect(verdictOutside.allow).toBe("ask");
 
     // Escribir fuera de allowedWriteDir con ruta relativa traversal ("../outside.ts")
-    const verdictRelativeOutside = permissionEngine.evaluate("write", { path: "../outside.ts" }, {
-      allowedWriteDir: allowedDir,
-      executionMode: "standard",
-    });
+    const verdictRelativeOutside = permissionEngine.evaluate(
+      "write",
+      { path: "../outside.ts" },
+      {
+        allowedWriteDir: allowedDir,
+        executionMode: "standard",
+      },
+    );
     expect(verdictRelativeOutside.allow).toBe("ask");
 
     // Escribir fuera de allowedWriteDir en modo autonomous (debe permitir autónomamente)
-    const verdictOutsideAuto = permissionEngine.evaluate("write", { path: join(userDir, "other-agent", "index.ts") }, {
-      allowedWriteDir: allowedDir,
-      executionMode: "autonomous",
-    });
+    const verdictOutsideAuto = permissionEngine.evaluate(
+      "write",
+      { path: join(userDir, "other-agent", "index.ts") },
+      {
+        allowedWriteDir: allowedDir,
+        executionMode: "autonomous",
+      },
+    );
     expect(verdictOutsideAuto.allow).toBe(true);
   });
 });

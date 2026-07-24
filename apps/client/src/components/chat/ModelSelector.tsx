@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-import { apiFetch } from "@/lib/api";
-import { useState, useEffect, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import { PortalPopover } from "./PortalPopover";
 import { useLiterals } from "@/lib";
+import { apiFetch } from "@/lib/api";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { literals as u } from "./ChatInput.literals";
+import { PortalPopover } from "./PortalPopover";
 
 interface ProviderInfo {
   id: string;
@@ -33,10 +33,20 @@ const RECENT_MODELS_KEY = "crewfy-recent-models";
 function parseModelString(modelId: string): SelectedModel | null {
   const idx = modelId.indexOf("/");
   if (idx === -1) return null;
-  return { provider: modelId.slice(0, idx), modelId: modelId.slice(idx + 1), modelName: modelId.slice(idx + 1) };
+  return {
+    provider: modelId.slice(0, idx),
+    modelId: modelId.slice(idx + 1),
+    modelName: modelId.slice(idx + 1),
+  };
 }
 
-export function ModelSelector({ sessionId, disabled = false, value, onChange, compact = false }: Props) {
+export function ModelSelector({
+  sessionId,
+  disabled = false,
+  value,
+  onChange,
+  compact = false,
+}: Props) {
   const controlled = onChange !== undefined;
   const l = useLiterals(u);
 
@@ -46,7 +56,8 @@ export function ModelSelector({ sessionId, disabled = false, value, onChange, co
       return value ? parseModelString(value) : null;
     }
     try {
-      const raw = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem("crewfy-selected-model");
+      const raw =
+        localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem("crewfy-selected-model");
       return raw ? JSON.parse(raw) : null;
     } catch {
       return null;
@@ -54,7 +65,8 @@ export function ModelSelector({ sessionId, disabled = false, value, onChange, co
   });
   const [recentModels, setRecentModels] = useState<SelectedModel[]>(() => {
     try {
-      const raw = localStorage.getItem(RECENT_MODELS_KEY) ?? localStorage.getItem("pi-recent-models");
+      const raw =
+        localStorage.getItem(RECENT_MODELS_KEY) ?? localStorage.getItem("pi-recent-models");
       return raw ? JSON.parse(raw) : [];
     } catch {
       return [];
@@ -67,30 +79,29 @@ export function ModelSelector({ sessionId, disabled = false, value, onChange, co
   const triggerRef = useRef<HTMLButtonElement>(null);
   const navigate = useNavigate();
 
-  const applyModelToSession = useCallback(
-    async (model: SelectedModel, sid: string) => {
-      try {
-        const res = await apiFetch(`/api/sessions/${sid}/model`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"},
-          body: JSON.stringify({
-            provider: model.provider,
-            modelId: model.modelId,
-            thinkingLevel: "medium"})});
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          setError(data.error ?? "Failed to set model");
-        } else {
-          setError(null);
-        }
-      } catch {
-        setError("Failed to set model");
+  const applyModelToSession = useCallback(async (model: SelectedModel, sid: string) => {
+    try {
+      const res = await apiFetch(`/api/sessions/${sid}/model`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          provider: model.provider,
+          modelId: model.modelId,
+          thinkingLevel: "medium",
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? "Failed to set model");
+      } else {
+        setError(null);
       }
-    },
-    []
-  );
-
+    } catch {
+      setError("Failed to set model");
+    }
+  }, []);
 
   useEffect(() => {
     selectedRef.current = selected;
@@ -129,7 +140,8 @@ export function ModelSelector({ sessionId, disabled = false, value, onChange, co
           const fallbackSelection = {
             provider: firstProvider.id,
             modelId: firstModel.id,
-            modelName: firstModel.name};
+            modelName: firstModel.name,
+          };
           setSelected(fallbackSelection);
           localStorage.setItem(STORAGE_KEY, JSON.stringify(fallbackSelection));
           setError(null);
@@ -145,7 +157,8 @@ export function ModelSelector({ sessionId, disabled = false, value, onChange, co
         const fallbackSelection = {
           provider: firstProvider.id,
           modelId: firstModel.id,
-          modelName: firstModel.name};
+          modelName: firstModel.name,
+        };
         setSelected(fallbackSelection);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(fallbackSelection));
         setError(null);
@@ -170,9 +183,7 @@ export function ModelSelector({ sessionId, disabled = false, value, onChange, co
       setActiveProvider(null);
 
       setRecentModels((prev) => {
-        const filtered = prev.filter(
-          (rm) => !(rm.provider === provider && rm.modelId === modelId)
-        );
+        const filtered = prev.filter((rm) => !(rm.provider === provider && rm.modelId === modelId));
         const updated = [newSelection, ...filtered].slice(0, 5);
         localStorage.setItem(RECENT_MODELS_KEY, JSON.stringify(updated));
         return updated;
@@ -188,7 +199,7 @@ export function ModelSelector({ sessionId, disabled = false, value, onChange, co
       if (!sessionId) return;
       await applyModelToSession(newSelection, sessionId);
     },
-    [controlled, onChange, sessionId, applyModelToSession]
+    [controlled, onChange, sessionId, applyModelToSession],
   );
 
   const isModelAvailable = useCallback(
@@ -196,12 +207,10 @@ export function ModelSelector({ sessionId, disabled = false, value, onChange, co
       const p = providers.find((prov) => prov.id === model.provider);
       return !!p?.models.some((m) => m.id === model.modelId);
     },
-    [providers]
+    [providers],
   );
 
-  const currentProvider = activeProvider
-    ? providers.find((p) => p.id === activeProvider)
-    : null;
+  const currentProvider = activeProvider ? providers.find((p) => p.id === activeProvider) : null;
 
   return (
     <>
@@ -223,21 +232,50 @@ export function ModelSelector({ sessionId, disabled = false, value, onChange, co
               }`
         }
       >
-        <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor" className="text-primary flex-shrink-0">
-          <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v2H4V6zm0 4h3v4H4v-4zm5 0h7v4H9v-4z" clipRule="evenodd" />
+        <svg
+          width="12"
+          height="12"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          className="text-primary flex-shrink-0"
+        >
+          <path
+            fillRule="evenodd"
+            d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v2H4V6zm0 4h3v4H4v-4zm5 0h7v4H9v-4z"
+            clipRule="evenodd"
+          />
         </svg>
         <span className={compact ? "truncate max-w-[120px]" : "truncate max-w-[200px]"}>
           {selected ? selected.modelName : "Select model"}
         </span>
         {error && (
-          <span className="text-destructive ml-1" title={error}>!</span>
+          <span className="text-destructive ml-1" title={error}>
+            !
+          </span>
         )}
-        <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor" className={`transition-transform flex-shrink-0 ${open ? "rotate-180" : ""}`}>
-          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+        <svg
+          width="10"
+          height="10"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          className={`transition-transform flex-shrink-0 ${open ? "rotate-180" : ""}`}
+        >
+          <path
+            fillRule="evenodd"
+            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+            clipRule="evenodd"
+          />
         </svg>
       </button>
 
-      <PortalPopover triggerRef={triggerRef} open={open} onClose={() => { setOpen(false); setActiveProvider(null); }}>
+      <PortalPopover
+        triggerRef={triggerRef}
+        open={open}
+        onClose={() => {
+          setOpen(false);
+          setActiveProvider(null);
+        }}
+      >
         <div className="w-72 bg-[#171717] border border-border rounded-xl shadow-xl flex flex-col max-h-[min(80vh,360px)] overflow-y-auto">
           {activeProvider && currentProvider ? (
             <>
@@ -246,7 +284,11 @@ export function ModelSelector({ sessionId, disabled = false, value, onChange, co
                 className="w-full flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-card-hover transition-colors border-b border-input shrink-0"
               >
                 <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                  <path
+                    fillRule="evenodd"
+                    d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 {currentProvider.name}
               </button>
@@ -330,8 +372,18 @@ export function ModelSelector({ sessionId, disabled = false, value, onChange, co
                       />
                       <span className="truncate">{p.name}</span>
                     </div>
-                    <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor" className="text-muted-foreground flex-shrink-0 ml-2">
-                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                    <svg
+                      width="10"
+                      height="10"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      className="text-muted-foreground flex-shrink-0 ml-2"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                        clipRule="evenodd"
+                      />
                     </svg>
                   </button>
                 ))}
@@ -344,7 +396,11 @@ export function ModelSelector({ sessionId, disabled = false, value, onChange, co
                 className="w-full flex items-center gap-2 px-3 py-2 text-xs text-primary hover:bg-card-hover transition-colors border-t border-input shrink-0"
               >
                 <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                  <path
+                    fillRule="evenodd"
+                    d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 {l.connectProviders}
               </button>

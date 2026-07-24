@@ -11,7 +11,7 @@ interface CustomHtmlProps {
 export function CustomHtmlComponent({ html, title, height, tokens }: CustomHtmlProps) {
   // Inject theme design tokens inside the head tag
   const cssStyles = `<style>${tokens}</style>`;
-  
+
   let processedHtml = html;
   if (html.includes("</head>") || html.includes("</HEAD>")) {
     processedHtml = html.replace(/(<\/head\s*>)/i, `${cssStyles}$1`);

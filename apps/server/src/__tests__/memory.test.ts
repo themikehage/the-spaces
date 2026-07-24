@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-import { describe, expect, it, afterEach } from "bun:test";
-import { LocalMemoryProvider } from "../core/memory/local-provider";
-import { unlinkSync, existsSync } from "node:fs";
+import { afterEach, describe, expect, it } from "bun:test";
+import { existsSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
+import { LocalMemoryProvider } from "../core/memory/local-provider";
 
 const TEST_DB = join(import.meta.dir, "test-memories.db");
 
@@ -41,7 +41,7 @@ describe("LocalMemoryProvider with Session Scoping", () => {
     // Querying with sessionId: "session-A" should return Session A and Global memories, but not Session B
     const sessionA = await provider.recall("memory", { sessionId: "session-A" });
     expect(sessionA.length).toBe(2);
-    const contentsA = sessionA.map(m => m.content);
+    const contentsA = sessionA.map((m) => m.content);
     expect(contentsA).toContain("Session A memory");
     expect(contentsA).toContain("Global memory");
     expect(contentsA).not.toContain("Session B memory");
@@ -49,7 +49,7 @@ describe("LocalMemoryProvider with Session Scoping", () => {
     // Querying with sessionId: "session-B" should return Session B and Global memories, but not Session A
     const sessionB = await provider.recall("memory", { sessionId: "session-B" });
     expect(sessionB.length).toBe(2);
-    const contentsB = sessionB.map(m => m.content);
+    const contentsB = sessionB.map((m) => m.content);
     expect(contentsB).toContain("Session B memory");
     expect(contentsB).toContain("Global memory");
     expect(contentsB).not.toContain("Session A memory");

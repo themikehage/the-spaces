@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { Database } from "bun:sqlite";
+import { existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
-import { mkdirSync, existsSync } from "node:fs";
 import { SPACES_DATA_PATH } from "shared";
 
 let _db: Database | null = null;

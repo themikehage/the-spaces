@@ -69,7 +69,11 @@ export function bashExecutionToText(msg: BashExecutionMessage): string {
   return text;
 }
 
-export function createBranchSummaryMessage(summary: string, fromId: string, timestamp: string): BranchSummaryMessage {
+export function createBranchSummaryMessage(
+  summary: string,
+  fromId: string,
+  timestamp: string,
+): BranchSummaryMessage {
   return {
     role: "branchSummary",
     summary,
@@ -125,7 +129,10 @@ export function convertToLlm(messages: any[]): Message[] {
             timestamp: m.timestamp,
           } as any;
         case "custom": {
-          const content = typeof m.content === "string" ? [{ type: "text" as const, text: m.content }] : m.content;
+          const content =
+            typeof m.content === "string"
+              ? [{ type: "text" as const, text: m.content }]
+              : m.content;
           return {
             role: "user",
             content,
@@ -135,14 +142,22 @@ export function convertToLlm(messages: any[]): Message[] {
         case "branchSummary":
           return {
             role: "user",
-            content: [{ type: "text" as const, text: BRANCH_SUMMARY_PREFIX + m.summary + BRANCH_SUMMARY_SUFFIX }],
+            content: [
+              {
+                type: "text" as const,
+                text: BRANCH_SUMMARY_PREFIX + m.summary + BRANCH_SUMMARY_SUFFIX,
+              },
+            ],
             timestamp: m.timestamp,
           } as any;
         case "compactionSummary":
           return {
             role: "user",
             content: [
-              { type: "text" as const, text: COMPACTION_SUMMARY_PREFIX + m.summary + COMPACTION_SUMMARY_SUFFIX },
+              {
+                type: "text" as const,
+                text: COMPACTION_SUMMARY_PREFIX + m.summary + COMPACTION_SUMMARY_SUFFIX,
+              },
             ],
             timestamp: m.timestamp,
           } as any;

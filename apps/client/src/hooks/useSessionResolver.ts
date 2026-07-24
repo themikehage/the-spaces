@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-import { useEffect, useRef, useState } from "react";
 import { apiFetch } from "@/lib/api";
 import {
-  getSessionName,
   buildCreateSessionBody,
   getSessionContextPredicate,
+  getSessionName,
 } from "@/lib/session-utils";
+import { useEffect, useRef, useState } from "react";
 
 interface UseSessionResolverParams {
   sessionId: string | null;
@@ -60,8 +60,6 @@ export function useSessionResolver({
 
     const resolve = async () => {
       try {
-
-
         const res = await apiFetch("/api/sessions");
         if (!res.ok || !isCurrentResolution()) return;
 

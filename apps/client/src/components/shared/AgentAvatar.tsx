@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: MIT
-import { useMemo, useState } from "react";
-import type { FC } from "react";
-import { getAvatarComponent, isDefaultAvatar } from "@/lib/defaultAvatars";
 import { useAuth } from "@/contexts/AuthContext";
-
-
+import { getAvatarComponent, isDefaultAvatar } from "@/lib/defaultAvatars";
+import type { FC } from "react";
+import { useMemo, useState } from "react";
 
 interface AgentAvatarProps {
   name: string;
@@ -17,19 +15,22 @@ const SIZE_MAP = {
   xs: 16,
   sm: 24,
   md: 32,
-  lg: 40};
+  lg: 40,
+};
 
 const TEXT_SIZE_MAP = {
   xs: "text-[7px]",
   sm: "text-[9px]",
   md: "text-xs",
-  lg: "text-sm"};
+  lg: "text-sm",
+};
 
 export const AgentAvatar: FC<AgentAvatarProps> = ({
   name,
   avatarUrl,
   size = "md",
-  className = ""}) => {
+  className = "",
+}) => {
   const [imgError, setImgError] = useState(false);
   const px = SIZE_MAP[size];
   const { token } = useAuth();

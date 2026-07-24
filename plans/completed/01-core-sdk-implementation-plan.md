@@ -8,15 +8,15 @@
 
 ## Contexto y acoplamiento confirmado
 
-| Síntoma | Archivo | Línea |
-|---|---|---|
-| `SessionToolFactory` lee metadata vía singleton | `tool-factory.ts` | 78 |
-| `metadata-store` usa `require("team-store")` lazy | `metadata-store.ts` | 69, 105 |
-| `tool-factory` usa `require("team-store")` lazy | `tool-factory.ts` | 95 |
-| Resolución de modelo duplicada 3 veces | `session-manager.ts` | 441-470 |
-| `afterToolCall` no cableado | `session-manager.ts` | 429 |
-| `EnvelopeResult` sin campo `outputs` | `shared/envelope.ts` | — |
-| No existe `WorkspaceConfigPort` ni punto de carga post-resolve | — | — |
+| Síntoma                                                        | Archivo              | Línea   |
+| -------------------------------------------------------------- | -------------------- | ------- |
+| `SessionToolFactory` lee metadata vía singleton                | `tool-factory.ts`    | 78      |
+| `metadata-store` usa `require("team-store")` lazy              | `metadata-store.ts`  | 69, 105 |
+| `tool-factory` usa `require("team-store")` lazy                | `tool-factory.ts`    | 95      |
+| Resolución de modelo duplicada 3 veces                         | `session-manager.ts` | 441-470 |
+| `afterToolCall` no cableado                                    | `session-manager.ts` | 429     |
+| `EnvelopeResult` sin campo `outputs`                           | `shared/envelope.ts` | —       |
+| No existe `WorkspaceConfigPort` ni punto de carga post-resolve | —                    | —       |
 
 ---
 
@@ -55,8 +55,8 @@ Se busca solo en ese path — sin merge con niveles superiores en esta fase.
 export interface ModelResolutionContext {
   sessionModel?: string;
   agentModel?: string;
-  projectModel?: string;   // NUEVO
-  teamModel?: string;      // NUEVO
+  projectModel?: string; // NUEVO
+  teamModel?: string; // NUEVO
   userDefaultModel?: string;
 }
 
@@ -154,7 +154,9 @@ export interface TeamConfigReader {
 
 class SessionMetadataStore {
   private teamReader?: TeamConfigReader;
-  setTeamReader(reader: TeamConfigReader): void { this.teamReader = reader; }
+  setTeamReader(reader: TeamConfigReader): void {
+    this.teamReader = reader;
+  }
 }
 ```
 
@@ -179,7 +181,7 @@ export interface DelegationRequest {
 }
 
 export class DelegationService {
-  async execute(req: DelegationRequest, ctx: SessionContext): Promise<EnvelopeResult>
+  async execute(req: DelegationRequest, ctx: SessionContext): Promise<EnvelopeResult>;
 }
 ```
 
@@ -249,34 +251,34 @@ El `FileWorkspaceConfigLoader` ya existe desde Fase 1. En esta fase se usa su re
 
 ### Fase 0
 
-| Archivo | Acción |
-|---|---|
-| `core/ports/workspace-config.port.ts` | NEW |
-| `core/ports/model-resolver.ts` | NEW |
-| `packages/shared/src/envelope.ts` | MODIFY — agregar `outputs?` |
-| `core/session/after-tool-call-hook.ts` | NEW |
-| `core/session-manager.ts` | MODIFY — cablear `afterToolCall` |
+| Archivo                                | Acción                           |
+| -------------------------------------- | -------------------------------- |
+| `core/ports/workspace-config.port.ts`  | NEW                              |
+| `core/ports/model-resolver.ts`         | NEW                              |
+| `packages/shared/src/envelope.ts`      | MODIFY — agregar `outputs?`      |
+| `core/session/after-tool-call-hook.ts` | NEW                              |
+| `core/session-manager.ts`              | MODIFY — cablear `afterToolCall` |
 
 ### Fase 1
 
-| Archivo | Acción |
-|---|---|
-| `core/session/workspace-config-loader.ts` | NEW |
-| `core/session-manager.ts` | MODIFY — inyectar WorkspaceConfig post-resolve |
-| `core/session/metadata-store.ts` | MODIFY — eliminar lazy require, inyectar TeamConfigReader |
-| `core/delegation-service.ts` | NEW |
-| `core/tools/manage-delegations-tool.ts` | MODIFY — thin adapter |
-| `core/session/model-resolver.ts` | NEW |
-| `core/session-manager.ts` | MODIFY — usar DefaultModelResolver |
+| Archivo                                   | Acción                                                    |
+| ----------------------------------------- | --------------------------------------------------------- |
+| `core/session/workspace-config-loader.ts` | NEW                                                       |
+| `core/session-manager.ts`                 | MODIFY — inyectar WorkspaceConfig post-resolve            |
+| `core/session/metadata-store.ts`          | MODIFY — eliminar lazy require, inyectar TeamConfigReader |
+| `core/delegation-service.ts`              | NEW                                                       |
+| `core/tools/manage-delegations-tool.ts`   | MODIFY — thin adapter                                     |
+| `core/session/model-resolver.ts`          | NEW                                                       |
+| `core/session-manager.ts`                 | MODIFY — usar DefaultModelResolver                        |
 
 ### Fase 2
 
-| Archivo | Acción |
-|---|---|
-| `core/session/workspace-config-loader.ts` | MODIFY — usar todos los campos |
-| `core/session-manager.ts` | MODIFY — cascada de modelos por entidad |
-| `core/tools/manage-delegations-tool.ts` | MODIFY — schema con `outputs` |
-| `core/tools/factory-tool.ts` | MODIFY — CRUD de proyecto incluye `defaultModel` |
+| Archivo                                   | Acción                                           |
+| ----------------------------------------- | ------------------------------------------------ |
+| `core/session/workspace-config-loader.ts` | MODIFY — usar todos los campos                   |
+| `core/session-manager.ts`                 | MODIFY — cascada de modelos por entidad          |
+| `core/tools/manage-delegations-tool.ts`   | MODIFY — schema con `outputs`                    |
+| `core/tools/factory-tool.ts`              | MODIFY — CRUD de proyecto incluye `defaultModel` |
 
 ---
 
@@ -292,8 +294,8 @@ El `FileWorkspaceConfigLoader` ya existe desde Fase 1. En esta fase se usa su re
 
 ## Verification por fase
 
-| Fase | Check |
-|---|---|
-| 0 | `pnpm build` pasa; server arranca; tests existentes verdes |
-| 1 | Crear sesión para un proyecto con `.spaces/config.json` → model correcto; teams Negotiation sin regresión |
-| 2 | Delegación con `outputs` → padre recibe el campo; workspace config aplica en subagentes del mismo proyecto |
+| Fase | Check                                                                                                      |
+| ---- | ---------------------------------------------------------------------------------------------------------- |
+| 0    | `pnpm build` pasa; server arranca; tests existentes verdes                                                 |
+| 1    | Crear sesión para un proyecto con `.spaces/config.json` → model correcto; teams Negotiation sin regresión  |
+| 2    | Delegación con `outputs` → padre recibe el campo; workspace config aplica en subagentes del mismo proyecto |

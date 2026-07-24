@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 import {
   type ISessionStore,
-  type SessionData,
   type MessageRecord,
-  type SessionSummary,
+  type SessionData,
   type SessionListQueryFilters,
+  type SessionSummary,
 } from "shared";
 
 export class MemorySessionStore implements ISessionStore {
@@ -26,14 +26,20 @@ export class MemorySessionStore implements ISessionStore {
     this.messages.set(sessionId, list);
   }
 
-  async getMessages(sessionId: string, opts?: { limit?: number; offset?: number }): Promise<MessageRecord[]> {
+  async getMessages(
+    sessionId: string,
+    opts?: { limit?: number; offset?: number },
+  ): Promise<MessageRecord[]> {
     const list = this.messages.get(sessionId) || [];
     const offset = opts?.offset ?? 0;
     const limit = opts?.limit ?? list.length;
     return list.slice(offset, offset + limit);
   }
 
-  async listUserSessions(username: string, query?: SessionListQueryFilters): Promise<SessionSummary[]> {
+  async listUserSessions(
+    username: string,
+    query?: SessionListQueryFilters,
+  ): Promise<SessionSummary[]> {
     const results: SessionSummary[] = [];
     for (const session of this.sessions.values()) {
       if (session.username === username) {

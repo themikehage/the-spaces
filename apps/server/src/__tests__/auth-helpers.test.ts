@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-import { describe, it, expect } from "bun:test";
+import { describe, expect, it } from "bun:test";
 import {
   extractToken,
-  parseExpiresAt,
-  isExpired,
   getSessionTokensFromCookieHeader,
+  isExpired,
   parseCookieHeader,
+  parseExpiresAt,
 } from "../lib/auth-helpers";
 
 describe("auth-helpers", () => {
@@ -86,8 +86,7 @@ describe("auth-helpers", () => {
     });
 
     it("should extract both cookies when present", () => {
-      const header =
-        "better-auth.session_token=token1; __Secure-better-auth.session_token=token2";
+      const header = "better-auth.session_token=token1; __Secure-better-auth.session_token=token2";
       const tokens = getSessionTokensFromCookieHeader(header);
       expect(tokens).toContain("token1");
       expect(tokens).toContain("token2");

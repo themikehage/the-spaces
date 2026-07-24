@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MIT
-import { expect, test, describe, beforeEach, afterEach, mock } from "bun:test";
-import { AgentSession } from "../ai/agent-session";
-import { SessionManager } from "../ai/session-persistence";
-import { AuthStorage } from "../ai/auth-storage";
-import { existsSync, unlinkSync, mkdirSync } from "node:fs";
+import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
+import { existsSync, mkdirSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
+import { AgentSession } from "../ai/agent-session";
+import { AuthStorage } from "../ai/auth-storage";
+import { JsonlSessionStore } from "../ai/session-persistence";
 
 const TMP_TEST_DIR = join(import.meta.dirname, "../../tmp-tests");
 const TEST_SESSION_FILE = join(TMP_TEST_DIR, "test-session.jsonl");
 
 describe("AgentSession & Agent Class Integration Tests", () => {
-  let sessionManager: SessionManager;
+  let sessionManager: JsonlSessionStore;
   let mockResourceLoader: any;
   let mockModelRegistry: any;
   let mockAuthStorage: AuthStorage;
@@ -35,7 +35,7 @@ describe("AgentSession & Agent Class Integration Tests", () => {
       unlinkSync(TEST_SESSION_FILE);
     }
 
-    sessionManager = SessionManager.create(TMP_TEST_DIR, TMP_TEST_DIR);
+    sessionManager = JsonlSessionStore.create(TMP_TEST_DIR, TMP_TEST_DIR);
     sessionManager.setSessionFile(TEST_SESSION_FILE);
 
     mockResourceLoader = {
@@ -56,7 +56,7 @@ describe("AgentSession & Agent Class Integration Tests", () => {
       getAuthStatus: () => ({ configured: false }),
       set: () => {},
       remove: () => {},
-      reload: () => {}
+      reload: () => {},
     } as unknown as AuthStorage;
   });
 
@@ -96,7 +96,11 @@ describe("AgentSession & Agent Class Integration Tests", () => {
           state = {
             messages: [
               { role: "user", content: "hello", timestamp: Date.now() },
-              { role: "assistant", content: [{ type: "text", text: "hi!" }], timestamp: Date.now() }
+              {
+                role: "assistant",
+                content: [{ type: "text", text: "hi!" }],
+                timestamp: Date.now(),
+              },
             ],
             isStreaming: false,
             thinkingLevel: "off",
@@ -117,12 +121,16 @@ describe("AgentSession & Agent Class Integration Tests", () => {
           subscribe(cb: any) {
             cb({
               type: "message_end",
-              message: { role: "assistant", content: [{ type: "text", text: "hi!" }], timestamp: Date.now() }
+              message: {
+                role: "assistant",
+                content: [{ type: "text", text: "hi!" }],
+                timestamp: Date.now(),
+              },
             });
             return () => {};
           }
           async prompt() {}
-        }
+        },
       };
     });
 

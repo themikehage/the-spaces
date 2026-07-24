@@ -49,8 +49,12 @@ function MessageBubbleSkeleton({
               key={i}
               className={`h-3 rounded ${
                 align === "right"
-                  ? isLast ? "w-3/5 ml-auto" : "w-full"
-                  : isLast ? "w-4/5" : "w-full"
+                  ? isLast
+                    ? "w-3/5 ml-auto"
+                    : "w-full"
+                  : isLast
+                    ? "w-4/5"
+                    : "w-full"
               }`}
             />
           );

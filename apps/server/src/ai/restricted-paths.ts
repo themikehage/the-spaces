@@ -12,7 +12,7 @@ export const DEFAULT_RESTRICTED_PATHS = [
 
 export function isRestrictedPath(
   command: string,
-  restrictedPaths: string[] = DEFAULT_RESTRICTED_PATHS
+  restrictedPaths: string[] = DEFAULT_RESTRICTED_PATHS,
 ): { restricted: boolean; matchedPath?: string } {
   const lowerCmd = command.toLowerCase();
   for (const path of restrictedPaths) {

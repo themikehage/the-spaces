@@ -2,15 +2,15 @@
 import { existsSync, mkdirSync } from "node:fs";
 import { type AgentDefinition, type BaseTool } from "shared";
 import { createAgentSession, DefaultResourceLoader } from "../../ai";
+import { memoryRegistry } from "../memory/registry";
+import { createAfterToolCallHook } from "./after-tool-call-hook";
 import { resolveAgentContext, type ResolvedAgentContext } from "./agent-context-resolver";
+import { resolveAgentDefinition } from "./agent-definition-resolver";
+import { createBeforeToolCallHook } from "./before-tool-call-hook";
 import { DefaultModelResolver } from "./model-resolver";
 import { sessionPromptBuilder } from "./prompt-builder";
 import { sessionToolFactory } from "./tool-factory";
 import { userConfigManager } from "./user-config";
-import { memoryRegistry } from "../memory/registry";
-import { createBeforeToolCallHook } from "./before-tool-call-hook";
-import { createAfterToolCallHook } from "./after-tool-call-hook";
-import { resolveAgentDefinition } from "./agent-definition-resolver";
 
 export interface AgentRuntimeConfig {
   username: string;
@@ -38,7 +38,9 @@ export interface AgentRuntimeInstance {
   context: ResolvedAgentContext;
 }
 
-export async function createAgentRuntime(config: AgentRuntimeConfig): Promise<AgentRuntimeInstance> {
+export async function createAgentRuntime(
+  config: AgentRuntimeConfig,
+): Promise<AgentRuntimeInstance> {
   const {
     username,
     sessionId,
@@ -91,7 +93,7 @@ export async function createAgentRuntime(config: AgentRuntimeConfig): Promise<Ag
   const memory = await memoryRegistry.get(
     toolProfile === "agent-server" ? `agent:${agentId}` : `session:${sessionId}`,
     context.memoryDbPath,
-    context.memoryEnabled
+    context.memoryEnabled,
   );
 
   let resourceLoader = config.resourceLoader;
@@ -156,8 +158,8 @@ export async function createAgentRuntime(config: AgentRuntimeConfig): Promise<Ag
   pluginManager.register(new AuditLogPlugin({ sessionId, username }));
   pluginManager.register(new MemoryEnricherPlugin({ memory }));
 
-  const { sessionManager: sessionStore } = await import("../../ai");
-  const sessionManagerInstance = sessionStore.create(context.sessionDir, context.sessionDir);
+  const { JsonlSessionStore } = await import("../../ai");
+  const sessionManagerInstance = JsonlSessionStore.create(context.sessionDir, context.sessionDir);
 
   const { session } = await createAgentSession({
     cwd: context.workspaceDir,

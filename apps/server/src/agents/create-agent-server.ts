@@ -1,38 +1,16 @@
 // SPDX-License-Identifier: MIT
-import {
-  createAgentSession,
-  AuthStorage,
-  ModelRegistry,
-  DefaultResourceLoader,
-  createBashToolDefinition,
-  SessionManager,
-} from "../ai";
 import { Hono } from "hono";
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join, resolve } from "node:path";
 import { streamSSE } from "hono/streaming";
-import { type AgentDefinition, SessionPrefix, getAgentDir } from "shared";
-import type { AgentServer } from "./types";
-import { createUiTools } from "../core/tools/ui-tools";
-import { sessionManager as coreSessionManager } from "../core/session-manager";
-import { createProgrammaticSessionSync } from "../auth/onboarding";
-import { filterSecretsFromOutput } from "../core/bash-output-filter";
-import { memoryRegistry } from "../core/memory/registry";
-import { createMemoryTools } from "../core/memory/memory-tools";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { type AgentDefinition, getAgentDir } from "shared";
 import { mcpRegistry } from "../core/mcp-registry";
-import { assemblePromptAppends } from "../core/prompts/prompt-assembly";
-import { createBeforeToolCallHook } from "../core/session/before-tool-call-hook";
-import { createAfterToolCallHook } from "../core/session/after-tool-call-hook";
-import { scopeConfigManager } from "../core/scope";
-import { resolveProjectDir } from "../core/session/workspace-resolver";
-import { createPreviewTools } from "../core/tools/preview-tools";
+import { memoryRegistry } from "../core/memory/registry";
+import type { AgentServer } from "./types";
 
 function ensureAgentWorkspace(username: string, id: string): string {
   const dir = getAgentDir(username, id);
-  const subdirs = [
-    join(dir, "sessions"),
-    join(dir, "workspace"),
-  ];
+  const subdirs = [join(dir, "sessions"), join(dir, "workspace")];
   for (const d of subdirs) {
     if (!existsSync(d)) mkdirSync(d, { recursive: true });
   }
@@ -40,7 +18,10 @@ function ensureAgentWorkspace(username: string, id: string): string {
   return dir;
 }
 
-export async function createAgentServer(definition: AgentDefinition, username: string): Promise<AgentServer> {
+export async function createAgentServer(
+  definition: AgentDefinition,
+  username: string,
+): Promise<AgentServer> {
   const { createAgentRuntime } = await import("../core/session/agent-runtime");
   const { DEFAULT_ALWAYS_ON_TOOLS } = await import("../core/session/tool-groups");
 
@@ -53,11 +34,21 @@ export async function createAgentServer(definition: AgentDefinition, username: s
   });
 
   const session = runtime.session;
-  const memory = await memoryRegistry.get(`agent:${definition.id}`, runtime.context.memoryDbPath, runtime.context.memoryEnabled);
+  const memory = await memoryRegistry.get(
+    `agent:${definition.id}`,
+    runtime.context.memoryDbPath,
+    runtime.context.memoryEnabled,
+  );
 
   const activeToolNames = [
     ...DEFAULT_ALWAYS_ON_TOOLS,
-    "read", "write", "edit", "bash", "grep", "find", "ls",
+    "read",
+    "write",
+    "edit",
+    "bash",
+    "grep",
+    "find",
+    "ls",
   ];
   if (runtime.context.memoryEnabled) {
     activeToolNames.push("memory_store", "memory_recall", "memory_forget");
@@ -99,7 +90,7 @@ export async function createAgentServer(definition: AgentDefinition, username: s
       role: definition.role,
       streaming: session.isStreaming,
       activeObservers,
-    })
+    }),
   );
 
   app.get("/messages", (c) => {
@@ -110,7 +101,7 @@ export async function createAgentServer(definition: AgentDefinition, username: s
     activeObservers++;
     return streamSSE(c, async (sse) => {
       const unsub = session.subscribe((event) => {
-        sse.writeSSE({ data: JSON.stringify(event), event: event.type }).catch(() => { });
+        sse.writeSSE({ data: JSON.stringify(event), event: event.type }).catch(() => {});
       });
       c.req.raw.signal.addEventListener("abort", () => {
         activeObservers = Math.max(0, activeObservers - 1);
@@ -134,7 +125,7 @@ export async function createAgentServer(definition: AgentDefinition, username: s
         if (existsSync(summaryPath)) {
           executions.push(JSON.parse(readFileSync(summaryPath, "utf-8")));
         }
-      } catch { }
+      } catch {}
     }
     executions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     return c.json({ executions });
@@ -175,7 +166,7 @@ export async function createAgentServer(definition: AgentDefinition, username: s
         messages,
         toolCalls,
         errors,
-        ...summary
+        ...summary,
       });
     } catch (e) {
       return c.json({ error: String(e) }, 500);
@@ -197,7 +188,10 @@ export async function createAgentServer(definition: AgentDefinition, username: s
     const execDir = join(execsDir, execId);
     mkdirSync(execDir, { recursive: true });
 
-    writeFileSync(join(execDir, "prompt.json"), JSON.stringify({ prompt: message, createdAt: new Date().toISOString() }, null, 2));
+    writeFileSync(
+      join(execDir, "prompt.json"),
+      JSON.stringify({ prompt: message, createdAt: new Date().toISOString() }, null, 2),
+    );
 
     const toolCalls: any[] = [];
     const errors: string[] = [];
@@ -228,16 +222,26 @@ export async function createAgentServer(definition: AgentDefinition, username: s
       const durationMs = Date.now() - startTime;
       try {
         const msgs = session.messages;
-        writeFileSync(join(execDir, "messages.jsonl"), msgs.map(m => JSON.stringify(m)).join("\n"));
+        writeFileSync(
+          join(execDir, "messages.jsonl"),
+          msgs.map((m) => JSON.stringify(m)).join("\n"),
+        );
         writeFileSync(join(execDir, "tool-calls.json"), JSON.stringify(toolCalls, null, 2));
         writeFileSync(join(execDir, "errors.json"), JSON.stringify(errors, null, 2));
-        writeFileSync(join(execDir, "summary.json"), JSON.stringify({
-          id: execId,
-          prompt: message,
-          durationMs,
-          errors,
-          createdAt: new Date().toISOString(),
-        }, null, 2));
+        writeFileSync(
+          join(execDir, "summary.json"),
+          JSON.stringify(
+            {
+              id: execId,
+              prompt: message,
+              durationMs,
+              errors,
+              createdAt: new Date().toISOString(),
+            },
+            null,
+            2,
+          ),
+        );
       } catch (e) {
         console.error(`[AgentServer:${definition.id}] Failed to save execution log:`, e);
       }
@@ -258,14 +262,17 @@ export async function createAgentServer(definition: AgentDefinition, username: s
 
     return streamSSE(c, async (sse) => {
       const unsub = session.subscribe((event) => {
-        sse.writeSSE({ data: JSON.stringify(event), event: event.type }).catch(() => { });
+        sse.writeSSE({ data: JSON.stringify(event), event: event.type }).catch(() => {});
       });
 
       try {
         await session.prompt(message);
       } catch (err) {
         errors.push(String(err));
-        await sse.writeSSE({ data: JSON.stringify({ type: "agent_error", error: String(err) }), event: "agent_error" });
+        await sse.writeSSE({
+          data: JSON.stringify({ type: "agent_error", error: String(err) }),
+          event: "agent_error",
+        });
       } finally {
         unsub();
         finalize();

@@ -13,7 +13,10 @@ export class FileWorkspaceConfigLoader implements WorkspaceConfigPort {
       const content = readFileSync(configPath, "utf-8");
       return JSON.parse(content) as WorkspaceConfig;
     } catch (err) {
-      console.error(`[FileWorkspaceConfigLoader] Failed to read workspace config at ${configPath}:`, err);
+      console.error(
+        `[FileWorkspaceConfigLoader] Failed to read workspace config at ${configPath}:`,
+        err,
+      );
       return null;
     }
   }

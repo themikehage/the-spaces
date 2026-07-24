@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-﻿import { appendFileSync, mkdirSync, existsSync, readFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { getAuditDir } from "shared";
 
@@ -15,11 +15,7 @@ export interface ToolCallAuditEvent {
   errorMsg?: string;
 }
 
-export function auditLog(
-  username: string,
-  action: string,
-  details: Record<string, unknown>
-): void {
+export function auditLog(username: string, action: string, details: Record<string, unknown>): void {
   try {
     const logDir = join(getAuditDir(), username);
     mkdirSync(logDir, { recursive: true });
@@ -30,11 +26,7 @@ export function auditLog(
       timestamp: new Date().toISOString(),
     };
 
-    appendFileSync(
-      join(logDir, "env-access.log"),
-      JSON.stringify(entry) + "\n",
-      "utf-8"
-    );
+    appendFileSync(join(logDir, "env-access.log"), JSON.stringify(entry) + "\n", "utf-8");
   } catch (err) {
     console.error(`[Audit Log] Failed to write audit log for ${username}:`, err);
   }
@@ -45,7 +37,7 @@ function sanitizeArgs(args?: Record<string, unknown>): Record<string, unknown> |
   const sanitized: Record<string, unknown> = {};
   const sensitiveKeys = ["key", "token", "password", "secret", "auth", "api_key", "apikey"];
   for (const [k, v] of Object.entries(args)) {
-    if (sensitiveKeys.some(s => k.toLowerCase().includes(s))) {
+    if (sensitiveKeys.some((s) => k.toLowerCase().includes(s))) {
       sanitized[k] = "[REDACTED]";
     } else if (typeof v === "string" && v.length > 500) {
       sanitized[k] = v.slice(0, 500) + "... [TRUNCATED]";
@@ -56,7 +48,10 @@ function sanitizeArgs(args?: Record<string, unknown>): Record<string, unknown> |
   return sanitized;
 }
 
-export function recordToolCallAudit(username: string, event: Omit<ToolCallAuditEvent, "timestamp">): void {
+export function recordToolCallAudit(
+  username: string,
+  event: Omit<ToolCallAuditEvent, "timestamp">,
+): void {
   try {
     const logDir = join(getAuditDir(), username);
     mkdirSync(logDir, { recursive: true });
@@ -67,11 +62,7 @@ export function recordToolCallAudit(username: string, event: Omit<ToolCallAuditE
       argsSummary: sanitizeArgs(event.argsSummary),
     };
 
-    appendFileSync(
-      join(logDir, "tool-calls.jsonl"),
-      JSON.stringify(entry) + "\n",
-      "utf-8"
-    );
+    appendFileSync(join(logDir, "tool-calls.jsonl"), JSON.stringify(entry) + "\n", "utf-8");
   } catch (err) {
     console.error(`[Audit Log] Failed to write tool call audit log for ${username}:`, err);
   }

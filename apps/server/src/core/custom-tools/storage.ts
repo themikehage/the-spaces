@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { getUserDir } from "shared";
 import { type CustomToolDefinition, CustomToolDefinitionSchema } from "./schemas";
@@ -83,7 +83,7 @@ export class CustomToolStorage {
   upsert(username: string, definition: CustomToolDefinition): void {
     const dir = this.getStorageDir(username);
     const filePath = join(dir, `${definition.name}.json`);
-    
+
     const now = new Date().toISOString();
     const cleanDef = {
       ...definition,
@@ -95,8 +95,8 @@ export class CustomToolStorage {
 
     // Update index
     const index = this.readIndex(username);
-    const existingIdx = index.findIndex(e => e.name === cleanDef.name);
-    
+    const existingIdx = index.findIndex((e) => e.name === cleanDef.name);
+
     const entry: RegistryEntry = {
       name: cleanDef.name,
       label: cleanDef.label,
@@ -121,7 +121,7 @@ export class CustomToolStorage {
     }
 
     const index = this.readIndex(username);
-    const updated = index.filter(e => e.name !== name);
+    const updated = index.filter((e) => e.name !== name);
     this.writeIndex(username, updated);
   }
 
@@ -133,7 +133,7 @@ export class CustomToolStorage {
     } else {
       // If full file doesn't exist, update index at least
       const index = this.readIndex(username);
-      const existing = index.find(e => e.name === name);
+      const existing = index.find((e) => e.name === name);
       if (existing) {
         existing.enabled = enabled;
         this.writeIndex(username, index);

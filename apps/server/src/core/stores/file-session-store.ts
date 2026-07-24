@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
-import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from "node:fs";
-import { readFile, writeFile, readdir, unlink } from "node:fs/promises";
+import { existsSync, mkdirSync } from "node:fs";
+import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
   type ISessionStore,
-  type SessionData,
   type MessageRecord,
-  type SessionSummary,
+  type SessionData,
   type SessionListQueryFilters,
+  type SessionSummary,
   getSessionsDir,
   SessionPrefix,
 } from "shared";
@@ -34,7 +34,9 @@ export class FileSessionStore implements ISessionStore {
     }
     if (session.messages && session.messages.length > 0) {
       const logPath = join(dir, "messages.jsonl");
-      const lines = session.messages.map((m) => JSON.stringify({ type: "message", message: m })).join("\n") + "\n";
+      const lines =
+        session.messages.map((m) => JSON.stringify({ type: "message", message: m })).join("\n") +
+        "\n";
       await writeFile(logPath, lines, "utf-8");
     }
   }
@@ -44,18 +46,29 @@ export class FileSessionStore implements ISessionStore {
     // For file appending, write JSON line to session log file
   }
 
-  async getMessages(sessionId: string, opts?: { limit?: number; offset?: number }): Promise<MessageRecord[]> {
+  async getMessages(
+    sessionId: string,
+    opts?: { limit?: number; offset?: number },
+  ): Promise<MessageRecord[]> {
     return [];
   }
 
-  async listUserSessions(username: string, query?: SessionListQueryFilters): Promise<SessionSummary[]> {
+  async listUserSessions(
+    username: string,
+    query?: SessionListQueryFilters,
+  ): Promise<SessionSummary[]> {
     const sessionsDir = this.resolveUserSessionsDir(username);
     if (!existsSync(sessionsDir)) return [];
 
     try {
       const entries = await readdir(sessionsDir, { withFileTypes: true });
       const sessionPromises = entries
-        .filter((entry) => entry.isDirectory() && !entry.name.startsWith("plan_") && !entry.name.startsWith(SessionPrefix.SUBAGENT))
+        .filter(
+          (entry) =>
+            entry.isDirectory() &&
+            !entry.name.startsWith("plan_") &&
+            !entry.name.startsWith(SessionPrefix.SUBAGENT),
+        )
         .map(async (entry): Promise<SessionSummary> => {
           const sessionId = entry.name;
           const sessionSubdir = join(sessionsDir, sessionId);
@@ -74,8 +87,14 @@ export class FileSessionStore implements ISessionStore {
           return {
             id: sessionId,
             name: typeof metadata.name === "string" ? metadata.name : sessionId,
-            createdAt: typeof metadata.createdAt === "string" ? metadata.createdAt : new Date().toISOString(),
-            updatedAt: typeof metadata.updatedAt === "string" ? metadata.updatedAt : new Date().toISOString(),
+            createdAt:
+              typeof metadata.createdAt === "string"
+                ? metadata.createdAt
+                : new Date().toISOString(),
+            updatedAt:
+              typeof metadata.updatedAt === "string"
+                ? metadata.updatedAt
+                : new Date().toISOString(),
             messageCount,
             status: (metadata.status as any) || "sleeping",
             projectId: metadata.projectId as string | undefined,
@@ -89,7 +108,9 @@ export class FileSessionStore implements ISessionStore {
 
       if (query?.search) {
         const term = query.search.toLowerCase();
-        items = items.filter((s) => s.name.toLowerCase().includes(term) || s.id.toLowerCase().includes(term));
+        items = items.filter(
+          (s) => s.name.toLowerCase().includes(term) || s.id.toLowerCase().includes(term),
+        );
       }
       if (query?.projectId) {
         items = items.filter((s) => s.projectId === query.projectId);

@@ -10,7 +10,10 @@ export const DEFAULT_SUBAGENT_CONFIG: SubagentConfig = {
 export function getAppConfig() {
   const envMaxDepth = process.env.SPACES_SUBAGENT_MAX_DEPTH;
   const parsedDepth = envMaxDepth !== undefined ? parseInt(envMaxDepth, 10) : undefined;
-  const maxDepth = parsedDepth !== undefined && !isNaN(parsedDepth) ? parsedDepth : DEFAULT_SUBAGENT_CONFIG.maxDepth;
+  const maxDepth =
+    parsedDepth !== undefined && !isNaN(parsedDepth)
+      ? parsedDepth
+      : DEFAULT_SUBAGENT_CONFIG.maxDepth;
 
   return {
     subagent: {

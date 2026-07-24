@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: MIT
-import { useState, useEffect } from "react";
-import type { McpServerConfig } from "shared";
 import { Button } from "@/components/ui/Button";
+import { useEffect, useState } from "react";
+import type { McpServerConfig } from "shared";
 
 interface MCPCustomFormProps {
   initialConfig?: McpServerConfig | null;
   onSubmit: (config: McpServerConfig) => void;
   onCancel: () => void;
-  onTest: (config: McpServerConfig) => Promise<{ success: boolean; tools: string[]; error?: string }>;
+  onTest: (
+    config: McpServerConfig,
+  ) => Promise<{ success: boolean; tools: string[]; error?: string }>;
 }
 
 interface EnvVarRow {
@@ -15,12 +17,7 @@ interface EnvVarRow {
   value: string;
 }
 
-export function MCPCustomForm({
-  initialConfig,
-  onSubmit,
-  onCancel,
-  onTest,
-}: MCPCustomFormProps) {
+export function MCPCustomForm({ initialConfig, onSubmit, onCancel, onTest }: MCPCustomFormProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [transport, setTransport] = useState<"stdio" | "http">("stdio");
@@ -28,11 +25,15 @@ export function MCPCustomForm({
   const [argsStr, setArgsStr] = useState("[]");
   const [url, setUrl] = useState("");
   const [envRows, setEnvRows] = useState<EnvVarRow[]>([]);
-  
+
   // Validation / Test status states
   const [argsError, setArgsError] = useState("");
   const [testing, setTesting] = useState(false);
-  const [testResult, setTestResult] = useState<{ success: boolean; tools: string[]; error?: string } | null>(null);
+  const [testResult, setTestResult] = useState<{
+    success: boolean;
+    tools: string[];
+    error?: string;
+  } | null>(null);
 
   useEffect(() => {
     if (initialConfig) {
@@ -42,7 +43,7 @@ export function MCPCustomForm({
       setCommand(initialConfig.command || "npx");
       setArgsStr(JSON.stringify(initialConfig.args || []));
       setUrl(initialConfig.url || "");
-      
+
       const envs: EnvVarRow[] = [];
       if (initialConfig.env) {
         for (const [key, value] of Object.entries(initialConfig.env)) {
@@ -68,7 +69,9 @@ export function MCPCustomForm({
     try {
       const parsed = JSON.parse(val);
       if (!Array.isArray(parsed)) {
-        setArgsError("Debe ser un array JSON válido, ejemplo: [\"-y\", \"@modelcontextprotocol/server-github\"]");
+        setArgsError(
+          'Debe ser un array JSON válido, ejemplo: ["-y", "@modelcontextprotocol/server-github"]',
+        );
       } else {
         setArgsError("");
       }
@@ -105,7 +108,12 @@ export function MCPCustomForm({
     }
 
     // Generate stable ID from name if creating new
-    const id = initialConfig?.id || name.toLowerCase().replace(/[^a-z0-9_-]/g, "-").replace(/-+/g, "-");
+    const id =
+      initialConfig?.id ||
+      name
+        .toLowerCase()
+        .replace(/[^a-z0-9_-]/g, "-")
+        .replace(/-+/g, "-");
 
     return {
       id,
@@ -149,7 +157,10 @@ export function MCPCustomForm({
   };
 
   return (
-    <form onSubmit={handleSave} className="bg-card rounded-xl border border-input/20 overflow-hidden shadow-sm space-y-6 p-6">
+    <form
+      onSubmit={handleSave}
+      className="bg-card rounded-xl border border-input/20 overflow-hidden shadow-sm space-y-6 p-6"
+    >
       <div className="flex items-center justify-between border-b border-input/10 pb-4">
         <div>
           <h3 className="text-foreground font-semibold text-sm">
@@ -171,7 +182,9 @@ export function MCPCustomForm({
       <div className="space-y-4">
         {/* Name */}
         <div className="grid grid-cols-1 gap-1">
-          <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Nombre del Servidor</label>
+          <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
+            Nombre del Servidor
+          </label>
           <input
             type="text"
             required
@@ -184,7 +197,9 @@ export function MCPCustomForm({
 
         {/* Description */}
         <div className="grid grid-cols-1 gap-1">
-          <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Descripción</label>
+          <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
+            Descripción
+          </label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -195,7 +210,9 @@ export function MCPCustomForm({
 
         {/* Transport Type */}
         <div className="grid grid-cols-1 gap-1">
-          <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Tipo de Transporte</label>
+          <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
+            Tipo de Transporte
+          </label>
           <div className="flex gap-4 mt-1">
             <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer select-none">
               <input
@@ -224,7 +241,9 @@ export function MCPCustomForm({
         {transport === "stdio" && (
           <div className="space-y-4 bg-background/30 p-4 rounded-xl border border-input/10">
             <div className="grid grid-cols-1 gap-1">
-              <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Comando base</label>
+              <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
+                Comando base
+              </label>
               <input
                 type="text"
                 required={transport === "stdio"}
@@ -236,7 +255,9 @@ export function MCPCustomForm({
             </div>
 
             <div className="grid grid-cols-1 gap-1">
-              <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Argumentos (JSON Array)</label>
+              <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
+                Argumentos (JSON Array)
+              </label>
               <input
                 type="text"
                 required={transport === "stdio"}
@@ -249,14 +270,20 @@ export function MCPCustomForm({
                 <span className="text-xs text-error font-medium mt-0.5">{argsError}</span>
               )}
               <span className="text-xs text-muted-foreground mt-0.5">
-                Usa <code className="bg-background px-1 py-0.2 rounded border border-input/10 text-foreground font-mono">$WORKSPACE_DIR</code> para montar el directorio de archivos del usuario de forma aislada.
+                Usa{" "}
+                <code className="bg-background px-1 py-0.2 rounded border border-input/10 text-foreground font-mono">
+                  $WORKSPACE_DIR
+                </code>{" "}
+                para montar el directorio de archivos del usuario de forma aislada.
               </span>
             </div>
 
             {/* Env Variables */}
             <div className="space-y-2.5">
               <div className="flex items-center justify-between">
-                <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Variables de entorno</label>
+                <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
+                  Variables de entorno
+                </label>
                 <button
                   type="button"
                   onClick={addEnvRow}
@@ -292,7 +319,14 @@ export function MCPCustomForm({
                         onClick={() => removeEnvRow(idx)}
                         className="p-1.5 hover:bg-card-hover/20 text-muted-foreground hover:text-error rounded transition-colors cursor-pointer"
                       >
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.5"
+                        >
                           <polyline points="3 6 5 6 21 6" />
                           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
                         </svg>
@@ -308,7 +342,9 @@ export function MCPCustomForm({
         {/* HTTP Inputs */}
         {transport === "http" && (
           <div className="bg-background/30 p-4 rounded-xl border border-input/10 grid grid-cols-1 gap-1">
-            <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">URL del Servidor SSE/HTTP</label>
+            <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
+              URL del Servidor SSE/HTTP
+            </label>
             <input
               type="url"
               required={transport === "http"}
@@ -323,9 +359,13 @@ export function MCPCustomForm({
 
       {/* Connection Test Outputs */}
       {testResult && (
-        <div className={`p-4 rounded-xl border ${
-          testResult.success ? "bg-success/5 border-success/20 text-success" : "bg-destructive/5 border-destructive/20 text-error"
-        } text-xs font-mono space-y-2`}>
+        <div
+          className={`p-4 rounded-xl border ${
+            testResult.success
+              ? "bg-success/5 border-success/20 text-success"
+              : "bg-destructive/5 border-destructive/20 text-error"
+          } text-xs font-mono space-y-2`}
+        >
           <div className="font-bold flex items-center gap-1.5 uppercase tracking-wider">
             {testResult.success ? (
               <>
@@ -341,11 +381,16 @@ export function MCPCustomForm({
           </div>
           {testResult.success ? (
             <div>
-              <span className="font-semibold block mb-1">Herramientas descubiertas ({testResult.tools.length}):</span>
+              <span className="font-semibold block mb-1">
+                Herramientas descubiertas ({testResult.tools.length}):
+              </span>
               {testResult.tools.length > 0 ? (
                 <div className="flex flex-wrap gap-1 mt-1">
-                  {testResult.tools.map(t => (
-                    <span key={t} className="bg-success/15 border border-success/25 px-2 py-0.5 rounded text-xs">
+                  {testResult.tools.map((t) => (
+                    <span
+                      key={t}
+                      className="bg-success/15 border border-success/25 px-2 py-0.5 rounded text-xs"
+                    >
                       {t}
                     </span>
                   ))}
@@ -355,9 +400,7 @@ export function MCPCustomForm({
               )}
             </div>
           ) : (
-            <div className="whitespace-pre-wrap leading-normal font-sans">
-              {testResult.error}
-            </div>
+            <div className="whitespace-pre-wrap leading-normal font-sans">{testResult.error}</div>
           )}
         </div>
       )}
@@ -368,7 +411,12 @@ export function MCPCustomForm({
           variant="outline"
           type="button"
           onClick={handleTest}
-          disabled={testing || (!name.trim()) || (transport === "stdio" && !!argsError) || (transport === "http" && !url.trim())}
+          disabled={
+            testing ||
+            !name.trim() ||
+            (transport === "stdio" && !!argsError) ||
+            (transport === "http" && !url.trim())
+          }
         >
           {testing && (
             <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin inline-block" />
@@ -382,7 +430,11 @@ export function MCPCustomForm({
           </Button>
           <Button
             type="submit"
-            disabled={(!name.trim()) || (transport === "stdio" && !!argsError) || (transport === "http" && !url.trim())}
+            disabled={
+              !name.trim() ||
+              (transport === "stdio" && !!argsError) ||
+              (transport === "http" && !url.trim())
+            }
           >
             {initialConfig ? "Guardar Cambios" : "Agregar Servidor"}
           </Button>

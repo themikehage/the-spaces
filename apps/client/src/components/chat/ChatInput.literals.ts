@@ -29,7 +29,8 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
   es: {
     placeholderSteer: "Guiar agente... (Enter para guiar, Alt+Enter para encolar follow-up)",
     placeholderSend: "Enviar mensaje... (Enter para enviar, Shift+Enter para nueva línea)",
-    placeholderRunnerActive: "El gestor de tareas está activo. Pausá la ejecución para enviar mensajes manualmente.",
+    placeholderRunnerActive:
+      "El gestor de tareas está activo. Pausá la ejecución para enviar mensajes manualmente.",
     btnSend: "Enviar",
     btnStop: "Detener",
     btnSteer: "Guiar",

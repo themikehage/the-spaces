@@ -4,7 +4,8 @@ import type { SupportedLocale } from "@/lib";
 export const literals: Record<SupportedLocale, Record<string, string>> = {
   en: {
     title: "Dashboard",
-    subtitle: "Overview of your active workspace projects, team channels, agents, and running execution sessions.",
+    subtitle:
+      "Overview of your active workspace projects, team channels, agents, and running execution sessions.",
     workspaceGlobal: "Global Workspace",
     newProject: "+ New Project",
     loading: "Loading dashboard data...",
@@ -28,7 +29,8 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     newNameLabel: "New Project Name",
     save: "Save",
     deleteModalTitle: "Delete Project",
-    deleteDescription: "This action is destructive. It will permanently delete the code folder, uploaded files, and all associated chat sessions.",
+    deleteDescription:
+      "This action is destructive. It will permanently delete the code folder, uploaded files, and all associated chat sessions.",
     confirmLabel: "Write {name} to confirm:",
     projectNamePlaceholderDelete: "Project name",
     deleting: "Deleting...",
@@ -63,7 +65,8 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
   },
   es: {
     title: "Dashboard",
-    subtitle: "Resumen de tus proyectos activos, canales de equipo, agentes y sesiones de ejecuci\u00f3n en curso.",
+    subtitle:
+      "Resumen de tus proyectos activos, canales de equipo, agentes y sesiones de ejecuci\u00f3n en curso.",
     workspaceGlobal: "Workspace Global",
     newProject: "+ Nuevo Proyecto",
     loading: "Cargando datos del dashboard...",
@@ -87,7 +90,8 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     newNameLabel: "Nuevo Nombre del Proyecto",
     save: "Guardar",
     deleteModalTitle: "Eliminar Proyecto",
-    deleteDescription: "Esta acci\u00f3n es destructiva. Se borrar\u00e1 la carpeta de c\u00f3digo, los archivos subidos y todas las sesiones de chat asociadas.",
+    deleteDescription:
+      "Esta acci\u00f3n es destructiva. Se borrar\u00e1 la carpeta de c\u00f3digo, los archivos subidos y todas las sesiones de chat asociadas.",
     confirmLabel: "Escrib\u00ed {name} para confirmar:",
     projectNamePlaceholderDelete: "Nombre del proyecto",
     deleting: "Eliminando...",

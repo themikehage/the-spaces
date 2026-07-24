@@ -21,7 +21,13 @@ export interface RecallOptions {
 
 export interface IMemoryStore {
   recall(query: string, opts?: RecallOptions): Promise<RecalledMemory[]>;
-  store(content: string, type: MemoryType, importance?: number, tags?: string[], sessionId?: string): Promise<void>;
+  store(
+    content: string,
+    type: MemoryType,
+    importance?: number,
+    tags?: string[],
+    sessionId?: string,
+  ): Promise<void>;
   forget(id: string): Promise<void>;
   clear?(): Promise<void>;
   buildContext(query: string, opts?: { sessionId?: string }): Promise<string>;

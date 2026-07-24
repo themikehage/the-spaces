@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join, dirname } from "node:path";
-import {
-  getUserDir,
-  getSessionDir,
-  getSessionMetadataPath,
-  AVAILABLE_TOOLS,
-} from "shared";
+import { dirname, join } from "node:path";
+import { AVAILABLE_TOOLS, getSessionDir } from "shared";
 import { resolveSubagentSessionDir } from "./workspace-resolver";
 
 export interface TeamConfigReader {
@@ -21,12 +16,14 @@ export class SessionMetadataStore {
   }
 
   private getMetadataPath(username: string, sessionId: string): string {
-    const sessionDir = resolveSubagentSessionDir(username, sessionId) ?? getSessionDir(username, sessionId);
+    const sessionDir =
+      resolveSubagentSessionDir(username, sessionId) ?? getSessionDir(username, sessionId);
     return join(sessionDir, "metadata.json");
   }
 
   ensureSessionDir(username: string, sessionId: string): string {
-    const sessionDir = resolveSubagentSessionDir(username, sessionId) ?? getSessionDir(username, sessionId);
+    const sessionDir =
+      resolveSubagentSessionDir(username, sessionId) ?? getSessionDir(username, sessionId);
     if (!existsSync(sessionDir)) {
       mkdirSync(sessionDir, { recursive: true });
     }
@@ -100,14 +97,25 @@ export class SessionMetadataStore {
     }
   }
 
-  setExecutionMode(username: string, sessionId: string, mode: "readonly" | "standard" | "autonomous"): void {
+  setExecutionMode(
+    username: string,
+    sessionId: string,
+    mode: "readonly" | "standard" | "autonomous",
+  ): void {
     this.saveSessionMetadata(username, sessionId, { executionMode: mode });
   }
 
-  getExecutionMode(username: string, sessionId: string): "readonly" | "standard" | "autonomous" | undefined {
+  getExecutionMode(
+    username: string,
+    sessionId: string,
+  ): "readonly" | "standard" | "autonomous" | undefined {
     const metadata = this.getSessionMetadata(username, sessionId);
     if (metadata) {
-      if (metadata.executionMode === "readonly" || metadata.executionMode === "standard" || metadata.executionMode === "autonomous") {
+      if (
+        metadata.executionMode === "readonly" ||
+        metadata.executionMode === "standard" ||
+        metadata.executionMode === "autonomous"
+      ) {
         return metadata.executionMode;
       }
       if (metadata.teamId) {
@@ -122,13 +130,22 @@ export class SessionMetadataStore {
     return undefined;
   }
 
-  setAutonomyLevel(username: string, sessionId: string, level: "auto" | "propose" | "suggest"): void {
+  setAutonomyLevel(
+    username: string,
+    sessionId: string,
+    level: "auto" | "propose" | "suggest",
+  ): void {
     this.saveSessionMetadata(username, sessionId, { autonomyLevel: level });
   }
 
   getAutonomyLevel(username: string, sessionId: string): "auto" | "propose" | "suggest" {
     const metadata = this.getSessionMetadata(username, sessionId);
-    if (metadata && (metadata.autonomyLevel === "auto" || metadata.autonomyLevel === "propose" || metadata.autonomyLevel === "suggest")) {
+    if (
+      metadata &&
+      (metadata.autonomyLevel === "auto" ||
+        metadata.autonomyLevel === "propose" ||
+        metadata.autonomyLevel === "suggest")
+    ) {
       return metadata.autonomyLevel;
     }
     return "auto";
@@ -145,7 +162,8 @@ export class SessionMetadataStore {
     for (const msg of msgs) {
       if (msg.usage) {
         totalTokensIn += msg.usage.input || msg.usage.promptTokens || msg.usage.prompt_tokens || 0;
-        totalTokensOut += msg.usage.output || msg.usage.completionTokens || msg.usage.completion_tokens || 0;
+        totalTokensOut +=
+          msg.usage.output || msg.usage.completionTokens || msg.usage.completion_tokens || 0;
       }
     }
     const totalTokens = totalTokensIn + totalTokensOut;

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-import { existsSync, mkdirSync, writeFileSync, rmSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { agentRegistry } from "../../agents";
-import { sessionManager } from "../session-manager";
-import { loadSkills } from "../../ai";
 import { getProjectsDir, getWorkspaceSkillsDir } from "shared";
+import { agentRegistry } from "../../agents";
+import { loadSkills } from "../../ai";
+import { sessionManager } from "../session-manager";
 import { FACTORY_CONTRACTS } from "./factory-contracts";
 
 export interface FactoryToolOptions {
@@ -19,7 +19,12 @@ const ENTITY_REFRESH_MAP: Record<string, string> = {
   teams: "team",
 };
 
-export function validateParams(entity: string, action: string, id: string | undefined, params: any) {
+export function validateParams(
+  entity: string,
+  action: string,
+  id: string | undefined,
+  params: any,
+) {
   const contract = FACTORY_CONTRACTS[entity];
   if (!contract) {
     return `Unknown entity: ${entity}`;
@@ -86,7 +91,11 @@ async function handleAgents(action: string, id: string | undefined, params: any,
     if (id) {
       const entry = agentRegistry.get(id, username);
       if (!entry) return err(`Agent "${id}" not found`);
-      return ok(JSON.stringify(entry.server.definition, null, 2), { entity: "agents", id, data: entry.server.definition });
+      return ok(JSON.stringify(entry.server.definition, null, 2), {
+        entity: "agents",
+        id,
+        data: entry.server.definition,
+      });
     }
     const list = agentRegistry.list(username);
     return ok(JSON.stringify(list, null, 2), { entity: "agents", data: list });
@@ -118,7 +127,12 @@ async function handleAgents(action: string, id: string | undefined, params: any,
       scope: params.scope,
     };
     await agentRegistry.register(username, definition, true, params.scope);
-    return ok(`Agent "${id}" created`, { entity: "agents", id, status: "created", data: definition });
+    return ok(`Agent "${id}" created`, {
+      entity: "agents",
+      id,
+      status: "created",
+      data: definition,
+    });
   }
 
   if (action === "delete") {
@@ -157,7 +171,12 @@ function findProjectDir(username: string, nameOrId: string): string | null {
   return null;
 }
 
-async function handleProjects(action: string, id: string | undefined, params: any, username: string) {
+async function handleProjects(
+  action: string,
+  id: string | undefined,
+  params: any,
+  username: string,
+) {
   if (action === "get") {
     if (id) {
       const projPath = findProjectDir(username, id);
@@ -194,7 +213,12 @@ async function handleProjects(action: string, id: string | undefined, params: an
         if (params.avatarUrl !== undefined) proj.avatarUrl = params.avatarUrl;
         if (params.assignment !== undefined) proj.assignment = params.assignment;
         writeFileSync(join(existingPath, "project.json"), JSON.stringify(proj, null, 2), "utf-8");
-        return ok(`Project "${id}" updated`, { entity: "projects", id, status: "updated", data: proj });
+        return ok(`Project "${id}" updated`, {
+          entity: "projects",
+          id,
+          status: "updated",
+          data: proj,
+        });
       }
     }
 
@@ -225,11 +249,22 @@ async function handleProjects(action: string, id: string | undefined, params: an
         });
         await proc.exited;
       } catch {
-        return ok(`Project "${params.name}" created but clone failed. Workspace is empty.`, { entity: "projects", id: projectId, status: "created", data: projData, cloneWarning: true });
+        return ok(`Project "${params.name}" created but clone failed. Workspace is empty.`, {
+          entity: "projects",
+          id: projectId,
+          status: "created",
+          data: projData,
+          cloneWarning: true,
+        });
       }
     }
 
-    return ok(`Project "${params.name}" created`, { entity: "projects", id: projectId, status: "created", data: projData });
+    return ok(`Project "${params.name}" created`, {
+      entity: "projects",
+      id: projectId,
+      status: "created",
+      data: projData,
+    });
   }
 
   if (action === "assign") {
@@ -242,7 +277,7 @@ async function handleProjects(action: string, id: string | undefined, params: an
     const currentAssignment = (proj.assignment as any) || { leaderId: null, members: [] };
     const updatedAssignment = {
       leaderId: params.leaderId !== undefined ? params.leaderId : currentAssignment.leaderId,
-      members: params.members !== undefined ? params.members : (currentAssignment.members || []),
+      members: params.members !== undefined ? params.members : currentAssignment.members || [],
       updatedAt: new Date().toISOString(),
     };
 
@@ -254,7 +289,12 @@ async function handleProjects(action: string, id: string | undefined, params: an
       broadcastToUser(username, { type: "project_updated", project: { id: proj.id, ...proj } });
     } catch {}
 
-    return ok(`Assignment updated for project "${id}"`, { entity: "projects", id, status: "assigned", data: proj });
+    return ok(`Assignment updated for project "${id}"`, {
+      entity: "projects",
+      id,
+      status: "assigned",
+      data: proj,
+    });
   }
 
   if (action === "member") {
@@ -268,7 +308,9 @@ async function handleProjects(action: string, id: string | undefined, params: an
     if (!agentId) return err("agentId is required in params for member action");
 
     const currentAssignment = (proj.assignment as any) || { leaderId: null, members: [] };
-    let members: any[] = Array.isArray(currentAssignment.members) ? [...currentAssignment.members] : [];
+    let members: any[] = Array.isArray(currentAssignment.members)
+      ? [...currentAssignment.members]
+      : [];
 
     const existingIndex = members.findIndex((m: any) => m.id === agentId);
     const memberName = params.name || agentId;
@@ -302,7 +344,12 @@ async function handleProjects(action: string, id: string | undefined, params: an
       broadcastToUser(username, { type: "project_updated", project: { id: proj.id, ...proj } });
     } catch {}
 
-    return ok(`Member "${memberName}" updated on project "${id}"`, { entity: "projects", id, status: "member_updated", data: proj });
+    return ok(`Member "${memberName}" updated on project "${id}"`, {
+      entity: "projects",
+      id,
+      status: "member_updated",
+      data: proj,
+    });
   }
 
   if (action === "delete") {
@@ -318,7 +365,12 @@ async function handleProjects(action: string, id: string | undefined, params: an
   return err(`Unknown action: ${action}`);
 }
 
-async function handleSessions(action: string, id: string | undefined, _params: any, username: string) {
+async function handleSessions(
+  action: string,
+  id: string | undefined,
+  _params: any,
+  username: string,
+) {
   if (action === "get") {
     if (id) {
       const meta = sessionManager.metadataStore.getSessionMetadata(username, id);
@@ -335,7 +387,9 @@ async function handleSessions(action: string, id: string | undefined, _params: a
   }
 
   if (action === "upsert") {
-    return err("Sessions are created implicitly via chat. Upsert is not supported. Use manage_delegations (action: 'delegate') to send a prompt to a session.");
+    return err(
+      "Sessions are created implicitly via chat. Upsert is not supported. Use manage_delegations (action: 'delegate') to send a prompt to a session.",
+    );
   }
 
   if (action === "delete") {
@@ -370,22 +424,40 @@ async function handleEnv(action: string, key: string | undefined, params: any, u
     const targetKey = key || params?.key;
     if (!targetKey) return err("key is required (as id or in params) for env delete");
     sessionManager.userConfig.deleteUserEnv(username, targetKey);
-    return ok(`Env var "${targetKey}" deleted`, { entity: "env", key: targetKey, status: "deleted" });
+    return ok(`Env var "${targetKey}" deleted`, {
+      entity: "env",
+      key: targetKey,
+      status: "deleted",
+    });
   }
 
   return err(`Unknown action: ${action}`);
 }
 
-async function handleProviders(action: string, id: string | undefined, params: any, username: string) {
+async function handleProviders(
+  action: string,
+  id: string | undefined,
+  params: any,
+  username: string,
+) {
   const { modelRegistry, authStorage } = sessionManager.userConfig.getUserContext(username);
 
   if (action === "get") {
     if (id) {
       const status = authStorage.getAuthStatus(id);
       const models = modelRegistry.getAll().filter((m: any) => m.provider === id);
-      return ok(JSON.stringify({ provider: id, configured: status.configured, source: status.source, models }, null, 2), {
-        entity: "providers", id, data: { configured: status.configured, source: status.source, models },
-      });
+      return ok(
+        JSON.stringify(
+          { provider: id, configured: status.configured, source: status.source, models },
+          null,
+          2,
+        ),
+        {
+          entity: "providers",
+          id,
+          data: { configured: status.configured, source: status.source, models },
+        },
+      );
     }
     const providersMap = modelRegistry.getProviders();
     const providers = [];
@@ -406,14 +478,22 @@ async function handleProviders(action: string, id: string | undefined, params: a
     if (!params.apiKey) return err("apiKey is required in params for provider upsert");
     authStorage.set(id, params.apiKey);
     modelRegistry.refresh();
-    return ok(`API key set for provider "${id}"`, { entity: "providers", id, status: "configured" });
+    return ok(`API key set for provider "${id}"`, {
+      entity: "providers",
+      id,
+      status: "configured",
+    });
   }
 
   if (action === "delete") {
     if (!id) return err("id (provider ID) is required for delete");
     authStorage.remove(id);
     modelRegistry.refresh();
-    return ok(`API key revoked for provider "${id}"`, { entity: "providers", id, status: "revoked" });
+    return ok(`API key revoked for provider "${id}"`, {
+      entity: "providers",
+      id,
+      status: "revoked",
+    });
   }
 
   return err(`Unknown action: ${action}`);
@@ -427,7 +507,11 @@ async function handleSkills(action: string, id: string | undefined, params: any,
       const skillPath = join(skillsDir, id, "SKILL.md");
       if (!existsSync(skillPath)) return err(`Skill "${id}" not found`);
       const content = readFileSync(skillPath, "utf-8");
-      return ok(content, { entity: "skills", id, data: { name: id, filePath: skillPath, content } });
+      return ok(content, {
+        entity: "skills",
+        id,
+        data: { name: id, filePath: skillPath, content },
+      });
     }
     const result = loadSkills({
       cwd: skillsDir,
@@ -467,8 +551,6 @@ async function handleSkills(action: string, id: string | undefined, params: any,
   return err(`Unknown action: ${action}`);
 }
 
-
-
 async function handleTeams(action: string, id: string | undefined, params: any, username: string) {
   const { teamStore, teamOrchestrator } = await import("../../teams");
 
@@ -489,7 +571,12 @@ async function handleTeams(action: string, id: string | undefined, params: any, 
       try {
         const updated = teamStore.updateTeam(username, id, params);
         if (!updated) return err(`Team "${id}" not found`);
-        return ok(`Team "${id}" updated`, { entity: "teams", id, status: "updated", data: updated });
+        return ok(`Team "${id}" updated`, {
+          entity: "teams",
+          id,
+          status: "updated",
+          data: updated,
+        });
       } catch (e: any) {
         return err(e.message || `Failed to update team "${id}"`);
       }
@@ -542,9 +629,16 @@ async function handleTeams(action: string, id: string | undefined, params: any, 
       }
       const { SessionPrefix, getTeamWorkspaceDir } = await import("shared");
       const ownerSessionId = params.sessionId || `${SessionPrefix.TEAM}${team.id}`;
-      const session = await sessionManager.getOrCreateSession(username, ownerSessionId, undefined, leader.agentId, undefined, {
-        workspaceDir: getTeamWorkspaceDir(username, team.id),
-      });
+      const session = await sessionManager.getOrCreateSession(
+        username,
+        ownerSessionId,
+        undefined,
+        leader.agentId,
+        undefined,
+        {
+          workspaceDir: getTeamWorkspaceDir(username, team.id),
+        },
+      );
       session.prompt(message).catch((err) => {
         console.error(`[manage_factory] Persistent session prompt error:`, err);
       });
@@ -579,13 +673,23 @@ async function handleTeams(action: string, id: string | undefined, params: any, 
 
     const updatedTeam = teamStore.updateMembers(username, id, updatedMembers);
     if (!updatedTeam) return err(`Failed to update members for team "${id}"`);
-    return ok(`Member "${agentId}" added/updated in team "${id}"`, { entity: "teams", id, status: "member_updated", data: updatedTeam });
+    return ok(`Member "${agentId}" added/updated in team "${id}"`, {
+      entity: "teams",
+      id,
+      status: "member_updated",
+      data: updatedTeam,
+    });
   }
 
   return err(`Unknown action: ${action}`);
 }
 
-async function handleSettings(action: string, _id: string | undefined, params: any, username: string) {
+async function handleSettings(
+  action: string,
+  _id: string | undefined,
+  params: any,
+  username: string,
+) {
   if (action === "get") {
     const settings = sessionManager.userConfig.getUserSettings(username);
     return ok(JSON.stringify(settings, null, 2), { entity: "settings", data: settings });
@@ -594,8 +698,10 @@ async function handleSettings(action: string, _id: string | undefined, params: a
   if (action === "upsert") {
     const updates: Record<string, any> = {};
     if (params.factoryName !== undefined) updates.factoryName = String(params.factoryName);
-    if (params.factoryAvatarUrl !== undefined) updates.factoryAvatarUrl = params.factoryAvatarUrl ? String(params.factoryAvatarUrl) : null;
-    if (params.factorySystemPrompt !== undefined) updates.factorySystemPrompt = String(params.factorySystemPrompt);
+    if (params.factoryAvatarUrl !== undefined)
+      updates.factoryAvatarUrl = params.factoryAvatarUrl ? String(params.factoryAvatarUrl) : null;
+    if (params.factorySystemPrompt !== undefined)
+      updates.factorySystemPrompt = String(params.factorySystemPrompt);
     sessionManager.userConfig.saveUserSettings(username, updates);
     return ok("Settings updated", { entity: "settings", status: "updated" });
   }
@@ -629,21 +735,33 @@ After mutating any entity, call refresh_ui to update the frontend sidebar.`,
       properties: {
         entity: {
           type: "string",
-          enum: ["agents", "projects", "sessions", "env", "providers", "skills", "teams", "settings"],
+          enum: [
+            "agents",
+            "projects",
+            "sessions",
+            "env",
+            "providers",
+            "skills",
+            "teams",
+            "settings",
+          ],
           description: "The factory entity type to operate on.",
         },
         action: {
           type: "string",
           enum: ["get", "upsert", "delete", "assign", "send", "member"],
-          description: "get: retrieve entity data (list or single). upsert: create or update. delete: permanently remove. assign: set project assignment (leaderId, members). send: dispatch message to a team. member: add/update a team/project member.",
+          description:
+            "get: retrieve entity data (list or single). upsert: create or update. delete: permanently remove. assign: set project assignment (leaderId, members). send: dispatch message to a team. member: add/update a team/project member.",
         },
         id: {
           type: "string",
-          description: "Entity identifier. Required for delete, send, and member. For get, omit to list all entities. For upsert on agents/skills/teams, use as the unique ID. For env, use 'key' in params instead.",
+          description:
+            "Entity identifier. Required for delete, send, and member. For get, omit to list all entities. For upsert on agents/skills/teams, use as the unique ID. For env, use 'key' in params instead.",
         },
         params: {
           type: "object",
-          description: "Entity-specific parameters as a flat JSON object. For upsert, includes required fields. See GET /api/factory/contract/:entity for exact schemas per entity.",
+          description:
+            "Entity-specific parameters as a flat JSON object. For upsert, includes required fields. See GET /api/factory/contract/:entity for exact schemas per entity.",
         },
       },
       required: ["entity", "action"],

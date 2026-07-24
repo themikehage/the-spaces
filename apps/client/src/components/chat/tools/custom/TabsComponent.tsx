@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { useState } from "react";
 import type { ReactNode } from "react";
+import { useState } from "react";
 
 interface TabItem {
   label: string;

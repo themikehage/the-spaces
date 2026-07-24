@@ -1,22 +1,29 @@
 // SPDX-License-Identifier: MIT
-import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { z } from "zod";
-import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
-import { authMiddleware, getAuthPayload } from "../middleware/auth";
+import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import {
+  CreateSessionSchema,
+  ModelSettingsSchema,
+  PromptSchema,
+  SessionPrefix,
+  ToolPermissionsSchema,
+  getExecutionMessagesPath,
+} from "shared";
+import { z } from "zod";
 import { sessionManager } from "../core/session-manager";
-import { CreateSessionSchema, PromptSchema, ModelSettingsSchema, ToolPermissionsSchema, SessionPrefix, getExecutionMessagesPath } from "shared";
+import { authMiddleware, getAuthPayload } from "../middleware/auth";
 
-import { broadcastToSession } from "../ws/handler";
+import { existsSync as _existsSync, readFileSync as _readFileSync } from "node:fs";
+import { join as _join } from "node:path";
+import { getTeamWorkspaceDir } from "shared";
 import { agentRegistry } from "../agents";
 import { delegationRegistry } from "../core/delegation-registry";
-import { teamStore } from "../teams/team-store";
-import { getTeamWorkspaceDir } from "shared";
 import { resolveProjectDir } from "../core/session/workspace-resolver";
-import { readFileSync as _readFileSync, existsSync as _existsSync } from "node:fs";
-import { join as _join } from "node:path";
+import { teamStore } from "../teams/team-store";
+import { broadcastToSession } from "../ws/handler";
 
 const STORAGE_KEY = "spaces-sessions";
 
@@ -26,24 +33,24 @@ sessionsRouter.use("/*", authMiddleware);
 
 sessionsRouter.get("/", async (c) => {
   const { username } = getAuthPayload(c);
-  
+
   const search = c.req.query("search");
   const agentId = c.req.query("agentId");
   const projectId = c.req.query("projectId") ?? c.req.query("projectName");
   const status = c.req.query("status");
   const from = c.req.query("from");
   const to = c.req.query("to");
-  
+
   const pageQuery = c.req.query("page");
   const perPageQuery = c.req.query("perPage");
   const page = pageQuery ? parseInt(pageQuery, 10) : undefined;
   const perPage = perPageQuery ? parseInt(perPageQuery, 10) : undefined;
-  
+
   const sortBy = c.req.query("sortBy") || "updatedAt";
   const sortDir = c.req.query("sortDir") || "desc";
-  
+
   const isExecutionQuery = c.req.query("isExecution");
-  const isExecution = isExecutionQuery !== undefined ? (isExecutionQuery === "true") : undefined;
+  const isExecution = isExecutionQuery !== undefined ? isExecutionQuery === "true" : undefined;
 
   const allFilteredSessions = await sessionManager.listSessions(username, {
     search,
@@ -68,7 +75,7 @@ sessionsRouter.get("/", async (c) => {
       sessions: paginatedSessions,
       total,
       page: p,
-      perPage: pp
+      perPage: pp,
     });
   }
 
@@ -134,7 +141,9 @@ sessionsRouter.get("/analytics", async (c) => {
     const duration = s.durationMs || 0;
     totalDurationMs += duration;
 
-    const dateStr = s.createdAt ? s.createdAt.substring(0, 10) : new Date(0).toISOString().substring(0, 10);
+    const dateStr = s.createdAt
+      ? s.createdAt.substring(0, 10)
+      : new Date(0).toISOString().substring(0, 10);
     if (!sessionsByDay[dateStr]) {
       sessionsByDay[dateStr] = { count: 0, tokens: 0 };
     }
@@ -164,30 +173,39 @@ sessionsRouter.get("/analytics", async (c) => {
     }
   }
 
-  const formattedSessionsByDay = Object.entries(sessionsByDay).map(([date, data]) => ({
-    date,
-    count: data.count,
-    tokens: data.tokens,
-  })).sort((a, b) => a.date.localeCompare(b.date));
+  const formattedSessionsByDay = Object.entries(sessionsByDay)
+    .map(([date, data]) => ({
+      date,
+      count: data.count,
+      tokens: data.tokens,
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date));
 
-  const topTools = Object.entries(toolCounts).map(([tool, count]) => ({
-    tool,
-    count,
-  })).sort((a, b) => b.count - a.count);
+  const topTools = Object.entries(toolCounts)
+    .map(([tool, count]) => ({
+      tool,
+      count,
+    }))
+    .sort((a, b) => b.count - a.count);
 
-  const topModels = Object.entries(modelCounts).map(([model, count]) => ({
-    model,
-    count,
-  })).sort((a, b) => b.count - a.count);
+  const topModels = Object.entries(modelCounts)
+    .map(([model, count]) => ({
+      model,
+      count,
+    }))
+    .sort((a, b) => b.count - a.count);
 
-  const topErrors = Object.entries(toolErrors).map(([tool, count]) => ({
-    tool,
-    count,
-  })).sort((a, b) => b.count - a.count);
+  const topErrors = Object.entries(toolErrors)
+    .map(([tool, count]) => ({
+      tool,
+      count,
+    }))
+    .sort((a, b) => b.count - a.count);
 
   const avgDurationMs = totalSessions > 0 ? Math.round(totalDurationMs / totalSessions) : 0;
   const avgTokensPerSession = totalSessions > 0 ? Math.round(totalTokens / totalSessions) : 0;
-  const errorRate = totalSessions > 0 ? parseFloat((sessionsWithErrors / totalSessions).toFixed(2)) : 0;
+  const errorRate =
+    totalSessions > 0 ? parseFloat((sessionsWithErrors / totalSessions).toFixed(2)) : 0;
 
   return c.json({
     totalSessions,
@@ -205,28 +223,41 @@ sessionsRouter.get("/analytics", async (c) => {
   });
 });
 
-sessionsRouter.post("/batch", zValidator("json", z.object({
-  action: z.enum(["archive", "unarchive", "delete"]),
-  sessionIds: z.array(z.string().min(1)),
-})), async (c) => {
-  const { action, sessionIds } = c.req.valid("json");
-  const { username } = getAuthPayload(c);
+sessionsRouter.post(
+  "/batch",
+  zValidator(
+    "json",
+    z.object({
+      action: z.enum(["archive", "unarchive", "delete"]),
+      sessionIds: z.array(z.string().min(1)),
+    }),
+  ),
+  async (c) => {
+    const { action, sessionIds } = c.req.valid("json");
+    const { username } = getAuthPayload(c);
 
-  for (const sessionId of sessionIds) {
-    if (sessionId.startsWith(SessionPrefix.EXEC)) continue;
-    if (action === "archive") {
-      sessionManager.metadataStore.saveSessionMetadata(username, sessionId, { archived: true, updatedAt: new Date().toISOString() });
-    } else if (action === "unarchive") {
-      sessionManager.metadataStore.saveSessionMetadata(username, sessionId, { archived: false, updatedAt: new Date().toISOString() });
-    } else if (action === "delete") {
-      await sessionManager.destroySession(username, sessionId).catch((err) => {
-        console.error(`[Batch Delete] Failed for ${sessionId}:`, err);
-      });
+    for (const sessionId of sessionIds) {
+      if (sessionId.startsWith(SessionPrefix.EXEC)) continue;
+      if (action === "archive") {
+        sessionManager.metadataStore.saveSessionMetadata(username, sessionId, {
+          archived: true,
+          updatedAt: new Date().toISOString(),
+        });
+      } else if (action === "unarchive") {
+        sessionManager.metadataStore.saveSessionMetadata(username, sessionId, {
+          archived: false,
+          updatedAt: new Date().toISOString(),
+        });
+      } else if (action === "delete") {
+        await sessionManager.destroySession(username, sessionId).catch((err) => {
+          console.error(`[Batch Delete] Failed for ${sessionId}:`, err);
+        });
+      }
     }
-  }
 
-  return c.json({ success: true, count: sessionIds.length });
-});
+    return c.json({ success: true, count: sessionIds.length });
+  },
+);
 
 sessionsRouter.post("/:id/archive", async (c) => {
   const sessionId = c.req.param("id");
@@ -234,7 +265,10 @@ sessionsRouter.post("/:id/archive", async (c) => {
   if (sessionId.startsWith(SessionPrefix.EXEC)) {
     return c.json({ error: "Cannot archive API executions" }, 400);
   }
-  sessionManager.metadataStore.saveSessionMetadata(username, sessionId, { archived: true, updatedAt: new Date().toISOString() });
+  sessionManager.metadataStore.saveSessionMetadata(username, sessionId, {
+    archived: true,
+    updatedAt: new Date().toISOString(),
+  });
   return c.json({ success: true, archived: true });
 });
 
@@ -244,7 +278,10 @@ sessionsRouter.post("/:id/unarchive", async (c) => {
   if (sessionId.startsWith(SessionPrefix.EXEC)) {
     return c.json({ error: "Cannot unarchive API executions" }, 400);
   }
-  sessionManager.metadataStore.saveSessionMetadata(username, sessionId, { archived: false, updatedAt: new Date().toISOString() });
+  sessionManager.metadataStore.saveSessionMetadata(username, sessionId, {
+    archived: false,
+    updatedAt: new Date().toISOString(),
+  });
   return c.json({ success: true, archived: false });
 });
 
@@ -255,9 +292,7 @@ sessionsRouter.post("/", zValidator("json", CreateSessionSchema), async (c) => {
 
   const team = teamId ? teamStore.getTeam(username, teamId) : null;
   const isOrchestration = team?.teamType === "Orchestration";
-  const leader = isOrchestration
-    ? team.members.find((member) => member.role === "lead")
-    : null;
+  const leader = isOrchestration ? team.members.find((member) => member.role === "lead") : null;
   if (teamId && isOrchestration && !leader) {
     return c.json({ error: "Orchestration team requires a leader" }, 400);
   }
@@ -303,18 +338,30 @@ sessionsRouter.post("/", zValidator("json", CreateSessionSchema), async (c) => {
     projectId: resolvedProjectId || null,
     agentId: ownerAgentId || null,
     teamId: teamId || null,
-    ...(isNegotiation ? {
-      executionMode: "readonly",
-      tools: ["read", "grep", "find", "ls"]
-    } : {})
+    ...(isNegotiation
+      ? {
+          executionMode: "readonly",
+          tools: ["read", "grep", "find", "ls"],
+        }
+      : {}),
   });
 
   if (!teamId || isOrchestration) {
-    sessionManager.getOrCreateSession(username, sessionId, resolvedProjectId, ownerAgentId, teamId ? {
-      workspaceDir: getTeamWorkspaceDir(username, teamId),
-    } : undefined).catch(err => {
-      console.error(`[Session Start Async] Failed for ${sessionId}:`, err);
-    });
+    sessionManager
+      .getOrCreateSession(
+        username,
+        sessionId,
+        resolvedProjectId,
+        ownerAgentId,
+        teamId
+          ? {
+              workspaceDir: getTeamWorkspaceDir(username, teamId),
+            }
+          : undefined,
+      )
+      .catch((err) => {
+        console.error(`[Session Start Async] Failed for ${sessionId}:`, err);
+      });
   }
 
   return c.json(session, 201);
@@ -342,28 +389,33 @@ sessionsRouter.post("/:id/prompt", zValidator("json", PromptSchema), async (c) =
     execDir = join(projectExecsDir, execId);
     mkdirSync(execDir, { recursive: true });
 
-    writeFileSync(join(execDir, "prompt.json"), JSON.stringify({ prompt: message, createdAt: new Date().toISOString() }, null, 2));
+    writeFileSync(
+      join(execDir, "prompt.json"),
+      JSON.stringify({ prompt: message, createdAt: new Date().toISOString() }, null, 2),
+    );
   }
 
-  const unsubLog = execDir ? session.subscribe((event: any) => {
-    if (event.type === "tool_execution_start") {
-      toolCalls.push({
-        id: event.toolCall.id,
-        name: event.toolCall.name,
-        args: event.toolCall.arguments,
-        startedAt: new Date().toISOString(),
-      });
-    } else if (event.type === "tool_execution_end") {
-      const tc = toolCalls.find((t) => t.id === event.toolCall.id);
-      if (tc) {
-        tc.result = event.result;
-        tc.isError = event.isError;
-        tc.endedAt = new Date().toISOString();
-      }
-    } else if (event.type === "agent_error") {
-      errors.push(event.error || "Unknown error");
-    }
-  }) : () => {};
+  const unsubLog = execDir
+    ? session.subscribe((event: any) => {
+        if (event.type === "tool_execution_start") {
+          toolCalls.push({
+            id: event.toolCall.id,
+            name: event.toolCall.name,
+            args: event.toolCall.arguments,
+            startedAt: new Date().toISOString(),
+          });
+        } else if (event.type === "tool_execution_end") {
+          const tc = toolCalls.find((t) => t.id === event.toolCall.id);
+          if (tc) {
+            tc.result = event.result;
+            tc.isError = event.isError;
+            tc.endedAt = new Date().toISOString();
+          }
+        } else if (event.type === "agent_error") {
+          errors.push(event.error || "Unknown error");
+        }
+      })
+    : () => {};
 
   const finalize = () => {
     unsubLog();
@@ -371,16 +423,26 @@ sessionsRouter.post("/:id/prompt", zValidator("json", PromptSchema), async (c) =
       const durationMs = Date.now() - startTime;
       try {
         const msgs = session.messages;
-        writeFileSync(join(execDir, "messages.jsonl"), msgs.map(m => JSON.stringify(m)).join("\n"));
+        writeFileSync(
+          join(execDir, "messages.jsonl"),
+          msgs.map((m) => JSON.stringify(m)).join("\n"),
+        );
         writeFileSync(join(execDir, "tool-calls.json"), JSON.stringify(toolCalls, null, 2));
         writeFileSync(join(execDir, "errors.json"), JSON.stringify(errors, null, 2));
-        writeFileSync(join(execDir, "summary.json"), JSON.stringify({
-          id: execId,
-          prompt: message,
-          durationMs,
-          errors,
-          createdAt: new Date().toISOString(),
-        }, null, 2));
+        writeFileSync(
+          join(execDir, "summary.json"),
+          JSON.stringify(
+            {
+              id: execId,
+              prompt: message,
+              durationMs,
+              errors,
+              createdAt: new Date().toISOString(),
+            },
+            null,
+            2,
+          ),
+        );
       } catch (e) {
         console.error(`[SessionsRoute] Failed to save execution log for project ${projectId}:`, e);
       }
@@ -398,99 +460,113 @@ sessionsRouter.post("/:id/prompt", zValidator("json", PromptSchema), async (c) =
   }
 });
 
-sessionsRouter.post(
-  "/:id/prompt/stream",
-  zValidator("json", PromptSchema),
-  async (c) => {
-    const sessionId = c.req.param("id");
-    const { message } = c.req.valid("json");
-    const { username } = getAuthPayload(c);
+sessionsRouter.post("/:id/prompt/stream", zValidator("json", PromptSchema), async (c) => {
+  const sessionId = c.req.param("id");
+  const { message } = c.req.valid("json");
+  const { username } = getAuthPayload(c);
 
-    const session = await sessionManager.getOrCreateSession(username, sessionId);
-    const metadata = sessionManager.metadataStore.getSessionMetadata(username, sessionId) || {};
-    const projectId = (metadata.projectId ?? metadata.projectName) as string | undefined;
+  const session = await sessionManager.getOrCreateSession(username, sessionId);
+  const metadata = sessionManager.metadataStore.getSessionMetadata(username, sessionId) || {};
+  const projectId = (metadata.projectId ?? metadata.projectName) as string | undefined;
 
-    const execId = crypto.randomUUID();
-    let execDir: string | null = null;
-    let toolCalls: any[] = [];
-    const errors: string[] = [];
-    const startTime = Date.now();
+  const execId = crypto.randomUUID();
+  let execDir: string | null = null;
+  let toolCalls: any[] = [];
+  const errors: string[] = [];
+  const startTime = Date.now();
 
-    if (projectId) {
-      const userDir = sessionManager.userConfig.ensureUserDir(username);
-      const projectExecsDir = join(userDir, "projects", projectId, "executions");
-      if (!existsSync(projectExecsDir)) mkdirSync(projectExecsDir, { recursive: true });
-      execDir = join(projectExecsDir, execId);
-      mkdirSync(execDir, { recursive: true });
+  if (projectId) {
+    const userDir = sessionManager.userConfig.ensureUserDir(username);
+    const projectExecsDir = join(userDir, "projects", projectId, "executions");
+    if (!existsSync(projectExecsDir)) mkdirSync(projectExecsDir, { recursive: true });
+    execDir = join(projectExecsDir, execId);
+    mkdirSync(execDir, { recursive: true });
 
-      writeFileSync(join(execDir, "prompt.json"), JSON.stringify({ prompt: message, createdAt: new Date().toISOString() }, null, 2));
-    }
-
-    const unsubLog = execDir ? session.subscribe((event: any) => {
-      if (event.type === "tool_execution_start") {
-        toolCalls.push({
-          id: event.toolCall.id,
-          name: event.toolCall.name,
-          args: event.toolCall.arguments,
-          startedAt: new Date().toISOString(),
-        });
-      } else if (event.type === "tool_execution_end") {
-        const tc = toolCalls.find((t) => t.id === event.toolCall.id);
-        if (tc) {
-          tc.result = event.result;
-          tc.isError = event.isError;
-          tc.endedAt = new Date().toISOString();
-        }
-      } else if (event.type === "agent_error") {
-        errors.push(event.error || "Unknown error");
-      }
-    }) : () => {};
-
-    const finalize = () => {
-      unsubLog();
-      if (execDir) {
-        const durationMs = Date.now() - startTime;
-        try {
-          const msgs = session.messages;
-          writeFileSync(join(execDir, "messages.jsonl"), msgs.map(m => JSON.stringify(m)).join("\n"));
-          writeFileSync(join(execDir, "tool-calls.json"), JSON.stringify(toolCalls, null, 2));
-          writeFileSync(join(execDir, "errors.json"), JSON.stringify(errors, null, 2));
-          writeFileSync(join(execDir, "summary.json"), JSON.stringify({
-            id: execId,
-            prompt: message,
-            durationMs,
-            errors,
-            createdAt: new Date().toISOString(),
-          }, null, 2));
-        } catch (e) {
-          console.error(`[SessionsRoute] Failed to save execution log for project ${projectId}:`, e);
-        }
-      }
-    };
-
-    return streamSSE(c, async (sse) => {
-      const unsub = session.subscribe((event) => {
-        sse.writeSSE({ data: JSON.stringify(event), event: event.type }).catch(() => {});
-      });
-
-      try {
-        await session.prompt(message);
-      } catch (err) {
-        errors.push(String(err));
-        await sse.writeSSE({ data: JSON.stringify({ type: "agent_error", error: String(err) }), event: "agent_error" });
-      } finally {
-        unsub();
-        finalize();
-        await sse.writeSSE({ data: "{}", event: "done" });
-      }
-    });
+    writeFileSync(
+      join(execDir, "prompt.json"),
+      JSON.stringify({ prompt: message, createdAt: new Date().toISOString() }, null, 2),
+    );
   }
-);
+
+  const unsubLog = execDir
+    ? session.subscribe((event: any) => {
+        if (event.type === "tool_execution_start") {
+          toolCalls.push({
+            id: event.toolCall.id,
+            name: event.toolCall.name,
+            args: event.toolCall.arguments,
+            startedAt: new Date().toISOString(),
+          });
+        } else if (event.type === "tool_execution_end") {
+          const tc = toolCalls.find((t) => t.id === event.toolCall.id);
+          if (tc) {
+            tc.result = event.result;
+            tc.isError = event.isError;
+            tc.endedAt = new Date().toISOString();
+          }
+        } else if (event.type === "agent_error") {
+          errors.push(event.error || "Unknown error");
+        }
+      })
+    : () => {};
+
+  const finalize = () => {
+    unsubLog();
+    if (execDir) {
+      const durationMs = Date.now() - startTime;
+      try {
+        const msgs = session.messages;
+        writeFileSync(
+          join(execDir, "messages.jsonl"),
+          msgs.map((m) => JSON.stringify(m)).join("\n"),
+        );
+        writeFileSync(join(execDir, "tool-calls.json"), JSON.stringify(toolCalls, null, 2));
+        writeFileSync(join(execDir, "errors.json"), JSON.stringify(errors, null, 2));
+        writeFileSync(
+          join(execDir, "summary.json"),
+          JSON.stringify(
+            {
+              id: execId,
+              prompt: message,
+              durationMs,
+              errors,
+              createdAt: new Date().toISOString(),
+            },
+            null,
+            2,
+          ),
+        );
+      } catch (e) {
+        console.error(`[SessionsRoute] Failed to save execution log for project ${projectId}:`, e);
+      }
+    }
+  };
+
+  return streamSSE(c, async (sse) => {
+    const unsub = session.subscribe((event) => {
+      sse.writeSSE({ data: JSON.stringify(event), event: event.type }).catch(() => {});
+    });
+
+    try {
+      await session.prompt(message);
+    } catch (err) {
+      errors.push(String(err));
+      await sse.writeSSE({
+        data: JSON.stringify({ type: "agent_error", error: String(err) }),
+        event: "agent_error",
+      });
+    } finally {
+      unsub();
+      finalize();
+      await sse.writeSSE({ data: "{}", event: "done" });
+    }
+  });
+});
 
 sessionsRouter.get("/projects/:projectName/executions", async (c) => {
   const { username } = getAuthPayload(c);
   const projectName = c.req.param("projectName");
-  
+
   const userDir = sessionManager.userConfig.ensureUserDir(username);
   const execsDir = join(userDir, "projects", projectName, "executions");
   if (!existsSync(execsDir)) return c.json({ executions: [] });
@@ -520,7 +596,7 @@ sessionsRouter.get("/projects/:projectName/executions/:execId", async (c) => {
 
   try {
     const prompt = JSON.parse(readFileSync(join(execDir, "prompt.json"), "utf-8")).prompt;
-    
+
     let messages: any[] = [];
     const msgFile = join(execDir, "messages.jsonl");
     if (existsSync(msgFile)) {
@@ -548,7 +624,7 @@ sessionsRouter.get("/projects/:projectName/executions/:execId", async (c) => {
       messages,
       toolCalls,
       errors,
-      ...summary
+      ...summary,
     });
   } catch (e) {
     return c.json({ error: String(e) }, 500);
@@ -572,19 +648,23 @@ sessionsRouter.get("/:id/messages", async (c) => {
       }
       try {
         const content = readFileSync(messagesPath, "utf-8");
-        const messages = content.trim().split("\n").filter(Boolean).map(line => {
-          const parsed = JSON.parse(line);
-          // Asegurar campos básicos esperados en UI
-          if (parsed.message) {
-            return {
-              id: parsed.id || parsed.message.id || crypto.randomUUID(),
-              role: parsed.message.role,
-              content: parsed.message.content,
-              timestamp: parsed.timestamp || new Date().toISOString(),
-            };
-          }
-          return parsed;
-        });
+        const messages = content
+          .trim()
+          .split("\n")
+          .filter(Boolean)
+          .map((line) => {
+            const parsed = JSON.parse(line);
+            // Asegurar campos básicos esperados en UI
+            if (parsed.message) {
+              return {
+                id: parsed.id || parsed.message.id || crypto.randomUUID(),
+                role: parsed.message.role,
+                content: parsed.message.content,
+                timestamp: parsed.timestamp || new Date().toISOString(),
+              };
+            }
+            return parsed;
+          });
         return c.json({ messages });
       } catch (err) {
         return c.json({ messages: [] });
@@ -596,18 +676,22 @@ sessionsRouter.get("/:id/messages", async (c) => {
       }
       try {
         const content = readFileSync(messagesPath, "utf-8");
-        const messages = content.trim().split("\n").filter(Boolean).map(line => {
-          const parsed = JSON.parse(line);
-          if (parsed.message) {
-            return {
-              id: parsed.id || parsed.message.id || crypto.randomUUID(),
-              role: parsed.message.role,
-              content: parsed.message.content,
-              timestamp: parsed.timestamp || new Date().toISOString(),
-            };
-          }
-          return parsed;
-        });
+        const messages = content
+          .trim()
+          .split("\n")
+          .filter(Boolean)
+          .map((line) => {
+            const parsed = JSON.parse(line);
+            if (parsed.message) {
+              return {
+                id: parsed.id || parsed.message.id || crypto.randomUUID(),
+                role: parsed.message.role,
+                content: parsed.message.content,
+                timestamp: parsed.timestamp || new Date().toISOString(),
+              };
+            }
+            return parsed;
+          });
         return c.json({ messages });
       } catch (err) {
         return c.json({ messages: [] });
@@ -637,7 +721,9 @@ sessionsRouter.get("/:id/messages", async (c) => {
   }
 
   const enrichedMessages = activeMessages.map((msg: any, idx: number) => {
-    const entry = allEntries.find((e: any) => e.type === "message" && e.message && (e.message.id === msg.id || e.id === msg.id));
+    const entry = allEntries.find(
+      (e: any) => e.type === "message" && e.message && (e.message.id === msg.id || e.id === msg.id),
+    );
     const parentId = entry ? entry.parentId : null;
     const siblings = childrenByParent.get(parentId) ?? [msg.id || entry?.id];
 
@@ -676,7 +762,7 @@ sessionsRouter.post(
     } catch (error) {
       return c.json({ success: false, error: String(error) }, 500);
     }
-  }
+  },
 );
 
 sessionsRouter.post("/:id/abort", async (c) => {
@@ -710,60 +796,68 @@ sessionsRouter.delete("/:id", async (c) => {
   return c.json({ success: true });
 });
 
-sessionsRouter.patch("/:id", zValidator("json", z.object({ name: z.string().min(1).max(100) })), async (c) => {
-  const sessionId = c.req.param("id");
-  const { name } = c.req.valid("json");
-  const { username } = getAuthPayload(c);
-
-  if (sessionId.startsWith(SessionPrefix.EXEC)) {
-    return c.json({ error: "Cannot rename API executions" }, 400);
-  }
-
-  sessionManager.metadataStore.saveSessionMetadata(username, sessionId, { name });
-
-  return c.json({ success: true });
-});
-
-sessionsRouter.post(
-  "/:id/model",
-  zValidator("json", ModelSettingsSchema),
+sessionsRouter.patch(
+  "/:id",
+  zValidator("json", z.object({ name: z.string().min(1).max(100) })),
   async (c) => {
     const sessionId = c.req.param("id");
-    const { provider, modelId, thinkingLevel } = c.req.valid("json");
+    const { name } = c.req.valid("json");
     const { username } = getAuthPayload(c);
 
     if (sessionId.startsWith(SessionPrefix.EXEC)) {
-      return c.json({ error: "Cannot modify model settings for execution logs" }, 400);
+      return c.json({ error: "Cannot rename API executions" }, 400);
     }
 
-    const { modelRegistry } = sessionManager.userConfig.getUserContext(username);
+    sessionManager.metadataStore.saveSessionMetadata(username, sessionId, { name });
 
-    const model = modelRegistry.find(provider, modelId);
-    if (!model) {
-      return c.json({ error: "Model not found" }, 404);
-    }
-
-    const session = await sessionManager.getOrCreateSession(username, sessionId);
-    if (!session) {
-      return c.json({ error: "Session not found" }, 404);
-    }
-
-    await session.setModel(model);
-    if (thinkingLevel) {
-      session.setThinkingLevel(thinkingLevel);
-    }
-
-    try {
-      const contextUsage = session.getContextUsage();
-      const sessionStats = session.getSessionStats();
-      if (contextUsage || sessionStats) {
-        broadcastToSession(sessionId, { type: "context_usage", sessionId, contextUsage, sessionStats });
-      }
-    } catch {}
-
-    return c.json({ success: true, model: { id: model.id, name: model.name, provider: model.provider as string } });
-  }
+    return c.json({ success: true });
+  },
 );
+
+sessionsRouter.post("/:id/model", zValidator("json", ModelSettingsSchema), async (c) => {
+  const sessionId = c.req.param("id");
+  const { provider, modelId, thinkingLevel } = c.req.valid("json");
+  const { username } = getAuthPayload(c);
+
+  if (sessionId.startsWith(SessionPrefix.EXEC)) {
+    return c.json({ error: "Cannot modify model settings for execution logs" }, 400);
+  }
+
+  const { modelRegistry } = sessionManager.userConfig.getUserContext(username);
+
+  const model = modelRegistry.find(provider, modelId);
+  if (!model) {
+    return c.json({ error: "Model not found" }, 404);
+  }
+
+  const session = await sessionManager.getOrCreateSession(username, sessionId);
+  if (!session) {
+    return c.json({ error: "Session not found" }, 404);
+  }
+
+  await session.setModel(model);
+  if (thinkingLevel) {
+    session.setThinkingLevel(thinkingLevel);
+  }
+
+  try {
+    const contextUsage = session.getContextUsage();
+    const sessionStats = session.getSessionStats();
+    if (contextUsage || sessionStats) {
+      broadcastToSession(sessionId, {
+        type: "context_usage",
+        sessionId,
+        contextUsage,
+        sessionStats,
+      });
+    }
+  } catch {}
+
+  return c.json({
+    success: true,
+    model: { id: model.id, name: model.name, provider: model.provider as string },
+  });
+});
 
 sessionsRouter.get("/:id/context", async (c) => {
   const sessionId = c.req.param("id");
@@ -824,108 +918,105 @@ sessionsRouter.get("/:id/skills", async (c) => {
   }
 });
 
-sessionsRouter.post(
-  "/:id/tools",
-  zValidator("json", ToolPermissionsSchema),
-  async (c) => {
-    const sessionId = c.req.param("id");
-    const { tools, executionMode, autonomyLevel } = c.req.valid("json");
-    const { username } = getAuthPayload(c);
+sessionsRouter.post("/:id/tools", zValidator("json", ToolPermissionsSchema), async (c) => {
+  const sessionId = c.req.param("id");
+  const { tools, executionMode, autonomyLevel } = c.req.valid("json");
+  const { username } = getAuthPayload(c);
 
-    if (sessionId.startsWith(SessionPrefix.EXEC)) {
-      return c.json({ error: "Cannot modify tool permissions for execution logs" }, 400);
-    }
-
-    const session = await sessionManager.getOrCreateSession(username, sessionId);
-    if (!session) {
-      return c.json({ error: "Session not found" }, 404);
-    }
-
-    const currentActive = session.getActiveToolNames();
-
-    const ALWAYS_ON = [
-      "request_approval",
-      "ask_question",
-      "render_images",
-      "render_chart",
-      "share_file",
-      "refresh_ui",
-      "manage_delegations",
-      "decompose_tasks",
-      "update_task_status",
-      "complete_task_list",
-      "vision",
-      "generate_image",
-      "manage_factory",
-      "manage_custom_tools",
-    ] as const;
-    const BUILTIN_AND_ALWAYS = new Set<string>([
-      "read",
-      "write",
-      "edit",
-      "bash",
-      "grep",
-      "find",
-      "ls",
-      "exa_search",
-      "web_fetch",
-      "render_html",
-      ...ALWAYS_ON,
-      "memory_store",
-      "memory_recall",
-      "memory_forget",
-      "create_experiment",
-      "manage_preview",
-    ]);
-
-    const mcpActive = currentActive.filter((tName) => tName.startsWith("mcp_"));
-    const memoryActive = currentActive.filter((tName) => tName.startsWith("memory_"));
-    const exaActive = currentActive.filter((tName) => tName === "exa_search");
-    const webFetchActive = currentActive.filter((tName) => tName === "web_fetch");
-    const customActive = currentActive.filter(
-      (tName) => !tName.startsWith("mcp_") && !tName.startsWith("memory_") && !BUILTIN_AND_ALWAYS.has(tName)
-    );
-
-    let enabledCustomFromStorage: string[] = [];
-    try {
-      const { customToolStorage } = await import("../core/custom-tools/storage");
-      enabledCustomFromStorage = customToolStorage
-        .loadAll(username)
-        .filter((d: any) => d.enabled !== false)
-        .map((d: any) => d.name);
-    } catch {}
-
-    const mergedCustom = Array.from(new Set([...customActive, ...enabledCustomFromStorage]));
-
-    session.setActiveToolsByName(
-      Array.from(
-        new Set([
-          ...tools,
-          ...mcpActive,
-          ...memoryActive,
-          ...exaActive,
-          ...webFetchActive,
-          ...mergedCustom,
-          ...ALWAYS_ON,
-        ])
-      )
-    );
-    sessionManager.metadataStore.persistSessionTools(username, sessionId, tools);
-    if (executionMode) {
-      sessionManager.metadataStore.setExecutionMode(username, sessionId, executionMode);
-    }
-    if (autonomyLevel) {
-      sessionManager.metadataStore.setAutonomyLevel(username, sessionId, autonomyLevel);
-    }
-
-    return c.json({ success: true, tools, executionMode, autonomyLevel });
+  if (sessionId.startsWith(SessionPrefix.EXEC)) {
+    return c.json({ error: "Cannot modify tool permissions for execution logs" }, 400);
   }
-);
+
+  const session = await sessionManager.getOrCreateSession(username, sessionId);
+  if (!session) {
+    return c.json({ error: "Session not found" }, 404);
+  }
+
+  const currentActive = session.getActiveToolNames();
+
+  const ALWAYS_ON = [
+    "request_approval",
+    "ask_question",
+    "render_images",
+    "render_chart",
+    "share_file",
+    "refresh_ui",
+    "manage_delegations",
+    "decompose_tasks",
+    "update_task_status",
+    "complete_task_list",
+    "vision",
+    "generate_image",
+    "manage_factory",
+    "manage_custom_tools",
+  ] as const;
+  const BUILTIN_AND_ALWAYS = new Set<string>([
+    "read",
+    "write",
+    "edit",
+    "bash",
+    "grep",
+    "find",
+    "ls",
+    "exa_search",
+    "web_fetch",
+    "render_html",
+    ...ALWAYS_ON,
+    "memory_store",
+    "memory_recall",
+    "memory_forget",
+    "create_experiment",
+    "manage_preview",
+  ]);
+
+  const mcpActive = currentActive.filter((tName) => tName.startsWith("mcp_"));
+  const memoryActive = currentActive.filter((tName) => tName.startsWith("memory_"));
+  const exaActive = currentActive.filter((tName) => tName === "exa_search");
+  const webFetchActive = currentActive.filter((tName) => tName === "web_fetch");
+  const customActive = currentActive.filter(
+    (tName) =>
+      !tName.startsWith("mcp_") && !tName.startsWith("memory_") && !BUILTIN_AND_ALWAYS.has(tName),
+  );
+
+  let enabledCustomFromStorage: string[] = [];
+  try {
+    const { customToolStorage } = await import("../core/custom-tools/storage");
+    enabledCustomFromStorage = customToolStorage
+      .loadAll(username)
+      .filter((d: any) => d.enabled !== false)
+      .map((d: any) => d.name);
+  } catch {}
+
+  const mergedCustom = Array.from(new Set([...customActive, ...enabledCustomFromStorage]));
+
+  session.setActiveToolsByName(
+    Array.from(
+      new Set([
+        ...tools,
+        ...mcpActive,
+        ...memoryActive,
+        ...exaActive,
+        ...webFetchActive,
+        ...mergedCustom,
+        ...ALWAYS_ON,
+      ]),
+    ),
+  );
+  sessionManager.metadataStore.persistSessionTools(username, sessionId, tools);
+  if (executionMode) {
+    sessionManager.metadataStore.setExecutionMode(username, sessionId, executionMode);
+  }
+  if (autonomyLevel) {
+    sessionManager.metadataStore.setAutonomyLevel(username, sessionId, autonomyLevel);
+  }
+
+  return c.json({ success: true, tools, executionMode, autonomyLevel });
+});
 
 function getGatedToolStatus(username: string): Record<string, "available" | "missing_key"> {
   const env = sessionManager.userConfig.getUserEnv(username);
   return {
-    exa_search: (env.EXA_API_KEY || process.env.EXA_API_KEY) ? "available" : "missing_key",
+    exa_search: env.EXA_API_KEY || process.env.EXA_API_KEY ? "available" : "missing_key",
     web_fetch: "available",
   };
 }
@@ -935,7 +1026,11 @@ sessionsRouter.get("/:id/tools", async (c) => {
   const { username } = getAuthPayload(c);
 
   if (sessionId.startsWith(SessionPrefix.EXEC)) {
-    return c.json({ tools: [], serialTools: ["request_approval", "ask_question"], toolStatus: getGatedToolStatus(username) });
+    return c.json({
+      tools: [],
+      serialTools: ["request_approval", "ask_question"],
+      toolStatus: getGatedToolStatus(username),
+    });
   }
 
   const tools = sessionManager.metadataStore.getSessionTools(username, sessionId);
@@ -951,7 +1046,13 @@ sessionsRouter.get("/:id/tools", async (c) => {
   const executionMode = sessionManager.metadataStore.getExecutionMode(username, sessionId);
   const autonomyLevel = sessionManager.metadataStore.getAutonomyLevel(username, sessionId);
 
-  return c.json({ tools, serialTools, toolStatus: getGatedToolStatus(username), executionMode, autonomyLevel });
+  return c.json({
+    tools,
+    serialTools,
+    toolStatus: getGatedToolStatus(username),
+    executionMode,
+    autonomyLevel,
+  });
 });
 
 sessionsRouter.get("/:id/export", async (c) => {
@@ -960,7 +1061,10 @@ sessionsRouter.get("/:id/export", async (c) => {
   const format = c.req.query("format") || "json";
 
   if (format !== "json" && format !== "jsonl" && format !== "markdown") {
-    return c.json({ error: "Invalid export format. Supported formats: json, jsonl, markdown." }, 400);
+    return c.json(
+      { error: "Invalid export format. Supported formats: json, jsonl, markdown." },
+      400,
+    );
   }
 
   // 1. Size Limit Check (10MB)
@@ -970,7 +1074,7 @@ sessionsRouter.get("/:id/export", async (c) => {
     if (existsSync(sessionDir)) {
       try {
         const files = readdirSync(sessionDir);
-        const jsonlFiles = files.filter(f => f.endsWith(".jsonl"));
+        const jsonlFiles = files.filter((f) => f.endsWith(".jsonl"));
         let totalSize = 0;
         for (const file of jsonlFiles) {
           const stats = statSync(join(sessionDir, file));
@@ -998,22 +1102,33 @@ sessionsRouter.get("/:id/export", async (c) => {
         const messagesPath = getExecutionMessagesPath(username, "agents", entidad, execId);
         if (existsSync(messagesPath)) {
           const content = readFileSync(messagesPath, "utf-8");
-          messages = content.trim().split("\n").filter(Boolean).map(line => {
-            const parsed = JSON.parse(line);
-            if (parsed.message) {
-              return {
-                id: parsed.id || parsed.message.id || crypto.randomUUID(),
-                role: parsed.message.role,
-                content: parsed.message.content,
-                timestamp: parsed.timestamp || new Date().toISOString(),
-                usage: parsed.message.usage || parsed.usage,
-              };
-            }
-            return parsed;
-          });
+          messages = content
+            .trim()
+            .split("\n")
+            .filter(Boolean)
+            .map((line) => {
+              const parsed = JSON.parse(line);
+              if (parsed.message) {
+                return {
+                  id: parsed.id || parsed.message.id || crypto.randomUUID(),
+                  role: parsed.message.role,
+                  content: parsed.message.content,
+                  timestamp: parsed.timestamp || new Date().toISOString(),
+                  usage: parsed.message.usage || parsed.usage,
+                };
+              }
+              return parsed;
+            });
         }
         try {
-          const summaryPath = join(sessionManager.userConfig.ensureUserDir(username), "agents", entidad, "executions", execId, "summary.json");
+          const summaryPath = join(
+            sessionManager.userConfig.ensureUserDir(username),
+            "agents",
+            entidad,
+            "executions",
+            execId,
+            "summary.json",
+          );
           if (existsSync(summaryPath)) {
             metadata = JSON.parse(readFileSync(summaryPath, "utf-8"));
           }
@@ -1022,22 +1137,33 @@ sessionsRouter.get("/:id/export", async (c) => {
         const messagesPath = getExecutionMessagesPath(username, "projects", entidad, execId);
         if (existsSync(messagesPath)) {
           const content = readFileSync(messagesPath, "utf-8");
-          messages = content.trim().split("\n").filter(Boolean).map(line => {
-            const parsed = JSON.parse(line);
-            if (parsed.message) {
-              return {
-                id: parsed.id || parsed.message.id || crypto.randomUUID(),
-                role: parsed.message.role,
-                content: parsed.message.content,
-                timestamp: parsed.timestamp || new Date().toISOString(),
-                usage: parsed.message.usage || parsed.usage,
-              };
-            }
-            return parsed;
-          });
+          messages = content
+            .trim()
+            .split("\n")
+            .filter(Boolean)
+            .map((line) => {
+              const parsed = JSON.parse(line);
+              if (parsed.message) {
+                return {
+                  id: parsed.id || parsed.message.id || crypto.randomUUID(),
+                  role: parsed.message.role,
+                  content: parsed.message.content,
+                  timestamp: parsed.timestamp || new Date().toISOString(),
+                  usage: parsed.message.usage || parsed.usage,
+                };
+              }
+              return parsed;
+            });
         }
         try {
-          const summaryPath = join(sessionManager.userConfig.ensureUserDir(username), "projects", entidad, "executions", execId, "summary.json");
+          const summaryPath = join(
+            sessionManager.userConfig.ensureUserDir(username),
+            "projects",
+            entidad,
+            "executions",
+            execId,
+            "summary.json",
+          );
           if (existsSync(summaryPath)) {
             metadata = JSON.parse(readFileSync(summaryPath, "utf-8"));
           }
@@ -1062,7 +1188,7 @@ sessionsRouter.get("/:id/export", async (c) => {
   }
 
   if (format === "jsonl") {
-    const jsonlContent = messages.map(m => JSON.stringify(m)).join("\n");
+    const jsonlContent = messages.map((m) => JSON.stringify(m)).join("\n");
     c.header("Content-Disposition", `attachment; filename="session-${sessionId}.jsonl"`);
     c.header("Content-Type", "application/x-jsonlines");
     return c.text(jsonlContent);
@@ -1073,7 +1199,7 @@ sessionsRouter.get("/:id/export", async (c) => {
     const model = metadata.modelId || "unknown";
     const totalTokensIn = metadata.totalTokensIn || 0;
     const totalTokensOut = metadata.totalTokensOut || 0;
-    const totalTokens = metadata.totalTokens || (totalTokensIn + totalTokensOut);
+    const totalTokens = metadata.totalTokens || totalTokensIn + totalTokensOut;
     const durationMsVal = metadata.durationMs;
     const durationSec = durationMsVal ? Math.floor(durationMsVal / 1000) : 0;
     const durMin = Math.floor(durationSec / 60);
@@ -1097,8 +1223,17 @@ sessionsRouter.get("/:id/export", async (c) => {
     markdown += `\n---\n\n`;
 
     for (const msg of messages) {
-      const timeStr = msg.timestamp ? new Date(msg.timestamp).toISOString().replace("T", " ").substring(0, 19) : "unknown time";
-      const roleLabel = msg.role === "user" ? "User" : msg.role === "assistant" ? (msg.agentName ? `Assistant (${msg.agentName})` : "Assistant") : msg.role;
+      const timeStr = msg.timestamp
+        ? new Date(msg.timestamp).toISOString().replace("T", " ").substring(0, 19)
+        : "unknown time";
+      const roleLabel =
+        msg.role === "user"
+          ? "User"
+          : msg.role === "assistant"
+            ? msg.agentName
+              ? `Assistant (${msg.agentName})`
+              : "Assistant"
+            : msg.role;
 
       markdown += `## ${roleLabel} (${timeStr})\n`;
 
@@ -1125,7 +1260,10 @@ sessionsRouter.get("/:id/export", async (c) => {
           markdown += `**Status:** ERROR\n`;
         }
         if (msg.content) {
-          markdown += "```\n" + (typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content, null, 2)) + "\n```\n\n";
+          markdown +=
+            "```\n" +
+            (typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content, null, 2)) +
+            "\n```\n\n";
         }
       }
     }
@@ -1216,7 +1354,9 @@ sessionsRouter.get("/:parentId/subagents/:subagentId/messages", async (c) => {
   if (jsonlFiles.length > 0) {
     try {
       const content = readFileSync(join(targetDir, jsonlFiles[0]), "utf-8");
-      messages = content.trim().split("\n")
+      messages = content
+        .trim()
+        .split("\n")
         .filter(Boolean)
         .map((line) => JSON.parse(line));
     } catch (e) {
@@ -1283,6 +1423,3 @@ sessionsRouter.post("/:id/delegations/:toolCallId/abort", async (c) => {
   delegationRegistry.abortAllRecursive(delegation.subagentSessionId);
   return c.json({ success: true });
 });
-
-
-

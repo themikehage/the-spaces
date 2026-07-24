@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { apiFetch } from "@/lib/api";
-import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
-import { useLiterals } from "@/lib";
-import { literals as u } from "./SessionSidebar.literals";
 import { AgentAvatar } from "@/components/shared/AgentAvatar";
 import { EntityAvatar } from "@/components/shared/EntityAvatar";
 import { useSessions } from "@/contexts/SessionsContext";
+import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
+import { useLiterals } from "@/lib";
+import { apiFetch } from "@/lib/api";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { literals as u } from "./SessionSidebar.literals";
 
 // --- Component ---
 
@@ -26,8 +26,6 @@ interface AgentItem {
   createdAt: string;
   avatarUrl?: string;
 }
-
-
 
 interface Props {
   currentPage?: string;
@@ -108,51 +106,68 @@ export function SessionSidebar({
   }, []);
 
   const isGlobal = !activeAgent && !activeProjectName && !activeTeam;
-  const isSessionView = currentPage === "chat" || currentPage === "workspace" || currentPage === "preview";
+  const isSessionView =
+    currentPage === "chat" || currentPage === "workspace" || currentPage === "preview";
 
-  const itemClass = useCallback((isActive: boolean) => {
-    if (isMobile) {
-      return `w-full flex items-center gap-3 px-4 py-3 h-12 rounded-lg text-base truncate transition-colors text-left cursor-pointer ${isActive
-        ? "bg-card-hover text-foreground font-semibold border-l-4 border-primary rounded-l-none pl-3"
-        : "text-muted-foreground hover:bg-card/50 hover:text-foreground"
+  const itemClass = useCallback(
+    (isActive: boolean) => {
+      if (isMobile) {
+        return `w-full flex items-center gap-3 px-4 py-3 h-12 rounded-lg text-base truncate transition-colors text-left cursor-pointer ${
+          isActive
+            ? "bg-card-hover text-foreground font-semibold border-l-4 border-primary rounded-l-none pl-3"
+            : "text-muted-foreground hover:bg-card/50 hover:text-foreground"
         }`;
-    }
-    return `w-full flex items-center gap-2 px-3 py-1 rounded-lg text-xs truncate transition-colors text-left cursor-pointer ${isActive
-      ? "bg-card-hover text-foreground font-medium border-l-2 border-primary rounded-l-none pl-2"
-      : "text-muted-foreground hover:bg-card/50 hover:text-foreground"
+      }
+      return `w-full flex items-center gap-2 px-3 py-1 rounded-lg text-xs truncate transition-colors text-left cursor-pointer ${
+        isActive
+          ? "bg-card-hover text-foreground font-medium border-l-2 border-primary rounded-l-none pl-2"
+          : "text-muted-foreground hover:bg-card/50 hover:text-foreground"
       }`;
-  }, [isMobile]);
+    },
+    [isMobile],
+  );
 
   const accordionHeaderClass = isMobile
     ? "group/title flex items-center px-4 py-3 h-12 text-sm uppercase tracking-wider font-semibold text-muted-foreground"
     : "group/title flex items-center px-3 py-1 text-xs uppercase tracking-wider font-semibold text-muted-foreground cursor-pointer";
 
-  const accordionButtonClass = "flex items-center gap-2 hover:text-foreground transition-colors cursor-pointer text-left";
+  const accordionButtonClass =
+    "flex items-center gap-2 hover:text-foreground transition-colors cursor-pointer text-left";
 
   const chevronSize = isMobile ? 20 : 16;
 
-  const factoryButtonClass = `${isMobile
-    ? "w-full flex items-center gap-3 px-4 py-3 h-12 rounded-lg text-base font-semibold transition-all cursor-pointer"
-    : "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer"
-    } ${isGlobal
+  const factoryButtonClass = `${
+    isMobile
+      ? "w-full flex items-center gap-3 px-4 py-3 h-12 rounded-lg text-base font-semibold transition-all cursor-pointer"
+      : "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+  } ${
+    isGlobal
       ? "bg-card text-primary border border-primary/30"
       : "bg-card/40 text-muted-foreground hover:bg-card hover:text-primary border border-transparent hover:border-primary/20"
-    }`;
+  }`;
 
-  const adminItemClass = useCallback((isActive: boolean) => {
-    if (isMobile) {
-      return `w-full flex items-center gap-3 px-4 py-3 h-12 rounded-lg text-base transition-colors cursor-pointer text-left ${isActive
-        ? "bg-card text-foreground font-semibold border-l-4 border-primary rounded-l-none pl-3"
-        : "text-muted-foreground hover:bg-card/50 hover:text-foreground"
+  const adminItemClass = useCallback(
+    (isActive: boolean) => {
+      if (isMobile) {
+        return `w-full flex items-center gap-3 px-4 py-3 h-12 rounded-lg text-base transition-colors cursor-pointer text-left ${
+          isActive
+            ? "bg-card text-foreground font-semibold border-l-4 border-primary rounded-l-none pl-3"
+            : "text-muted-foreground hover:bg-card/50 hover:text-foreground"
         }`;
-    }
-    return `w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-colors cursor-pointer text-left ${isActive
-      ? "bg-card text-foreground font-medium"
-      : "text-muted-foreground hover:bg-card/50 hover:text-foreground"
+      }
+      return `w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-colors cursor-pointer text-left ${
+        isActive
+          ? "bg-card text-foreground font-medium"
+          : "text-muted-foreground hover:bg-card/50 hover:text-foreground"
       }`;
-  }, [isMobile]);
+    },
+    [isMobile],
+  );
 
-  const [globalSettings, setGlobalSettings] = useState<{ factoryName?: string; factoryAvatarUrl?: string | null } | null>(null);
+  const [globalSettings, setGlobalSettings] = useState<{
+    factoryName?: string;
+    factoryAvatarUrl?: string | null;
+  } | null>(null);
 
   const fetchGlobalSettings = useCallback(async () => {
     try {
@@ -196,8 +211,6 @@ export function SessionSidebar({
     return () => window.removeEventListener("entity-updated", handleUpdate);
   }, [fetchRepos, fetchAgents, fetchTeams, fetchGlobalSettings]);
 
-
-
   const handleGoFactory = useCallback(() => {
     if (onSelectProject) onSelectProject(null, null);
     if (onSelectAgent) onSelectAgent(null);
@@ -211,7 +224,7 @@ export function SessionSidebar({
       if (onSelectProject) onSelectProject(projectId, projectName);
       onCloseSidebar?.();
     },
-    [onSelectProject, onCloseSidebar]
+    [onSelectProject, onCloseSidebar],
   );
 
   const handleSelectAgentClick = useCallback(
@@ -219,7 +232,7 @@ export function SessionSidebar({
       if (onSelectAgent) onSelectAgent(agent);
       onCloseSidebar?.();
     },
-    [onSelectAgent, onCloseSidebar]
+    [onSelectAgent, onCloseSidebar],
   );
 
   const handleSelectTeamClick = useCallback(
@@ -227,7 +240,7 @@ export function SessionSidebar({
       if (onSelectTeam) onSelectTeam(team);
       onCloseSidebar?.();
     },
-    [onSelectTeam, onCloseSidebar]
+    [onSelectTeam, onCloseSidebar],
   );
   const adminItems = useMemo(
     () => [
@@ -260,7 +273,16 @@ export function SessionSidebar({
         label: l.navPlugins || "Plugins",
         path: "/plugins",
         icon: (
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="m21 16-4 4-4-4" />
             <path d="M17 20V4" />
             <path d="m3 8 4-4 4 4" />
@@ -269,18 +291,20 @@ export function SessionSidebar({
         ),
       },
     ],
-    [l.navSkills, l.navSettings, l.navPlugins]
+    [l.navSkills, l.navSettings, l.navPlugins],
   );
 
   return (
     <div className="flex flex-col h-full bg-background select-none text-foreground">
       {/* Spaces Button */}
-      <div className={isMobile ? "p-4 border-b border-border flex-shrink-0" : "p-3 border-b border-border flex-shrink-0"}>
-        <button
-          onClick={handleGoFactory}
-          className={factoryButtonClass}
-          title={l.globalWorkspace}
-        >
+      <div
+        className={
+          isMobile
+            ? "p-4 border-b border-border flex-shrink-0"
+            : "p-3 border-b border-border flex-shrink-0"
+        }
+      >
+        <button onClick={handleGoFactory} className={factoryButtonClass} title={l.globalWorkspace}>
           {globalSettings?.factoryAvatarUrl ? (
             <AgentAvatar
               name={globalSettings.factoryName || "Spaces"}
@@ -289,7 +313,13 @@ export function SessionSidebar({
               className="flex-shrink-0 rounded-full"
             />
           ) : (
-            <svg width={isMobile ? 20 : 14} height={isMobile ? 20 : 14} viewBox="0 0 20 20" fill="currentColor" className="flex-shrink-0">
+            <svg
+              width={isMobile ? 20 : 14}
+              height={isMobile ? 20 : 14}
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="flex-shrink-0"
+            >
               <path
                 fillRule="evenodd"
                 d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-5L9 4H4zm7 5a1 1 0 10-2 0v1H8a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V9z"
@@ -302,7 +332,13 @@ export function SessionSidebar({
       </div>
 
       {/* Context List Accordions */}
-      <div className={isMobile ? "flex-1 overflow-y-auto min-h-0 py-3 space-y-4" : "flex-1 overflow-y-auto min-h-0 py-2 space-y-3"}>
+      <div
+        className={
+          isMobile
+            ? "flex-1 overflow-y-auto min-h-0 py-3 space-y-4"
+            : "flex-1 overflow-y-auto min-h-0 py-2 space-y-3"
+        }
+      >
         {/* Repos Accordion */}
         <div className="flex flex-col">
           <div className={accordionHeaderClass} onClick={() => setIsOpenRepos((prev) => !prev)}>
@@ -327,9 +363,21 @@ export function SessionSidebar({
               }}
               className={`${accordionButtonClass}`}
             >
-              <span className="ml-2">{l.sectionProjects} ({repos.length})</span>
-              <svg width={isMobile ? 20 : 12} height={isMobile ? 20 : 12} viewBox="0 0 20 20" fill="currentColor" className="text-muted-foreground flex-shrink-0">
-                <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+              <span className="ml-2">
+                {l.sectionProjects} ({repos.length})
+              </span>
+              <svg
+                width={isMobile ? 20 : 12}
+                height={isMobile ? 20 : 12}
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="text-muted-foreground flex-shrink-0"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
               </svg>
             </button>
           </div>
@@ -337,7 +385,9 @@ export function SessionSidebar({
           {isOpenRepos && (
             <div className={isMobile ? "px-3 mt-1 space-y-1.5" : "px-2 mt-1 space-y-0.5"}>
               {loadingRepos ? (
-                <div className="text-xs text-muted-foreground px-3 py-1 animate-pulse">{l.loading}</div>
+                <div className="text-xs text-muted-foreground px-3 py-1 animate-pulse">
+                  {l.loading}
+                </div>
               ) : repos.length === 0 ? (
                 <div className="text-xs text-muted-foreground px-3 py-1">{l.noProjects}</div>
               ) : (
@@ -389,9 +439,21 @@ export function SessionSidebar({
               }}
               className={`${accordionButtonClass}`}
             >
-              <span className="ml-2">{l.sectionAgents} ({agents.length})</span>
-              <svg width={isMobile ? 20 : 12} height={isMobile ? 20 : 12} viewBox="0 0 20 20" fill="currentColor" className="text-muted-foreground flex-shrink-0">
-                <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+              <span className="ml-2">
+                {l.sectionAgents} ({agents.length})
+              </span>
+              <svg
+                width={isMobile ? 20 : 12}
+                height={isMobile ? 20 : 12}
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="text-muted-foreground flex-shrink-0"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
               </svg>
             </button>
           </div>
@@ -399,7 +461,9 @@ export function SessionSidebar({
           {isOpenAgents && (
             <div className={isMobile ? "px-3 mt-1 space-y-1.5" : "px-2 mt-1 space-y-0.5"}>
               {loadingAgents ? (
-                <div className="text-xs text-muted-foreground px-3 py-1 animate-pulse">{l.loading}</div>
+                <div className="text-xs text-muted-foreground px-3 py-1 animate-pulse">
+                  {l.loading}
+                </div>
               ) : agents.length === 0 ? (
                 <div className="text-xs text-muted-foreground px-3 py-1">{l.noAgents}</div>
               ) : (
@@ -415,12 +479,24 @@ export function SessionSidebar({
                   return (
                     <button
                       key={agent.id}
-                      onClick={() => handleSelectAgentClick({ id: agent.id, name: agent.name, avatarUrl: agent.avatarUrl })}
+                      onClick={() =>
+                        handleSelectAgentClick({
+                          id: agent.id,
+                          name: agent.name,
+                          avatarUrl: agent.avatarUrl,
+                        })
+                      }
                       className={itemClass(isActive)}
                     >
                       <span className="relative flex-shrink-0">
-                        <AgentAvatar name={agent.name} avatarUrl={agent.avatarUrl} size={isMobile ? "sm" : "xs"} />
-                        <span className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border-2 border-background ${statusDot}`} />
+                        <AgentAvatar
+                          name={agent.name}
+                          avatarUrl={agent.avatarUrl}
+                          size={isMobile ? "sm" : "xs"}
+                        />
+                        <span
+                          className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border-2 border-background ${statusDot}`}
+                        />
                       </span>
                       <span className="truncate">{agent.name}</span>
                     </button>
@@ -455,9 +531,21 @@ export function SessionSidebar({
               }}
               className={`${accordionButtonClass}`}
             >
-              <span className="ml-2">{l.sectionTeams} ({teams.length})</span>
-              <svg width={isMobile ? 20 : 12} height={isMobile ? 20 : 12} viewBox="0 0 20 20" fill="currentColor" className="text-muted-foreground flex-shrink-0">
-                <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+              <span className="ml-2">
+                {l.sectionTeams} ({teams.length})
+              </span>
+              <svg
+                width={isMobile ? 20 : 12}
+                height={isMobile ? 20 : 12}
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="text-muted-foreground flex-shrink-0"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
               </svg>
             </button>
           </div>
@@ -465,7 +553,9 @@ export function SessionSidebar({
           {isOpenTeams && (
             <div className={isMobile ? "px-3 mt-1 space-y-1.5" : "px-2 mt-1 space-y-0.5"}>
               {loadingTeams ? (
-                <div className="text-xs text-muted-foreground px-3 py-1 animate-pulse">{l.loading}</div>
+                <div className="text-xs text-muted-foreground px-3 py-1 animate-pulse">
+                  {l.loading}
+                </div>
               ) : teams.length === 0 ? (
                 <div className="text-xs text-muted-foreground px-3 py-1">{l.noTeams}</div>
               ) : (
@@ -474,7 +564,13 @@ export function SessionSidebar({
                   return (
                     <button
                       key={team.id}
-                      onClick={() => handleSelectTeamClick({ id: team.id, name: team.name, avatarUrl: team.avatarUrl })}
+                      onClick={() =>
+                        handleSelectTeamClick({
+                          id: team.id,
+                          name: team.name,
+                          avatarUrl: team.avatarUrl,
+                        })
+                      }
                       className={itemClass(isActive)}
                     >
                       <EntityAvatar

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-import { expect, test, describe, beforeEach } from "bun:test";
-import { delegationRegistry } from "../core/delegation-registry";
+import { beforeEach, describe, expect, test } from "bun:test";
 import { AbortToken } from "../core/abort-token";
+import { delegationRegistry } from "../core/delegation-registry";
 
 describe("AbortToken System", () => {
   test("runs registered callbacks in LIFO order", () => {
@@ -9,9 +9,15 @@ describe("AbortToken System", () => {
     const token = new AbortToken(parentController.signal, "test-root");
 
     const order: number[] = [];
-    token.register(() => { order.push(1); }, "first");
-    token.register(() => { order.push(2); }, "second");
-    token.register(() => { order.push(3); }, "third");
+    token.register(() => {
+      order.push(1);
+    }, "first");
+    token.register(() => {
+      order.push(2);
+    }, "second");
+    token.register(() => {
+      order.push(3);
+    }, "third");
 
     token.abortAll();
 
@@ -24,7 +30,9 @@ describe("AbortToken System", () => {
     token.abortAll();
 
     let run = false;
-    token.register(() => { run = true; }, "immediate");
+    token.register(() => {
+      run = true;
+    }, "immediate");
 
     expect(run).toBe(true);
   });
@@ -32,7 +40,9 @@ describe("AbortToken System", () => {
   test("abortAll is idempotent", () => {
     const token = new AbortToken(undefined, "test-root");
     let count = 0;
-    token.register(() => { count++; }, "count");
+    token.register(() => {
+      count++;
+    }, "count");
 
     token.abortAll();
     token.abortAll();
@@ -45,7 +55,9 @@ describe("AbortToken System", () => {
     const token = new AbortToken(parentController.signal, "test-root");
 
     let run = false;
-    token.register(() => { run = true; }, "child");
+    token.register(() => {
+      run = true;
+    }, "child");
 
     parentController.abort();
 
@@ -80,7 +92,9 @@ describe("DelegationRegistry BFS Recursive Cancellation", () => {
         startedAt: new Date().toISOString(),
         subagentSessionId: "session-sub1",
       },
-      () => { aborted1 = true; }
+      () => {
+        aborted1 = true;
+      },
     );
 
     // Nivel 2: sub_1 -> sub_1_1
@@ -97,7 +111,9 @@ describe("DelegationRegistry BFS Recursive Cancellation", () => {
         startedAt: new Date().toISOString(),
         subagentSessionId: "session-sub1-1",
       },
-      () => { aborted2 = true; }
+      () => {
+        aborted2 = true;
+      },
     );
 
     // Nivel 3: sub_1_1 -> sub_1_1_1
@@ -114,7 +130,9 @@ describe("DelegationRegistry BFS Recursive Cancellation", () => {
         startedAt: new Date().toISOString(),
         subagentSessionId: "session-sub1-1-1",
       },
-      () => { aborted3 = true; }
+      () => {
+        aborted3 = true;
+      },
     );
 
     // Abortar recursivamente desde la raíz "session-A"
@@ -143,7 +161,9 @@ describe("DelegationRegistry BFS Recursive Cancellation", () => {
         startedAt: new Date().toISOString(),
         subagentSessionId: "session-subA",
       },
-      () => { abortedA = true; }
+      () => {
+        abortedA = true;
+      },
     );
 
     // Rama B
@@ -160,7 +180,9 @@ describe("DelegationRegistry BFS Recursive Cancellation", () => {
         startedAt: new Date().toISOString(),
         subagentSessionId: "session-subB",
       },
-      () => { abortedB = true; }
+      () => {
+        abortedB = true;
+      },
     );
 
     // Cancelar rama A
@@ -184,7 +206,7 @@ describe("DelegationRegistry BFS Recursive Cancellation", () => {
         startedAt: new Date().toISOString(),
         subagentSessionId: "session-sub1",
       },
-      () => {}
+      () => {},
     );
 
     expect(() => {

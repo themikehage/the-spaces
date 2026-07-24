@@ -1,37 +1,40 @@
 // SPDX-License-Identifier: MIT
-import { apiFetch } from "@/lib/api";
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useAgents } from "@/hooks/useAgents";
-import { ConfirmModal } from "@/components/ui/ConfirmModal";
-import { AgentAvatar } from "@/components/shared/AgentAvatar";
 import { RegisterModal } from "@/components/agents/RegisterModal";
-import type { AgentDefinition, AgentInfo } from "shared";
-import { useLiterals } from "@/lib";
-import { literals as u } from "./AgentsPage.literals";
-import { Button } from "@/components/ui/Button";
-import { useToast } from "@/contexts/ToastContext";
 import { AuthenticatedImage } from "@/components/chat/ImageGrid";
+import { AgentAvatar } from "@/components/shared/AgentAvatar";
+import { Button } from "@/components/ui/Button";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { useToast } from "@/contexts/ToastContext";
+import { useAgents } from "@/hooks/useAgents";
+import { useLiterals } from "@/lib";
+import { apiFetch } from "@/lib/api";
+import { AnimatePresence, motion } from "framer-motion";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { AgentDefinition, AgentInfo } from "shared";
+import { literals as u } from "./AgentsPage.literals";
 
 const STATUS_COLORS: Record<string, string> = {
   starting: "text-warning bg-warning/10 border-warning/30",
   idle: "text-primary bg-primary/10 border-primary/30",
   streaming: "text-blue-400 bg-blue-400/10 border-blue-400/30",
   error: "text-destructive bg-destructive/10 border-error/30",
-  stopped: "text-muted-foreground bg-card border-input"};
+  stopped: "text-muted-foreground bg-card border-input",
+};
 
 const STATUS_DOT: Record<string, string> = {
   starting: "bg-warning animate-pulse",
   idle: "bg-primary",
   streaming: "bg-blue-400 animate-pulse",
   error: "bg-destructive",
-  stopped: "bg-text-secondary"};
+  stopped: "bg-text-secondary",
+};
 
 const ROLE_COLORS: Record<string, string> = {
   "web-builder": "text-purple-400 bg-purple-400/10 border-purple-400/20",
   researcher: "text-sky-400 bg-sky-400/10 border-sky-400/20",
   supervisor: "text-amber-400 bg-amber-400/10 border-amber-400/20",
-  default: "text-muted-foreground bg-card border-input"};
+  default: "text-muted-foreground bg-card border-input",
+};
 
 function roleColor(role: string) {
   return ROLE_COLORS[role] ?? ROLE_COLORS.default;
@@ -41,7 +44,8 @@ function AgentCard({
   agent,
   onDelete,
   onChat,
-  onExecutions}: {
+  onExecutions,
+}: {
   agent: AgentInfo;
   onDelete: (id: string) => void;
   onChat: (agent: { id: string; name: string; avatarUrl?: string }) => void;
@@ -74,21 +78,23 @@ function AgentCard({
       transition={{ duration: 0.2 }}
       className="bg-card border border-input rounded-xl p-4 flex flex-col gap-3 hover:border-primary/20 transition-colors"
     >
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <AgentAvatar name={agent.name} avatarUrl={agent.avatarUrl} size="md" />
-            <div className="min-w-0">
-              <p className="font-medium text-foreground text-sm truncate">{agent.name}</p>
-              <p className="text-muted-foreground text-xs font-mono truncate">{agent.id}</p>
-            </div>
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <AgentAvatar name={agent.name} avatarUrl={agent.avatarUrl} size="md" />
+          <div className="min-w-0">
+            <p className="font-medium text-foreground text-sm truncate">{agent.name}</p>
+            <p className="text-muted-foreground text-xs font-mono truncate">{agent.id}</p>
           </div>
+        </div>
         <span
           className={`text-xs font-medium px-2 py-0.5 rounded-full border flex-shrink-0 ${
             STATUS_COLORS[agent.status] ?? STATUS_COLORS.stopped
           }`}
         >
           <span className="flex items-center gap-1">
-            <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[agent.status] ?? "bg-text-secondary"}`} />
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[agent.status] ?? "bg-text-secondary"}`}
+            />
             {agent.status}
           </span>
         </span>
@@ -150,7 +156,8 @@ function BlueprintDetailModal({
   onClose,
   onInstall,
   isInstalled,
-  installing}: {
+  installing,
+}: {
   blueprint: any;
   onClose: () => void;
   onInstall: (id: string) => Promise<void>;
@@ -186,11 +193,10 @@ function BlueprintDetailModal({
               </div>
             )}
             <div>
-              <h2 className="text-sm font-semibold text-foreground">
-                {blueprint.metadata.title}
-              </h2>
+              <h2 className="text-sm font-semibold text-foreground">{blueprint.metadata.title}</h2>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {blueprint.type === "agent" ? l.filterAgents : l.filterChannels} • {l.version} {blueprint.metadata.version}
+                {blueprint.type === "agent" ? l.filterAgents : l.filterChannels} • {l.version}{" "}
+                {blueprint.metadata.version}
               </p>
             </div>
           </div>
@@ -199,7 +205,11 @@ function BlueprintDetailModal({
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-card-hover transition-colors"
           >
             <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 11-1.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              <path
+                fillRule="evenodd"
+                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 11-1.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              />
             </svg>
           </button>
         </div>
@@ -219,9 +229,7 @@ function BlueprintDetailModal({
               <span className="text-muted-foreground text-[10px] uppercase font-semibold tracking-wider">
                 {l.author}
               </span>
-              <span className="text-foreground font-medium mt-1">
-                {blueprint.metadata.author}
-              </span>
+              <span className="text-foreground font-medium mt-1">{blueprint.metadata.author}</span>
             </div>
             {blueprint.metadata.compatibility && (
               <div className="bg-background/50 border border-input rounded-xl p-3 flex flex-col">
@@ -244,7 +252,10 @@ function BlueprintDetailModal({
                   </h3>
                   <div className="flex flex-wrap gap-1.5">
                     {blueprint.definition.skills.map((s: string) => (
-                      <span key={s} className="px-2.5 py-1 bg-primary/10 border border-primary/20 text-primary rounded-lg font-medium text-[11px]">
+                      <span
+                        key={s}
+                        className="px-2.5 py-1 bg-primary/10 border border-primary/20 text-primary rounded-lg font-medium text-[11px]"
+                      >
                         {s}
                       </span>
                     ))}
@@ -305,7 +316,10 @@ function BlueprintDetailModal({
                   </h3>
                   <div className="space-y-1.5">
                     {blueprint.definition.members.map((m: any) => (
-                      <div key={m.agentId} className="flex items-center justify-between p-2.5 rounded-xl border border-input bg-background/50">
+                      <div
+                        key={m.agentId}
+                        className="flex items-center justify-between p-2.5 rounded-xl border border-input bg-background/50"
+                      >
                         <div className="flex items-center gap-2">
                           <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-[10px] border border-primary/20">
                             {m.agentId.slice(0, 2).toUpperCase()}
@@ -320,7 +334,8 @@ function BlueprintDetailModal({
                           </div>
                         </div>
                         <span className="text-[10px] text-muted-foreground font-medium">
-                          {l.replyModeTitle}: <strong className="text-foreground">{m.replyMode}</strong>
+                          {l.replyModeTitle}:{" "}
+                          <strong className="text-foreground">{m.replyMode}</strong>
                         </span>
                       </div>
                     ))}
@@ -335,7 +350,10 @@ function BlueprintDetailModal({
                   </h3>
                   <div className="space-y-1">
                     {blueprint.definition.context.map((ctx: any) => (
-                      <div key={ctx.key} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-background border border-input font-mono text-[10px]">
+                      <div
+                        key={ctx.key}
+                        className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-background border border-input font-mono text-[10px]"
+                      >
                         <span className="text-primary font-semibold">{ctx.key}:</span>
                         <span className="text-muted-foreground">{ctx.value}</span>
                       </div>
@@ -353,7 +371,10 @@ function BlueprintDetailModal({
               </h3>
               <div className="flex flex-wrap gap-1">
                 {blueprint.metadata.tags.map((t: string) => (
-                  <span key={t} className="text-[9px] bg-background/50 border border-input px-2 py-0.5 rounded-md text-muted-foreground font-medium">
+                  <span
+                    key={t}
+                    className="text-[9px] bg-background/50 border border-input px-2 py-0.5 rounded-md text-muted-foreground font-medium"
+                  >
                     {t}
                   </span>
                 ))}
@@ -389,9 +410,21 @@ interface AgentsPageProps {
 export function AgentsPage({ onSelectAgent }: AgentsPageProps) {
   const l = useLiterals(u);
   const { addToast } = useToast();
-  const { agents, loading, error, fetchAgents, registerAgent, stopAgent, uploadAvatar, deleteAvatar } = useAgents();
+  const {
+    agents,
+    loading,
+    error,
+    fetchAgents,
+    registerAgent,
+    stopAgent,
+    uploadAvatar,
+    deleteAvatar,
+  } = useAgents();
   const [showRegister, setShowRegister] = useState(false);
-  const [selectedAgentForExecutions, setSelectedAgentForExecutions] = useState<{ id: string; name: string } | null>(null);
+  const [selectedAgentForExecutions, setSelectedAgentForExecutions] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   // Gallery-specific state
   const [activeTab, setActiveTab] = useState<"my-agents" | "gallery">("my-agents");
@@ -438,26 +471,33 @@ export function AgentsPage({ onSelectAgent }: AgentsPageProps) {
     }
   }, [activeTab, fetchBlueprints, fetchTeams]);
 
-  const handleInstall = useCallback(async (bpId: string) => {
-    setInstallingId(bpId);
-    try {
-      const res = await apiFetch(`/api/gallery/blueprints/${bpId}/install`, {
-        method: "POST"});
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to install");
-      
-      addToast("success", data.type === "agent" ? l.installSuccessAgent : l.installSuccessChannel);
-      
-      await fetchAgents();
-      await fetchTeams();
-      window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: data.type } }));
-    } catch (err: any) {
-      console.error(err);
-      addToast("error", err.message || l.installError);
-    } finally {
-      setInstallingId(null);
-    }
-  }, [fetchAgents, fetchTeams, addToast, l]);
+  const handleInstall = useCallback(
+    async (bpId: string) => {
+      setInstallingId(bpId);
+      try {
+        const res = await apiFetch(`/api/gallery/blueprints/${bpId}/install`, {
+          method: "POST",
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to install");
+
+        addToast(
+          "success",
+          data.type === "agent" ? l.installSuccessAgent : l.installSuccessChannel,
+        );
+
+        await fetchAgents();
+        await fetchTeams();
+        window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: data.type } }));
+      } catch (err: any) {
+        console.error(err);
+        addToast("error", err.message || l.installError);
+      } finally {
+        setInstallingId(null);
+      }
+    },
+    [fetchAgents, fetchTeams, addToast, l],
+  );
 
   const handleRegisterOrUpdate = async (def: AgentDefinition) => {
     await registerAgent(def);
@@ -468,13 +508,15 @@ export function AgentsPage({ onSelectAgent }: AgentsPageProps) {
       const matchesSearch =
         bp.metadata.title.toLowerCase().includes(gallerySearch.toLowerCase()) ||
         bp.metadata.description.toLowerCase().includes(gallerySearch.toLowerCase()) ||
-        bp.metadata.tags.some((tag: string) => tag.toLowerCase().includes(gallerySearch.toLowerCase()));
-      
+        bp.metadata.tags.some((tag: string) =>
+          tag.toLowerCase().includes(gallerySearch.toLowerCase()),
+        );
+
       const matchesType =
         galleryFilter === "all" ||
         (galleryFilter === "agent" && bp.type === "agent") ||
         (galleryFilter === "team" && bp.type === "team");
-      
+
       return matchesSearch && matchesType;
     });
   }, [blueprints, gallerySearch, galleryFilter]);
@@ -484,9 +526,7 @@ export function AgentsPage({ onSelectAgent }: AgentsPageProps) {
       <div className="flex items-center justify-between px-6 py-5 border-b border-border flex-shrink-0">
         <div>
           <h1 className="text-base font-semibold text-foreground">{l.pageTitle}</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {l.pageSubtitle}
-          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">{l.pageSubtitle}</p>
         </div>
         <div className="flex items-center gap-2">
           {activeTab === "my-agents" ? (
@@ -497,7 +537,11 @@ export function AgentsPage({ onSelectAgent }: AgentsPageProps) {
                 title={l.refresh}
               >
                 <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                  <path
+                    fillRule="evenodd"
+                    d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </button>
               <button
@@ -507,7 +551,11 @@ export function AgentsPage({ onSelectAgent }: AgentsPageProps) {
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-primary text-background rounded-lg hover:bg-primary/90 transition-colors"
               >
                 <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                  <path
+                    fillRule="evenodd"
+                    d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 Register Agent
               </button>
@@ -519,7 +567,11 @@ export function AgentsPage({ onSelectAgent }: AgentsPageProps) {
               title={l.refresh}
             >
               <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+                  clipRule="evenodd"
+                />
               </svg>
             </button>
           )}
@@ -560,8 +612,18 @@ export function AgentsPage({ onSelectAgent }: AgentsPageProps) {
 
             {!loading && error && (
               <div className="flex flex-col items-center justify-center h-32 text-destructive text-sm gap-2">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" className="opacity-60">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="opacity-60"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 {error}
               </div>
@@ -570,7 +632,13 @@ export function AgentsPage({ onSelectAgent }: AgentsPageProps) {
             {!loading && !error && agents.length === 0 && (
               <div className="flex flex-col items-center justify-center h-48 text-muted-foreground gap-3">
                 <div className="w-12 h-12 rounded-2xl bg-card border border-input flex items-center justify-center">
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" className="text-muted-foreground">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    className="text-muted-foreground"
+                  >
                     <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
                   </svg>
                 </div>
@@ -736,7 +804,8 @@ export function AgentsPage({ onSelectAgent }: AgentsPageProps) {
 
                       <div className="flex items-center justify-between border-t border-input pt-3 mt-1 gap-2">
                         <span className="text-[10px] text-muted-foreground">
-                          {l.author}: <strong className="text-foreground">{item.metadata.author}</strong>
+                          {l.author}:{" "}
+                          <strong className="text-foreground">{item.metadata.author}</strong>
                         </span>
                         <div className="flex gap-1.5">
                           <button
@@ -756,8 +825,10 @@ export function AgentsPage({ onSelectAgent }: AgentsPageProps) {
                           >
                             {installingId === item.id ? (
                               <div className="w-2.5 h-2.5 border border-background border-t-transparent rounded-full animate-spin" />
+                            ) : isInstalled ? (
+                              l.installed
                             ) : (
-                              isInstalled ? l.installed : l.install
+                              l.install
                             )}
                           </button>
                         </div>
@@ -801,8 +872,12 @@ export function AgentsPage({ onSelectAgent }: AgentsPageProps) {
             onInstall={handleInstall}
             isInstalled={
               selectedBlueprint.type === "agent"
-                ? agents.some((a) => a.blueprintId === selectedBlueprint.id || a.id === selectedBlueprint.id)
-                : teams.some((c) => c.blueprintId === selectedBlueprint.id || c.id === selectedBlueprint.id)
+                ? agents.some(
+                    (a) => a.blueprintId === selectedBlueprint.id || a.id === selectedBlueprint.id,
+                  )
+                : teams.some(
+                    (c) => c.blueprintId === selectedBlueprint.id || c.id === selectedBlueprint.id,
+                  )
             }
             installing={installingId === selectedBlueprint.id}
           />
@@ -814,7 +889,8 @@ export function AgentsPage({ onSelectAgent }: AgentsPageProps) {
 
 function ExecutionsModal({
   agent,
-  onClose}: {
+  onClose,
+}: {
   agent: { id: string; name: string };
   onClose: () => void;
 }) {
@@ -876,7 +952,9 @@ function ExecutionsModal({
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-input flex-shrink-0">
           <div>
-            <h2 className="text-sm font-semibold text-foreground">{l.execTitle}: {agent.name}</h2>
+            <h2 className="text-sm font-semibold text-foreground">
+              {l.execTitle}: {agent.name}
+            </h2>
             <p className="text-xs text-muted-foreground mt-0.5">{l.execSubtitle}</p>
           </div>
           <button
@@ -884,7 +962,11 @@ function ExecutionsModal({
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-card-hover transition-colors"
           >
             <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 11-1.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              <path
+                fillRule="evenodd"
+                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 11-1.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              />
             </svg>
           </button>
         </div>
@@ -897,46 +979,58 @@ function ExecutionsModal({
                 <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
               </div>
             )}
-            {!loading && error && (
-              <p className="text-xs text-destructive p-3">{error}</p>
-            )}
+            {!loading && error && <p className="text-xs text-destructive p-3">{error}</p>}
             {!loading && !error && executions.length === 0 && (
               <p className="text-xs text-muted-foreground p-3 text-center">{l.noExecutions}</p>
             )}
-            {!loading && !error && executions.map((exec) => (
-              <button
-                key={exec.id}
-                onClick={() => handleSelectExec(exec)}
-                className={`text-left p-3 rounded-xl border text-xs flex flex-col gap-1 transition-all ${
-                  selectedExec?.id === exec.id
-                    ? "bg-primary/10 border-primary/30 text-foreground"
-                    : "bg-card border-input text-muted-foreground hover:border-input/80 hover:text-foreground"
-                }`}
-              >
-                <div className="flex justify-between items-center w-full">
-                  <span className="font-mono text-xs text-muted-foreground">
-                    {exec.id.slice(0, 8)}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {new Date(exec.createdAt).toLocaleTimeString()}
-                  </span>
-                </div>
-                <p className="font-medium text-foreground truncate w-full mt-0.5">{exec.prompt}</p>
-                <div className="flex gap-2 text-xs text-muted-foreground mt-1">
-                  <span>{(exec.durationMs / 1000).toFixed(1)}s</span>
-                  {exec.errors && exec.errors.length > 0 && (
-                    <span className="text-destructive font-medium">⚠️ {exec.errors.length} {l.errors}</span>
-                  )}
-                </div>
-              </button>
-            ))}
+            {!loading &&
+              !error &&
+              executions.map((exec) => (
+                <button
+                  key={exec.id}
+                  onClick={() => handleSelectExec(exec)}
+                  className={`text-left p-3 rounded-xl border text-xs flex flex-col gap-1 transition-all ${
+                    selectedExec?.id === exec.id
+                      ? "bg-primary/10 border-primary/30 text-foreground"
+                      : "bg-card border-input text-muted-foreground hover:border-input/80 hover:text-foreground"
+                  }`}
+                >
+                  <div className="flex justify-between items-center w-full">
+                    <span className="font-mono text-xs text-muted-foreground">
+                      {exec.id.slice(0, 8)}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(exec.createdAt).toLocaleTimeString()}
+                    </span>
+                  </div>
+                  <p className="font-medium text-foreground truncate w-full mt-0.5">
+                    {exec.prompt}
+                  </p>
+                  <div className="flex gap-2 text-xs text-muted-foreground mt-1">
+                    <span>{(exec.durationMs / 1000).toFixed(1)}s</span>
+                    {exec.errors && exec.errors.length > 0 && (
+                      <span className="text-destructive font-medium">
+                        ⚠️ {exec.errors.length} {l.errors}
+                      </span>
+                    )}
+                  </div>
+                </button>
+              ))}
           </div>
 
           {/* Details Pane */}
           <div className="flex-1 overflow-y-auto p-5 bg-card flex flex-col gap-4">
             {!selectedExec && (
               <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mb-2">
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="mb-2"
+                >
                   <circle cx="12" cy="12" r="10" />
                   <path d="M12 16v-4" />
                   <path d="M12 8h.01" />
@@ -948,7 +1042,9 @@ function ExecutionsModal({
             {selectedExec && (
               <>
                 <div>
-                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{l.prompt}</h3>
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    {l.prompt}
+                  </h3>
                   <p className="text-sm font-medium text-foreground bg-background p-3 rounded-lg border border-input mt-1.5 leading-relaxed">
                     {selectedExec.prompt}
                   </p>
@@ -967,13 +1063,18 @@ function ExecutionsModal({
                       <div className="bg-background/50 border border-input rounded-xl p-3 flex flex-col">
                         <span className="text-xs text-muted-foreground">{l.execDuration}</span>
                         <span className="text-sm font-semibold text-foreground mt-0.5">
-                          {(execDetail.durationMs / 1000).toFixed(2)}{l.seconds}
+                          {(execDetail.durationMs / 1000).toFixed(2)}
+                          {l.seconds}
                         </span>
                       </div>
                       <div className="bg-background/50 border border-input rounded-xl p-3 flex flex-col">
                         <span className="text-xs text-muted-foreground">{l.execStatus}</span>
-                        <span className={`text-sm font-semibold mt-0.5 ${execDetail.errors?.length > 0 ? "text-destructive" : "text-primary"}`}>
-                          {execDetail.errors?.length > 0 ? `${execDetail.errors.length} {l.errors}` : "{l.success}"}
+                        <span
+                          className={`text-sm font-semibold mt-0.5 ${execDetail.errors?.length > 0 ? "text-destructive" : "text-primary"}`}
+                        >
+                          {execDetail.errors?.length > 0
+                            ? `${execDetail.errors.length} {l.errors}`
+                            : "{l.success}"}
                         </span>
                       </div>
                     </div>
@@ -994,34 +1095,51 @@ function ExecutionsModal({
 
                     {/* Tool Calls */}
                     <div>
-                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{l.executedTools}</h4>
-                      {(!execDetail.toolCalls || execDetail.toolCalls.length === 0) ? (
+                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                        {l.executedTools}
+                      </h4>
+                      {!execDetail.toolCalls || execDetail.toolCalls.length === 0 ? (
                         <p className="text-xs text-muted-foreground italic">{l.noTools}</p>
                       ) : (
                         <div className="flex flex-col gap-2">
                           {execDetail.toolCalls.map((tc: any, i: number) => (
-                            <details key={i} className="border border-input rounded-xl bg-background/30 overflow-hidden text-xs">
+                            <details
+                              key={i}
+                              className="border border-input rounded-xl bg-background/30 overflow-hidden text-xs"
+                            >
                               <summary className="p-3 font-mono font-medium hover:bg-card-hover cursor-pointer flex justify-between items-center select-none text-foreground">
                                 <div className="flex items-center gap-2">
-                                  <span className={tc.isError ? "text-destructive" : "text-primary"}>●</span>
+                                  <span
+                                    className={tc.isError ? "text-destructive" : "text-primary"}
+                                  >
+                                    ●
+                                  </span>
                                   <span>{tc.name}</span>
                                 </div>
                                 <span className="text-xs text-muted-foreground font-sans">
-                                  {tc.endedAt ? `${((new Date(tc.endedAt).getTime() - new Date(tc.startedAt).getTime()) / 1000).toFixed(2)}s` : "{l.running}"}
+                                  {tc.endedAt
+                                    ? `${((new Date(tc.endedAt).getTime() - new Date(tc.startedAt).getTime()) / 1000).toFixed(2)}s`
+                                    : "{l.running}"}
                                 </span>
                               </summary>
                               <div className="p-4 border-t border-input bg-background/50 flex flex-col gap-3 font-mono">
                                 <div>
-                                  <span className="text-xs text-muted-foreground uppercase block mb-1">{l.arguments}</span>
+                                  <span className="text-xs text-muted-foreground uppercase block mb-1">
+                                    {l.arguments}
+                                  </span>
                                   <pre className="text-xs bg-background p-2.5 rounded-lg overflow-x-auto text-foreground max-h-40">
                                     {JSON.stringify(tc.args, null, 2)}
                                   </pre>
                                 </div>
                                 {tc.result && (
                                   <div>
-                                    <span className="text-xs text-muted-foreground uppercase block mb-1">{l.result}</span>
+                                    <span className="text-xs text-muted-foreground uppercase block mb-1">
+                                      {l.result}
+                                    </span>
                                     <pre className="text-xs bg-background p-2.5 rounded-lg overflow-x-auto text-foreground max-h-60 whitespace-pre-wrap">
-                                      {typeof tc.result === "string" ? tc.result : JSON.stringify(tc.result, null, 2)}
+                                      {typeof tc.result === "string"
+                                        ? tc.result
+                                        : JSON.stringify(tc.result, null, 2)}
                                     </pre>
                                   </div>
                                 )}
@@ -1034,18 +1152,27 @@ function ExecutionsModal({
 
                     {/* Message Logs */}
                     <div>
-                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{l.sessionMessages}</h4>
+                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                        {l.sessionMessages}
+                      </h4>
                       <div className="flex flex-col gap-2 border border-input rounded-xl p-3 bg-background/20">
-                        {execDetail.messages?.filter((m: any) => m.role !== "system").map((m: any, i: number) => (
-                          <div key={i} className={`p-2.5 rounded-lg text-xs leading-relaxed ${m.role === "user" ? "bg-primary/5 ml-8 border border-primary/10" : "bg-card-hover mr-8 border border-input"}`}>
-                            <div className="font-semibold text-foreground mb-1 uppercase tracking-wider text-xs text-muted-foreground">
-                              {m.role}
+                        {execDetail.messages
+                          ?.filter((m: any) => m.role !== "system")
+                          .map((m: any, i: number) => (
+                            <div
+                              key={i}
+                              className={`p-2.5 rounded-lg text-xs leading-relaxed ${m.role === "user" ? "bg-primary/5 ml-8 border border-primary/10" : "bg-card-hover mr-8 border border-input"}`}
+                            >
+                              <div className="font-semibold text-foreground mb-1 uppercase tracking-wider text-xs text-muted-foreground">
+                                {m.role}
+                              </div>
+                              <div className="whitespace-pre-wrap text-foreground font-mono text-[11px] leading-normal bg-background/30 p-1.5 rounded border border-input/30 mt-1">
+                                {typeof m.content === "string"
+                                  ? m.content
+                                  : JSON.stringify(m.content)}
+                              </div>
                             </div>
-                            <div className="whitespace-pre-wrap text-foreground font-mono text-[11px] leading-normal bg-background/30 p-1.5 rounded border border-input/30 mt-1">
-                              {typeof m.content === "string" ? m.content : JSON.stringify(m.content)}
-                            </div>
-                          </div>
-                        ))}
+                          ))}
                       </div>
                     </div>
                   </>

@@ -6,14 +6,20 @@ export interface FunctionToolConfig<T = Record<string, unknown>> {
   description: string;
   schema?: unknown;
   parameters?: Record<string, unknown>;
-  execute: (args: T, signal?: AbortSignal) => Promise<ToolResult | string | Record<string, unknown>>;
+  execute: (
+    args: T,
+    signal?: AbortSignal,
+  ) => Promise<ToolResult | string | Record<string, unknown>>;
 }
 
 export class FunctionTool<T = Record<string, unknown>> implements BaseTool {
   readonly name: string;
   readonly description: string;
   readonly declaration: ToolDeclaration;
-  private readonly executeFn: (args: T, signal?: AbortSignal) => Promise<ToolResult | string | Record<string, unknown>>;
+  private readonly executeFn: (
+    args: T,
+    signal?: AbortSignal,
+  ) => Promise<ToolResult | string | Record<string, unknown>>;
 
   constructor(config: FunctionToolConfig<T>) {
     this.name = config.name;
@@ -35,7 +41,12 @@ export class FunctionTool<T = Record<string, unknown>> implements BaseTool {
       if (typeof rawRes === "string") {
         return { content: rawRes, metadata: { durationMs } };
       }
-      if (rawRes && typeof rawRes === "object" && "content" in rawRes && typeof rawRes.content === "string") {
+      if (
+        rawRes &&
+        typeof rawRes === "object" &&
+        "content" in rawRes &&
+        typeof rawRes.content === "string"
+      ) {
         return {
           content: rawRes.content,
           isError: Boolean((rawRes as ToolResult).isError),

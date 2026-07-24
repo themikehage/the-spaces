@@ -19,7 +19,8 @@ export const literals = {
     noValue: "N/A",
     updateError: "Failed to update project data.",
     deleteProject: "Danger Zone",
-    deleteProjectDescription: "This action is permanent and cannot be undone. All workspace files and database state for this project will be deleted.",
+    deleteProjectDescription:
+      "This action is permanent and cannot be undone. All workspace files and database state for this project will be deleted.",
     deleteConfirmLabel: "Type the project name '{name}' to confirm:",
     deleteButton: "Delete Project",
     deleting: "Deleting...",
@@ -41,9 +42,10 @@ export const literals = {
     noValue: "N/A",
     updateError: "Error al actualizar los datos del proyecto.",
     deleteProject: "Zona de Peligro",
-    deleteProjectDescription: "Esta acción es permanente y no se puede deshacer. Se eliminarán todos los archivos del espacio de trabajo y el estado del proyecto.",
+    deleteProjectDescription:
+      "Esta acción es permanente y no se puede deshacer. Se eliminarán todos los archivos del espacio de trabajo y el estado del proyecto.",
     deleteConfirmLabel: "Escribe el nombre del proyecto '{name}' para confirmar:",
     deleteButton: "Eliminar Proyecto",
     deleting: "Eliminando...",
-  }
+  },
 } satisfies Record<SupportedLocale, Record<string, string>>;

@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MIT
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { Trash2, Archive, RotateCcw } from "lucide-react";
 import { useSessions, type SessionStatus } from "@/contexts/SessionsContext";
-import { apiFetch } from "@/lib/api";
 import { useLiterals } from "@/lib";
-import { literals as u } from "./SessionPopover.literals";
+import { apiFetch } from "@/lib/api";
 import {
-  getSessionName,
   buildCreateSessionBody,
   getSessionContextPredicate,
   getSessionMeta,
+  getSessionName,
 } from "@/lib/session-utils";
+import { Archive, RotateCcw, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { literals as u } from "./SessionPopover.literals";
 
 interface SessionItem {
   id: string;
@@ -85,7 +85,7 @@ export function SessionPopover({
       window.dispatchEvent(new CustomEvent("entity-updated"));
       fetchSessions();
     },
-    [fetchSessions]
+    [fetchSessions],
   );
 
   const unarchiveSession = useCallback(
@@ -95,7 +95,7 @@ export function SessionPopover({
       window.dispatchEvent(new CustomEvent("entity-updated"));
       fetchSessions();
     },
-    [fetchSessions]
+    [fetchSessions],
   );
 
   useEffect(() => {
@@ -109,7 +109,7 @@ export function SessionPopover({
       prev.map((s) => ({
         ...s,
         status: sessionStatuses[s.id] || s.status,
-      }))
+      })),
     );
   }, [sessionStatuses]);
 
@@ -117,9 +117,7 @@ export function SessionPopover({
   useEffect(() => {
     const handleRename = (e: Event) => {
       const { sessionId, name } = (e as CustomEvent<{ sessionId: string; name: string }>).detail;
-      setSessions((prev) =>
-        prev.map((s) => (s.id === sessionId ? { ...s, name } : s))
-      );
+      setSessions((prev) => prev.map((s) => (s.id === sessionId ? { ...s, name } : s)));
     };
     window.addEventListener("renameSession", handleRename);
     return () => window.removeEventListener("renameSession", handleRename);
@@ -141,7 +139,7 @@ export function SessionPopover({
     try {
       const sessionName = getSessionName(
         { activeTeam, activeAgent, activeProjectName, activeProjectFriendlyName },
-        filteredSessions.length
+        filteredSessions.length,
       );
 
       const res = await apiFetch("/api/sessions", {
@@ -149,11 +147,13 @@ export function SessionPopover({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(buildCreateSessionBody(sessionName, {
-          activeTeam,
-          activeAgent,
-          activeProjectName,
-        })),
+        body: JSON.stringify(
+          buildCreateSessionBody(sessionName, {
+            activeTeam,
+            activeAgent,
+            activeProjectName,
+          }),
+        ),
       });
       if (!res.ok) return;
       const session = await res.json();
@@ -178,14 +178,14 @@ export function SessionPopover({
       setSessions(remaining);
 
       const filteredRemaining = remaining.filter(
-        getSessionContextPredicate({ activeTeam, activeAgent, activeProjectName })
+        getSessionContextPredicate({ activeTeam, activeAgent, activeProjectName }),
       );
 
       if (activeSessionId === id) {
         onSelectSession(filteredRemaining[0]?.id ?? "");
       }
     },
-    [activeSessionId, onSelectSession, sessions, activeProjectName, activeAgent, activeTeam]
+    [activeSessionId, onSelectSession, sessions, activeProjectName, activeAgent, activeTeam],
   );
 
   const handleDeleteClick = useCallback((e: React.MouseEvent, id: string) => {
@@ -216,17 +216,16 @@ export function SessionPopover({
   return (
     <>
       {/* Backdrop transparente para cerrar con click fuera */}
-      <div
-        className="fixed inset-0 z-40 bg-transparent"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 z-40 bg-transparent" onClick={onClose} />
 
       {/* Popover flotante */}
       <div className="absolute right-0 top-full mt-2 w-80 bg-card border border-input rounded-xl shadow-2xl flex flex-col z-55 animate-scale-in max-h-[420px] overflow-hidden">
         {/* Header */}
         <div className="p-3 border-b border-input flex items-center justify-between flex-shrink-0 bg-card/80 backdrop-blur-md">
           <div className="flex flex-col min-w-0">
-            <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{l.sessionHistory}</span>
+            <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+              {l.sessionHistory}
+            </span>
             <span className="text-xs font-bold text-primary truncate" title={contextLabel}>
               {contextLabel}
             </span>
@@ -237,7 +236,11 @@ export function SessionPopover({
             title={l.close}
           >
             <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              <path
+                fillRule="evenodd"
+                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              />
             </svg>
           </button>
         </div>
@@ -254,7 +257,11 @@ export function SessionPopover({
             ) : (
               <>
                 <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+                  <path
+                    fillRule="evenodd"
+                    d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 Nueva Sesión
               </>
@@ -304,27 +311,42 @@ export function SessionPopover({
                       onSelectSession(s.id);
                       onClose();
                     }}
-                    className={`w-full text-left px-2.5 py-2 pr-14 rounded-lg text-xs transition-all cursor-pointer ${isActive
+                    className={`w-full text-left px-2.5 py-2 pr-14 rounded-lg text-xs transition-all cursor-pointer ${
+                      isActive
                         ? "bg-card-hover/80 text-foreground border border-input"
                         : "text-muted-foreground hover:bg-card-hover/40 hover:text-foreground border border-transparent"
-                      }`}
+                    }`}
                   >
                     <div className="flex items-center gap-1.5">
                       {cfg && !isExec && (
-                        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${cfg.color}`} title={cfg.label} />
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${cfg.color}`}
+                          title={cfg.label}
+                        />
                       )}
                       {isExec && (
-                        <span className={`text-xs px-1 py-0.2 rounded font-bold uppercase flex-shrink-0 ${s.id.includes("_channel_") ? "bg-primary/15 text-primary border border-primary/20" : "bg-purple-500/15 text-purple-400 border border-purple-500/20"
-                          }`}>
+                        <span
+                          className={`text-xs px-1 py-0.2 rounded font-bold uppercase flex-shrink-0 ${
+                            s.id.includes("_channel_")
+                              ? "bg-primary/15 text-primary border border-primary/20"
+                              : "bg-purple-500/15 text-purple-400 border border-purple-500/20"
+                          }`}
+                        >
                           {s.id.includes("_channel_") ? "CLI" : "API"}
                         </span>
                       )}
                       <span className="truncate flex-1 font-medium font-sans">{s.name}</span>
                     </div>
                     <div className="flex items-center justify-between mt-0.5 text-xs text-muted-foreground">
-                      <span>{isExec ? l.histExec : `${s.messageCount} ${s.messageCount === 1 ? l.message : l.messages}`}</span>
+                      <span>
+                        {isExec
+                          ? l.histExec
+                          : `${s.messageCount} ${s.messageCount === 1 ? l.message : l.messages}`}
+                      </span>
                       {s.status && s.status !== "sleeping" && !isExec && (
-                        <span className={`font-semibold ${cfg?.color.replace("bg-", "text-") || "text-muted-foreground"}`}>
+                        <span
+                          className={`font-semibold ${cfg?.color.replace("bg-", "text-") || "text-muted-foreground"}`}
+                        >
                           {cfg?.label}
                         </span>
                       )}
@@ -333,7 +355,9 @@ export function SessionPopover({
                   {!isExec && (
                     <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                       <button
-                        onClick={(e) => s.archived ? unarchiveSession(e, s.id) : archiveSession(e, s.id)}
+                        onClick={(e) =>
+                          s.archived ? unarchiveSession(e, s.id) : archiveSession(e, s.id)
+                        }
                         className="text-muted-foreground hover:text-accent transition-colors p-1 rounded hover:bg-card-hover cursor-pointer"
                         title={s.archived ? "Desarchivar sesión" : "Archivar sesión"}
                       >

@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-import { useState, useEffect } from "react";
+import { Dropdown } from "@/components/ui/Dropdown";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLiterals } from "@/lib";
+import { apiFetch } from "@/lib/api";
+import { useEffect, useState } from "react";
+import { literals as u } from "./GeneralTab.literals";
 import { LocaleSelector } from "./LocaleSelector";
 import { ThemeToggle } from "./ThemeToggle";
-import { useLiterals } from "@/lib";
-import { literals as u } from "./GeneralTab.literals";
-import { Dropdown } from "@/components/ui/Dropdown";
-import { apiFetch } from "@/lib/api";
 
 export function GeneralTab() {
   const { user, logout, changePassword } = useAuth();
@@ -33,9 +33,31 @@ export function GeneralTab() {
   const [visionModel, setVisionModel] = useState("");
   const [imageGenModel, setImageGenModel] = useState("");
   const [videoGenModel, setVideoGenModel] = useState("");
-  const [visionModels, setVisionModels] = useState<Array<{ id: string; name: string; provider: string }>>([]);
-  const [imageGenModels, setImageGenModels] = useState<Array<{ id: string; name: string; provider: string; description?: string; cost?: number; rpm?: number; concurrency?: number | null }>>([]);
-  const [videoGenModels, setVideoGenModels] = useState<Array<{ id: string; name: string; provider: string; description?: string; cost?: number; rpm?: number; concurrency?: number | null }>>([]);
+  const [visionModels, setVisionModels] = useState<
+    Array<{ id: string; name: string; provider: string }>
+  >([]);
+  const [imageGenModels, setImageGenModels] = useState<
+    Array<{
+      id: string;
+      name: string;
+      provider: string;
+      description?: string;
+      cost?: number;
+      rpm?: number;
+      concurrency?: number | null;
+    }>
+  >([]);
+  const [videoGenModels, setVideoGenModels] = useState<
+    Array<{
+      id: string;
+      name: string;
+      provider: string;
+      description?: string;
+      cost?: number;
+      rpm?: number;
+      concurrency?: number | null;
+    }>
+  >([]);
   const [settingsLoading, setSettingsLoading] = useState(true);
   const [subagentMaxDepth, setSubagentMaxDepth] = useState<number>(1);
 
@@ -49,7 +71,9 @@ export function GeneralTab() {
   const [visionError, setVisionError] = useState<string | null>(null);
 
   // Image Generation Diagnostic Test State
-  const [imageTestPrompt, setImageTestPrompt] = useState("A cute coding robot logo, clean futuristic green theme");
+  const [imageTestPrompt, setImageTestPrompt] = useState(
+    "A cute coding robot logo, clean futuristic green theme",
+  );
   const [testingImage, setTestingImage] = useState(false);
   const [imageResult, setImageResult] = useState<string | null>(null);
   const [imageBlobUrl, setImageBlobUrl] = useState<string | null>(null);
@@ -57,7 +81,9 @@ export function GeneralTab() {
 
   // Video Generation Diagnostic Test State
   const [videoGenEnabled, setVideoGenEnabled] = useState(true);
-  const [videoTestPrompt, setVideoTestPrompt] = useState("A beautiful sunset over the mountains, cinematic");
+  const [videoTestPrompt, setVideoTestPrompt] = useState(
+    "A beautiful sunset over the mountains, cinematic",
+  );
   const [testingVideo, setTestingVideo] = useState(false);
   const [videoResult, setVideoResult] = useState<string | null>(null);
   const [videoBlobUrl, setVideoBlobUrl] = useState<string | null>(null);
@@ -430,9 +456,7 @@ export function GeneralTab() {
 
       <div className="bg-card rounded-lg p-4 border border-input/30 space-y-4">
         <h3 className="text-foreground font-semibold text-sm">{l.aiToolsConfig}</h3>
-        <p className="text-muted-foreground text-[11px]">
-          {l.aiToolsDesc}
-        </p>
+        <p className="text-muted-foreground text-[11px]">{l.aiToolsDesc}</p>
         {settingsLoading ? (
           <div className="text-xs text-muted-foreground animate-pulse">{l.loadingModels}</div>
         ) : (
@@ -444,7 +468,7 @@ export function GeneralTab() {
               <Dropdown<string>
                 value={visionModel}
                 onChange={handleUpdateVisionModel}
-                options={visionModels.map(m => ({
+                options={visionModels.map((m) => ({
                   value: `${m.provider}/${m.id}`,
                   label: `${m.name} (${m.provider})`,
                 }))}
@@ -495,8 +519,14 @@ export function GeneralTab() {
 
                     {visionTestFile && visionTestBase64 && (
                       <div className="flex items-center gap-2 bg-background p-2 rounded-lg border border-input/10">
-                        <img src={`data:${visionTestMime};base64,${visionTestBase64}`} alt="preview" className="w-10 h-10 object-cover rounded-md border border-input/30" />
-                        <div className="text-[10px] text-muted-foreground truncate flex-1">{visionTestFile.name}</div>
+                        <img
+                          src={`data:${visionTestMime};base64,${visionTestBase64}`}
+                          alt="preview"
+                          className="w-10 h-10 object-cover rounded-md border border-input/30"
+                        />
+                        <div className="text-[10px] text-muted-foreground truncate flex-1">
+                          {visionTestFile.name}
+                        </div>
                       </div>
                     )}
 
@@ -534,7 +564,7 @@ export function GeneralTab() {
               <Dropdown<string>
                 value={imageGenModel}
                 onChange={handleUpdateImageGenModel}
-                options={imageGenModels.map(m => ({
+                options={imageGenModels.map((m) => ({
                   value: m.id,
                   label: m.name,
                 }))}
@@ -543,7 +573,7 @@ export function GeneralTab() {
               />
 
               {(() => {
-                const selected = imageGenModels.find(m => m.id === imageGenModel);
+                const selected = imageGenModels.find((m) => m.id === imageGenModel);
                 if (!selected) return null;
                 return (
                   <div className="mt-2 bg-background p-3 rounded-lg border border-input/20 space-y-2 text-xs">
@@ -555,20 +585,33 @@ export function GeneralTab() {
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pt-2.5 border-t border-input/10">
                       {selected.cost !== undefined && (
                         <div>
-                          <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">{l.cost}</span>
-                          <span className="text-foreground font-semibold">${selected.cost}{l.perImage}</span>
+                          <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">
+                            {l.cost}
+                          </span>
+                          <span className="text-foreground font-semibold">
+                            ${selected.cost}
+                            {l.perImage}
+                          </span>
                         </div>
                       )}
                       {selected.rpm !== undefined && (
                         <div>
-                          <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">{l.rateLimit}</span>
-                          <span className="text-foreground font-semibold">{selected.rpm} {l.rpm}</span>
+                          <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">
+                            {l.rateLimit}
+                          </span>
+                          <span className="text-foreground font-semibold">
+                            {selected.rpm} {l.rpm}
+                          </span>
                         </div>
                       )}
                       {selected.concurrency !== undefined && selected.concurrency !== null && (
                         <div>
-                          <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">{l.concurrency}</span>
-                          <span className="text-foreground font-semibold">{selected.concurrency} {l.concurrent}</span>
+                          <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">
+                            {l.concurrency}
+                          </span>
+                          <span className="text-foreground font-semibold">
+                            {selected.concurrency} {l.concurrent}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -607,9 +650,15 @@ export function GeneralTab() {
                       <span className="font-bold block text-[11px]">{l.imageGenerated}</span>
                       <div className="relative group max-w-sm rounded-lg overflow-hidden border border-input/40 bg-card p-1">
                         {imageBlobUrl ? (
-                          <img src={imageBlobUrl} alt="Generated Test" className="w-full h-auto object-contain rounded-md" />
+                          <img
+                            src={imageBlobUrl}
+                            alt="Generated Test"
+                            className="w-full h-auto object-contain rounded-md"
+                          />
                         ) : (
-                          <div className="w-full h-32 flex items-center justify-center bg-card text-[11px] text-muted-foreground">{l.loadingImagePreview}</div>
+                          <div className="w-full h-32 flex items-center justify-center bg-card text-[11px] text-muted-foreground">
+                            {l.loadingImagePreview}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -634,7 +683,10 @@ export function GeneralTab() {
                   onChange={(e) => handleToggleVideoGenEnabled(e.target.checked)}
                   className="w-4 h-4 accent-accent rounded border-input bg-background cursor-pointer"
                 />
-                <label htmlFor="videoGenEnabled" className="text-xs font-semibold text-foreground cursor-pointer">
+                <label
+                  htmlFor="videoGenEnabled"
+                  className="text-xs font-semibold text-foreground cursor-pointer"
+                >
                   {l.videoGenEnabled}
                 </label>
               </div>
@@ -647,7 +699,7 @@ export function GeneralTab() {
                   <Dropdown<string>
                     value={videoGenModel}
                     onChange={handleUpdateVideoGenModel}
-                    options={videoGenModels.map(m => ({
+                    options={videoGenModels.map((m) => ({
                       value: m.id,
                       label: m.name,
                     }))}
@@ -656,7 +708,7 @@ export function GeneralTab() {
                   />
 
                   {(() => {
-                    const selected = videoGenModels.find(m => m.id === videoGenModel);
+                    const selected = videoGenModels.find((m) => m.id === videoGenModel);
                     if (!selected) return null;
                     return (
                       <div className="mt-2 bg-background p-3 rounded-lg border border-input/20 space-y-2 text-xs">
@@ -668,20 +720,33 @@ export function GeneralTab() {
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pt-2.5 border-t border-input/10">
                           {selected.cost !== undefined && (
                             <div>
-                              <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">{l.cost}</span>
-                              <span className="text-foreground font-semibold">${selected.cost}{l.perVideo}</span>
+                              <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">
+                                {l.cost}
+                              </span>
+                              <span className="text-foreground font-semibold">
+                                ${selected.cost}
+                                {l.perVideo}
+                              </span>
                             </div>
                           )}
                           {selected.rpm !== undefined && (
                             <div>
-                              <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">{l.rateLimit}</span>
-                              <span className="text-foreground font-semibold">{selected.rpm} {l.rpm}</span>
+                              <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">
+                                {l.rateLimit}
+                              </span>
+                              <span className="text-foreground font-semibold">
+                                {selected.rpm} {l.rpm}
+                              </span>
                             </div>
                           )}
                           {selected.concurrency !== undefined && selected.concurrency !== null && (
                             <div>
-                              <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">{l.concurrency}</span>
-                              <span className="text-foreground font-semibold">{selected.concurrency} {l.concurrent}</span>
+                              <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">
+                                {l.concurrency}
+                              </span>
+                              <span className="text-foreground font-semibold">
+                                {selected.concurrency} {l.concurrent}
+                              </span>
                             </div>
                           )}
                         </div>
@@ -720,9 +785,15 @@ export function GeneralTab() {
                           <span className="font-bold block text-[11px]">{l.videoGenerated}</span>
                           <div className="relative group max-w-sm rounded-lg overflow-hidden border border-input/40 bg-card p-1">
                             {videoBlobUrl ? (
-                              <video src={videoBlobUrl} controls className="w-full h-auto object-contain rounded-md" />
+                              <video
+                                src={videoBlobUrl}
+                                controls
+                                className="w-full h-auto object-contain rounded-md"
+                              />
                             ) : (
-                              <div className="w-full h-32 flex items-center justify-center bg-card text-[11px] text-muted-foreground">{l.loadingVideoPreview}</div>
+                              <div className="w-full h-32 flex items-center justify-center bg-card text-[11px] text-muted-foreground">
+                                {l.loadingVideoPreview}
+                              </div>
                             )}
                           </div>
                         </div>
@@ -745,9 +816,7 @@ export function GeneralTab() {
 
       <div className="bg-card rounded-lg p-4 border border-input/30 space-y-4">
         <h3 className="text-foreground font-semibold text-sm">{l.subagents}</h3>
-        <p className="text-muted-foreground text-[11px]">
-          {l.subagentMaxDepthDesc}
-        </p>
+        <p className="text-muted-foreground text-[11px]">{l.subagentMaxDepthDesc}</p>
         <div className="space-y-3 pt-1">
           <div className="flex items-center justify-between text-xs font-semibold text-foreground">
             <span>{l.subagentMaxDepth}</span>
@@ -780,7 +849,9 @@ export function GeneralTab() {
         <h3 className="text-foreground font-semibold text-sm">{l.mcpLink}</h3>
         <p className="text-muted-foreground text-[11px]">{l.mcpDesc}</p>
         <button
-          onClick={() => window.dispatchEvent(new CustomEvent("navigate", { detail: { path: "/mcps" } }))}
+          onClick={() =>
+            window.dispatchEvent(new CustomEvent("navigate", { detail: { path: "/mcps" } }))
+          }
           className="text-xs bg-primary/10 text-primary hover:bg-primary/20 border border-primary/25 px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer"
         >
           {l.openMCP}
@@ -910,9 +981,7 @@ export function GeneralTab() {
       <div className="bg-card rounded-lg p-4 border border-input/30 space-y-4">
         <div>
           <h3 className="text-foreground font-semibold text-sm">{l.backupPortability}</h3>
-          <p className="text-muted-foreground text-[11px] mt-0.5">
-            {l.backupDesc}
-          </p>
+          <p className="text-muted-foreground text-[11px] mt-0.5">{l.backupDesc}</p>
         </div>
 
         <div className="border-t border-input/30 pt-3 space-y-3">
@@ -953,7 +1022,9 @@ export function GeneralTab() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground uppercase font-bold tracking-wider">{l.importMode}</label>
+              <label className="text-xs text-muted-foreground uppercase font-bold tracking-wider">
+                {l.importMode}
+              </label>
               <Dropdown<"merge" | "overwrite">
                 value={importMode}
                 onChange={setImportMode}
@@ -966,7 +1037,9 @@ export function GeneralTab() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground uppercase font-bold tracking-wider">{l.selectZipFile}</label>
+              <label className="text-xs text-muted-foreground uppercase font-bold tracking-wider">
+                {l.selectZipFile}
+              </label>
               <input
                 type="file"
                 accept=".zip"
@@ -999,12 +1072,17 @@ export function GeneralTab() {
             <button
               onClick={() => handleImportBackup(false)}
               disabled={importing}
-              className={`text-xs px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer disabled:opacity-50 ${importMode === "overwrite"
+              className={`text-xs px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer disabled:opacity-50 ${
+                importMode === "overwrite"
                   ? "bg-destructive/10 text-destructive hover:bg-destructive/20 border border-error/25"
                   : "bg-primary/10 text-primary hover:bg-primary/20 border border-primary/25"
-                }`}
+              }`}
             >
-              {importing ? l.importingBackup : importMode === "overwrite" ? l.restoreOverwrite : l.importMerge}
+              {importing
+                ? l.importingBackup
+                : importMode === "overwrite"
+                  ? l.restoreOverwrite
+                  : l.importMerge}
             </button>
           )}
         </div>
@@ -1014,13 +1092,25 @@ export function GeneralTab() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
           <div className="bg-card border border-input/80 rounded-xl p-5 max-w-md w-full space-y-4 shadow-xl">
             <h3 className="text-destructive font-bold text-base flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
               </svg>
               {l.destructiveOverwrite}
             </h3>
             <p className="text-muted-foreground text-xs leading-relaxed">
-              {l.overwriteWarning1} <strong className="text-foreground">{l.overwriteModeLabel}</strong> {l.overwriteWarning2}
+              {l.overwriteWarning1}{" "}
+              <strong className="text-foreground">{l.overwriteModeLabel}</strong>{" "}
+              {l.overwriteWarning2}
             </p>
 
             <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 space-y-2">

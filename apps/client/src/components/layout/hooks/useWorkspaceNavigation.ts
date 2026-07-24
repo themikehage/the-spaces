@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { useEffect, useRef } from "react";
 import type { RoutePage } from "@/router/useRoutePage";
+import { useEffect, useRef } from "react";
 
 export function useWorkspaceNavigation(page: RoutePage, onNavigate: (path: string) => void) {
   const pendingWorkspaceFile = useRef<string | null>(null);

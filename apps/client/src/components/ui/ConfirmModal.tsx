@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { type FC } from "react";
-import { Modal } from "./Modal";
 import { Button } from "./Button";
+import { Modal } from "./Modal";
 
 interface Props {
   open: boolean;

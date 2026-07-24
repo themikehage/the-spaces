@@ -12,18 +12,18 @@
 
 El codebase tiene 10+ singletons a nivel de módulo que se instancian al importar:
 
-| Singleton | Módulo | Problema |
-|---|---|---|
-| `mcpRegistry` | `core/mcp-registry.ts` | Estado global por proceso, imposible de aislar por tenant |
-| `sessionManager` | `core/session-manager.ts` | Dependencia circular con delegation-registry |
-| `delegationRegistry` | `core/delegation-registry.ts` | Importado como singleton, lazy-imports para romper ciclos |
-| `sessionToolFactory` | `core/session-tool-factory.ts` | Acoplado al singleton de sessionManager |
-| `userConfigManager` | `core/user-config-manager.ts` | Estado compartido entre todas las sesiones |
-| `sessionMetadataStore` | `session/metadata-store.ts` | Un store por módulo, no por instancia |
-| `sessionPromptBuilder` | `ai/session-prompt-builder.ts` | Depende de múltiples singletons para armar prompts |
-| `memoryRegistry` | `core/memory/registry.ts` | Estado global de memory engines |
-| `serverSpacesHost` | `core/spaces-host.ts` | Singleton del host, referenciado desde routes y ws |
-| `uiApprovalRegistry` | `core/ui-approval-registry.ts` | Registro global de handlers de UI |
+| Singleton              | Módulo                         | Problema                                                  |
+| ---------------------- | ------------------------------ | --------------------------------------------------------- |
+| `mcpRegistry`          | `core/mcp-registry.ts`         | Estado global por proceso, imposible de aislar por tenant |
+| `sessionManager`       | `core/session-manager.ts`      | Dependencia circular con delegation-registry              |
+| `delegationRegistry`   | `core/delegation-registry.ts`  | Importado como singleton, lazy-imports para romper ciclos |
+| `sessionToolFactory`   | `core/session-tool-factory.ts` | Acoplado al singleton de sessionManager                   |
+| `userConfigManager`    | `core/user-config-manager.ts`  | Estado compartido entre todas las sesiones                |
+| `sessionMetadataStore` | `session/metadata-store.ts`    | Un store por módulo, no por instancia                     |
+| `sessionPromptBuilder` | `ai/session-prompt-builder.ts` | Depende de múltiples singletons para armar prompts        |
+| `memoryRegistry`       | `core/memory/registry.ts`      | Estado global de memory engines                           |
+| `serverSpacesHost`     | `core/spaces-host.ts`          | Singleton del host, referenciado desde routes y ws        |
+| `uiApprovalRegistry`   | `core/ui-approval-registry.ts` | Registro global de handlers de UI                         |
 
 Las dependencias circulares se resuelven con lazy imports:
 
@@ -48,12 +48,12 @@ Solo existen singletons intencionales: `PluginManager` y `LLMRegistry` para regi
 
 ### Volumen estimado
 
-| Módulo | Archivos afectados | Complejidad |
-|---|---|---|
-| AppContext + interfaces | ~5 nuevos, ~15 modificados | Alta — diseño arquitectónico |
-| Refactor singletons a factories | ~20 archivos | Media — mecánico pero requiere cuidado con inicialización |
-| Romper dependencias circulares | ~8 archivos | Alta — requiere extraer interfaces y reordenar imports |
-| Testing isolation | ~10 archivos de test | Media — una vez que la DI existe |
+| Módulo                          | Archivos afectados         | Complejidad                                               |
+| ------------------------------- | -------------------------- | --------------------------------------------------------- |
+| AppContext + interfaces         | ~5 nuevos, ~15 modificados | Alta — diseño arquitectónico                              |
+| Refactor singletons a factories | ~20 archivos               | Media — mecánico pero requiere cuidado con inicialización |
+| Romper dependencias circulares  | ~8 archivos                | Alta — requiere extraer interfaces y reordenar imports    |
+| Testing isolation               | ~10 archivos de test       | Media — una vez que la DI existe                          |
 
 ---
 
@@ -124,16 +124,16 @@ Esto viola el Principio de Responsabilidad Única. Cualquier cambio en el modelo
 
 ### Volumen estimado
 
-| Extracción | Nuevo archivo | Líneas movidas | Riesgo |
-|---|---|---|---|
-| ToolRegistry | `core/tool-registry.ts` | ~80 | Bajo — extracción mecánica |
-| EventBus | `core/event-bus.ts` | ~60 | Bajo — interfaz simple |
-| SkillLoader | `ai/skill-loader.ts` | ~100 | Medio — integración con filesystem |
-| PromptBuilder | `ai/prompt-builder.ts` | ~150 | Medio — consolidación de 3 fuentes |
-| ContextEstimator | `ai/context-estimator.ts` | ~50 | Bajo — lógica autocontenida |
-| CompactionManager | `ai/compaction-manager.ts` | ~120 | Medio — dependencia con JSONL tree |
-| NavigationController | `core/navigation-controller.ts` | ~150 | Alto — abort/steer/followUp son críticos |
-| AgentSession (orchestrator) | `agent-session.ts` | ~200 restantes | Alto — cambia la API pública |
+| Extracción                  | Nuevo archivo                   | Líneas movidas | Riesgo                                   |
+| --------------------------- | ------------------------------- | -------------- | ---------------------------------------- |
+| ToolRegistry                | `core/tool-registry.ts`         | ~80            | Bajo — extracción mecánica               |
+| EventBus                    | `core/event-bus.ts`             | ~60            | Bajo — interfaz simple                   |
+| SkillLoader                 | `ai/skill-loader.ts`            | ~100           | Medio — integración con filesystem       |
+| PromptBuilder               | `ai/prompt-builder.ts`          | ~150           | Medio — consolidación de 3 fuentes       |
+| ContextEstimator            | `ai/context-estimator.ts`       | ~50            | Bajo — lógica autocontenida              |
+| CompactionManager           | `ai/compaction-manager.ts`      | ~120           | Medio — dependencia con JSONL tree       |
+| NavigationController        | `core/navigation-controller.ts` | ~150           | Alto — abort/steer/followUp son críticos |
+| AgentSession (orchestrator) | `agent-session.ts`              | ~200 restantes | Alto — cambia la API pública             |
 
 ---
 
@@ -143,15 +143,15 @@ Esto viola el Principio de Responsabilidad Única. Cualquier cambio en el modelo
 
 Dos clases con el mismo nombre, responsabilidades distintas:
 
-| Archivo | Clase | Responsabilidad | Import alias |
-|---|---|---|---|
-| `src/ai/session-persistence.ts` | `SessionManager` | Persistencia en JSONL: escribir entradas, reconstruir contexto, navegar el árbol de sesiones | — |
-| `src/core/session-manager.ts` | `SessionManager` | Orquestador de aplicación: crear sesiones, asignar tools, modelos, workspace, hooks | `VendoredSessionManager` |
+| Archivo                         | Clase            | Responsabilidad                                                                              | Import alias             |
+| ------------------------------- | ---------------- | -------------------------------------------------------------------------------------------- | ------------------------ |
+| `src/ai/session-persistence.ts` | `SessionManager` | Persistencia en JSONL: escribir entradas, reconstruir contexto, navegar el árbol de sesiones | —                        |
+| `src/core/session-manager.ts`   | `SessionManager` | Orquestador de aplicación: crear sesiones, asignar tools, modelos, workspace, hooks          | `VendoredSessionManager` |
 
 El archivo `src/core/session-manager.ts` importa al otro como:
 
 ```typescript
-import { SessionManager as VendoredSessionManager } from '../ai/session-persistence.js';
+import { SessionManager as VendoredSessionManager } from "../ai/session-persistence.js";
 ```
 
 Para un contributor nuevo, encontrar `SessionManager` en dos lugares con responsabilidades completamente distintas pero relacionadas es confuso. El alias `Vendored` sugiere que es código externo (no lo es). La palabra "vendor" en el codebase se usa para `@vendor/agent`, no para persistencia.
@@ -176,12 +176,12 @@ No hay ambigüedad sobre qué hace cada clase.
 
 ### Volumen estimado
 
-| Tarea | Archivos | Complejidad |
-|---|---|---|
-| Renombrar `JsonlSessionStore` | 2 archivos (definición + tests) | Baja |
-| Actualizar imports en todo el codebase | ~30 archivos | Baja — buscar y reemplazar |
-| JSDoc en ambas clases | 2 archivos | Baja |
-| Verificar que nada se rompe | — | Media — requiere correr test suite completa |
+| Tarea                                  | Archivos                        | Complejidad                                 |
+| -------------------------------------- | ------------------------------- | ------------------------------------------- |
+| Renombrar `JsonlSessionStore`          | 2 archivos (definición + tests) | Baja                                        |
+| Actualizar imports en todo el codebase | ~30 archivos                    | Baja — buscar y reemplazar                  |
+| JSDoc en ambas clases                  | 2 archivos                      | Baja                                        |
+| Verificar que nada se rompe            | —                               | Media — requiere correr test suite completa |
 
 ---
 
@@ -191,11 +191,11 @@ No hay ambigüedad sobre qué hace cada clase.
 
 Los archivos de rutas concentran demasiadas responsabilidades:
 
-| Archivo | Líneas | Rutas que contiene |
-|---|---|---|
-| `src/routes/sessions.ts` | 1287 | CRUD, prompt, stream SSE, modelos, tools, permisos, contexto, skills, export (3 formatos), delegaciones, subagentes, tareas, logs de ejecución |
-| `src/routes/teams.ts` | Grande | CRUD de equipos, miembros, asignación de agentes, ejecución |
-| `src/routes/agents.ts` | Grande | CRUD de agentes, config de modelos, tools, skills |
+| Archivo                  | Líneas | Rutas que contiene                                                                                                                             |
+| ------------------------ | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/routes/sessions.ts` | 1287   | CRUD, prompt, stream SSE, modelos, tools, permisos, contexto, skills, export (3 formatos), delegaciones, subagentes, tareas, logs de ejecución |
+| `src/routes/teams.ts`    | Grande | CRUD de equipos, miembros, asignación de agentes, ejecución                                                                                    |
+| `src/routes/agents.ts`   | Grande | CRUD de agentes, config de modelos, tools, skills                                                                                              |
 
 Un solo archivo con 1287 líneas mezcla:
 
@@ -234,12 +234,12 @@ Responsabilidades separadas en archivos enfocados. Las rutas se generan a partir
 
 ### Volumen estimado
 
-| Tarea | Archivos nuevos | Archivo original | Complejidad |
-|---|---|---|---|
-| Split `sessions.ts` | ~9 sub-routers + 1 index | Reducir a <50 líneas (solo montaje) | Media — requiere entender dependencias entre rutas |
-| Split `teams.ts` | ~5 sub-routers + 1 index | Reducir a <50 líneas | Media |
-| Split `agents.ts` | ~5 sub-routers + 1 index | Reducir a <50 líneas | Media |
-| Actualizar imports en server bootstrap | 1 archivo (`server/index.ts`) | — | Baja |
+| Tarea                                  | Archivos nuevos               | Archivo original                    | Complejidad                                        |
+| -------------------------------------- | ----------------------------- | ----------------------------------- | -------------------------------------------------- |
+| Split `sessions.ts`                    | ~9 sub-routers + 1 index      | Reducir a <50 líneas (solo montaje) | Media — requiere entender dependencias entre rutas |
+| Split `teams.ts`                       | ~5 sub-routers + 1 index      | Reducir a <50 líneas                | Media                                              |
+| Split `agents.ts`                      | ~5 sub-routers + 1 index      | Reducir a <50 líneas                | Media                                              |
+| Actualizar imports en server bootstrap | 1 archivo (`server/index.ts`) | —                                   | Baja                                               |
 
 ---
 
@@ -258,11 +258,13 @@ Ejemplo del problema:
 
 ```typescript
 // ws/factory.ts — mensaje construido con string literals
-ws.send(JSON.stringify({ type: 'session_stream', sessionId, data }));
+ws.send(JSON.stringify({ type: "session_stream", sessionId, data }));
 
 // Cliente — parseo sin validación
 const msg = JSON.parse(event.data);
-if (msg.type === 'session_stream') { /* confía en la forma */ }
+if (msg.type === "session_stream") {
+  /* confía en la forma */
+}
 ```
 
 Si el servidor cambia la forma del payload, el cliente no se entera hasta que rompe en runtime. No hay type safety de punta a punta.
@@ -280,16 +282,17 @@ Cada mensaje tiene un tipo bien definido y tanto emisor como receptor validan co
 ### Lo que falta
 
 - **Tipos compartidos en `packages/shared`**: definir en un archivo `packages/shared/src/ws-messages.ts`:
+
   ```typescript
   // Discriminated union con type field
   export type WsMessage =
-    | { type: 'session_stream'; sessionId: string; chunk: string }
-    | { type: 'team_broadcast'; teamId: string; payload: unknown }
-    | { type: 'approval_request'; requestId: string; tool: string; params: unknown }
-    | { type: 'approval_response'; requestId: string; approved: boolean }
-    | { type: 'ui_action'; action: string; sessionId: string }
-    | { type: 'heartbeat'; timestamp: number }
-    | { type: 'error'; code: string; message: string };
+    | { type: "session_stream"; sessionId: string; chunk: string }
+    | { type: "team_broadcast"; teamId: string; payload: unknown }
+    | { type: "approval_request"; requestId: string; tool: string; params: unknown }
+    | { type: "approval_response"; requestId: string; approved: boolean }
+    | { type: "ui_action"; action: string; sessionId: string }
+    | { type: "heartbeat"; timestamp: number }
+    | { type: "error"; code: string; message: string };
   ```
 
 - **Zod schemas para validación**: un schema por tipo de mensaje, compuesto en un discriminated union con `z.discriminatedUnion('type', [...])`.
@@ -304,13 +307,13 @@ Cada mensaje tiene un tipo bien definido y tanto emisor como receptor validan co
 
 ### Volumen estimado
 
-| Tarea | Archivos | Complejidad |
-|---|---|---|
-| Tipos + Zod schemas en shared | 1 nuevo (`ws-messages.ts`) | Baja — definir schemas |
-| Actualizar `ws/factory.ts` | 1 archivo | Media — refactorizar builders y parsers |
-| Validación en cliente | ~3 archivos (hooks WS del cliente) | Media — agregar Zod parse en cada handler |
-| Documentación del protocolo | 1 archivo | Baja |
-| Migrar mensajes uno por uno | Iterativo, ~10 tipos | Media — incremental, riesgo bajo por mensaje |
+| Tarea                         | Archivos                           | Complejidad                                  |
+| ----------------------------- | ---------------------------------- | -------------------------------------------- |
+| Tipos + Zod schemas en shared | 1 nuevo (`ws-messages.ts`)         | Baja — definir schemas                       |
+| Actualizar `ws/factory.ts`    | 1 archivo                          | Media — refactorizar builders y parsers      |
+| Validación en cliente         | ~3 archivos (hooks WS del cliente) | Media — agregar Zod parse en cada handler    |
+| Documentación del protocolo   | 1 archivo                          | Baja                                         |
+| Migrar mensajes uno por uno   | Iterativo, ~10 tipos               | Media — incremental, riesgo bajo por mensaje |
 
 ---
 

@@ -1,7 +1,16 @@
 // SPDX-License-Identifier: MIT
-import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useReducer, type ReactNode } from "react";
-import { matchPath, useLocation, useNavigate } from "react-router-dom";
 import { buildContextPath } from "@/router/paths";
+import {
+  createContext,
+  createElement,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useReducer,
+  type ReactNode,
+} from "react";
+import { matchPath, useLocation, useNavigate } from "react-router-dom";
 
 export interface ActiveAgent {
   id: string;
@@ -30,7 +39,7 @@ const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
 function readStoredValue<T>(key: string): T | null {
   try {
     const value = localStorage.getItem(key);
-    return value ? JSON.parse(value) as T : null;
+    return value ? (JSON.parse(value) as T) : null;
   } catch {
     return null;
   }
@@ -111,7 +120,8 @@ function useWorkspaceContextState(): WorkspaceContextValue {
         case "project": {
           const storedId = localStorage.getItem("active-project-id");
           const storedName = localStorage.getItem("active-project-name");
-          const friendlyName = (storedId === currentRoute.id && storedName) ? storedName : currentRoute.id;
+          const friendlyName =
+            storedId === currentRoute.id && storedName ? storedName : currentRoute.id;
           return {
             ...initialState,
             activeProjectId: currentRoute.id,
@@ -120,7 +130,10 @@ function useWorkspaceContextState(): WorkspaceContextValue {
         }
         case "agent": {
           const storedAgent = readStoredValue<ActiveAgent>("active-agent");
-          const agent = (storedAgent?.id === currentRoute.id) ? storedAgent : { id: currentRoute.id, name: currentRoute.id };
+          const agent =
+            storedAgent?.id === currentRoute.id
+              ? storedAgent
+              : { id: currentRoute.id, name: currentRoute.id };
           return {
             ...initialState,
             activeAgent: agent,
@@ -128,7 +141,10 @@ function useWorkspaceContextState(): WorkspaceContextValue {
         }
         case "team": {
           const storedTeam = readStoredValue<ActiveNamedContext>("active-team");
-          const team = (storedTeam?.id === currentRoute.id) ? storedTeam : { id: currentRoute.id, name: currentRoute.id };
+          const team =
+            storedTeam?.id === currentRoute.id
+              ? storedTeam
+              : { id: currentRoute.id, name: currentRoute.id };
           return {
             ...initialState,
             activeTeam: team,
@@ -143,7 +159,11 @@ function useWorkspaceContextState(): WorkspaceContextValue {
     const activeTeam = readStoredValue<ActiveNamedContext>("active-team");
 
     if (activeProjectId) {
-      return { ...initialState, activeProjectId, activeProjectFriendlyName: activeProjectFriendlyName || activeProjectId };
+      return {
+        ...initialState,
+        activeProjectId,
+        activeProjectFriendlyName: activeProjectFriendlyName || activeProjectId,
+      };
     }
     if (activeAgent) {
       return { ...initialState, activeAgent };
@@ -191,21 +211,31 @@ function useWorkspaceContextState(): WorkspaceContextValue {
         if (state.activeProjectId !== routeContext.id) {
           const storedId = localStorage.getItem("active-project-id");
           const storedName = localStorage.getItem("active-project-name");
-          const friendlyName = (storedId === routeContext.id && storedName) ? storedName : routeContext.id;
-          dispatch({ type: "SELECT_PROJECT", payload: { id: routeContext.id, name: friendlyName } });
+          const friendlyName =
+            storedId === routeContext.id && storedName ? storedName : routeContext.id;
+          dispatch({
+            type: "SELECT_PROJECT",
+            payload: { id: routeContext.id, name: friendlyName },
+          });
         }
         break;
       case "agent":
         if (state.activeAgent?.id !== routeContext.id) {
           const storedAgent = readStoredValue<ActiveAgent>("active-agent");
-          const agent = (storedAgent?.id === routeContext.id) ? storedAgent : { id: routeContext.id, name: routeContext.id };
+          const agent =
+            storedAgent?.id === routeContext.id
+              ? storedAgent
+              : { id: routeContext.id, name: routeContext.id };
           dispatch({ type: "SELECT_AGENT", payload: agent });
         }
         break;
       case "team":
         if (state.activeTeam?.id !== routeContext.id) {
           const storedTeam = readStoredValue<ActiveNamedContext>("active-team");
-          const team = (storedTeam?.id === routeContext.id) ? storedTeam : { id: routeContext.id, name: routeContext.id };
+          const team =
+            storedTeam?.id === routeContext.id
+              ? storedTeam
+              : { id: routeContext.id, name: routeContext.id };
           dispatch({ type: "SELECT_TEAM", payload: team });
         }
         break;
@@ -218,7 +248,10 @@ function useWorkspaceContextState(): WorkspaceContextValue {
       if (detail?.type === "project" && state.activeProjectId) {
         const storedName = localStorage.getItem("active-project-name");
         if (storedName && storedName !== state.activeProjectFriendlyName) {
-          dispatch({ type: "SELECT_PROJECT", payload: { id: state.activeProjectId, name: storedName } });
+          dispatch({
+            type: "SELECT_PROJECT",
+            payload: { id: state.activeProjectId, name: storedName },
+          });
         }
       }
     };
@@ -226,42 +259,54 @@ function useWorkspaceContextState(): WorkspaceContextValue {
     return () => window.removeEventListener("entity-updated", handleUpdate);
   }, [state.activeProjectId, state.activeProjectFriendlyName]);
 
-  const navigateIfNeeded = useCallback((path: string) => {
-    if (pathname !== path) navigate(path);
-  }, [navigate, pathname]);
+  const navigateIfNeeded = useCallback(
+    (path: string) => {
+      if (pathname !== path) navigate(path);
+    },
+    [navigate, pathname],
+  );
 
-  const selectProject = useCallback((projectId: string | null, projectName: string | null) => {
-    if (!projectId) {
-      dispatch({ type: "CLEAR" });
-      navigateIfNeeded("/");
-      return;
-    }
-    localStorage.setItem("active-project-id", projectId);
-    if (projectName) {
-      localStorage.setItem("active-project-name", projectName);
-    }
-    navigateIfNeeded(buildContextPath({ type: "project", id: projectId }));
-  }, [navigateIfNeeded]);
+  const selectProject = useCallback(
+    (projectId: string | null, projectName: string | null) => {
+      if (!projectId) {
+        dispatch({ type: "CLEAR" });
+        navigateIfNeeded("/");
+        return;
+      }
+      localStorage.setItem("active-project-id", projectId);
+      if (projectName) {
+        localStorage.setItem("active-project-name", projectName);
+      }
+      navigateIfNeeded(buildContextPath({ type: "project", id: projectId }));
+    },
+    [navigateIfNeeded],
+  );
 
-  const selectAgent = useCallback((agent: ActiveAgent | null) => {
-    if (!agent) {
-      dispatch({ type: "CLEAR" });
-      navigateIfNeeded("/");
-      return;
-    }
-    localStorage.setItem("active-agent", JSON.stringify(agent));
-    navigateIfNeeded(buildContextPath({ type: "agent", id: agent.id }));
-  }, [navigateIfNeeded]);
+  const selectAgent = useCallback(
+    (agent: ActiveAgent | null) => {
+      if (!agent) {
+        dispatch({ type: "CLEAR" });
+        navigateIfNeeded("/");
+        return;
+      }
+      localStorage.setItem("active-agent", JSON.stringify(agent));
+      navigateIfNeeded(buildContextPath({ type: "agent", id: agent.id }));
+    },
+    [navigateIfNeeded],
+  );
 
-  const selectTeam = useCallback((team: ActiveNamedContext | null) => {
-    if (!team) {
-      dispatch({ type: "CLEAR" });
-      navigateIfNeeded("/");
-      return;
-    }
-    localStorage.setItem("active-team", JSON.stringify(team));
-    navigateIfNeeded(buildContextPath({ type: "team", id: team.id }));
-  }, [navigateIfNeeded]);
+  const selectTeam = useCallback(
+    (team: ActiveNamedContext | null) => {
+      if (!team) {
+        dispatch({ type: "CLEAR" });
+        navigateIfNeeded("/");
+        return;
+      }
+      localStorage.setItem("active-team", JSON.stringify(team));
+      navigateIfNeeded(buildContextPath({ type: "team", id: team.id }));
+    },
+    [navigateIfNeeded],
+  );
 
   return {
     activeProjectId: state.activeProjectId,

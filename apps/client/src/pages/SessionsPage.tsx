@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-import { useSearchParams } from "react-router-dom";
-import { useLiterals } from "@/lib";
-import { literals as u } from "./SessionsPage.literals";
-import { TabsNav } from "@/components/ui/TabsNav";
-import { SessionsKanbanPage } from "@/pages/SessionsKanbanPage";
-import { AnalyticsPage } from "@/pages/AnalyticsPage";
 import { SessionConsoleView } from "@/components/sessions/SessionConsoleView";
+import { TabsNav } from "@/components/ui/TabsNav";
+import { useLiterals } from "@/lib";
+import { AnalyticsPage } from "@/pages/AnalyticsPage";
+import { SessionsKanbanPage } from "@/pages/SessionsKanbanPage";
+import { useSearchParams } from "react-router-dom";
+import { literals as u } from "./SessionsPage.literals";
 
 interface Props {
   onNavigate: (path: string) => void;

@@ -17,10 +17,23 @@ interface Props {
 function getLanguage(path: string): string {
   const ext = path.split(".").pop()?.toLowerCase() ?? "";
   const map: Record<string, string> = {
-    ts: "typescript", tsx: "typescript", js: "javascript", jsx: "javascript",
-    py: "python", rs: "rust", go: "go", sh: "bash", bash: "bash",
-    html: "html", css: "css", json: "json", yaml: "yaml", yml: "yaml",
-    md: "markdown", txt: "text", toml: "toml",
+    ts: "typescript",
+    tsx: "typescript",
+    js: "javascript",
+    jsx: "javascript",
+    py: "python",
+    rs: "rust",
+    go: "go",
+    sh: "bash",
+    bash: "bash",
+    html: "html",
+    css: "css",
+    json: "json",
+    yaml: "yaml",
+    yml: "yaml",
+    md: "markdown",
+    txt: "text",
+    toml: "toml",
   };
   return map[ext] ?? "text";
 }
@@ -29,8 +42,8 @@ export function ReadResult({ content, args }: Props) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const path = (args.path as string) || "";
 
-  const imageBlock = content.find(b => b.type === "image");
-  const textBlock = content.find(b => b.type === "text");
+  const imageBlock = content.find((b) => b.type === "image");
+  const textBlock = content.find((b) => b.type === "text");
   const text = textBlock?.text ?? "";
 
   if (imageBlock?.data && imageBlock.mimeType) {
@@ -49,7 +62,11 @@ export function ReadResult({ content, args }: Props) {
             className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm cursor-zoom-out"
             onClick={() => setLightboxOpen(false)}
           >
-            <img src={src} alt={path} className="max-w-full max-h-full object-contain rounded-lg shadow-2xl" />
+            <img
+              src={src}
+              alt={path}
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+            />
           </div>
         )}
       </>

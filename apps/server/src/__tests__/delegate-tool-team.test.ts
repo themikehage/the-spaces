@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-import { expect, test, describe, beforeAll, mock } from "bun:test";
-import { createManageDelegationsTool } from "../core/tools/manage-delegations-tool";
+import { beforeAll, describe, expect, test } from "bun:test";
 import { agentRegistry } from "../agents";
 import { sessionManager } from "../core/session-manager";
+import { createManageDelegationsTool } from "../core/tools/manage-delegations-tool";
 
 describe("delegate_task Tool Team Integration Tests", () => {
   const username = "test_team_delegator";
@@ -25,10 +25,20 @@ describe("delegate_task Tool Team Integration Tests", () => {
               cwd: teamWorkspace,
               setModel: async () => {},
               prompt: async () => {},
-              messages: [{ role: "assistant", content: [{ type: "text", text: "---\nstatus: success\nexecutive_summary: Done\nartifacts: none\nrisks: None\n---" }] }],
+              messages: [
+                {
+                  role: "assistant",
+                  content: [
+                    {
+                      type: "text",
+                      text: "---\nstatus: success\nexecutive_summary: Done\nartifacts: none\nrisks: None\n---",
+                    },
+                  ],
+                },
+              ],
               subscribe: () => () => {},
-            }
-          }
+            },
+          },
         } as any;
       }
       if (id === unauthorizedId) {
@@ -36,8 +46,8 @@ describe("delegate_task Tool Team Integration Tests", () => {
           username,
           status: "idle",
           server: {
-            definition: { id: unauthorizedId, name: "Unauthorized", role: "Auditor" }
-          }
+            definition: { id: unauthorizedId, name: "Unauthorized", role: "Auditor" },
+          },
         } as any;
       }
       return undefined;
@@ -56,13 +66,23 @@ describe("delegate_task Tool Team Integration Tests", () => {
       projectName?: string,
       agentId?: string,
       channelId?: string,
-      overrides?: any
+      overrides?: any,
     ) => {
       passedOverrides = overrides;
       // return a mock session
       return {
         id: sId,
-        messages: [{ role: "assistant", content: [{ type: "text", text: "---\nstatus: success\nexecutive_summary: Done\nartifacts: none\nrisks: None\n---" }] }],
+        messages: [
+          {
+            role: "assistant",
+            content: [
+              {
+                type: "text",
+                text: "---\nstatus: success\nexecutive_summary: Done\nartifacts: none\nrisks: None\n---",
+              },
+            ],
+          },
+        ],
         setModel: async () => {},
         prompt: async () => {},
         abort: async () => {},
@@ -127,7 +147,7 @@ describe("delegate_task Tool Team Integration Tests", () => {
         targetType: "agent",
         targetId: unauthorizedId,
         task: "Analyze logs",
-      })
+      }),
     ).rejects.toThrow(`Agent "${unauthorizedId}" is not a permitted delegate in this Team context`);
   });
 
@@ -141,7 +161,17 @@ describe("delegate_task Tool Team Integration Tests", () => {
     sessionManager.getOrCreateSession = async () => {
       return {
         id: "del_specialist",
-        messages: [{ role: "assistant", content: [{ type: "text", text: "---\nstatus: success\nexecutive_summary: Done\nartifacts: none\nrisks: None\n---" }] }],
+        messages: [
+          {
+            role: "assistant",
+            content: [
+              {
+                type: "text",
+                text: "---\nstatus: success\nexecutive_summary: Done\nartifacts: none\nrisks: None\n---",
+              },
+            ],
+          },
+        ],
         setModel: async (m: any) => {
           setModelCalledWith = m;
         },
@@ -199,7 +229,17 @@ describe("delegate_task Tool Team Integration Tests", () => {
     sessionManager.getOrCreateSession = async () => {
       return {
         id: "del_specialist",
-        messages: [{ role: "assistant", content: [{ type: "text", text: "---\nstatus: success\nexecutive_summary: Done\nartifacts: none\nrisks: None\n---" }] }],
+        messages: [
+          {
+            role: "assistant",
+            content: [
+              {
+                type: "text",
+                text: "---\nstatus: success\nexecutive_summary: Done\nartifacts: none\nrisks: None\n---",
+              },
+            ],
+          },
+        ],
         setModel: async (m: any) => {
           setModelCalledWith = m;
         },

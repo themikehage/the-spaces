@@ -25,7 +25,7 @@ export class DefaultResourceLoader {
   private appendSystemPrompt: string[];
   private loadAgentsFiles: boolean;
   private loadSkills: boolean;
-  
+
   private agentsFiles: Array<{ path: string; content: string }> = [];
   private skills: Skill[] = [];
   private diagnostics: ResourceDiagnostic[] = [];
@@ -49,7 +49,7 @@ export class DefaultResourceLoader {
     // 1. Cargar archivos de contexto (AGENTS.md)
     if (this.loadAgentsFiles) {
       const contextCandidates = ["AGENTS.md", "AGENTS.MD", "CLAUDE.md", "CLAUDE.MD"];
-      
+
       // Primero el global (en agentDir)
       let globalContent = "";
       for (const filename of contextCandidates) {
@@ -80,7 +80,7 @@ export class DefaultResourceLoader {
       const promptParts: string[] = [];
       if (globalContent) promptParts.push(globalContent);
       if (localContent) promptParts.push(localContent);
-      
+
       if (promptParts.length > 0) {
         this.systemPrompt = promptParts.join("\n\n");
       }

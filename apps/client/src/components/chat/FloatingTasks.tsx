@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
+import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import type { TaskRunnerState } from "shared";
 
 interface Props {
@@ -40,7 +40,9 @@ export function FloatingTasks({ tasksState, onToggleStatus }: Props) {
       <div className="w-full bg-surface border border-border rounded-xl overflow-hidden font-sans text-xs flex flex-col shadow-md">
         <div className="px-3 py-2 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
-            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${isRunning ? "bg-accent animate-pulse" : "bg-warning"}`} />
+            <span
+              className={`w-2 h-2 rounded-full flex-shrink-0 ${isRunning ? "bg-accent animate-pulse" : "bg-warning"}`}
+            />
             <span className="font-semibold text-text-primary text-[11px] truncate">
               {isRunning ? "Ejecutando plan" : "Plan pausado"}
             </span>
@@ -62,11 +64,19 @@ export function FloatingTasks({ tasksState, onToggleStatus }: Props) {
             >
               {isRunning ? (
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
-                  <path fillRule="evenodd" d="M6.75 5.25a.75.75 0 0 1 .75-.75H9a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H7.5a.75.75 0 0 1-.75-.75V5.25Zm7.5 0A.75.75 0 0 1 15 4.5h1.5a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H15a.75.75 0 0 1-.75-.75V5.25Z" clipRule="evenodd" />
+                  <path
+                    fillRule="evenodd"
+                    d="M6.75 5.25a.75.75 0 0 1 .75-.75H9a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H7.5a.75.75 0 0 1-.75-.75V5.25Zm7.5 0A.75.75 0 0 1 15 4.5h1.5a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H15a.75.75 0 0 1-.75-.75V5.25Z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               ) : (
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
-                  <path fillRule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clipRule="evenodd" />
+                  <path
+                    fillRule="evenodd"
+                    d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               )}
             </button>
@@ -123,12 +133,32 @@ export function FloatingTasks({ tasksState, onToggleStatus }: Props) {
                     >
                       <div className="mt-0.5 flex-shrink-0">
                         {isDone ? (
-                          <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor" className="text-accent">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          <svg
+                            width="10"
+                            height="10"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            className="text-accent"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                         ) : isFailed ? (
-                          <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor" className="text-destructive">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                          <svg
+                            width="10"
+                            height="10"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            className="text-destructive"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                         ) : isActive && isRunning ? (
                           <span className="relative flex h-2 w-2 mt-0.5">
@@ -141,7 +171,9 @@ export function FloatingTasks({ tasksState, onToggleStatus }: Props) {
                       </div>
 
                       <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-                        <span className={`font-medium text-[11px] truncate ${isDone ? "text-text-secondary line-through" : "text-text-primary"}`}>
+                        <span
+                          className={`font-medium text-[11px] truncate ${isDone ? "text-text-secondary line-through" : "text-text-primary"}`}
+                        >
                           {task.title}
                         </span>
                         {task.depends_on && task.depends_on.length > 0 && (

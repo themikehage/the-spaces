@@ -19,9 +19,16 @@ export class AuditLogPlugin extends BasePlugin {
 
   async afterToolCall(ctx: ToolCallContext, result: ToolResult | any): Promise<void> {
     const toolName = typeof ctx.tool === "string" ? ctx.tool : ctx.tool.name;
-    const isError = result && typeof result === "object" && "isError" in result ? Boolean(result.isError) : false;
-    const errorMsg = result && typeof result === "object" && "errorCode" in result ? String(result.errorCode) : undefined;
-    const durationMs = result && typeof result === "object" && result.metadata?.durationMs ? Number(result.metadata.durationMs) : 0;
+    const isError =
+      result && typeof result === "object" && "isError" in result ? Boolean(result.isError) : false;
+    const errorMsg =
+      result && typeof result === "object" && "errorCode" in result
+        ? String(result.errorCode)
+        : undefined;
+    const durationMs =
+      result && typeof result === "object" && result.metadata?.durationMs
+        ? Number(result.metadata.durationMs)
+        : 0;
 
     recordToolCallAudit(this.config.username, {
       sessionId: this.config.sessionId,

@@ -1,12 +1,18 @@
 // SPDX-License-Identifier: MIT
-import type { MemoryProvider, RecallOptions, RecalledMemory, MemoryType } from "./types";
+import type { MemoryProvider, MemoryType, RecallOptions, RecalledMemory } from "./types";
 
 export class NullMemoryProvider implements MemoryProvider {
   async recall(query: string, opts?: RecallOptions): Promise<RecalledMemory[]> {
     return [];
   }
 
-  async store(content: string, type: MemoryType, importance?: number, tags?: string[], sessionId?: string): Promise<void> {
+  async store(
+    content: string,
+    type: MemoryType,
+    importance?: number,
+    tags?: string[],
+    sessionId?: string,
+  ): Promise<void> {
     // No-op
   }
 

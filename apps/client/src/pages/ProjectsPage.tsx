@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-import { apiFetch } from "@/lib/api";
-import { useState, useEffect, useCallback } from "react";
-import { Button } from "@/components/ui/Button";
-import { EntityAvatar } from "@/components/shared/EntityAvatar";
 import { ProjectCreateModal } from "@/components/projects/ProjectCreateModal";
+import { EntityAvatar } from "@/components/shared/EntityAvatar";
+import { Button } from "@/components/ui/Button";
 import { useLiterals } from "@/lib";
+import { apiFetch } from "@/lib/api";
+import { useCallback, useEffect, useState } from "react";
 import { literals as l } from "./DashboardPage.literals";
 
 interface RepoItem {
@@ -57,7 +57,11 @@ export function ProjectsPage({ onNavigate: _onNavigate, onSelectProject }: Props
     return () => window.removeEventListener("entity-updated", handleUpdate);
   }, [fetchRepos]);
 
-  const handleCreateRepo = async (data: { name: string; cloneUrl?: string; avatarUrl?: string }) => {
+  const handleCreateRepo = async (data: {
+    name: string;
+    cloneUrl?: string;
+    avatarUrl?: string;
+  }) => {
     const res = await apiFetch("/api/workspace-projects", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -70,7 +74,7 @@ export function ProjectsPage({ onNavigate: _onNavigate, onSelectProject }: Props
     const createdProject = await res.json();
     await fetchRepos();
     window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "project" } }));
-    
+
     return createdProject;
   };
 
@@ -107,7 +111,9 @@ export function ProjectsPage({ onNavigate: _onNavigate, onSelectProject }: Props
     <div className="flex-1 flex flex-col h-full bg-background overflow-hidden relative font-sans">
       <div className="h-14 px-6 border-b border-border flex items-center justify-between flex-shrink-0 bg-card/10">
         <div>
-          <h1 className="text-sm font-semibold text-foreground tracking-wide Outfit">{literals.title}</h1>
+          <h1 className="text-sm font-semibold text-foreground tracking-wide Outfit">
+            {literals.title}
+          </h1>
           <p className="text-[11px] text-muted-foreground hidden sm:block">{literals.subtitle}</p>
         </div>
         <div className="flex gap-2">
@@ -126,7 +132,9 @@ export function ProjectsPage({ onNavigate: _onNavigate, onSelectProject }: Props
             <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
         ) : error ? (
-          <div className="h-full flex items-center justify-center text-destructive text-xs font-semibold">{error}</div>
+          <div className="h-full flex items-center justify-center text-destructive text-xs font-semibold">
+            {error}
+          </div>
         ) : repos.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-muted-foreground text-sm gap-3 pt-20">
             <div className="w-12 h-12 rounded-2xl bg-card border border-input flex items-center justify-center">
@@ -157,11 +165,15 @@ export function ProjectsPage({ onNavigate: _onNavigate, onSelectProject }: Props
                       className="rounded-none w-full h-full object-cover"
                     />
                   </div>
-                  <h3 className="font-extrabold text-xs text-foreground truncate mt-2.5 leading-tight">{repo.name}</h3>
+                  <h3 className="font-extrabold text-xs text-foreground truncate mt-2.5 leading-tight">
+                    {repo.name}
+                  </h3>
                   <p className="text-[9px] text-text-secondary mt-0.5 truncate font-mono">
                     {literals.id} {repo.id || repo.name}
                   </p>
-                  <p className="text-[9px] text-text-secondary mt-0.5 font-medium">{formatTime(repo.lastModified)}</p>
+                  <p className="text-[9px] text-text-secondary mt-0.5 font-medium">
+                    {formatTime(repo.lastModified)}
+                  </p>
                 </div>
                 <div className="flex gap-1.5 mt-3 pt-2 border-t border-input/5">
                   <button

@@ -32,7 +32,8 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     portPlaceholder: "4200",
     modelPlaceholder: "e.g. GPT 5.6 Terra",
     skillsPlaceholder: "github-deploy, cloudflare-deploy",
-    systemPromptPlaceholder: "You are an expert web developer specializing in React and TypeScript...",
+    systemPromptPlaceholder:
+      "You are an expert web developer specializing in React and TypeScript...",
     saving: "Saving...",
     saveChanges: "Save Changes",
     cancel: "Cancel",
@@ -57,7 +58,8 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     saveError: "Failed to save agent",
     idPatternTitle: "lowercase letters, numbers, and dashes only",
     deleteConfirm_1: 'Are you sure you want to delete agent "',
-    deleteConfirm_2: '"? This will stop its server and permanently delete all its associated chat sessions.',
+    deleteConfirm_2:
+      '"? This will stop its server and permanently delete all its associated chat sessions.',
     avatarField: "Avatar",
     avatarRemove: "Remove avatar",
     tabMyAgents: "My Agents",
@@ -85,7 +87,8 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     viewDetail: "View Details",
     advancedConfig: "Advanced Configuration",
     serialToolsLabel: "Serial Tools (Interactive)",
-    serialToolsDescription: "Select the tools that will suspend agent execution to wait for your approval or input.",
+    serialToolsDescription:
+      "Select the tools that will suspend agent execution to wait for your approval or input.",
     blueprintIdLabel: "Blueprint ID",
     createdAtLabel: "Created At",
   },
@@ -119,7 +122,8 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     portPlaceholder: "4200",
     modelPlaceholder: "ej. GPT 5.6 Terra",
     skillsPlaceholder: "github-deploy, cloudflare-deploy",
-    systemPromptPlaceholder: "Eres un desarrollador web experto especializado en React y TypeScript...",
+    systemPromptPlaceholder:
+      "Eres un desarrollador web experto especializado en React y TypeScript...",
     saving: "Guardando...",
     saveChanges: "Guardar Cambios",
     cancel: "Cancelar",
@@ -143,8 +147,9 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     result: "Resultado",
     saveError: "Error al guardar el agente",
     idPatternTitle: "solo minúsculas, números y guiones",
-    deleteConfirm_1: "¿Estás seguro de que quieres eliminar al agente \"",
-    deleteConfirm_2: "\"? Esto detendrá su servidor y eliminará todas sus sesiones de chat asociadas de manera permanente.",
+    deleteConfirm_1: '¿Estás seguro de que quieres eliminar al agente "',
+    deleteConfirm_2:
+      '"? Esto detendrá su servidor y eliminará todas sus sesiones de chat asociadas de manera permanente.',
     avatarField: "Avatar",
     avatarRemove: "Eliminar avatar",
     tabMyAgents: "Mis Agentes",
@@ -172,7 +177,8 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     viewDetail: "Ver Detalles",
     advancedConfig: "Configuracion Avanzada",
     serialToolsLabel: "Herramientas Seriales (Interactivas)",
-    serialToolsDescription: "Selecciona las herramientas que pausaran la ejecucion del agente para esperar tu aprobacion o respuesta.",
+    serialToolsDescription:
+      "Selecciona las herramientas que pausaran la ejecucion del agente para esperar tu aprobacion o respuesta.",
     blueprintIdLabel: "ID del Blueprint",
     createdAtLabel: "Creado el",
   },

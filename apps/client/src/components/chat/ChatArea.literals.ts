@@ -15,7 +15,8 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     pillStartLab: "Start Experiment",
     pillStartLabPrompt: "Explain how to configure and run a debate experiment in the Laboratory.",
     pillAnalyzeCode: "Analyze Workspace",
-    pillAnalyzeCodePrompt: "Analyze the current repository structure and describe its architecture.",
+    pillAnalyzeCodePrompt:
+      "Analyze the current repository structure and describe its architecture.",
     pillRunTests: "Run Tests",
     pillRunTestsPrompt: "Run the project's test suite and report if any checks fail.",
     pillAgentRole: "Describe Role",
@@ -33,9 +34,11 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     pillListAgents: "Listar Agentes",
     pillListAgentsPrompt: "Listá los agentes programáticos activos y sus roles.",
     pillStartLab: "Iniciar Experimento",
-    pillStartLabPrompt: "Explicame cómo configurar y ejecutar una simulación de debate en el Laboratorio.",
+    pillStartLabPrompt:
+      "Explicame cómo configurar y ejecutar una simulación de debate en el Laboratorio.",
     pillAnalyzeCode: "Analizar Workspace",
-    pillAnalyzeCodePrompt: "Analizá la estructura del repositorio actual y describí su arquitectura.",
+    pillAnalyzeCodePrompt:
+      "Analizá la estructura del repositorio actual y describí su arquitectura.",
     pillRunTests: "Ejecutar Tests",
     pillRunTestsPrompt: "Corré las pruebas del proyecto y reportá si hay fallas.",
     pillAgentRole: "Describir Rol",

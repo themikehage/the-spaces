@@ -2,21 +2,21 @@
 import { getEnvironmentContext } from "../env-check";
 import { promptComposer, type DeploymentContext } from "./composer";
 import {
-  HTML_PREVIEW_INSTRUCTIONS,
   AG_UI_INSTRUCTIONS,
+  ENVIRONMENT_INSTRUCTIONS,
+  HTML_PREVIEW_INSTRUCTIONS,
   PERSISTENT_MEMORY_INSTRUCTIONS,
   SUBAGENT_DELEGATION_INSTRUCTIONS,
   TASK_DELEGATION_INSTRUCTIONS,
-  ENVIRONMENT_INSTRUCTIONS,
 } from "./system-instructions";
 
 export type PromptAssemblyMode =
   | "standard-session" // Global/project chat sessions
   | "team-orchestration"
   | "orchestration-team"
-  | "debate-stateless"  // Negotiation team debate — no memory, no tools
-  | "agent-startup"    // Standalone agent server bootstrap
-  | "subagent-spawn";  // Spawned subagent executor
+  | "debate-stateless" // Negotiation team debate — no memory, no tools
+  | "agent-startup" // Standalone agent server bootstrap
+  | "subagent-spawn"; // Spawned subagent executor
 
 export interface PromptAssemblyContext {
   mode: PromptAssemblyMode;
@@ -60,8 +60,10 @@ export function buildSubagentInstructions(task: string, role?: string): string {
     `executive_summary: <1-3 sentences summarizing what was accomplished>`,
     `artifacts: <comma-separated list of files created/modified, or "none">`,
     `risks: <any risks found, or "None">`,
-    `---`
-  ].filter(Boolean).join("\n");
+    `---`,
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 export function wrapDelegationTask(task: string, targetType: string): string {
@@ -74,8 +76,8 @@ export function wrapDelegationTask(task: string, targetType: string): string {
     "---",
     "status: success | partial | blocked",
     "executive_summary: <1-3 sentences summarizing what was accomplished>",
-    "artifacts: <comma-separated list of files created/modified, or \"none\">",
-    "risks: <any risks found, or \"None\">",
+    'artifacts: <comma-separated list of files created/modified, or "none">',
+    'risks: <any risks found, or "None">',
     "---",
   ].join("\n");
 }
@@ -83,10 +85,7 @@ export function wrapDelegationTask(task: string, targetType: string): string {
 export function assemblePromptAppends(ctx: PromptAssemblyContext): string[] {
   switch (ctx.mode) {
     case "standard-session":
-      return [
-        formatEnvironmentContext(ctx.workspaceDir),
-        ...STANDARD_APPEND_INSTRUCTIONS,
-      ];
+      return [formatEnvironmentContext(ctx.workspaceDir), ...STANDARD_APPEND_INSTRUCTIONS];
     case "team-orchestration":
     case "orchestration-team":
     case "agent-startup": {
@@ -94,7 +93,7 @@ export function assemblePromptAppends(ctx: PromptAssemblyContext): string[] {
       const layered = promptComposer.compose(
         ctx.agentDef || { name: "", role: "", systemPrompt: "" },
         deployment,
-        ctx.workspaceDir
+        ctx.workspaceDir,
       );
       return [
         formatEnvironmentContext(ctx.workspaceDir),
@@ -110,17 +109,12 @@ export function assemblePromptAppends(ctx: PromptAssemblyContext): string[] {
       const layered = promptComposer.compose(
         ctx.agentDef || { name: "", role: "", systemPrompt: "" },
         deployment,
-        ctx.workspaceDir
+        ctx.workspaceDir,
       );
-      return [
-        layered.composed,
-      ];
+      return [layered.composed];
     }
     case "subagent-spawn": {
-      const instructions = buildSubagentInstructions(
-        ctx.subagentTask || "",
-        ctx.subagentRole
-      );
+      const instructions = buildSubagentInstructions(ctx.subagentTask || "", ctx.subagentRole);
       return [
         ctx.agentsMd || "",
         instructions,

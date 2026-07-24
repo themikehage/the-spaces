@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
-import { useState, useMemo } from "react";
 import {
+  Bot,
+  Brain,
+  CheckCircle,
   ChevronDown,
   ChevronUp,
+  Clock,
   Play,
   User,
-  Brain,
   Wrench,
-  Bot,
-  CheckCircle,
   XCircle,
-  Clock,
 } from "lucide-react";
+import { useMemo, useState } from "react";
 
 interface Milestone {
   id: string;
@@ -132,7 +132,11 @@ export function SessionTimeline({ messages, sessionCreatedAt }: SessionTimelineP
 
   const formatTimestamp = (iso: string) => {
     try {
-      return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      return new Date(iso).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
     } catch {
       return "";
     }
@@ -197,15 +201,17 @@ export function SessionTimeline({ messages, sessionCreatedAt }: SessionTimelineP
               >
                 <div className="space-y-0.5 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-semibold text-xs text-foreground tracking-tight">{m.title}</span>
+                    <span className="font-semibold text-xs text-foreground tracking-tight">
+                      {m.title}
+                    </span>
                     {m.status && (
                       <span
                         className={`text-[9px] font-bold px-1.5 py-0.2 rounded-md uppercase flex items-center gap-1 ${
                           m.status === "success"
                             ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/15"
                             : m.status === "error"
-                            ? "bg-rose-500/10 text-rose-400 border border-rose-500/15"
-                            : "bg-amber-500/10 text-amber-400 border border-amber-500/15"
+                              ? "bg-rose-500/10 text-rose-400 border border-rose-500/15"
+                              : "bg-amber-500/10 text-amber-400 border border-amber-500/15"
                         }`}
                       >
                         {m.status === "success" && <CheckCircle size={10} />}
@@ -221,7 +227,9 @@ export function SessionTimeline({ messages, sessionCreatedAt }: SessionTimelineP
                     )}
                   </div>
                   {m.subtitle && (
-                    <p className="text-[10px] text-muted-foreground font-medium truncate">{m.subtitle}</p>
+                    <p className="text-[10px] text-muted-foreground font-medium truncate">
+                      {m.subtitle}
+                    </p>
                   )}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">

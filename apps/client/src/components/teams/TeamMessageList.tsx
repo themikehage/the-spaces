@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-import { useRef } from "react";
-import type { TeamMessage } from "shared";
-import type { StreamingAgentState } from "@/hooks/useTeam";
 import { MessageList } from "@/components/chat/MessageList";
 import { useChatScroll } from "@/hooks/useChatScroll";
+import type { StreamingAgentState } from "@/hooks/useTeam";
+import { useRef } from "react";
+import type { TeamMessage } from "shared";
 
 interface Props {
   messages: TeamMessage[];
@@ -18,7 +18,7 @@ interface Props {
 function mapTeamMessagesToStandard(
   messages: TeamMessage[],
   streamingAgents: Record<string, StreamingAgentState>,
-  agentAvatarMap: Record<string, string | undefined> = {}
+  agentAvatarMap: Record<string, string | undefined> = {},
 ): any[] {
   const result: any[] = [];
 
@@ -173,13 +173,9 @@ export function TeamMessageList({
   const activeStreamList = Object.values(streamingAgents);
   const isStreaming = activeStreamList.length > 0;
 
-  const {
-    showScrollButton,
-    scrollToBottom,
-    handleScroll
-  } = useChatScroll(scrollContainerRef, {
+  const { showScrollButton, scrollToBottom, handleScroll } = useChatScroll(scrollContainerRef, {
     messages,
-    isStreaming
+    isStreaming,
   });
 
   return (
@@ -196,8 +192,12 @@ export function TeamMessageList({
                 <span className="text-primary font-bold text-lg">#</span>
               </div>
               <div className="text-center">
-                <p className="font-medium text-foreground text-sm">No messages in this team session yet</p>
-                <p className="text-xs text-muted-foreground mt-1">Send a message below to trigger multi-agent debate</p>
+                <p className="font-medium text-foreground text-sm">
+                  No messages in this team session yet
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Send a message below to trigger multi-agent debate
+                </p>
               </div>
             </div>
           ) : (
@@ -216,7 +216,13 @@ export function TeamMessageList({
           onClick={() => scrollToBottom("smooth")}
           className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center justify-center w-9 h-9 rounded-full bg-surface border border-border text-accent shadow-xl hover:bg-surface-hover active:scale-95 transition-all duration-200"
         >
-          <svg className="w-4 h-4 animate-bounce" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+          <svg
+            className="w-4 h-4 animate-bounce"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            viewBox="0 0 24 24"
+          >
             <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
           </svg>
         </button>

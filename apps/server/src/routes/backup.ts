@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
+import AdmZip from "adm-zip";
 import { Hono } from "hono";
-import { authMiddleware, getAuthPayload } from "../middleware/auth";
-import { sessionManager } from "../core/session-manager";
-import { agentRegistry } from "../agents";
-import { rmSync, mkdirSync, existsSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { readdir } from "node:fs/promises";
 import { join, relative } from "node:path";
-import AdmZip from "adm-zip";
 import { getUserDir } from "shared";
+import { agentRegistry } from "../agents";
+import { sessionManager } from "../core/session-manager";
+import { authMiddleware, getAuthPayload } from "../middleware/auth";
 
 export const backupRouter = new Hono();
 backupRouter.use("/*", authMiddleware);
@@ -16,7 +16,7 @@ async function addFilesRecursively(
   zip: AdmZip,
   currentDir: string,
   baseDir: string,
-  type: "light" | "full"
+  type: "light" | "full",
 ) {
   if (!existsSync(currentDir)) return;
   const entries = await readdir(currentDir, { withFileTypes: true });
@@ -50,9 +50,19 @@ async function addFilesRecursively(
     } else {
       if (type === "light") {
         const parts = relPath.split("/");
-        const isRootConfig = parts.length === 1 && ["credentials.json", "auth.json", "integrations.json", "env.json", "mcp-servers.json", "mcp-config.json"].includes(parts[0]);
+        const isRootConfig =
+          parts.length === 1 &&
+          [
+            "credentials.json",
+            "auth.json",
+            "integrations.json",
+            "env.json",
+            "mcp-servers.json",
+            "mcp-config.json",
+          ].includes(parts[0]);
         const isCustomSkill = relPath.startsWith("workspace/.agents/skills/");
-        const isAgentDef = parts.length === 3 && parts[0] === "agents" && parts[2] === "definition.json";
+        const isAgentDef =
+          parts.length === 3 && parts[0] === "agents" && parts[2] === "definition.json";
         const isTeamDef = parts.length === 3 && parts[0] === "teams" && parts[2] === "team.json";
 
         if (isRootConfig || isCustomSkill || isAgentDef || isTeamDef) {

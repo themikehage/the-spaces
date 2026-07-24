@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
-import { TaskStateManager } from "../tools/task-state-manager";
-import { SessionPrefix } from "shared";
-import { promptComposer } from "../prompts/composer";
-import { assemblePromptAppends } from "../prompts/prompt-assembly";
-import { CUSTOM_TOOL_INSTRUCTIONS } from "../custom-tools";
-import { resolveProjectDir } from "./workspace-resolver";
-import { userConfig } from "./user-config";
-import { sessionMetadataStore } from "./metadata-store";
-import { buildProjectContextPrompt } from "../prompts/project-context";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { SessionPrefix } from "shared";
+import { CUSTOM_TOOL_INSTRUCTIONS } from "../custom-tools";
+import { promptComposer } from "../prompts/composer";
+import { buildProjectContextPrompt } from "../prompts/project-context";
+import { assemblePromptAppends } from "../prompts/prompt-assembly";
+import { TaskStateManager } from "../tools/task-state-manager";
+import { sessionMetadataStore } from "./metadata-store";
+import { userConfig } from "./user-config";
+import { resolveProjectDir } from "./workspace-resolver";
 
 export interface BuildPromptsParams {
   username: string;
@@ -48,14 +48,14 @@ export class SessionPromptBuilder {
     if (sessionId.startsWith(SessionPrefix.DELEGATE)) {
       appendPrompts.push(
         `\n\n## Delegated Task Mode\n` +
-        `You are executing a delegated task. Perform the task directly and output a structured result envelope at the very end of your response.\n` +
-        `Return the result envelope exactly in this format as your last message:\n` +
-        `---\n` +
-        `status: success | partial | blocked\n` +
-        `executive_summary: <1-3 sentences summarizing what was accomplished>\n` +
-        `artifacts: <comma-separated list of files created/modified, or "none">\n` +
-        `risks: <any risks found, or "None">\n` +
-        `---`
+          `You are executing a delegated task. Perform the task directly and output a structured result envelope at the very end of your response.\n` +
+          `Return the result envelope exactly in this format as your last message:\n` +
+          `---\n` +
+          `status: success | partial | blocked\n` +
+          `executive_summary: <1-3 sentences summarizing what was accomplished>\n` +
+          `artifacts: <comma-separated list of files created/modified, or "none">\n` +
+          `risks: <any risks found, or "None">\n` +
+          `---`,
       );
     }
 
@@ -89,8 +89,8 @@ export class SessionPromptBuilder {
                   if (leaderEntry?.server.definition.systemPrompt) {
                     appendPrompts.push(
                       `\n\n## Project Lead Agent Persona & Directives\n` +
-                      `This project has an assigned Lead Agent (${leaderEntry.server.definition.name || assignment.leaderId}). Incorporate the following lead instructions into your reasoning and execution:\n\n` +
-                      leaderEntry.server.definition.systemPrompt
+                        `This project has an assigned Lead Agent (${leaderEntry.server.definition.name || assignment.leaderId}). Incorporate the following lead instructions into your reasoning and execution:\n\n` +
+                        leaderEntry.server.definition.systemPrompt,
                     );
                   }
                 } catch (err) {
@@ -100,12 +100,15 @@ export class SessionPromptBuilder {
 
               if (Array.isArray(assignment.members) && assignment.members.length > 0) {
                 const roster = assignment.members
-                  .map((m: { id: string; name: string; role: string }) => `- **${m.name}** (ID: \`${m.id}\`, Role: ${m.role})`)
+                  .map(
+                    (m: { id: string; name: string; role: string }) =>
+                      `- **${m.name}** (ID: \`${m.id}\`, Role: ${m.role})`,
+                  )
                   .join("\n");
                 appendPrompts.push(
                   `\n\n## Project Assigned Team Roster\n` +
-                  `The following team members are assigned to work on this project:\n` +
-                  roster
+                    `The following team members are assigned to work on this project:\n` +
+                    roster,
                 );
               }
             }
@@ -119,21 +122,23 @@ export class SessionPromptBuilder {
     if (cachedMcpToolNames.length > 0) {
       appendPrompts.push(
         `\n\nModel Context Protocol (MCP) Tools Available:\n` +
-        `You have the following custom MCP tools registered and active:\n` +
-        `${cachedMcpToolNames.map((name: string) => `- ${name}`).join("\n")}\n` +
-        `Use these tools when the task requires interacting with external databases, APIs, searching the web, or product integrations (like Slack, Linear, Jira, Google Drive). Do not assume you need to use bash if a specific MCP tool is more suitable.\n`
+          `You have the following custom MCP tools registered and active:\n` +
+          `${cachedMcpToolNames.map((name: string) => `- ${name}`).join("\n")}\n` +
+          `Use these tools when the task requires interacting with external databases, APIs, searching the web, or product integrations (like Slack, Linear, Jira, Google Drive). Do not assume you need to use bash if a specific MCP tool is more suitable.\n`,
       );
     }
 
     try {
       const { customToolStorage } = await import("../custom-tools/storage");
-      const customDefs = customToolStorage.loadAll(username).filter((d: any) => d.enabled !== false);
+      const customDefs = customToolStorage
+        .loadAll(username)
+        .filter((d: any) => d.enabled !== false);
       if (customDefs.length > 0) {
         appendPrompts.push(
           `\n\n## Custom Tools Available (User-Created):\n` +
-          `You have ${customDefs.length} custom tool(s) registered and active for this user:\n` +
-          `${customDefs.map((t: any) => `- ${t.name}: ${t.description}`).join("\n")}\n` +
-          `These are available as regular tools — invoke them by name like any other tool. Prefer them when the task matches their purpose.\n`
+            `You have ${customDefs.length} custom tool(s) registered and active for this user:\n` +
+            `${customDefs.map((t: any) => `- ${t.name}: ${t.description}`).join("\n")}\n` +
+            `These are available as regular tools — invoke them by name like any other tool. Prefer them when the task matches their purpose.\n`,
         );
       }
     } catch (e) {
@@ -172,7 +177,10 @@ export class SessionPromptBuilder {
       try {
         const activeTask = tasksState.tasks?.find((t: any) => t.id === tasksState.currentTaskId);
         const tasksListStr = tasksState.tasks
-          ?.map((t: any) => `- [${t.status === "done" ? "x" : t.status === "running" ? "/" : " "}] ${t.id}: ${t.title}${t.depends_on?.length > 0 ? ` (depends on: ${t.depends_on.join(", ")})` : ""}`)
+          ?.map(
+            (t: any) =>
+              `- [${t.status === "done" ? "x" : t.status === "running" ? "/" : " "}] ${t.id}: ${t.title}${t.depends_on?.length > 0 ? ` (depends on: ${t.depends_on.join(", ")})` : ""}`,
+          )
           .join("\n");
 
         const promptSnippet =
@@ -212,7 +220,10 @@ export class SessionPromptBuilder {
         const { agentRegistry } = await import("../../agents");
         const team = teamStore.getTeam(username, meta.teamId);
         const ownerId = params.resolvedAgentId || "";
-        if (team?.teamType === "Orchestration" && team.members.some((member) => member.agentId === ownerId && member.role === "lead")) {
+        if (
+          team?.teamType === "Orchestration" &&
+          team.members.some((member) => member.agentId === ownerId && member.role === "lead")
+        ) {
           return {
             mode: "orchestration",
             agentRole: "lead",
@@ -220,7 +231,10 @@ export class SessionPromptBuilder {
               .filter((member) => member.agentId !== ownerId && member.role !== "observer")
               .map((member) => {
                 const entry = agentRegistry.get(member.agentId, username);
-                const capability = entry?.server.definition.systemPrompt?.replace(/\s+/g, " ").slice(0, 180) || entry?.server.definition.role || member.role;
+                const capability =
+                  entry?.server.definition.systemPrompt?.replace(/\s+/g, " ").slice(0, 180) ||
+                  entry?.server.definition.role ||
+                  member.role;
                 return {
                   agentId: member.agentId,
                   agentName: entry?.server.definition.name || member.agentId,

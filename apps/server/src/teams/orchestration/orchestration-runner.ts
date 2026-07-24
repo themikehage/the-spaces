@@ -1,13 +1,8 @@
 // SPDX-License-Identifier: MIT
-import { teamStore } from "../team-store";
+import { type TeamMessage, SessionPrefix, getTeamWorkspaceDir } from "shared";
 import { agentRegistry } from "../../agents";
 import { sessionManager } from "../../core/session-manager";
-import {
-  type Team,
-  type TeamMessage,
-  SessionPrefix,
-  getTeamWorkspaceDir,
-} from "shared";
+import { teamStore } from "../team-store";
 
 type BroadcastFn = (teamId: string, data: any) => void;
 
@@ -29,7 +24,7 @@ export class OrchestrationRunner {
     username: string,
     teamId: string,
     userContent: string,
-    conversationSessionId?: string
+    conversationSessionId?: string,
   ): Promise<void> {
     const team = teamStore.getTeam(username, teamId);
     if (!team) throw new Error("Team not found");
@@ -77,7 +72,7 @@ export class OrchestrationRunner {
       undefined,
       leader.agentId,
       undefined,
-      { workspaceDir: getTeamWorkspaceDir(username, teamId) }
+      { workspaceDir: getTeamWorkspaceDir(username, teamId) },
     );
 
     const existingBridge = this.activeBridges.get(teamId);

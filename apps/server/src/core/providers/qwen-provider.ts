@@ -14,4 +14,3 @@ export function registerQwenProvider(registry: ModelRegistry, username?: string)
     models: persisted ?? [],
   });
 }
-

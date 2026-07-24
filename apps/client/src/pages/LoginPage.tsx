@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-import { useState, type FormEvent } from "react";
+import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLiterals } from "@/lib";
+import { useState, type FormEvent } from "react";
 import { literals as loginLiterals } from "./LoginPage.literals";
-import { Button } from "@/components/ui/Button";
 
 export function LoginPage() {
   const l = useLiterals(loginLiterals);
@@ -28,9 +28,7 @@ export function LoginPage() {
         <h1 className="text-3xl font-display font-bold text-foreground text-center mb-2">
           {l.title}
         </h1>
-        <p className="text-muted-foreground text-center mb-8">
-          {l.subtitle}
-        </p>
+        <p className="text-muted-foreground text-center mb-8">{l.subtitle}</p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <input
@@ -57,15 +55,8 @@ export function LoginPage() {
                          focus:border-primary transition-colors"
             />
           </div>
-          {error && (
-            <p className="text-destructive text-sm text-center">{error}</p>
-          )}
-          <Button
-            type="submit"
-            disabled={loading}
-            size="lg"
-            className="w-full"
-          >
+          {error && <p className="text-destructive text-sm text-center">{error}</p>}
+          <Button type="submit" disabled={loading} size="lg" className="w-full">
             {loading ? l.signingIn : l.signIn}
           </Button>
         </form>

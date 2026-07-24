@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-import { useContext } from "react";
-import { LiteralsContext } from "@/lib";
 import type { SupportedLocale } from "@/lib";
+import { LiteralsContext } from "@/lib";
+import { useContext } from "react";
 
 const locales: { value: SupportedLocale; label: string }[] = [
   { value: "en", label: "English" },

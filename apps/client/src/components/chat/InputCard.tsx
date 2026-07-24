@@ -39,15 +39,12 @@ export function InputCard({
         focused
           ? "border-primary ring-1 ring-primary/20 shadow-md"
           : streaming
-          ? "border-primary/50"
-          : "border-border/60 hover:border-border/90"
+            ? "border-primary/50"
+            : "border-border/60 hover:border-border/90"
       } ${disabled ? "opacity-50 pointer-events-none" : ""}`}
     >
       {/* 1. AttachmentPreview */}
-      <AttachmentPreview
-        attachments={attachments}
-        onRemove={onRemoveAttachment}
-      />
+      <AttachmentPreview attachments={attachments} onRemove={onRemoveAttachment} />
 
       <div className="px-4 py-3">
         <ChatTextarea

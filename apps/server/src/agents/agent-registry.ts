@@ -1,12 +1,20 @@
 // SPDX-License-Identifier: MIT
-import { createAgentServer } from "./create-agent-server";
-import { type AgentDefinition, type AgentInfo, type AgentStatus, SessionPrefix, getUserDir, SPACES_DATA_PATH, USERS_DIR, type AgentScopeTarget } from "shared";
-import type { AgentEntry } from "./types";
-import { scopeConfigManager } from "../core/scope";
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import {
+  SPACES_DATA_PATH,
+  SessionPrefix,
+  USERS_DIR,
+  getUserDir,
+  type AgentDefinition,
+  type AgentInfo,
+  type AgentScopeTarget,
+  type AgentStatus,
+} from "shared";
+import { scopeConfigManager } from "../core/scope";
 import { getAgentStopCallback } from "./agent-stop-callback";
-
+import { createAgentServer } from "./create-agent-server";
+import type { AgentEntry } from "./types";
 
 class AgentRegistry {
   private agents = new Map<string, AgentEntry>();
@@ -46,7 +54,10 @@ class AgentRegistry {
                       await this.register(username, def, false);
                     }
                   } catch (err) {
-                    console.error(`[AgentRegistry] Failed to load persisted agent ${entry.name} for ${username}:`, err);
+                    console.error(
+                      `[AgentRegistry] Failed to load persisted agent ${entry.name} for ${username}:`,
+                      err,
+                    );
                   }
                 }
               }
@@ -59,7 +70,12 @@ class AgentRegistry {
     }
   }
 
-  async register(username: string, definition: AgentDefinition, saveToDisk = true, scope?: AgentScopeTarget): Promise<AgentEntry> {
+  async register(
+    username: string,
+    definition: AgentDefinition,
+    saveToDisk = true,
+    scope?: AgentScopeTarget,
+  ): Promise<AgentEntry> {
     if (this.agents.has(definition.id)) {
       throw new Error(`Agent "${definition.id}" is already registered`);
     }
@@ -85,7 +101,11 @@ class AgentRegistry {
       if (saveToDisk) {
         const agentDir = this.getAgentDir(username, definition.id);
         const { scope: defScope, ...defWithoutScope } = definition;
-        writeFileSync(join(agentDir, "definition.json"), JSON.stringify(defWithoutScope, null, 2), "utf-8");
+        writeFileSync(
+          join(agentDir, "definition.json"),
+          JSON.stringify(defWithoutScope, null, 2),
+          "utf-8",
+        );
         await scopeConfigManager.registerAgent(username, definition.id, scope || defScope);
       }
 
@@ -185,7 +205,11 @@ class AgentRegistry {
     }
   }
 
-  async update(username: string, id: string, updates: Partial<Omit<AgentDefinition, "id">>): Promise<AgentEntry> {
+  async update(
+    username: string,
+    id: string,
+    updates: Partial<Omit<AgentDefinition, "id">>,
+  ): Promise<AgentEntry> {
     const entry = this.agents.get(id);
     if (!entry || entry.username !== username) {
       throw new Error(`Agent "${id}" not found`);
@@ -203,7 +227,10 @@ class AgentRegistry {
       if (currentMembership.type === "global") {
         targetScope = { type: "global" };
       } else {
-        targetScope = { type: currentMembership.type as "channel" | "project", id: currentMembership.id };
+        targetScope = {
+          type: currentMembership.type as "channel" | "project",
+          id: currentMembership.id,
+        };
       }
     }
 

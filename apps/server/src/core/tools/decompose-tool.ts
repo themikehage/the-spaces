@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { join } from "node:path";
-import { sessionManager } from "../session-manager";
 import { broadcastToSession } from "../../ws/handler";
-import { streamSimple } from "../../ai/vendor/ai/src/compat.ts";
+import { sessionManager } from "../session-manager";
 import { TaskStateManager } from "./task-state-manager";
 
 export interface DecomposeTasksOptions {
@@ -10,7 +9,12 @@ export interface DecomposeTasksOptions {
   parentSessionId: string;
 }
 
-function buildDecomposePrompt(objective: string, context: string, maxTasks: number, mode: string): string {
+function buildDecomposePrompt(
+  objective: string,
+  context: string,
+  maxTasks: number,
+  mode: string,
+): string {
   const modeInstruction =
     mode === "dag"
       ? "Where possible, express parallelism by specifying which tasks each step depends on using their IDs."
@@ -50,13 +54,13 @@ function parseTasksFromText(text: string): unknown | null {
   if (jsonMatch) {
     try {
       return JSON.parse(jsonMatch[1].trim());
-    } catch { }
+    } catch {}
   }
   const trimmed = text.trim();
   if (trimmed.startsWith("[") || trimmed.startsWith("{")) {
     try {
       return JSON.parse(trimmed);
-    } catch { }
+    } catch {}
   }
   return null;
 }
@@ -124,7 +128,9 @@ Once the plan is registered, execute each task in order using your available too
 
       if (!Array.isArray(rawTasks) || rawTasks.length === 0) {
         return {
-          content: [{ type: "text", text: "Error: tasks array is required and must not be empty." }],
+          content: [
+            { type: "text", text: "Error: tasks array is required and must not be empty." },
+          ],
           isError: true,
         };
       }
@@ -203,4 +209,3 @@ Once the plan is registered, execute each task in order using your available too
     },
   };
 }
-

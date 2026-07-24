@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-import { useEffect, useRef, useState } from "react";
-import { ALL_TOOLS } from "./ToolsSelector";
-import { PortalPopover } from "./PortalPopover";
 import { useLiterals } from "@/lib";
+import { useEffect, useRef, useState } from "react";
 import { literals as u } from "./ChatInput.literals";
+import { PortalPopover } from "./PortalPopover";
+import { ALL_TOOLS } from "./ToolsSelector";
 
 interface ToolsPopoverProps {
   activeTools: string[];
@@ -73,32 +73,49 @@ export function ToolsPopover({
   const applyPreset = (preset: "autonomous" | "standard" | "readonly") => {
     if (preset === "autonomous") {
       const available = ALL_TOOLS.filter(
-        (t) => !(t.gateKey && toolStatus?.[t.id] === "missing_key")
+        (t) => !(t.gateKey && toolStatus?.[t.id] === "missing_key"),
       ).map((t) => t.id);
       onChange(available, "autonomous");
     } else if (preset === "standard") {
-      onChange(["read", "write", "edit", "bash", "grep", "find", "ls", "request_approval", "ask_question", "render_html"], "standard");
+      onChange(
+        [
+          "read",
+          "write",
+          "edit",
+          "bash",
+          "grep",
+          "find",
+          "ls",
+          "request_approval",
+          "ask_question",
+          "render_html",
+        ],
+        "standard",
+      );
     } else {
       onChange(["read", "grep", "find", "ls"], "readonly");
     }
   };
 
-  const isReadOnly = executionMode === "readonly" || (
-    activeTools.includes("read") &&
-    activeTools.includes("grep") &&
-    activeTools.includes("find") &&
-    activeTools.includes("ls") &&
-    !activeTools.includes("write") &&
-    !activeTools.includes("edit") &&
-    !activeTools.includes("bash")
-  );
+  const isReadOnly =
+    executionMode === "readonly" ||
+    (activeTools.includes("read") &&
+      activeTools.includes("grep") &&
+      activeTools.includes("find") &&
+      activeTools.includes("ls") &&
+      !activeTools.includes("write") &&
+      !activeTools.includes("edit") &&
+      !activeTools.includes("bash"));
 
   const isAutonomous = executionMode === "autonomous";
   const isStandard = executionMode === "standard" || (!isReadOnly && !isAutonomous);
 
   return (
     <PortalPopover triggerRef={triggerRef} open={open} onClose={onClose}>
-      <div ref={popoverRef} className="w-80 max-h-96 overflow-hidden bg-[#171717] border border-border rounded-xl shadow-xl flex flex-col">
+      <div
+        ref={popoverRef}
+        className="w-80 max-h-96 overflow-hidden bg-[#171717] border border-border rounded-xl shadow-xl flex flex-col"
+      >
         <div className="flex gap-1.5 p-2 border-b border-border bg-[#171717] shrink-0">
           <button
             type="button"

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { getUserDir } from "shared";
 import type { ToolPermissionRule } from "./subagent-permissions";
 
@@ -37,11 +37,15 @@ export class UserPermissionStore {
     username: string,
     toolName: string,
     pattern: string,
-    action: "allow" | "deny"
+    action: "allow" | "deny",
   ): void {
     const rules = this.getDecisions(username);
     const filtered = rules.filter(
-      (r) => !(r.toolName.toLowerCase() === toolName.toLowerCase() && r.pattern.toLowerCase() === pattern.toLowerCase())
+      (r) =>
+        !(
+          r.toolName.toLowerCase() === toolName.toLowerCase() &&
+          r.pattern.toLowerCase() === pattern.toLowerCase()
+        ),
     );
     filtered.push({
       toolName,

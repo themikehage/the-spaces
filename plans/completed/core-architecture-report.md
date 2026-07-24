@@ -31,16 +31,16 @@ server/routes + ws
 
 ## 3. Mapa mental original (confirmado)
 
-| Pieza | Dónde | Notas |
-|---|---|---|
-| **Loop** | `vendor/agent` `agent-loop.ts`, `agent.ts` | Sólido; Spaces **bypasea** `AgentHarness` |
-| **Modelos** | `ai/model-registry.ts` + `core/providers/*` | Cascada session→agent→user; **sin** project |
-| **System prompts** | `prompt-builder` + `prompts/*` + `resource-loader` | Dos ensambladores sumados |
-| **Hooks tools** | Vendor before/after; app solo **before** | HITL + sandbox; `afterToolCall` no cableado |
-| **Workspace** | `workspace-resolver` + cwd/sandbox | Unidad natural de config futura |
-| **HITL** | `before-tool-call-hook` + `approvalManager` | `auto \| propose \| suggest` |
-| **Tools** | `tool-factory` → `tool-activation` → MCP | Always-on duplicados en 4 sitios |
-| **Delegaciones** | `manage_delegations` + registry + envelope | spawn/delegate → `terminate` → `followUp`/`continue` |
+| Pieza              | Dónde                                              | Notas                                                |
+| ------------------ | -------------------------------------------------- | ---------------------------------------------------- |
+| **Loop**           | `vendor/agent` `agent-loop.ts`, `agent.ts`         | Sólido; Spaces **bypasea** `AgentHarness`            |
+| **Modelos**        | `ai/model-registry.ts` + `core/providers/*`        | Cascada session→agent→user; **sin** project          |
+| **System prompts** | `prompt-builder` + `prompts/*` + `resource-loader` | Dos ensambladores sumados                            |
+| **Hooks tools**    | Vendor before/after; app solo **before**           | HITL + sandbox; `afterToolCall` no cableado          |
+| **Workspace**      | `workspace-resolver` + cwd/sandbox                 | Unidad natural de config futura                      |
+| **HITL**           | `before-tool-call-hook` + `approvalManager`        | `auto \| propose \| suggest`                         |
+| **Tools**          | `tool-factory` → `tool-activation` → MCP           | Always-on duplicados en 4 sitios                     |
+| **Delegaciones**   | `manage_delegations` + registry + envelope         | spawn/delegate → `terminate` → `followUp`/`continue` |
 
 ---
 
@@ -50,66 +50,66 @@ Ordenados por criticidad para extender sin romper.
 
 ### Tier 0 — Columna vertebral de sesión/turno
 
-| # | Mecanismo | Path clave | Qué hace |
-|---|---|---|---|
-| 1 | **Session factory** | `core/session-manager.ts` | Bootstrap único: workspace, JSONL, prompts, tools, hooks, model, events. Key `username:sessionId`. Destroy = abort árbol + MCP + memory + rm dir |
-| 2 | **metadata.json como SoT** | `session/metadata-store.ts` | `projectId/agentId/teamId/parentSessionId/tools/executionMode/autonomyLevel/permissionRules` + métricas. Decide tools, permisos, workspace |
-| 3 | **Árbol JSONL / context rebuild** | `ai/session-persistence.ts` | Tree: message, compaction, branch_summary, model_change, thinking_level_change… `buildSessionContext` = lo que ve el modelo. Memoria del Agent **no** es durable |
-| 4 | **steer / followUp / continue / abort** | `vendor/agent` + `agent-session` | Colas mid-run y post-run. Delegación completa con `followUp` + auto-`continue`. Abort hace fan-out recursivo |
-| 5 | **Compaction** | `harness/compaction/*` + `AgentSession.compact` | Resume historia (`keepRecentTokens: 20k`, `reserve: 16k`). Entry `compaction` en el árbol. Manual, no auto cada turno |
-| 6 | **convertToLlm + roles custom** | `ai/messages.ts` | `compactionSummary`, `branchSummary`, `custom`, `bashExecution` → user/assistant/toolResult. Roles desconocidos se dropean |
+| #   | Mecanismo                               | Path clave                                      | Qué hace                                                                                                                                                         |
+| --- | --------------------------------------- | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Session factory**                     | `core/session-manager.ts`                       | Bootstrap único: workspace, JSONL, prompts, tools, hooks, model, events. Key `username:sessionId`. Destroy = abort árbol + MCP + memory + rm dir                 |
+| 2   | **metadata.json como SoT**              | `session/metadata-store.ts`                     | `projectId/agentId/teamId/parentSessionId/tools/executionMode/autonomyLevel/permissionRules` + métricas. Decide tools, permisos, workspace                       |
+| 3   | **Árbol JSONL / context rebuild**       | `ai/session-persistence.ts`                     | Tree: message, compaction, branch_summary, model_change, thinking_level_change… `buildSessionContext` = lo que ve el modelo. Memoria del Agent **no** es durable |
+| 4   | **steer / followUp / continue / abort** | `vendor/agent` + `agent-session`                | Colas mid-run y post-run. Delegación completa con `followUp` + auto-`continue`. Abort hace fan-out recursivo                                                     |
+| 5   | **Compaction**                          | `harness/compaction/*` + `AgentSession.compact` | Resume historia (`keepRecentTokens: 20k`, `reserve: 16k`). Entry `compaction` en el árbol. Manual, no auto cada turno                                            |
+| 6   | **convertToLlm + roles custom**         | `ai/messages.ts`                                | `compactionSummary`, `branchSummary`, `custom`, `bashExecution` → user/assistant/toolResult. Roles desconocidos se dropean                                       |
 
 ### Tier 1 — Seguridad, aislamiento, cancelación
 
-| # | Mecanismo | Path clave | Qué hace |
-|---|---|---|---|
-| 7 | **Multi-tenant + auth en tools** | `user-config`, `paths.ts`, tool-factory | Todo namespaced por user. Keys/env/workspace por usuario. Tools cierran sobre `username/sessionId/cwd` |
-| 8 | **Sandbox en capas** | `permission-engine`, `path-safety`, `bash-tool`, `bash-output-filter` | Deny estático → rules subagent → ASK → path escape block → bash PID/ports → scrub secretos en output |
-| 9 | **AbortToken + árbol cancelación** | `abort-token.ts`, `delegation-registry.ts` | LIFO callbacks + BFS abort hijos. Restart marca delegaciones stale como `blocked` |
-| 10 | **Herencia permisos subagent** | `subagent-permissions.ts`, `session-depth.ts` | Techo = tools del padre. Defaults niegan nest meta-tools. explorer/builder/autonomous. Depth vía `parentSessionId` |
-| 11 | **Session prefixes** | `packages/shared/session-prefix.ts` | `sub_ del_ team_ lab_ exec_ bench_…` dictan layout FS, cleanup y permisos. No inventar IDs libres |
+| #   | Mecanismo                          | Path clave                                                            | Qué hace                                                                                                           |
+| --- | ---------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| 7   | **Multi-tenant + auth en tools**   | `user-config`, `paths.ts`, tool-factory                               | Todo namespaced por user. Keys/env/workspace por usuario. Tools cierran sobre `username/sessionId/cwd`             |
+| 8   | **Sandbox en capas**               | `permission-engine`, `path-safety`, `bash-tool`, `bash-output-filter` | Deny estático → rules subagent → ASK → path escape block → bash PID/ports → scrub secretos en output               |
+| 9   | **AbortToken + árbol cancelación** | `abort-token.ts`, `delegation-registry.ts`                            | LIFO callbacks + BFS abort hijos. Restart marca delegaciones stale como `blocked`                                  |
+| 10  | **Herencia permisos subagent**     | `subagent-permissions.ts`, `session-depth.ts`                         | Techo = tools del padre. Defaults niegan nest meta-tools. explorer/builder/autonomous. Depth vía `parentSessionId` |
+| 11  | **Session prefixes**               | `packages/shared/session-prefix.ts`                                   | `sub_ del_ team_ lab_ exec_ bench_…` dictan layout FS, cleanup y permisos. No inventar IDs libres                  |
 
 ### Tier 2 — Contexto y tools runtime
 
-| # | Mecanismo | Path clave | Qué hace |
-|---|---|---|---|
-| 12 | **Skills** | `load-skills.ts`, `resource-loader`, discovery en workspace | `SKILL.md` + frontmatter. Catálogo en system prompt; `/name` inyecta body del skill ese turno |
-| 13 | **Memory** | `core/memory/*`, `session-memory-enricher` | SQLite+FTS5 por sesión (semantic/episodic/procedural) + tools. **Auto-inject es no-op** (`injectMemoryContext` desactivado) |
-| 14 | **MCP** | `mcp-registry`, `mcp-client` | stdio/HTTP por user. Tools `mcp_{server}_{tool}` **async** tras crear sesión (race con primer prompt) |
-| 15 | **Custom tools + pipelines in-tool** | `custom-tools/runtime.ts`, `pipeline-engine.ts` | type `pipeline` llama tools del session con `{vars}`, depth≤5. type `ui` = UI declarativa |
-| 16 | **Task state** | `task-state-manager`, `decompose-tool` | `tasks.json` DAG por sesión. No reemplaza delegaciones; estructura blanda sobre el mismo loop |
+| #   | Mecanismo                            | Path clave                                                  | Qué hace                                                                                                                    |
+| --- | ------------------------------------ | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| 12  | **Skills**                           | `load-skills.ts`, `resource-loader`, discovery en workspace | `SKILL.md` + frontmatter. Catálogo en system prompt; `/name` inyecta body del skill ese turno                               |
+| 13  | **Memory**                           | `core/memory/*`, `session-memory-enricher`                  | SQLite+FTS5 por sesión (semantic/episodic/procedural) + tools. **Auto-inject es no-op** (`injectMemoryContext` desactivado) |
+| 14  | **MCP**                              | `mcp-registry`, `mcp-client`                                | stdio/HTTP por user. Tools `mcp_{server}_{tool}` **async** tras crear sesión (race con primer prompt)                       |
+| 15  | **Custom tools + pipelines in-tool** | `custom-tools/runtime.ts`, `pipeline-engine.ts`             | type `pipeline` llama tools del session con `{vars}`, depth≤5. type `ui` = UI declarativa                                   |
+| 16  | **Task state**                       | `task-state-manager`, `decompose-tool`                      | `tasks.json` DAG por sesión. No reemplaza delegaciones; estructura blanda sobre el mismo loop                               |
 
 ### Tier 3 — Streaming y control
 
-| # | Mecanismo | Path clave | Qué hace |
-|---|---|---|---|
-| 17 | **Event bus / WS** | `event-broker`, `session-event-publisher`, `ws/*` | loop events → AgentSession → broker → WS user/session/team. UI y teams dependen de esta cadena |
-| 18 | **Usage / métricas** | metadata `computeAndPersistMetrics`, usage en assistant | Totales tokens/tools/errors en `agent_end`. No es billing ledger |
-| 19 | **Queue modes + thinking** | `Agent` + tree entries | `steeringMode/followUpMode`: one-at-a-time \| all. Thinking/model persisten en JSONL tree |
+| #   | Mecanismo                  | Path clave                                              | Qué hace                                                                                       |
+| --- | -------------------------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| 17  | **Event bus / WS**         | `event-broker`, `session-event-publisher`, `ws/*`       | loop events → AgentSession → broker → WS user/session/team. UI y teams dependen de esta cadena |
+| 18  | **Usage / métricas**       | metadata `computeAndPersistMetrics`, usage en assistant | Totales tokens/tools/errors en `agent_end`. No es billing ledger                               |
+| 19  | **Queue modes + thinking** | `Agent` + tree entries                                  | `steeringMode/followUpMode`: one-at-a-time \| all. Thinking/model persisten en JSONL tree      |
 
 ### Tier 4 — Producto / side-effects (no kernel, pero reales)
 
-| # | Mecanismo | Notas |
-|---|---|---|
-| 20 | **Image / video / vision** | APIs aparte del chat model; artifacts en `assets/generated` |
-| 21 | **Preview builder/watcher** | `manage_preview` → build bash + FS watch + WS |
-| 22 | **Teams orchestration** | Lead session `team_{id}` + prompts layered; reusa SessionManager, no otro kernel |
-| 23 | **Factory tool** | `manage_factory` muta agents/projects/skills/teams/env |
-| 24 | **Secrets** | AES-GCM env (`env-crypto`) + inject bash + redact output. Audit log **solo** env-access |
-| 25 | **Scope** | `scope-config.json`: tools/agents por global/channel/project |
+| #   | Mecanismo                   | Notas                                                                                   |
+| --- | --------------------------- | --------------------------------------------------------------------------------------- |
+| 20  | **Image / video / vision**  | APIs aparte del chat model; artifacts en `assets/generated`                             |
+| 21  | **Preview builder/watcher** | `manage_preview` → build bash + FS watch + WS                                           |
+| 22  | **Teams orchestration**     | Lead session `team_{id}` + prompts layered; reusa SessionManager, no otro kernel        |
+| 23  | **Factory tool**            | `manage_factory` muta agents/projects/skills/teams/env                                  |
+| 24  | **Secrets**                 | AES-GCM env (`env-crypto`) + inject bash + redact output. Audit log **solo** env-access |
+| 25  | **Scope**                   | `scope-config.json`: tools/agents por global/channel/project                            |
 
 ### Stubs / incompleto (no planear encima)
 
-| Item | Estado |
-|---|---|
-| Auto-compaction cada turno | No; compact es API explícita |
-| Memory auto-inject | Cableado pero **no-op** |
-| Plugin/extensions API | `getExtensions()` vacío |
-| Prompt cache OpenAI | Stub passthrough |
-| `laboratory/*` (experiments) | Importado, **módulo ausente** |
-| `pipelines/*` store/runner | `manage_pipelines` importa módulos **ausentes** |
-| Audit full de tool calls | No existe |
-| `navigateTree` + branch summary | Vendor sí; app solo `branch()` + reload |
+| Item                            | Estado                                          |
+| ------------------------------- | ----------------------------------------------- |
+| Auto-compaction cada turno      | No; compact es API explícita                    |
+| Memory auto-inject              | Cableado pero **no-op**                         |
+| Plugin/extensions API           | `getExtensions()` vacío                         |
+| Prompt cache OpenAI             | Stub passthrough                                |
+| `laboratory/*` (experiments)    | Importado, **módulo ausente**                   |
+| `pipelines/*` store/runner      | `manage_pipelines` importa módulos **ausentes** |
+| Audit full de tool calls        | No existe                                       |
+| `navigateTree` + branch summary | Vendor sí; app solo `branch()` + reload         |
 
 ---
 
@@ -191,9 +191,9 @@ Tools FS/bash con `cwd=workspaceDir`. Skills dirs como allowed extra.
 
 ## 10. Delegaciones
 
-| action | Efecto |
-|---|---|
-| `spawn` | `sub_{id}`, explorer/builder/autonomous, tools mínimos |
+| action     | Efecto                                                  |
+| ---------- | ------------------------------------------------------- |
+| `spawn`    | `sub_{id}`, explorer/builder/autonomous, tools mínimos  |
 | `delegate` | `agent\|project\|team\|session` → `del_*` o team runner |
 
 Depth + techo de tools del padre. Team hop no suma depth.  
@@ -225,10 +225,10 @@ metadata.json
 
 Es core si:
 
-1. Interviene en cada turno, o  
-2. Decide tools/modelo/prompt, o  
-3. Puede bloquear side-effects (HITL/sandbox), o  
-4. Crea/reanuda grafos de sesiones, o  
+1. Interviene en cada turno, o
+2. Decide tools/modelo/prompt, o
+3. Puede bloquear side-effects (HITL/sandbox), o
+4. Crea/reanuda grafos de sesiones, o
 5. Define mensajes/eventos persistidos (JSONL tree)
 
 Es host/producto: HTTP/WS, layout multi-tenant, UI, provider concreto, MCP server concreto, preview/gallery/factory UX.
@@ -299,47 +299,47 @@ Preferir **AgentHarness** (o Agent unificado) por debajo; dejar de deep-importar
 
 ## 14. Plan de extracción (bajo riesgo)
 
-| Fase | Qué | Para qué |
-|---|---|---|
-| **0** Contratos | Events tipados; catálogo tools único; `resolveModel` único; cablear `afterToolCall` | Congelar bordes |
-| **1** Puertos | `SpacesHost` en tool factories; `DelegationService` fuera del tool; `WorkspaceConfig` loader (aunque solo lea AGENTS + overrides) | Sin cambiar UX |
-| **2** Runtime pkg | `createAgentRuntime`; unificar SessionStore; migrar AgentSession | Frontera publicable |
-| **3** Features | `.spaces/config` por workspace; model cascade entity; delegation `payload`; workflows | Sobre suelo firme |
+| Fase              | Qué                                                                                                                               | Para qué            |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| **0** Contratos   | Events tipados; catálogo tools único; `resolveModel` único; cablear `afterToolCall`                                               | Congelar bordes     |
+| **1** Puertos     | `SpacesHost` en tool factories; `DelegationService` fuera del tool; `WorkspaceConfig` loader (aunque solo lea AGENTS + overrides) | Sin cambiar UX      |
+| **2** Runtime pkg | `createAgentRuntime`; unificar SessionStore; migrar AgentSession                                                                  | Frontera publicable |
+| **3** Features    | `.spaces/config` por workspace; model cascade entity; delegation `payload`; workflows                                             | Sobre suelo firme   |
 
 ### Cómo caen tus ejemplos futuros
 
-| Feature | Puerto | Enganche hoy |
-|---|---|---|
-| Config workspace (rules/skills/workflows) | `WorkspaceConfigPort` | post-`resolveSessionWorkspace` |
-| Payload dinámico delegación | `DelegationPort` + envelope v2 | `manage-delegations-tool` |
-| Modelos por agente/proyecto | `ModelResolver` | session-manager + agent-server + delegations |
-| Policies por workspace | merge en `PermissionPolicy` | permission-engine / subagent rules |
+| Feature                                   | Puerto                         | Enganche hoy                                 |
+| ----------------------------------------- | ------------------------------ | -------------------------------------------- |
+| Config workspace (rules/skills/workflows) | `WorkspaceConfigPort`          | post-`resolveSessionWorkspace`               |
+| Payload dinámico delegación               | `DelegationPort` + envelope v2 | `manage-delegations-tool`                    |
+| Modelos por agente/proyecto               | `ModelResolver`                | session-manager + agent-server + delegations |
+| Policies por workspace                    | merge en `PermissionPolicy`    | permission-engine / subagent rules           |
 
 ---
 
 ## 15. Riesgos si se extiende sin SDK
 
-| Acción precipitada | Riesgo |
-|---|---|
-| Config workspace solo en session-manager | Teams/agents/delegates no la cargan |
-| Model-per-project solo en UI | spawn/delegate siguen con parent model |
-| Ampliar delegación sin versionar envelope | Padres no parsean; loops colgados |
-| Tools nuevas con más singletons | Intestable; multi-runtime imposible |
-| Fork del loop por hooks | Dos loops; pierdes upgrades vendor |
-| Asumir memory auto-inject o pipelines/lab | Código no-op o módulos ausentes |
+| Acción precipitada                        | Riesgo                                 |
+| ----------------------------------------- | -------------------------------------- |
+| Config workspace solo en session-manager  | Teams/agents/delegates no la cargan    |
+| Model-per-project solo en UI              | spawn/delegate siguen con parent model |
+| Ampliar delegación sin versionar envelope | Padres no parsean; loops colgados      |
+| Tools nuevas con más singletons           | Intestable; multi-runtime imposible    |
+| Fork del loop por hooks                   | Dos loops; pierdes upgrades vendor     |
+| Asumir memory auto-inject o pipelines/lab | Código no-op o módulos ausentes        |
 
 ---
 
 ## 16. Orden para entender el código
 
-1. `session-manager` + `metadata.json` + prefixes  
-2. JSONL tree + `buildSessionContext` + `convertToLlm`  
-3. Loop + steer/followUp/continue + `prepareNextTurn`  
-4. `beforeToolCall` + subagent rules + path/bash safety  
-5. Abort/delegation tree  
-6. Compaction entries  
-7. WS/event chain  
-8. Luego: skills, MCP, custom-tools, memory tools, media, preview, factory, teams  
+1. `session-manager` + `metadata.json` + prefixes
+2. JSONL tree + `buildSessionContext` + `convertToLlm`
+3. Loop + steer/followUp/continue + `prepareNextTurn`
+4. `beforeToolCall` + subagent rules + path/bash safety
+5. Abort/delegation tree
+6. Compaction entries
+7. WS/event chain
+8. Luego: skills, MCP, custom-tools, memory tools, media, preview, factory, teams
 
 **Blind spots si solo miraste loop/models/prompts/hooks/workspace/HITL/tools/delegations:**  
 metadata SoT · session tree/compaction · steer/followUp auto-continue · prepareNextTurn reload disco · herencia techo subagent · cancelación BFS · memory inject no-op · pipelines/lab rotos.
@@ -408,8 +408,8 @@ El core **es** tu mapa (loop, modelos, prompts, hooks, workspace, HITL, tools, d
 
 Moverse a un **Runtime SDK con Host ports** es el prerrequisito para:
 
-1. config por workspace al instanciar sesión  
-2. payloads dinámicos de delegación  
-3. modelos persistentes por entidad  
+1. config por workspace al instanciar sesión
+2. payloads dinámicos de delegación
+3. modelos persistentes por entidad
 
 sin romper lo que ya corre.

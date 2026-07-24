@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: MIT
-import { useEffect, useState, useRef, useCallback } from "react";
+import type { StreamingAgentState } from "@/hooks/useTeam";
 import {
-  ReactFlow,
-  MiniMap,
-  Controls,
   Background,
   BackgroundVariant,
-  useNodesState,
+  Controls,
+  MiniMap,
+  ReactFlow,
   useEdgesState,
+  useNodesState,
   type Edge,
   type OnInit,
   type ReactFlowInstance,
 } from "@xyflow/react";
-import type { TeamMember, AgentInfo } from "shared";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { AgentInfo, TeamMember } from "shared";
 import { AgentFlowNode, type AgentNode } from "./AgentFlowNode";
-import type { StreamingAgentState } from "@/hooks/useTeam";
 
 interface Props {
   members: TeamMember[];
@@ -33,7 +33,13 @@ const nodeTypes = {
   agentNode: AgentFlowNode,
 };
 
-export function OrgFlowCanvas({ members, registeredAgents, streamingAgents, onEditAgent, sessionStatuses }: Props) {
+export function OrgFlowCanvas({
+  members,
+  registeredAgents,
+  streamingAgents,
+  onEditAgent,
+  sessionStatuses,
+}: Props) {
   const [nodes, setNodes, onNodesChange] = useNodesState<AgentNode>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -137,7 +143,10 @@ export function OrgFlowCanvas({ members, registeredAgents, streamingAgents, onEd
   }, [members, registeredAgents, streamingAgents, containerWidth, onEditAgent]);
 
   return (
-    <div ref={containerRef} className="flex-1 h-full min-h-0 bg-background/30 rounded-xl overflow-hidden relative border border-border/40">
+    <div
+      ref={containerRef}
+      className="flex-1 h-full min-h-0 bg-background/30 rounded-xl overflow-hidden relative border border-border/40"
+    >
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -151,7 +160,10 @@ export function OrgFlowCanvas({ members, registeredAgents, streamingAgents, onEd
         maxZoom={1.5}
         proOptions={{ hideAttribution: true }}
       >
-        <Controls showInteractive={false} className="!bg-card !border-border !text-foreground [&_button]:!bg-card [&_button]:!border-border [&_button]:!text-foreground hover:[&_button]:!bg-card-hover" />
+        <Controls
+          showInteractive={false}
+          className="!bg-card !border-border !text-foreground [&_button]:!bg-card [&_button]:!border-border [&_button]:!text-foreground hover:[&_button]:!bg-card-hover"
+        />
         <MiniMap
           nodeColor={(n) => {
             const role = (n.data as any)?.member?.role || "member";
