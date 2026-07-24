@@ -1,11 +1,21 @@
 // SPDX-License-Identifier: MIT
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { SessionPrefix } from "shared";
+import { getWorkspaceDir, SessionPrefix } from "shared";
+import { loadSkills } from "../../ai";
 import { CUSTOM_TOOL_INSTRUCTIONS } from "../custom-tools";
+import { DEFAULT_AGENTS_MD } from "../default-factory-skills";
 import { promptComposer } from "../prompts/composer";
 import { buildProjectContextPrompt } from "../prompts/project-context";
 import { assemblePromptAppends } from "../prompts/prompt-assembly";
+import {
+  AG_UI_INSTRUCTIONS,
+  ENVIRONMENT_INSTRUCTIONS,
+  HTML_PREVIEW_INSTRUCTIONS,
+  PERSISTENT_MEMORY_INSTRUCTIONS,
+  SUBAGENT_DELEGATION_INSTRUCTIONS,
+  TASK_DELEGATION_INSTRUCTIONS,
+} from "../prompts/system-instructions";
 import { TaskStateManager } from "../tools/task-state-manager";
 import { sessionMetadataStore } from "./metadata-store";
 import { userConfig } from "./user-config";
@@ -266,9 +276,25 @@ export class SessionPromptBuilder {
   }> {
     const { username, entityType, agentId, projectId, teamId, subagentId } = params;
     const settings = userConfig.getUserSettings(username);
+    const workspaceDir = getWorkspaceDir(username);
     const sections: Array<{ title: string; content: string }> = [];
 
-    // 1. Agent Persona (if agent or subagent)
+    // 1. Global Workspace Directives (AGENTS.md / Global Spaces Director)
+    try {
+      const agentsMdPath = join(workspaceDir, "AGENTS.md");
+      let agentsMdContent = DEFAULT_AGENTS_MD;
+      if (existsSync(agentsMdPath)) {
+        agentsMdContent = readFileSync(agentsMdPath, "utf-8");
+      }
+      sections.push({
+        title: "Global Workspace Directives & Director Persona (AGENTS.md)",
+        content: agentsMdContent,
+      });
+    } catch (e) {
+      console.error("[PromptBuilder] Failed to read AGENTS.md for preview:", e);
+    }
+
+    // 2. Agent Specific Persona (if agent or subagent)
     const targetAgentId = agentId || subagentId;
     let agentDef: any = null;
     if (targetAgentId) {
@@ -278,7 +304,7 @@ export class SessionPromptBuilder {
         if (entry?.server?.definition) {
           agentDef = entry.server.definition;
           sections.push({
-            title: `Agent Persona (${agentDef.name || targetAgentId})`,
+            title: `Agent Specific Persona (${agentDef.name || targetAgentId})`,
             content: agentDef.systemPrompt || "No custom system prompt defined.",
           });
         }
@@ -287,7 +313,7 @@ export class SessionPromptBuilder {
       }
     }
 
-    // 2. Global Factory Instructions
+    // 3. Global Custom Spaces Instructions
     if (settings.factorySystemPrompt) {
       sections.push({
         title: "Global Custom Spaces Instructions",
@@ -295,7 +321,22 @@ export class SessionPromptBuilder {
       });
     }
 
-    // 3. Project Context
+    // 4. Standard Spaces Platform Protocols
+    const platformProtocols = [
+      ENVIRONMENT_INSTRUCTIONS,
+      HTML_PREVIEW_INSTRUCTIONS,
+      AG_UI_INSTRUCTIONS,
+      PERSISTENT_MEMORY_INSTRUCTIONS,
+      SUBAGENT_DELEGATION_INSTRUCTIONS,
+      TASK_DELEGATION_INSTRUCTIONS,
+    ].join("\n\n");
+
+    sections.push({
+      title: "Standard Spaces Platform Protocols",
+      content: platformProtocols,
+    });
+
+    // 5. Project Context
     const targetProjectId = projectId;
     if (targetProjectId) {
       try {
@@ -361,7 +402,7 @@ export class SessionPromptBuilder {
       }
     }
 
-    // 4. Team Context
+    // 6. Team Context
     const targetTeamId = teamId;
     if (targetTeamId) {
       try {
@@ -384,29 +425,55 @@ export class SessionPromptBuilder {
       }
     }
 
-    // 5. Custom Tools Context
+    // 7. Registered Tools & MCP Extensions
     try {
       const { customToolStorage } = await import("../custom-tools/storage");
       const customDefs = customToolStorage
         .loadAll(username)
         .filter((d: any) => d.enabled !== false);
+
+      let toolsContent = "";
       if (customDefs.length > 0) {
-        sections.push({
-          title: "Custom Registered Tools",
-          content:
-            `You have ${customDefs.length} custom tool(s) registered:\n` +
-            `${customDefs.map((t: any) => `- ${t.name}: ${t.description}`).join("\n")}`,
-        });
+        toolsContent +=
+          `## Custom Registered Tools:\n` +
+          `You have ${customDefs.length} custom tool(s) registered:\n` +
+          `${customDefs.map((t: any) => `- ${t.name}: ${t.description}`).join("\n")}\n\n`;
       }
+
+      sections.push({
+        title: "Registered Tools & MCP Extensions",
+        content: toolsContent.trim() || "No custom tools registered.",
+      });
     } catch (e) {
       console.error("[PromptBuilder] Failed to load custom tools for preview:", e);
     }
 
-    // 6. Custom Tool Instructions
+    // 8. Built-in Tool Guidelines & Custom Tool Builder
     sections.push({
-      title: "Built-in Tool Guidelines",
+      title: "Built-in Tool Guidelines & Custom Tool Builder",
       content: CUSTOM_TOOL_INSTRUCTIONS,
     });
+
+    // 9. Available Skills Catalog
+    try {
+      const loaded = loadSkills({
+        cwd: workspaceDir,
+        agentDir: workspaceDir,
+        skillPaths: [],
+        includeDefaults: true,
+      });
+      if (loaded.skills.length > 0) {
+        const skillList = loaded.skills
+          .map((s) => `- **${s.name}**: ${s.description}`)
+          .join("\n");
+        sections.push({
+          title: "Available Skills Catalog",
+          content: `<available_skills>\n${skillList}\n</available_skills>`,
+        });
+      }
+    } catch (e) {
+      console.error("[PromptBuilder] Failed to load skills catalog for preview:", e);
+    }
 
     const fullPrompt = sections.map((s) => `--- ${s.title} ---\n${s.content}`).join("\n\n");
     const estimatedTokens = Math.ceil(fullPrompt.length / 4);
