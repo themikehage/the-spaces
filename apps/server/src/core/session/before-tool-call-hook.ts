@@ -98,16 +98,18 @@ export function createBeforeToolCallHook({
         const result = await approvalPromise;
         if (result.action === "deny") {
           if (result.payload?.persist) {
-            const pattern =
-              result.payload.pattern || extractSubject(toolName, args as Record<string, unknown>);
+            const pattern = String(
+              result.payload.pattern || extractSubject(toolName, args as Record<string, unknown>),
+            );
             userPermissionStore.saveDecision(resolvedUsername, toolName, pattern, "deny");
           }
           return { block: true, reason: `[Permission Denied] Rejected by user` };
         }
 
         if (result.payload?.persist) {
-          const pattern =
-            result.payload.pattern || extractSubject(toolName, args as Record<string, unknown>);
+          const pattern = String(
+            result.payload.pattern || extractSubject(toolName, args as Record<string, unknown>),
+          );
           userPermissionStore.saveDecision(resolvedUsername, toolName, pattern, "allow");
         }
         return undefined; // Approved

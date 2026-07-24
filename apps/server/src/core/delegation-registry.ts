@@ -156,6 +156,13 @@ export class DelegationRegistry {
           };
           try {
             writeFileSync(join(dir, file), JSON.stringify(d, null, 2), "utf-8");
+            this.notify(username, {
+              type: "delegation_completed",
+              parentSessionId,
+              toolCallId: d.toolCallId,
+              status: "blocked",
+              result: d.result,
+            });
           } catch {}
         }
         list.push(d);

@@ -88,7 +88,9 @@
   - [x] Fase A - Área 1: Singleton Hell -> Dependency Injection (`ServerContext`, constructor injection, interfaces de puertos).
   - [x] Fase A - Área 2: God Object AgentSession -> Decomposición (EventBus, ToolRegistry, SkillLoader, PromptBuilder, ContextEstimator, CompactionManager, NavigationController).
   - [x] Fase B - Área 5: WebSocket Typed Contract (`ws-messages.ts` Zod schemas + factory refactor).
-  - [x] Fase B - Área 4: Route Files Split (`routes/sessions/`, `routes/teams/`, `routes/agents/`).
+  - [x] Corregir regresión de metadatos de contexto (projectId, agentId, teamId) en la creación de sesiones (`POST /api/sessions`).
+- [x] Desacoplar `ask_question` de las modales globales de aprobaciones e implementar el **Attention Hub** (centro de atención en la TopBar con popover y navegación a sesiones).
+- [x] Auditoría y saneamiento del módulo de delegaciones: eliminación de acoplamiento a singletons en `manage_delegations` y rutas REST, protección contra bucles infinitos en `getSubagentDepth`, sincronización WS de delegaciones interrumpidas y corrección del typecheck de TypeScript en `apps/server`.
 
 ## Criterio de cierre del sprint
 

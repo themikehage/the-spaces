@@ -136,7 +136,6 @@ teamsRouter.post("/:id/orchestration-session", async (c) => {
     sessionId,
     undefined,
     leader.agentId,
-    undefined,
     {
       workspaceDir: getTeamWorkspaceDir(username, team.id),
     },
@@ -399,7 +398,6 @@ teamsRouter.post(
         ownerSessionId,
         undefined,
         leader.agentId,
-        undefined,
         {
           workspaceDir: getTeamWorkspaceDir(username, team.id),
         },

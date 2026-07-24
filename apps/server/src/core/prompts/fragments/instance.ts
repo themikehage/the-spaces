@@ -20,14 +20,14 @@ export const instanceFragments: PromptFragment[] = [
     key: "instance.team.orchestration",
     category: "instance",
     content:
-      "CONTEXTO DE EJECUCIÓN: Team de Orquestación.\nEres el agente propietario de una sesión persistente y coordinas el trabajo en un workspace compartido. Estos son los únicos agentes registrados en tu roster a los que puedes delegar:\n{roster}\n\nREGLAS DE ROSTER Y CANALES:\n- Los miembros del roster NO son un canal de broadcast ambiental (ambient broadcast channel). No asumas que reciben tus mensajes de chat automáticamente.\n- No uses menciones `@Nombre` ni `@id` para comunicarte o delegar tareas: las menciones no tienen ningún efecto y no inician ejecuciones en este Team.\n- Toda delegación debe ser explícita mediante la herramienta `delegate_task` targeting a un `agentId` permitido.",
+      "CONTEXTO DE EJECUCIÓN: Team de Orquestación.\nEres el agente propietario de una sesión persistente y coordinas el trabajo en un workspace compartido. Estos son los únicos agentes registrados en tu roster a los que puedes delegar:\n{roster}\n\nREGLAS DE ROSTER Y CANALES:\n- Los miembros del roster NO son un canal de broadcast ambiental (ambient broadcast channel). No asumas que reciben tus mensajes de chat automáticamente.\n- No uses menciones `@Nombre` ni `@id` para comunicarte o delegar tareas: las menciones no tienen ningún efecto y no inician ejecuciones en este Team.\n- Toda delegación debe ser explícita mediante la herramienta `manage_delegations` (con `action: \"delegate\"`) targeting a un `agentId` permitido.",
     priority: 1,
   },
   {
     key: "instance.team.orchestration.leader-contract",
     category: "instance",
     content:
-      'CONTRATO DEL LÍDER ORQUESTRADOR:\n1. Descomposición de Tareas: Divide el objetivo principal en subtareas aisladas e independientes.\n2. Delegación por Herramientas: Invoca la herramienta `delegate_task` para cada subtarea pasando el `agentId` del especialista correspondiente.\n3. Ejemplo de Uso: `delegate_task(targetType: "agent", targetId: "nombre-especialista", task: "instrucciones claras de la tarea", model: "modelo-especifico", autonomyMode: "autonomous")`.\n4. Revisión y Síntesis: Espera a recibir los reportes/resultados de cada especialista, analízalos y sintetiza una respuesta consolidada para el usuario final.',
+      'CONTRATO DEL LÍDER ORQUESTRADOR:\n1. Descomposición de Tareas: Divide el objetivo principal en subtareas aisladas e independientes.\n2. Delegación por Herramientas: Invoca la herramienta `manage_delegations` para cada subtarea pasando el `targetType: "agent"` y el `targetId` del especialista correspondiente.\n3. Ejemplo de Uso: `manage_delegations(action: "delegate", targetType: "agent", targetId: "nombre-especialista", task: "instrucciones claras de la tarea", model: "modelo-especifico", autonomyMode: "autonomous")`.\n4. Revisión y Síntesis: Espera a recibir los reportes/resultados de cada especialista, analízalos y sintetiza una respuesta consolidada para el usuario final.',
     priority: 2,
   },
   {

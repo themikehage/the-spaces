@@ -128,7 +128,7 @@ class AgentRegistry {
     const globalIds = new Set(scopeConfigManager.getGlobalAgentIds(username));
     const result: AgentInfo[] = [];
     for (const [id, entry] of this.agents) {
-      if (entry.username === username && !id.startsWith(SessionPrefix.LAB) && globalIds.has(id)) {
+      if (entry.username === username && globalIds.has(id)) {
         result.push({
           id,
           name: entry.server.definition.name,
@@ -145,7 +145,7 @@ class AgentRegistry {
     return result;
   }
 
-  listScoped(username: string, parentType: "channels" | "projects", parentId: string): AgentInfo[] {
+  listScoped(username: string, parentType: "projects", parentId: string): AgentInfo[] {
     const scopedIds = new Set(scopeConfigManager.getScopedAgentIds(username, parentType, parentId));
     const result: AgentInfo[] = [];
     for (const [id, entry] of this.agents) {
@@ -228,7 +228,7 @@ class AgentRegistry {
         targetScope = { type: "global" };
       } else {
         targetScope = {
-          type: currentMembership.type as "channel" | "project",
+          type: "project",
           id: currentMembership.id,
         };
       }

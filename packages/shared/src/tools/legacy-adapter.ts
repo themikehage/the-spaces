@@ -18,6 +18,9 @@ export function legacyToolToBaseTool(obj: any): BaseTool {
     schema,
     execute: async (args: any, signal?: AbortSignal) => {
       if (typeof executeFn === "function") {
+        if (executeFn.length >= 2) {
+          return await executeFn("call_legacy", args, signal);
+        }
         return await executeFn(args, signal);
       }
       return "";

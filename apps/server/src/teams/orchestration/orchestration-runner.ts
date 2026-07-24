@@ -71,7 +71,6 @@ export class OrchestrationRunner {
       ownerSessionId,
       undefined,
       leader.agentId,
-      undefined,
       { workspaceDir: getTeamWorkspaceDir(username, teamId) },
     );
 

@@ -81,6 +81,40 @@ describe("AgentSession & Agent Class Integration Tests", () => {
     expect(session.isStreaming).toBe(false);
   });
 
+  test("AgentSession tool registration preserves customTools & BaseTools", () => {
+    const mockCustomTool = {
+      name: "test_tool",
+      description: "A test tool",
+      parameters: { type: "object", properties: {} },
+      execute: async () => "result",
+    };
+
+    const mockBaseTool = {
+      name: "base_tool",
+      description: "Base tool description",
+      declaration: {
+        name: "base_tool",
+        description: "Base tool description",
+        parameters: {},
+      },
+      execute: async () => ({ content: "base result" }),
+    };
+
+    const session = new AgentSession({
+      cwd: TMP_TEST_DIR,
+      sessionManager,
+      authStorage: mockAuthStorage,
+      modelRegistry: mockModelRegistry,
+      resourceLoader: mockResourceLoader,
+      customTools: [mockCustomTool, mockBaseTool],
+    });
+
+    expect(session.activeTools.length).toBe(2);
+    expect(session.activeTools.map((t) => t.name)).toEqual(["test_tool", "base_tool"]);
+    expect(session.allToolsMap.has("test_tool")).toBe(true);
+    expect(session.allToolsMap.has("base_tool")).toBe(true);
+  });
+
   test("Prompt delegation updates message state", async () => {
     const session = new AgentSession({
       cwd: TMP_TEST_DIR,

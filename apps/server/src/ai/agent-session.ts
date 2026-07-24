@@ -30,6 +30,7 @@ export interface CreateAgentSessionOptions {
     context: BeforeToolCallContext,
     signal?: AbortSignal,
   ) => Promise<BeforeToolCallResult | undefined>;
+  afterToolCall?: (context: any) => Promise<void> | void;
   delegationRegistry?: any;
 }
 
@@ -47,6 +48,7 @@ export class AgentSession {
     context: BeforeToolCallContext,
     signal?: AbortSignal,
   ) => Promise<BeforeToolCallResult | undefined>;
+  afterToolCall?: (context: any) => Promise<void> | void;
   delegationRegistry?: any;
 
   model: AvailableModel | null = null;
@@ -115,6 +117,7 @@ export class AgentSession {
     this.customTools = options.customTools || [];
     this._customTools = this.customTools;
     this.beforeToolCall = options.beforeToolCall;
+    this.afterToolCall = options.afterToolCall;
     this.delegationRegistry = options.delegationRegistry;
 
     this.promptBuilder = new PromptBuilder(this.resourceLoader);
@@ -141,15 +144,32 @@ export class AgentSession {
     const prevActiveNames = this.activeTools?.length
       ? this.activeTools.map((t: any) => t.name)
       : null;
-    this.allToolsMap.clear();
+    this.toolRegistry.clear();
     for (const toolDef of this.customTools) {
+      if (!toolDef) continue;
+      const name = toolDef.name || toolDef.declaration?.name || "unnamed";
+      const description = toolDef.description || toolDef.declaration?.description || "";
+      const parameters =
+        toolDef.parameters ||
+        toolDef.schema ||
+        toolDef.declaration?.parameters ||
+        toolDef.declaration?.schema ||
+        {};
+      const label = toolDef.label || name;
+
       const wrappedTool: AgentTool = {
-        name: toolDef.name,
-        label: toolDef.label || toolDef.name,
-        description: toolDef.description,
-        parameters: toolDef.parameters || toolDef.schema || {},
+        name,
+        label,
+        description,
+        parameters,
         execute: async (toolCallId, params, signal, onUpdate) => {
-          const res = await toolDef.execute(toolCallId, params, signal, onUpdate);
+          let res: any;
+          if (toolDef.declaration || (toolDef.execute && toolDef.execute.length <= 2)) {
+            res = await toolDef.execute(params, signal);
+          } else {
+            res = await toolDef.execute(toolCallId, params, signal, onUpdate);
+          }
+
           if (res && typeof res === "object" && "content" in res && Array.isArray(res.content)) {
             return res;
           }
@@ -157,6 +177,12 @@ export class AgentSession {
             return {
               content: [{ type: "text", text: res }],
               details: { output: res },
+            };
+          }
+          if (res && typeof res === "object" && typeof res.content === "string") {
+            return {
+              content: [{ type: "text", text: res.content }],
+              details: res,
             };
           }
           const outputText =
@@ -169,22 +195,25 @@ export class AgentSession {
           };
         },
       };
-      this.allToolsMap.set(toolDef.name, wrappedTool);
+      this.toolRegistry.registerTool(wrappedTool);
     }
 
     if (prevActiveNames && prevActiveNames.length > 0) {
       const prevSet = new Set(prevActiveNames);
-      const allNames = Array.from(this.allToolsMap.keys());
+      const allTools = this.toolRegistry.getAllTools();
+      const allNames = allTools.map((t) => t.name);
       const newNames = allNames.filter((n) => !prevSet.has(n));
       const activeNames = [...prevActiveNames, ...newNames];
-      this.activeTools = activeNames
-        .map((name) => this.allToolsMap.get(name))
+      const active = activeNames
+        .map((name) => this.toolRegistry.getTool(name))
         .filter(Boolean) as AgentTool[];
-      if (this.activeTools.length === 0) {
-        this.activeTools = Array.from(this.allToolsMap.values());
+      if (active.length > 0) {
+        this.activeTools = active;
+      } else {
+        this.activeTools = allTools;
       }
     } else {
-      this.activeTools = Array.from(this.allToolsMap.values());
+      this.activeTools = this.toolRegistry.getAllTools();
     }
 
     if (this.agent) {
@@ -419,7 +448,7 @@ export class AgentSession {
   setActiveToolsByName(names: string[]): void {
     const list: AgentTool[] = [];
     for (const name of names) {
-      const tool = this.allToolsMap.get(name);
+      const tool = this.toolRegistry.getTool(name);
       if (tool) list.push(tool);
     }
     this.activeTools = list;

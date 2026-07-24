@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+import { AttentionHubPopover } from "@/components/approvals/AttentionHubPopover";
 import { Logo } from "@/components/ui/Logo";
 import type { ConnectionState } from "@/lib/ws-client";
 import type { ReactNode } from "react";
@@ -44,6 +45,7 @@ export function DesktopHeader({
         {breadcrumbs}
       </div>
       <div className="flex items-center gap-1.5">
+        <AttentionHubPopover onNavigate={onNavigate} />
         <button
           onClick={() => onNavigate("/sessions")}
           className="p-1 text-muted-foreground hover:text-foreground rounded cursor-pointer"

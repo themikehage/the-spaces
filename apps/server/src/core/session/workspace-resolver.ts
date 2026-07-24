@@ -104,11 +104,21 @@ export function ensureWorkspaceStructure(username: string): string {
 }
 
 export function resolveSubagentSessionDir(username: string, sessionId: string): string | null {
-  if (sessionId.startsWith(SessionPrefix.SUBAGENT)) {
+  if (
+    sessionId.startsWith(SessionPrefix.SUBAGENT) ||
+    sessionId.startsWith(SessionPrefix.DELEGATE)
+  ) {
     const userDir = userConfigManager.ensureUserDir(username);
     const sessionsDir = join(userDir, "sessions");
     if (existsSync(sessionsDir)) {
       try {
+        // Direct session dir check first (e.g. userDir/sessions/sub_... or userDir/sessions/del_...)
+        const directDir = join(sessionsDir, sessionId);
+        if (existsSync(directDir)) {
+          return directDir;
+        }
+
+        // Subagents dir under parent check (e.g. userDir/sessions/parent/subagents/sub_...)
         const sessionFolders = readdirSync(sessionsDir);
         for (const parentId of sessionFolders) {
           const candidateDir = join(sessionsDir, parentId, "subagents", sessionId);

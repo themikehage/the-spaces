@@ -46,6 +46,10 @@ export class SessionMetadataStore {
     writeFileSync(metadataPath, JSON.stringify(metadata, null, 2), "utf-8");
   }
 
+  persistSessionMetadata(username: string, sessionId: string, data: Record<string, unknown>): void {
+    this.saveSessionMetadata(username, sessionId, data);
+  }
+
   getSessionMetadata(username: string, sessionId: string): Record<string, any> | null {
     const metadataPath = this.getMetadataPath(username, sessionId);
     if (existsSync(metadataPath)) {

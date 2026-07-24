@@ -22,8 +22,10 @@ import { delegationRegistry } from "../delegation-registry";
 import { assemblePromptAppends, wrapDelegationTask } from "../prompts/prompt-assembly";
 import { buildSubagentRules } from "../sandbox";
 import { sessionManager } from "../session-manager";
+import { sessionToolFactory } from "../session/tool-factory";
 import { getSubagentDepth } from "../session/session-depth";
 import { createUiTools } from "./ui-tools";
+import { agentRegistry } from "@/agents";
 
 export interface ManageDelegationsOptions {
   workspaceDir: string;
@@ -123,7 +125,7 @@ Use 'delegate' to delegate to a specific target.`,
     execute: async (toolCallId: string, args: any, parentSignal?: AbortSignal) => {
       const { action, task, targetType, targetId } = args;
 
-      const userSettings = sessionManager.userConfig.getUserSettings(username);
+      const userSettings = activeSessionManager.userConfig.getUserSettings(username);
       const appConfig = getAppConfig();
       const maxDepth =
         userSettings.subagentMaxDepth !== undefined
@@ -142,7 +144,7 @@ Use 'delegate' to delegate to a specific target.`,
 
       if (action === "spawn") {
         const subagentSessionId = `${SessionPrefix.SUBAGENT}${toolCallId}`;
-        const userDir = sessionManager.userConfig.ensureUserDir(username);
+        const userDir = activeSessionManager.userConfig.ensureUserDir(username);
         const subagentDir = join(
           userDir,
           "sessions",
@@ -207,7 +209,7 @@ Use 'delegate' to delegate to a specific target.`,
 
         const customBashTool = createBashToolDefinition(workspaceDir, {
           spawnHook: (context) => {
-            const userEnv = sessionManager.userConfig.getUserEnv(username);
+            const userEnv = activeSessionManager.userConfig.getUserEnv(username);
             const token = createProgrammaticSessionSync(username);
             return {
               ...context,
@@ -220,7 +222,7 @@ Use 'delegate' to delegate to a specific target.`,
             };
           },
           outputFilter: (output: string) => {
-            const userEnv = sessionManager.userConfig.getUserEnv(username);
+            const userEnv = activeSessionManager.userConfig.getUserEnv(username);
             const secrets = Object.values(userEnv).filter(Boolean);
             return filterSecretsFromOutput(output, secrets);
           },
@@ -244,15 +246,25 @@ Use 'delegate' to delegate to a specific target.`,
         });
         await subResourceLoader.reload();
 
-        const subSession = await sessionManager.getOrCreateSession(
+        const { customTools: subSessionTools } = sessionToolFactory.createSessionTools({
+          username,
+          sessionId: subagentSessionId,
+          workspaceDir,
+          memoryEnabled: false,
+          memory: null,
+          modelRegistry,
+          authStorage,
+          resourceLoader: subResourceLoader,
+        });
+
+        const subSession = await activeSessionManager.getOrCreateSession(
           username,
           subagentSessionId,
           undefined,
           undefined,
-          undefined,
           {
             resourceLoader: subResourceLoader,
-            customTools: [customBashTool as any, ...(uiTools as any)],
+            customTools: subSessionTools,
             workspaceDir,
             skipMcpTools: true,
             skipMemory: true,
@@ -435,7 +447,6 @@ Use 'delegate' to delegate to a specific target.`,
                 delegateSessionId,
                 undefined,
                 targetId,
-                undefined,
                 { workspaceDir: inheritedWorkspaceDir || workspaceDir },
               );
 

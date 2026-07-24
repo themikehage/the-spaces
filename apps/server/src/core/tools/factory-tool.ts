@@ -634,7 +634,6 @@ async function handleTeams(action: string, id: string | undefined, params: any, 
         ownerSessionId,
         undefined,
         leader.agentId,
-        undefined,
         {
           workspaceDir: getTeamWorkspaceDir(username, team.id),
         },

@@ -243,7 +243,6 @@ export const JSONSchemaLiteral = z.object({
 
 export const ToolScopeTargetSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("global") }),
-  z.object({ type: z.literal("channel"), id: z.string() }),
   z.object({ type: z.literal("project"), id: z.string() }),
   z.object({ type: z.literal("agent"), id: z.string() }),
 ]);

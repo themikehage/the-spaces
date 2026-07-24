@@ -61,7 +61,7 @@ filesRouter.get("/workspace-projects/:id/avatar", async (c) => {
 });
 
 filesRouter.use("/*", async (c, next) => {
-  if (c.req.path.startsWith("/api/preview/")) {
+  if (c.req.path.startsWith("/api/preview/") || c.req.path.startsWith("/api/auth/")) {
     return next();
   }
   return sessionMiddleware(c, next);

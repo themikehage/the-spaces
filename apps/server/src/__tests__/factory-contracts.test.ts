@@ -12,7 +12,6 @@ describe("Spaces Contracts Tests", () => {
       "env",
       "providers",
       "skills",
-      "experiments",
       "settings",
     ];
 

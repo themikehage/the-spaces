@@ -22,7 +22,12 @@ export interface ISessionManager {
 }
 
 export interface IMcpRegistry {
-  loadMcpToolsForUserSession(
+  getSessionMcpTools(
+    username: string,
+    sessionId: string,
+    workspaceDir?: string,
+  ): Promise<any[]>;
+  loadMcpToolsForUserSession?(
     username: string,
     sessionId: string,
     workspaceDir: string,
@@ -32,9 +37,23 @@ export interface IMcpRegistry {
 
 export interface IDelegationRegistry {
   onEvent(listener: (username: string, event: any) => void): () => void;
+  register(
+    username: string,
+    parentSessionId: string,
+    d: any,
+    abortFn: () => void,
+  ): void;
+  complete(
+    username: string,
+    parentSessionId: string,
+    toolCallId: string,
+    status: any,
+    result: any,
+  ): void;
   getAll(username: string, parentSessionId: string): any[];
   getByToolCallId(username: string, parentSessionId: string, toolCallId: string): any;
   abortAllRecursive(rootSessionId: string): void;
+  abortAll?(parentSessionId: string): void;
 }
 
 export interface IMemoryRegistry {

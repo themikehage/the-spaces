@@ -38,11 +38,11 @@ export const PERSISTENT_MEMORY_INSTRUCTIONS =
   `IMPORTANT: Use memory_store proactively after completing significant work (bug fixes, architecture decisions, discoveries, new patterns). Always use memory_recall before starting work on a topic that may have prior context.\n`;
 
 export const SUBAGENT_DELEGATION_INSTRUCTIONS =
-  `\n\nSubagent Delegation (spawn_subagent tool):\n` +
-  `You have a spawn_subagent tool to delegate focused, self-contained tasks to worker agents with fresh context. You are the ORCHESTRATOR, they are the EXECUTORS.\n` +
-  `Use spawn_subagent when:\n` +
+  `\n\nSubagent Delegation (manage_delegations tool with action "spawn"):\n` +
+  `You have a manage_delegations tool with action: "spawn" to delegate focused, self-contained tasks to worker agents with fresh context. You are the ORCHESTRATOR, they are the EXECUTORS.\n` +
+  `Use manage_delegations(action: "spawn", ...) when:\n` +
   `- A task requires isolated execution (such as writing several files, analyzing/verifying code, running builds/tests).\n` +
-  `- You want an adversarial peer review of code or plans (spawn a subagent with role 'senior typescript reviewer').\n` +
+  `- You want an adversarial peer review of code or plans (spawn a subagent with subagentRole 'senior typescript reviewer').\n` +
   `- You want to break down a larger feature into parallel or serial execution batches without losing context length.\n` +
   `Do NOT delegate simple one-line changes, git status reads, or trivial file lookups.\n` +
   `Every subagent is a pure EXECUTOR and must be given all context (relative file paths, code snippets, requirements) in the "task" argument. It has no memory of this parent conversation.\n`;
@@ -53,9 +53,9 @@ export const ENVIRONMENT_INSTRUCTIONS =
   `Run builds, linting, type-checking, tests, and git operations instead. The app is already deployed and running.\n`;
 
 export const TASK_DELEGATION_INSTRUCTIONS =
-  `\n\nTask Delegation (delegate_task tool):\n` +
-  `You have a delegate_task tool to prompt and execute tasks on programmatic agents, channels, projects, or existing sessions.\n` +
-  `Use delegate_task when you need to coordinate or ask another entity to do work (e.g. asking a search agent to search images, asking a channel team to build a plan, prompting a project build/test loop).\n` +
-  `- CRITICAL: ALWAYS use this tool to communicate with other agents, channels, or projects. DO NOT run bash commands (like curl, Invoke-RestMethod, or scripts/delegate.ts) to send prompts or communicate. Communicating with other agents via bash/HTTP endpoints is strictly prohibited and will cause permission/sandbox errors.\n` +
-  `- Target Type mapping: targetType must be "agent" | "project" | "channel" | "session".\n` +
-  `- For agent targets, it triggers a clean isolated session bound to the target agent. For project targets, it invokes the project executor. For channel targets, it coordinates multi-agent chains and awaits agreement/negotiation completion.\n`;
+  `\n\nTask Delegation (manage_delegations tool with action "delegate"):\n` +
+  `You have a manage_delegations tool with action: "delegate" to prompt and execute tasks on programmatic agents, teams, projects, or existing sessions.\n` +
+  `Use manage_delegations(action: "delegate", ...) when you need to coordinate or ask another entity to do work (e.g. asking a search agent to search images, asking a team to build a plan, prompting a project build/test loop).\n` +
+  `- CRITICAL: ALWAYS use this tool to communicate with other agents, teams, or projects. DO NOT run bash commands (like curl, Invoke-RestMethod, or scripts/delegate.ts) to send prompts or communicate. Communicating with other agents via bash/HTTP endpoints is strictly prohibited and will cause permission/sandbox errors.\n` +
+  `- Target Type mapping: targetType must be "agent" | "project" | "team" | "session".\n` +
+  `- For agent targets, it triggers a clean isolated session bound to the target agent. For project targets, it invokes the project executor. For team targets, it coordinates team agent execution.\n`;

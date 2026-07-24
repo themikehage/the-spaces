@@ -22,6 +22,7 @@ export async function createAgentServer(
   definition: AgentDefinition,
   username: string,
 ): Promise<AgentServer> {
+  const agentDir = ensureAgentWorkspace(username, definition.id);
   const { createAgentRuntime } = await import("../core/session/agent-runtime");
   const { DEFAULT_ALWAYS_ON_TOOLS } = await import("../core/session/tool-groups");
 
@@ -100,7 +101,7 @@ export async function createAgentServer(
   app.get("/observe", async (c) => {
     activeObservers++;
     return streamSSE(c, async (sse) => {
-      const unsub = session.subscribe((event) => {
+      const unsub = session.subscribe((event: any) => {
         sse.writeSSE({ data: JSON.stringify(event), event: event.type }).catch(() => {});
       });
       c.req.raw.signal.addEventListener("abort", () => {
@@ -224,7 +225,7 @@ export async function createAgentServer(
         const msgs = session.messages;
         writeFileSync(
           join(execDir, "messages.jsonl"),
-          msgs.map((m) => JSON.stringify(m)).join("\n"),
+          msgs.map((m: any) => JSON.stringify(m)).join("\n"),
         );
         writeFileSync(join(execDir, "tool-calls.json"), JSON.stringify(toolCalls, null, 2));
         writeFileSync(join(execDir, "errors.json"), JSON.stringify(errors, null, 2));
@@ -261,7 +262,7 @@ export async function createAgentServer(
     }
 
     return streamSSE(c, async (sse) => {
-      const unsub = session.subscribe((event) => {
+      const unsub = session.subscribe((event: any) => {
         sse.writeSSE({ data: JSON.stringify(event), event: event.type }).catch(() => {});
       });
 

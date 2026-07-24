@@ -37,8 +37,16 @@ export function createUiTools(
       required: ["title", "description"],
     },
     execute: async (toolCallId: string, args: any) => {
-      const result = await uiApprovalRegistry.register(toolCallId);
-      const textResult = result.action === "confirm" ? "confirmed" : "cancelled";
+      const sessionId = subagentOptions?.parentSessionId || subagentOptions?.sessionId || "default";
+      const result = await uiApprovalRegistry.register(toolCallId, {
+        username,
+        sessionId,
+        toolName: "request_approval",
+        args,
+        reason: args.description || args.title || "Action requires approval",
+      });
+      const textResult =
+        result.action === "confirm" || result.action === "approve" ? "confirmed" : "cancelled";
       return {
         content: [{ type: "text", text: textResult }],
         details: { status: textResult },
@@ -78,10 +86,23 @@ export function createUiTools(
       required: ["question", "options"],
     },
     execute: async (toolCallId: string, args: any) => {
-      const result = await uiApprovalRegistry.register(toolCallId);
-      if (result.action === "submit" && result.payload) {
-        const selectedStr = result.payload.selectedOptions?.join(", ") || "";
-        const customStr = result.payload.customAnswer || "";
+      const sessionId = subagentOptions?.parentSessionId || subagentOptions?.sessionId || "default";
+      const result = await uiApprovalRegistry.register(toolCallId, {
+        username,
+        sessionId,
+        toolName: "ask_question",
+        args,
+        reason: args.question || "Question requires answer",
+      });
+      if (
+        (result.action === "submit" || result.action === "approve" || result.action === "confirm") &&
+        result.payload
+      ) {
+        const selectedStr = Array.isArray(result.payload.selectedOptions)
+          ? result.payload.selectedOptions.join(", ")
+          : "";
+        const customStr =
+          typeof result.payload.customAnswer === "string" ? result.payload.customAnswer : "";
         let summary = "";
         if (selectedStr) summary += `Selected: ${selectedStr}`;
         if (customStr) summary += (summary ? " | " : "") + `Custom answer: ${customStr}`;
@@ -91,8 +112,8 @@ export function createUiTools(
         };
       }
       return {
-        content: [{ type: "text", text: "cancelled" }],
-        details: { status: "cancelled" },
+        content: [{ type: "text", text: "Question skipped" }],
+        details: { status: "skipped" },
       };
     },
   };

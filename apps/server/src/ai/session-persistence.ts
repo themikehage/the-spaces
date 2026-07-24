@@ -7,6 +7,7 @@ import {
   existsSync,
   mkdirSync,
   openSync,
+  readdirSync,
   readSync,
   renameSync,
   statSync,
@@ -467,7 +468,22 @@ export class JsonlSessionStore {
     if (sessionFile) {
       this.setSessionFile(sessionFile);
     } else {
-      this.newSession(newSessionOptions);
+      const canonicalFile = join(this.sessionDir, "session.jsonl");
+      if (existsSync(canonicalFile)) {
+        this.setSessionFile(canonicalFile);
+      } else {
+        const jsonlFiles = existsSync(this.sessionDir)
+          ? readdirSync(this.sessionDir)
+              .filter((f: string) => f.endsWith(".jsonl"))
+              .sort()
+              .reverse()
+          : [];
+        if (jsonlFiles.length > 0) {
+          this.setSessionFile(join(this.sessionDir, jsonlFiles[0]));
+        } else {
+          this.newSession(newSessionOptions);
+        }
+      }
     }
   }
 
@@ -534,8 +550,7 @@ export class JsonlSessionStore {
     this.flushed = false;
 
     if (this.persist) {
-      const fileTimestamp = timestamp.replace(/[:.]/g, "-");
-      this.sessionFile = join(this.sessionDir, `${fileTimestamp}_${this.sessionId}.jsonl`);
+      this.sessionFile = join(this.sessionDir, "session.jsonl");
     }
     return this.sessionFile;
   }

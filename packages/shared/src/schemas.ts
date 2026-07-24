@@ -21,7 +21,6 @@ export const SessionSchema = z.object({
   status: SessionStatusSchema.optional(),
   projectId: z.string().optional(),
   agentId: z.string().optional(),
-  channelId: z.string().optional(),
   teamId: z.string().optional(),
   experimentId: z.string().optional(),
   isExecution: z.boolean().optional(),
@@ -259,7 +258,6 @@ export interface FileUploadResult {
 
 export const AgentScopeTargetSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("global") }),
-  z.object({ type: z.literal("channel"), id: z.string() }),
   z.object({ type: z.literal("project"), id: z.string() }),
 ]);
 export type AgentScopeTarget = z.infer<typeof AgentScopeTargetSchema>;

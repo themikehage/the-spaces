@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+import { AttentionHubPopover } from "@/components/approvals/AttentionHubPopover";
 import { Logo } from "@/components/ui/Logo";
 import type { ConnectionState } from "@/lib/ws-client";
 import { Menu, Plus } from "lucide-react";
@@ -55,6 +56,7 @@ export function MobileTopbar({
       </div>
 
       <div className="flex items-center gap-1.5 flex-shrink-0">
+        <AttentionHubPopover onNavigate={onNavigate} />
         <span
           className={`w-2 h-2 rounded-full mr-1 flex-shrink-0 ${
             wsState === "connected"

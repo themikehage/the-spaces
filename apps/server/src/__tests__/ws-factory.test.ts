@@ -11,7 +11,7 @@ describe("ws/factory", () => {
     }
     wsRegistry.userSockets.clear();
     wsRegistry.sessionSockets.clear();
-    wsRegistry.channelSockets.clear();
+    wsRegistry.teamSockets.clear();
   });
 
   it("should create context with unique id", () => {

@@ -1395,7 +1395,9 @@ sessionsRouter.post("/:parentId/subagents/:subagentId/abort", async (c) => {
 sessionsRouter.get("/:id/delegations", async (c) => {
   const sessionId = c.req.param("id");
   const { username } = getAuthPayload(c);
-  const list = delegationRegistry.getAll(username, sessionId);
+  const serverCtx = (c as any).get?.("serverContext");
+  const registry = serverCtx?.delegationRegistry || delegationRegistry;
+  const list = registry.getAll(username, sessionId);
   return c.json({ delegations: list });
 });
 
@@ -1403,7 +1405,9 @@ sessionsRouter.get("/:id/delegations/:toolCallId", async (c) => {
   const sessionId = c.req.param("id");
   const toolCallId = c.req.param("toolCallId");
   const { username } = getAuthPayload(c);
-  const delegation = delegationRegistry.getByToolCallId(username, sessionId, toolCallId);
+  const serverCtx = (c as any).get?.("serverContext");
+  const registry = serverCtx?.delegationRegistry || delegationRegistry;
+  const delegation = registry.getByToolCallId(username, sessionId, toolCallId);
   if (!delegation) {
     return c.json({ error: "Delegation not found" }, 404);
   }
@@ -1414,12 +1418,14 @@ sessionsRouter.post("/:id/delegations/:toolCallId/abort", async (c) => {
   const sessionId = c.req.param("id");
   const toolCallId = c.req.param("toolCallId");
   const { username } = getAuthPayload(c);
+  const serverCtx = (c as any).get?.("serverContext");
+  const registry = serverCtx?.delegationRegistry || delegationRegistry;
 
-  const delegation = delegationRegistry.getByToolCallId(username, sessionId, toolCallId);
+  const delegation = registry.getByToolCallId(username, sessionId, toolCallId);
   if (!delegation) {
     return c.json({ error: "Delegation not found" }, 404);
   }
 
-  delegationRegistry.abortAllRecursive(delegation.subagentSessionId);
+  registry.abortAllRecursive(delegation.subagentSessionId);
   return c.json({ success: true });
 });

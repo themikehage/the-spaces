@@ -25,7 +25,10 @@ export function GlobalApprovalOverlay() {
       const res = await apiFetch("/api/approvals");
       if (res.ok) {
         const data = await res.json();
-        setApprovals(data.pending || []);
+        const securityItems = (data.pending || []).filter(
+          (item: any) => item.toolName !== "ask_question" && item.type !== "question",
+        );
+        setApprovals(securityItems);
       }
     } catch (e) {
       console.error("Failed to fetch pending approvals via REST:", e);
@@ -36,7 +39,7 @@ export function GlobalApprovalOverlay() {
     fetchApprovals();
 
     const unsubRequest = wsClient.subscribe("approval_request", (data: any) => {
-      if (data?.approval) {
+      if (data?.approval && data.approval.toolName !== "ask_question") {
         setApprovals((prev) => {
           if (prev.some((a) => a.approvalId === data.approval.approvalId)) return prev;
           return [...prev, data.approval];

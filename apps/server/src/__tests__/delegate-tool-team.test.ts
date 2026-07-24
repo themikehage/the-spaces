@@ -65,7 +65,6 @@ describe("delegate_task Tool Team Integration Tests", () => {
       sId: string,
       projectName?: string,
       agentId?: string,
-      channelId?: string,
       overrides?: any,
     ) => {
       passedOverrides = overrides;

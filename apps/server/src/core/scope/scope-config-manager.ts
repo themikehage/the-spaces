@@ -135,10 +135,16 @@ class ScopeConfigManager {
     }
   }
 
-  private validate(username: string, config: ScopeConfig): ScopeConfig {
+  private validate(username: string, config: any): ScopeConfig {
     const diskAgentIds = new Set(this.scanDiskAgentIds(username));
     const diskToolNames = new Set(this.scanDiskToolNames(username));
     let dirty = false;
+
+    // Strip legacy channels property if present
+    if ("channels" in config) {
+      delete config.channels;
+      dirty = true;
+    }
 
     if (!config.global) {
       config.global = { agents: [], tools: [] };
@@ -146,13 +152,15 @@ class ScopeConfigManager {
     }
 
     const oldGlobalAgentsLength = config.global.agents.length;
-    config.global.agents = config.global.agents.filter((id) => diskAgentIds.has(id));
+    config.global.agents = config.global.agents.filter((id: string) => diskAgentIds.has(id));
     if (config.global.agents.length !== oldGlobalAgentsLength) dirty = true;
 
     if (config.projects) {
-      for (const [projectId, proj] of Object.entries(config.projects)) {
+      for (const [projectId, proj] of Object.entries<any>(config.projects)) {
+        if (!proj.agents) proj.agents = [];
+        if (!proj.tools) proj.tools = [];
         const oldLen = proj.agents.length;
-        proj.agents = proj.agents.filter((id) => diskAgentIds.has(id));
+        proj.agents = proj.agents.filter((id: string) => diskAgentIds.has(id));
         if (proj.agents.length !== oldLen) dirty = true;
       }
     } else {
@@ -161,9 +169,9 @@ class ScopeConfigManager {
     }
 
     const allConfigAgents = new Set<string>();
-    config.global.agents.forEach((id) => allConfigAgents.add(id));
-    Object.values(config.projects).forEach((proj) =>
-      proj.agents.forEach((id) => allConfigAgents.add(id)),
+    config.global.agents.forEach((id: string) => allConfigAgents.add(id));
+    Object.values<any>(config.projects).forEach((proj) =>
+      proj.agents.forEach((id: string) => allConfigAgents.add(id)),
     );
 
     for (const agentId of diskAgentIds) {
@@ -178,28 +186,17 @@ class ScopeConfigManager {
 
     if (config.global.tools) {
       const oldLen = config.global.tools.length;
-      config.global.tools = config.global.tools.filter((t) => diskToolNames.has(t));
+      config.global.tools = config.global.tools.filter((t: string) => diskToolNames.has(t));
       if (config.global.tools.length !== oldLen) dirty = true;
     } else {
       config.global.tools = [];
       dirty = true;
     }
 
-    for (const chan of Object.values(config.channels)) {
-      if (chan.tools) {
-        const oldLen = chan.tools.length;
-        chan.tools = chan.tools.filter((t) => diskToolNames.has(t));
-        if (chan.tools.length !== oldLen) dirty = true;
-      } else {
-        chan.tools = [];
-        dirty = true;
-      }
-    }
-
-    for (const proj of Object.values(config.projects)) {
+    for (const proj of Object.values<any>(config.projects)) {
       if (proj.tools) {
         const oldLen = proj.tools.length;
-        proj.tools = proj.tools.filter((t) => diskToolNames.has(t));
+        proj.tools = proj.tools.filter((t: string) => diskToolNames.has(t));
         if (proj.tools.length !== oldLen) dirty = true;
       } else {
         proj.tools = [];
@@ -211,7 +208,7 @@ class ScopeConfigManager {
       config.agentTools = {};
       dirty = true;
     } else {
-      for (const [agentId, tools] of Object.entries(config.agentTools)) {
+      for (const [agentId, tools] of Object.entries<string[]>(config.agentTools)) {
         if (!diskAgentIds.has(agentId)) {
           delete config.agentTools[agentId];
           dirty = true;
@@ -235,7 +232,7 @@ class ScopeConfigManager {
       }
     }
 
-    return config;
+    return config as ScopeConfig;
   }
 
   private persist(username: string, config: ScopeConfig): void {
@@ -268,17 +265,13 @@ class ScopeConfigManager {
 
   getScopedAgentIds(
     username: string,
-    parentType: "channels" | "projects",
+    parentType: "projects",
     parentId: string,
   ): string[] {
     this.ensureLoaded(username);
     const config = this.cache.get(username);
     if (!config) return [];
-    if (parentType === "channels") {
-      return config.channels[parentId]?.agents ?? [];
-    } else {
-      return config.projects[parentId]?.agents ?? [];
-    }
+    return config.projects[parentId]?.agents ?? [];
   }
 
   getAgentMembership(username: string, agentId: string): AgentMembership | null {
@@ -336,9 +329,6 @@ class ScopeConfigManager {
       const config = await this.load(username);
 
       config.global.agents = config.global.agents.filter((id) => id !== agentId);
-      for (const cid of Object.keys(config.channels)) {
-        config.channels[cid].agents = config.channels[cid].agents.filter((id) => id !== agentId);
-      }
       for (const pid of Object.keys(config.projects)) {
         config.projects[pid].agents = config.projects[pid].agents.filter((id) => id !== agentId);
       }
@@ -346,13 +336,6 @@ class ScopeConfigManager {
       if (!scope || scope.type === "global") {
         if (!config.global.agents.includes(agentId)) {
           config.global.agents.push(agentId);
-        }
-      } else if (scope.type === "channel") {
-        if (!config.channels[scope.id]) {
-          config.channels[scope.id] = { agents: [], tools: [] };
-        }
-        if (!config.channels[scope.id].agents.includes(agentId)) {
-          config.channels[scope.id].agents.push(agentId);
         }
       } else if (scope.type === "project") {
         if (!config.projects[scope.id]) {
@@ -377,11 +360,6 @@ class ScopeConfigManager {
 
       if (target.type === "global") {
         config.global.tools = tools;
-      } else if (target.type === "channel") {
-        if (!config.channels[target.id]) {
-          config.channels[target.id] = { agents: [], tools: [] };
-        }
-        config.channels[target.id].tools = tools;
       } else if (target.type === "project") {
         if (!config.projects[target.id]) {
           config.projects[target.id] = { agents: [], tools: [] };
@@ -392,22 +370,6 @@ class ScopeConfigManager {
       }
 
       this.persist(username, config);
-    });
-  }
-
-  async removeChannelScope(username: string, channelId: string): Promise<void> {
-    await this.withLock(username, async () => {
-      const config = await this.load(username);
-      const entry = config.channels[channelId];
-      if (entry) {
-        for (const agentId of entry.agents) {
-          if (!config.global.agents.includes(agentId)) {
-            config.global.agents.push(agentId);
-          }
-        }
-        delete config.channels[channelId];
-        this.persist(username, config);
-      }
     });
   }
 
@@ -432,12 +394,6 @@ class ScopeConfigManager {
       const config = await this.load(username);
 
       config.global.agents = config.global.agents.filter((id) => id !== agentId);
-
-      for (const channelId of Object.keys(config.channels)) {
-        config.channels[channelId].agents = config.channels[channelId].agents.filter(
-          (id) => id !== agentId,
-        );
-      }
 
       for (const projectId of Object.keys(config.projects)) {
         config.projects[projectId].agents = config.projects[projectId].agents.filter(

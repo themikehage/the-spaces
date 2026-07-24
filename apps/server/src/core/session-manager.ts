@@ -255,6 +255,12 @@ export class SessionManager {
         });
 
         const session = runtime.session;
+        if (projectId || agentId) {
+          this.metadataStore.saveSessionMetadata(username, sessionId, {
+            ...(projectId ? { projectId } : {}),
+            ...(agentId ? { agentId } : {}),
+          });
+        }
         const memory = await memoryRegistry.get(
           `session:${sessionId}`,
           runtime.context.memoryDbPath,

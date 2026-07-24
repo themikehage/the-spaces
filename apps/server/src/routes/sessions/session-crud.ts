@@ -13,6 +13,7 @@ sessionCrudRouter.get("/", async (c) => {
   const { username } = getAuthPayload(c);
   const search = c.req.query("search");
   const agentId = c.req.query("agentId");
+  const teamId = c.req.query("teamId");
   const projectId = c.req.query("projectId") ?? c.req.query("projectName");
   const status = c.req.query("status");
   const from = c.req.query("from");
@@ -30,6 +31,7 @@ sessionCrudRouter.get("/", async (c) => {
   const allFilteredSessions = await sessionManager.listSessions(username, {
     search,
     agentId,
+    teamId,
     projectId,
     status,
     from,
@@ -60,8 +62,39 @@ sessionCrudRouter.get("/statuses", async (c) => {
 sessionCrudRouter.post("/", zValidator("json", CreateSessionSchema), async (c) => {
   const { username } = getAuthPayload(c);
   const data = c.req.valid("json");
-  const session = await sessionManager.getOrCreateSession(username, crypto.randomUUID(), data.projectId, data.agentId);
-  return c.json({ session }, 201);
+  const newSessionId = crypto.randomUUID();
+  await sessionManager.getOrCreateSession(
+    username,
+    newSessionId,
+    data.projectId,
+    data.agentId,
+  );
+
+  const now = new Date().toISOString();
+  sessionManager.metadataStore.saveSessionMetadata(username, newSessionId, {
+    name: data.name || newSessionId,
+    projectId: data.projectId,
+    agentId: data.agentId,
+    teamId: data.teamId,
+    createdAt: now,
+    updatedAt: now,
+  });
+
+  const meta = sessionManager.metadataStore.getSessionMetadata(username, newSessionId) || {};
+
+  const createdSessionItem = {
+    id: newSessionId,
+    name: data.name || meta.name || newSessionId,
+    createdAt: meta.createdAt || now,
+    updatedAt: meta.updatedAt || now,
+    messageCount: 0,
+    status: "active",
+    projectId: data.projectId,
+    agentId: data.agentId,
+    teamId: data.teamId,
+  };
+
+  return c.json(createdSessionItem, 201);
 });
 
 sessionCrudRouter.delete("/:id", async (c) => {
