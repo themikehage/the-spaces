@@ -18,17 +18,22 @@ const KNOWN_SERIAL_TOOLS = [
   {
     id: "ask_question",
     label: "ask_question",
-    description: "Prompts the user for a free-text answer",
+    description: "Prompts the user for a single/multi-choice or custom text answer",
   },
   {
-    id: "spawn_subagent",
-    label: "spawn_subagent",
-    description: "Delegates to a child agent and waits for result",
+    id: "manage_delegations",
+    label: "manage_delegations",
+    description: "Delegates tasks to child subagents or team members and awaits results",
   },
   {
-    id: "delegate_task",
-    label: "delegate_task",
-    description: "Runs a task in an isolated session and awaits result",
+    id: "decompose_tasks",
+    label: "decompose_tasks",
+    description: "Decomposes complex objectives into structured sub-tasks",
+  },
+  {
+    id: "update_task_status",
+    label: "update_task_status",
+    description: "Updates task execution progress and status sequentially",
   },
 ];
 
