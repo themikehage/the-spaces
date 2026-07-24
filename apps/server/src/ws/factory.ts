@@ -39,7 +39,7 @@ async function subscribeWsToSession(
   user: AuthPayload,
   sessionId: string
 ): Promise<void> {
-  if (sessionId.startsWith(SessionPrefix.EXEC) || sessionId.startsWith(SessionPrefix.LAB)) {
+  if (sessionId.startsWith(SessionPrefix.EXEC)) {
     return;
   }
 
@@ -413,7 +413,6 @@ export function createWsContext(): WsConnectionContext {
             "memory_store",
             "memory_recall",
             "memory_forget",
-            "create_experiment",
             "manage_preview",
           ]);
 

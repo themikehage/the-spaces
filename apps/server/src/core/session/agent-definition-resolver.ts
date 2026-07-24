@@ -13,26 +13,6 @@ export async function resolveAgentDefinition({
 
   if (resolvedAgentId) {
     const { agentRegistry } = await import("../../agents");
-    if (resolvedAgentId === "lab-architect") {
-      try {
-        if (!agentRegistry.get("lab-architect")) {
-          const { LAB_ARCHITECT_DEFINITION } = await import("../prompts/lab-architect");
-          const userDefaultModel = getDefaultModel();
-          const modelId = userDefaultModel || "";
-          await agentRegistry.register(
-            username,
-            {
-              ...LAB_ARCHITECT_DEFINITION,
-              model: modelId,
-              skills: [],
-            },
-            false
-          );
-        }
-      } catch (e) {
-        console.error("Failed to register lab-architect:", e);
-      }
-    }
     const agentEntry = agentRegistry.get(resolvedAgentId);
     agentDef = agentEntry?.server.definition;
   }

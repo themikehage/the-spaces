@@ -1,3 +1,5 @@
+import { DEFAULT_ALWAYS_ON_TOOLS } from "./tool-groups";
+
 export interface ResolveActiveToolsParams {
   sessionTools: string[];
   persistedTools?: string[];
@@ -29,28 +31,9 @@ export function resolveActiveTools({
   }
 
   const alwaysOnTools = [
-    "request_approval",
-    "ask_question",
-    "render_images",
-    "render_html",
-    "render_chart",
-    "share_file",
-    "refresh_ui",
-    "decompose_tasks",
-    "update_task_status",
-    "complete_task_list",
-    "vision",
-    "generate_image",
-    "manage_factory",
-    "manage_custom_tools",
+    ...DEFAULT_ALWAYS_ON_TOOLS,
     ...extraAlwaysOnTools,
   ];
-
-  if (resolvedAgentId === "lab-architect") {
-    alwaysOnTools.push("create_experiment");
-  } else {
-    alwaysOnTools.push("manage_delegations");
-  }
 
   if (toolOverrides?.add) {
     alwaysOnTools.push(...toolOverrides.add);

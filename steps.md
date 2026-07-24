@@ -24,6 +24,11 @@
 - [x] Resolver items críticos de `03-core-sdk-next-steps.md`: desacoplar `SessionPromptBuilder` y `DelegationRegistry` de `sessionManager`, estandarizar `ToolActivationEngine` con políticas por workspace, categorizar `TOOL_GROUPS`, habilitar inyección de memoria auto-recalled y asegurar trazabilidad de tools no instaladas (`manage_pipelines`).
 - [x] Implementar la Fase 1 del Plan 04 (`04-post-next-steps.md`): estructurar la Arquitectura Limpia interna en `apps/server/src/core/ports/` e implementar el contrato de integración `SpacesHost`.
 - [x] Implementar la sección de Observabilidad real del Plan 04: registro de auditoría estructurado en JSONL (`tool-calls.jsonl`) vía `afterToolCall` hook, agregación de métricas en `ObservabilityService` y endpoints REST `/api/logs/tool-calls` y `/api/logs/metrics`.
+- [x] Completar Refactorización para Código Abierto (Open Source Readiness):
+  - Fase 0: Auditoría, eliminación de código muerto (channel/lab), definición de `TOOL_GROUPS`, hooks `afterToolCall` y `buildProjectContextPrompt()`.
+  - Fase 1: Desacoplamiento de singletons (`DelegationRegistry` orientado a eventos con `onEvent`, `SessionToolFactory` con inyección estática, `ManageDelegationsTool` con inyección de puertos).
+  - Fase 2: Unificación de runtimes con `createAgentRuntime(config)` y `resolveAgentContext()`, simplificando `createAgentServer()` y `sessionManager`.
+  - Fase 3: Formalización del contrato `SpacesHost` (`ServerSpacesHost`) y creación de `ARCHITECTURE.md`.
 - [ ] Definir comandos estándar para typecheck, lint y pruebas en todos los workspaces.
 - [ ] Añadir pruebas de integración para rutas críticas: autenticación, sesiones, archivos y WebSocket.
 - [ ] Ampliar las pruebas de la orquestación de agentes, equipos y aprobaciones.

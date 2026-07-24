@@ -2,7 +2,6 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync } from 
 import { join } from "node:path";
 import { userConfig } from "./session/user-config";
 import type { EnvelopeResult } from "shared";
-import { broadcastToUser } from "../ws/handler";
 
 export interface PendingDelegation {
   toolCallId: string;
@@ -17,9 +16,45 @@ export interface PendingDelegation {
   subagentSessionId: string;
 }
 
+export type DelegationEvent =
+  | {
+      type: "delegation_started";
+      parentSessionId: string;
+      toolCallId: string;
+      subagentSessionId: string;
+      task: string;
+      targetType: string;
+    }
+  | {
+      type: "delegation_completed";
+      parentSessionId: string;
+      toolCallId: string;
+      status: PendingDelegation["status"];
+      result: EnvelopeResult;
+    };
+
+export type DelegationEventListener = (username: string, event: DelegationEvent) => void;
+
 class DelegationRegistry {
-  // Rastrear en memoria las promesas y abort controllers activos
   private activePromises = new Map<string, { abort: () => void; parentSessionId: string; subagentSessionId: string }>();
+  private listeners = new Set<DelegationEventListener>();
+
+  onEvent(listener: DelegationEventListener): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  private notify(username: string, event: DelegationEvent): void {
+    for (const listener of this.listeners) {
+      try {
+        listener(username, event);
+      } catch (err) {
+        console.error("[DelegationRegistry] Listener error:", err);
+      }
+    }
+  }
 
   private getDelegationsDir(username: string, parentSessionId: string): string {
     const userDir = userConfig.ensureUserDir(username);
@@ -43,7 +78,7 @@ class DelegationRegistry {
     writeFileSync(join(dir, `${d.toolCallId}.json`), JSON.stringify(d, null, 2), "utf-8");
     this.activePromises.set(d.toolCallId, { abort: abortFn, parentSessionId, subagentSessionId: d.subagentSessionId });
     
-    broadcastToUser(username, {
+    this.notify(username, {
       type: "delegation_started",
       parentSessionId,
       toolCallId: d.toolCallId,
@@ -70,7 +105,7 @@ class DelegationRegistry {
     }
     this.activePromises.delete(toolCallId);
 
-    broadcastToUser(username, {
+    this.notify(username, {
       type: "delegation_completed",
       parentSessionId,
       toolCallId,

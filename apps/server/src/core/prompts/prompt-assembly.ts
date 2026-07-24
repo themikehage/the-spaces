@@ -7,18 +7,15 @@ import {
   SUBAGENT_DELEGATION_INSTRUCTIONS,
   TASK_DELEGATION_INSTRUCTIONS,
   ENVIRONMENT_INSTRUCTIONS,
-  LAB_APPEND_INSTRUCTIONS,
 } from "./system-instructions";
 
 export type PromptAssemblyMode =
   | "standard-session" // Global/project chat sessions
-  | "channel-member"   // Channel orchestrator agent invocations
   | "team-orchestration"
   | "orchestration-team"
   | "debate-stateless"  // Negotiation team debate — no memory, no tools
   | "agent-startup"    // Standalone agent server bootstrap
-  | "subagent-spawn"  // Spawned subagent executor
-  | "experiment-member"; // Laboratory experiment agent invocations
+  | "subagent-spawn";  // Spawned subagent executor
 
 export interface PromptAssemblyContext {
   mode: PromptAssemblyMode;
@@ -89,7 +86,6 @@ export function assemblePromptAppends(ctx: PromptAssemblyContext): string[] {
         formatEnvironmentContext(ctx.workspaceDir),
         ...STANDARD_APPEND_INSTRUCTIONS,
       ];
-    case "channel-member":
     case "team-orchestration":
     case "orchestration-team":
     case "agent-startup": {
@@ -103,19 +99,6 @@ export function assemblePromptAppends(ctx: PromptAssemblyContext): string[] {
         formatEnvironmentContext(ctx.workspaceDir),
         layered.composed,
         ...STANDARD_APPEND_INSTRUCTIONS,
-      ];
-    }
-    case "experiment-member": {
-      const deployment = ctx.deployment || { mode: "solo" };
-      const layered = promptComposer.compose(
-        ctx.agentDef || { name: "", role: "", systemPrompt: "" },
-        deployment,
-        ctx.workspaceDir
-      );
-      return [
-        formatEnvironmentContext(ctx.workspaceDir),
-        layered.composed,
-        ...LAB_APPEND_INSTRUCTIONS,
       ];
     }
     case "debate-stateless": {

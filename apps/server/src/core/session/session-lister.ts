@@ -19,9 +19,7 @@ export type SessionListItem = {
   status?: "active" | "streaming" | "task-running" | "sleeping";
   projectId?: string;
   agentId?: string;
-  channelId?: string;
   teamId?: string;
-  experimentId?: string;
   isExecution?: boolean;
   totalTokens?: number;
   toolCallCount?: number;
@@ -37,7 +35,6 @@ export type SessionListItem = {
 export interface SessionListQuery {
   search?: string;
   agentId?: string;
-  channelId?: string;
   teamId?: string;
   projectId?: string;
   status?: string;
@@ -63,7 +60,7 @@ export class SessionLister {
     try {
       const entries = await readdir(sessionsDir, { withFileTypes: true });
       const sessionPromises = entries
-        .filter((entry) => entry.isDirectory() && !entry.name.startsWith("plan_") && !entry.name.startsWith(SessionPrefix.SUBAGENT) && !entry.name.startsWith(SessionPrefix.LAB))
+        .filter((entry) => entry.isDirectory() && !entry.name.startsWith("plan_") && !entry.name.startsWith(SessionPrefix.SUBAGENT))
         .map(async (entry): Promise<SessionListItem> => {
           const sessionId = entry.name;
           const sessionSubdir = join(sessionsDir, sessionId);
@@ -112,9 +109,7 @@ export class SessionLister {
             status,
             projectId: ((metadata.projectId ?? metadata.projectName) as string | undefined),
             agentId: metadata.agentId as string | undefined,
-            channelId: metadata.channelId as string | undefined,
             teamId: metadata.teamId as string | undefined,
-            experimentId: metadata.experimentId as string | undefined,
             totalTokens: typeof metadata.totalTokens === "number" ? metadata.totalTokens : undefined,
             toolCallCount: typeof metadata.toolCallCount === "number" ? metadata.toolCallCount : undefined,
             durationMs: typeof metadata.durationMs === "number" ? metadata.durationMs : undefined,

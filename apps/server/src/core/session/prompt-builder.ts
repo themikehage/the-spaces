@@ -6,6 +6,7 @@ import { CUSTOM_TOOL_INSTRUCTIONS } from "../custom-tools";
 import { resolveProjectDir } from "./workspace-resolver";
 import { userConfig } from "./user-config";
 import { sessionMetadataStore } from "./metadata-store";
+import { buildProjectContextPrompt } from "../prompts/project-context";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -17,7 +18,6 @@ export interface BuildPromptsParams {
   resolvedAgentId?: string;
   agentDef?: { name: string; role: string; systemPrompt: string };
   cachedMcpToolNames: string[];
-  experimentId?: string;
   projectId?: string;
 }
 
@@ -31,7 +31,6 @@ export class SessionPromptBuilder {
       resolvedAgentId,
       agentDef,
       cachedMcpToolNames,
-      experimentId,
     } = params;
 
     const settings = userConfig.getUserSettings(username);
@@ -70,25 +69,15 @@ export class SessionPromptBuilder {
             const previewState = getPreviewState(username, projectMeta.name);
             const previewUrl = `/api/preview/${encodeURIComponent(username)}/${encodeURIComponent(projectMeta.name)}/index.html`;
 
-            appendPrompts.push(
-              `\n\n## Project Context\n` +
-              `You are working inside a project workspace. Here is the project metadata:\n` +
-              `- **Project ID**: ${projectMeta.id}\n` +
-              `- **Project Name**: ${projectMeta.name}\n` +
-              `- **Workspace Path**: ${join(projectDir, "workspace")}\n` +
-              (projectMeta.cloneUrl ? `- **Clone URL**: ${projectMeta.cloneUrl}\n` : "") +
-              `\nAll your file operations are sandboxed to the workspace path above. Do NOT attempt to navigate outside it with relative paths like \`..\`.\n\n` +
-              `## Project Preview & Build Capabilities\n` +
-              `This workspace has an integrated real-time preview server and build watcher.\n` +
-              `Current Preview Configuration:\n` +
-              `- **Framework Preset**: ${previewState.config?.framework || "auto"}\n` +
-              `- **Build Command**: ${previewState.config?.buildCommand || "None (or npm run build auto-fallback)"}\n` +
-              `- **Output Directory**: ${previewState.config?.outputDir || "dist"}\n` +
-              `- **Status**: ${previewState.status} (distExists: ${previewState.distExists}, indexHtmlExists: ${previewState.indexHtmlExists})\n` +
-              `- **Preview URL**: ${previewUrl}\n\n` +
-              `You have a dedicated tool to interact with the preview system: \`manage_preview\` (supporting actions 'status', 'configure', 'build', and 'abort').\n` +
-              `Always run a build using \`manage_preview(action: "build")\` rather than manual bash scripts when you modify frontend assets (e.g. React/Vite/Next.js/Astro) so that the user's browser updates in real time, and logs are displayed in the workspace UI.`
-            );
+            const projectPrompt = buildProjectContextPrompt({
+              projectId: projectMeta.id,
+              projectName: projectMeta.name,
+              projectDir,
+              cloneUrl: projectMeta.cloneUrl,
+              previewState,
+              previewUrl,
+            });
+            appendPrompts.push(projectPrompt);
 
             if (projectMeta.assignment) {
               const { assignment } = projectMeta;
@@ -175,38 +164,6 @@ export class SessionPromptBuilder {
       const deployment = await this.resolveDeploymentContext(params);
       const layered = promptComposer.compose(agentDef, deployment, workspaceDir);
       appendPrompts.push(`\n\n${layered.composed}`);
-    }
-
-    if (resolvedAgentId === "lab-architect") {
-      if (experimentId) {
-        try {
-          // @ts-ignore
-          const labStore: any = await import("../../laboratory/experiment-store").catch(() => null);
-          const exp = labStore?.ExperimentStore ? await labStore.ExperimentStore.getExperiment(username, experimentId) : null;
-          if (exp) {
-            const agentsStr = exp.variants.multiWithLeader.agents.map((a: any) =>
-              `  * **${a.name}** (id: \`${a.id}\`, role: \`${a.role}\`)${a.leader ? " [LÍDER]" : ""}\n    Prompt: ${a.systemPrompt}`
-            ).join("\n");
-            appendPrompts.push(
-              `\n\n## Experimento Activo (ID: ${experimentId})\n` +
-              `Actualmente estás editando el experimento:\n` +
-              `- **Nombre:** ${exp.name}\n` +
-              `- **Objetivo/Task Prompt:** ${exp.taskPrompt}\n` +
-              `- **Criterios de Evaluación:** ${exp.judge.criteria.join(", ")}\n` +
-              `- **Agentes Configurados:**\n${agentsStr}\n\n` +
-              `Cuando llames a \`create_experiment\` para actualizar este experimento, debes pasarle obligatoriamente su \`experimentId\`: \`"${experimentId}"\`.`
-            );
-          }
-        } catch (e) {
-          console.error("Failed to load experiment for prompt builder:", e);
-        }
-      } else {
-        appendPrompts.push(
-          `\n\n## Sin Experimento Activo\n` +
-          `El usuario está iniciando el diseño de un experimento nuevo. Ayúdalo a diseñar su tripulación de agentes y criterios de evaluación. ` +
-          `Una vez definido, llama a \`create_experiment\` omitiendo el parámetro \`experimentId\` (se le generará uno automáticamente).`
-        );
-      }
     }
 
     const tasksState = TaskStateManager.getTaskState(sessionDir);

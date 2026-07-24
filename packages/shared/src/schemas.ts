@@ -39,9 +39,7 @@ export const CreateSessionSchema = z.object({
   name: z.string().min(1).max(100),
   projectId: z.string().optional(),
   agentId: z.string().optional(),
-  channelId: z.string().optional(),
   teamId: z.string().optional(),
-  experimentId: z.string().optional(),
 });
 
 export const ModelSettingsSchema = z.object({

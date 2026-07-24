@@ -6,7 +6,7 @@ import { createVideoGenTool } from "./video-gen-tool";
 export function createUiTools(
   workspaceDir: string,
   username: string,
-  isLaboratory?: boolean,
+  _isLaboratory?: boolean,
   subagentOptions?: any
 ) {
   const requestApprovalTool = {
@@ -25,12 +25,6 @@ export function createUiTools(
       required: ["title", "description"]
     },
     execute: async (toolCallId: string, args: any) => {
-      if (isLaboratory) {
-        return {
-          content: [{ type: "text", text: "confirmed" }],
-          details: { status: "confirmed", autoApproved: true }
-        };
-      }
       const result = await uiApprovalRegistry.register(toolCallId);
       const textResult = result.action === "confirm" ? "confirmed" : "cancelled";
       return {
@@ -59,13 +53,6 @@ export function createUiTools(
       required: ["question", "options"]
     },
     execute: async (toolCallId: string, args: any) => {
-      if (isLaboratory) {
-        const firstOption = args.options?.[0] || "Default Option";
-        return {
-          content: [{ type: "text", text: `Selected: ${firstOption} (Auto-selected in Lab)` }],
-          details: { status: "submitted", payload: { selectedOptions: [firstOption] }, autoApproved: true }
-        };
-      }
       const result = await uiApprovalRegistry.register(toolCallId);
       if (result.action === "submit" && result.payload) {
         const selectedStr = result.payload.selectedOptions?.join(", ") || "";
@@ -214,13 +201,13 @@ export function createUiTools(
 
   const refreshUiTool = {
     name: "refresh_ui",
-    description: "Notify the frontend interface to refresh a specific section or all sidebar lists (projects/repositories, agents, channels, experiments, custom skills) after making mutations.",
+    description: "Notify the frontend interface to refresh a specific section or all sidebar lists (projects/repositories, agents, custom skills) after making mutations.",
     parameters: {
       type: "object",
       properties: {
         entityType: {
           type: "string",
-          enum: ["project", "agent", "channel", "experiment", "skill", "all"],
+          enum: ["project", "agent", "skill", "all"],
           description: "The type of entity to refresh in the user interface. Use 'all' if multiple types changed."
         }
       },

@@ -15,10 +15,6 @@ export interface ScopeConfig {
     agents: string[];
     tools: string[];
   };
-  channels: Record<string, {
-    agents: string[];
-    tools: string[];
-  }>;
   projects: Record<string, {
     agents: string[];
     tools: string[];
@@ -28,7 +24,6 @@ export interface ScopeConfig {
 
 export type AgentMembership =
   | { type: "global" }
-  | { type: "channel"; id: string }
   | { type: "project"; id: string };
 
 class ScopeConfigManager {
@@ -92,7 +87,6 @@ class ScopeConfigManager {
           agents: diskAgentIds,
           tools: diskToolNames,
         },
-        channels: {},
         projects: {},
         agentTools: {},
       };
@@ -125,7 +119,6 @@ class ScopeConfigManager {
           agents: diskAgentIds,
           tools: diskToolNames,
         },
-        channels: {},
         projects: {},
         agentTools: {},
       };
@@ -147,17 +140,6 @@ class ScopeConfigManager {
     config.global.agents = config.global.agents.filter(id => diskAgentIds.has(id));
     if (config.global.agents.length !== oldGlobalAgentsLength) dirty = true;
 
-    if (config.channels) {
-      for (const [channelId, chan] of Object.entries(config.channels)) {
-        const oldLen = chan.agents.length;
-        chan.agents = chan.agents.filter(id => diskAgentIds.has(id));
-        if (chan.agents.length !== oldLen) dirty = true;
-      }
-    } else {
-      config.channels = {};
-      dirty = true;
-    }
-
     if (config.projects) {
       for (const [projectId, proj] of Object.entries(config.projects)) {
         const oldLen = proj.agents.length;
@@ -171,7 +153,6 @@ class ScopeConfigManager {
 
     const allConfigAgents = new Set<string>();
     config.global.agents.forEach(id => allConfigAgents.add(id));
-    Object.values(config.channels).forEach(chan => chan.agents.forEach(id => allConfigAgents.add(id)));
     Object.values(config.projects).forEach(proj => proj.agents.forEach(id => allConfigAgents.add(id)));
 
     for (const agentId of diskAgentIds) {
@@ -290,12 +271,6 @@ class ScopeConfigManager {
       return { type: "global" };
     }
 
-    for (const [channelId, chan] of Object.entries(config.channels)) {
-      if (chan.agents.includes(agentId)) {
-        return { type: "channel", id: channelId };
-      }
-    }
-
     for (const [projectId, proj] of Object.entries(config.projects)) {
       if (proj.agents.includes(agentId)) {
         return { type: "project", id: projectId };
@@ -314,12 +289,7 @@ class ScopeConfigManager {
 
     const membership = this.getAgentMembership(username, agentId);
     if (membership) {
-      if (membership.type === "channel") {
-        const chan = config.channels[membership.id];
-        if (chan && chan.tools) {
-          chan.tools.forEach(t => tools.add(t));
-        }
-      } else if (membership.type === "project") {
+      if (membership.type === "project") {
         const proj = config.projects[membership.id];
         if (proj && proj.tools) {
           proj.tools.forEach(t => tools.add(t));

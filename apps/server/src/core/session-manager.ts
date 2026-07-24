@@ -230,7 +230,6 @@ class SessionManager {
     sessionId: string,
     projectId?: string,
     agentId?: string,
-    channelId?: string,
     overrides?: SessionOverrides
   ): Promise<AgentSession> {
     const key = this.getSessionKey(username, sessionId);
@@ -254,233 +253,38 @@ class SessionManager {
 
     const initPromise = (async () => {
       try {
-        let { sessionDir, workspaceDir } = resolveSessionWorkspace(
+        const { createAgentRuntime } = await import("./session/agent-runtime");
+        const runtime = await createAgentRuntime({
           username,
           sessionId,
           projectId,
           agentId,
-          channelId
+          workspaceDir: overrides?.workspaceDir,
+          skipMemory: overrides?.skipMemory,
+          customTools: overrides?.customTools,
+          resourceLoader: overrides?.resourceLoader,
+          toolProfile: (sessionId.startsWith(SessionPrefix.SUBAGENT) || sessionId.startsWith(SessionPrefix.DELEGATE)) ? "subagent" : "user-session",
+        });
+
+        const session = runtime.session;
+        const memory = await memoryRegistry.get(
+          `session:${sessionId}`,
+          runtime.context.memoryDbPath,
+          runtime.context.memoryEnabled
         );
 
-        if (overrides?.workspaceDir) {
-          workspaceDir = overrides.workspaceDir;
-        }
-
-        if (!existsSync(sessionDir)) {
-          mkdirSync(sessionDir, { recursive: true });
-        }
-
-        const metadataPath = join(sessionDir, "metadata.json");
-        let resolvedProjectId = projectId;
-        let resolvedAgentId = agentId;
-        let resolvedChannelId = channelId;
-        let persistedTools: string[] | undefined;
-
-        const existingMeta = existsSync(metadataPath)
-          ? (() => { try { return JSON.parse(require("node:fs").readFileSync(metadataPath, "utf-8")); } catch { return {}; } })()
-          : {};
-        const updatedMeta = { ...existingMeta };
-
-        if (projectId || agentId || channelId) {
-          if (projectId !== undefined) updatedMeta.projectId = projectId;
-          if (agentId !== undefined) updatedMeta.agentId = agentId;
-          if (channelId !== undefined) updatedMeta.channelId = channelId;
-          writeFileSync(metadataPath, JSON.stringify(updatedMeta, null, 2), "utf-8");
-          resolvedProjectId = updatedMeta.projectId ?? updatedMeta.projectName;
-          resolvedAgentId = updatedMeta.agentId;
-          resolvedChannelId = updatedMeta.channelId;
-        } else {
-          resolvedProjectId = existingMeta.projectId ?? existingMeta.projectName;
-          resolvedAgentId = existingMeta.agentId;
-          resolvedChannelId = existingMeta.channelId;
-          persistedTools = Array.isArray(existingMeta.tools) ? existingMeta.tools : undefined;
-        }
-
-        if (!overrides?.workspaceDir) {
-          if (existingMeta.teamId) {
-            workspaceDir = getTeamWorkspaceDir(username, existingMeta.teamId);
-          } else if (resolvedAgentId) {
-            workspaceDir = getAgentWorkspaceDir(username, resolvedAgentId);
-          } else if (resolvedProjectId) {
-            const resolved = resolveProjectDir(username, resolvedProjectId);
-            workspaceDir = resolved ? join(resolved, "workspace") : getProjectWorkspaceDir(username, resolvedProjectId);
-          }
-        }
-
-        if (!existsSync(workspaceDir)) {
-          mkdirSync(workspaceDir, { recursive: true });
-        }
-
-        const wsConfig = await workspaceConfigLoader.load(workspaceDir);
-
-        const { authStorage, modelRegistry } = userConfigManager.getUserContext(username);
-
-        const { agentDef } = await resolveAgentDefinition({
-          username,
-          resolvedAgentId,
-          getDefaultModel: () => userConfigManager.getUserDefaultModel(username),
-        });
-
-        let resourceLoader: DefaultResourceLoader;
-        if (overrides?.resourceLoader) {
-          resourceLoader = overrides.resourceLoader;
-        } else {
-          const skillPaths = getResolvedSkillPaths(workspaceDir, username);
-          if (agentDef?.skills && agentDef.skills.length > 0) {
-            for (const sk of agentDef.skills) {
-              const candidate = resolve(workspaceDir, ".pi", "skills", sk);
-              if (existsSync(candidate) && !skillPaths.includes(candidate)) {
-                skillPaths.push(candidate);
-              }
-            }
-          }
-
-          const mcpConfig = mcpRegistry.loadConfig(username);
-          const cachedMcpToolNames: string[] = [];
-          for (const srv of Object.values(mcpConfig.mcpServers)) {
-            if (srv.enabled && Array.isArray(srv.tools)) {
-              for (const tName of srv.tools) {
-                cachedMcpToolNames.push(`mcp_${srv.id}_${tName}`);
-              }
-            }
-          }
-
-          const appendPrompts = await sessionPromptBuilder.buildSystemPrompts({
-            username,
-            sessionId,
-            workspaceDir,
-            sessionDir,
-            resolvedAgentId,
-            agentDef,
-            cachedMcpToolNames,
-            experimentId: updatedMeta.experimentId || (existingMeta ? (existingMeta as any).experimentId : undefined),
-            projectId: resolvedProjectId,
-          });
-
-          if (wsConfig?.rules && wsConfig.rules.length > 0) {
-            appendPrompts.push(`\n\n## Workspace Rules:\n${wsConfig.rules.join("\n")}`);
-          }
-
-          resourceLoader = new DefaultResourceLoader({
-            cwd: workspaceDir,
-            agentDir: getUserDir(username),
-            additionalSkillPaths: skillPaths,
-            appendSystemPrompt: appendPrompts,
-          });
-          await resourceLoader.reload();
-        }
-
-        const jsonlFiles = readdirSync(sessionDir)
-          .filter((f: string) => f.endsWith(".jsonl"))
-          .sort()
-          .reverse();
-
-        let sessionManager: VendoredSessionManager;
-        if (jsonlFiles.length > 0) {
-          sessionManager = VendoredSessionManager.open(
-            join(sessionDir, jsonlFiles[0]),
-            sessionDir,
-            sessionDir
-          );
-        } else {
-          sessionManager = VendoredSessionManager.create(sessionDir, sessionDir);
-        }
-
-        const userSettings = userConfigManager.getUserSettings(username);
-        const memoryEnabled = overrides?.skipMemory ? false : (userSettings.memoryEnabled ?? true);
-        const memoryDbPath = getMemoryDbPath(username, sessionId);
-        const memory = await memoryRegistry.get(`session:${sessionId}`, memoryDbPath, memoryEnabled);
-
-        const { customTools, hasExaKey } = sessionToolFactory.createSessionTools({
-          username,
-          sessionId,
-          workspaceDir,
-          memoryEnabled,
-          memory,
-          modelRegistry,
-          authStorage,
-          resourceLoader,
-          contextAgentId: resolvedAgentId,
-        });
-
-        let finalCustomTools = customTools;
-        if (overrides?.customTools) {
-          const overrideNames = new Set(overrides.customTools.map(t => t.name));
-          finalCustomTools = [
-            ...overrides.customTools,
-            ...customTools.filter(t => !overrideNames.has(t.name))
-          ];
-        }
-
-        let customToolNames: string[] = [];
-        try {
-          const { customToolStorage } = await import("./custom-tools/storage");
-          const all = customToolStorage.loadAll(username);
-          const resolvedNames = resolvedAgentId
-            ? new Set(require("./scope").scopeConfigManager.resolveToolsForAgent(username, resolvedAgentId))
-            : null;
-          customToolNames = all
-            .filter((d: any) => d.enabled !== false && (resolvedNames === null || resolvedNames.has(d.name)))
-            .map((d: any) => d.name);
-        } catch (e) {
-          console.error("[SessionManager] Failed to load custom tool names:", e);
-        }
-
         const isSubagent = sessionId.startsWith(SessionPrefix.SUBAGENT) || sessionId.startsWith(SessionPrefix.DELEGATE);
-        const beforeToolCall = createBeforeToolCallHook({
-          sessionId,
-          isSubagent,
-          parentSessionId: existingMeta ? (existingMeta as any).parentSessionId : undefined,
-          username,
-          executionMode: existingMeta ? (existingMeta as any).executionMode : undefined,
-        });
-
-        const afterToolCall = createAfterToolCallHook({ sessionId, username });
-
-        const { session } = await createAgentSession({
-          cwd: workspaceDir,
-          sessionManager,
-          authStorage,
-          modelRegistry,
-          resourceLoader,
-          customTools: finalCustomTools,
-          beforeToolCall,
-        });
-
-        const context = sessionManager.buildSessionContext();
-        const modelResolver = new DefaultModelResolver(modelRegistry);
-        const resolvedModel = modelResolver.resolve({
-          agentModel: agentDef?.model,
-          projectModel: wsConfig?.defaultModel,
-          userDefaultModel: userConfigManager.getUserDefaultModel(username) ?? undefined,
-        });
-
-        if (!context.model) {
-          if (resolvedModel) {
-            try {
-              await session.setModel(resolvedModel);
-              console.log(`[SessionManager:${sessionId}] Initialized session model: ${resolvedModel.provider}/${resolvedModel.id}`);
-            } catch (e) {
-              console.error(`[SessionManager:${sessionId}] Failed to set initial model:`, e);
-            }
-          }
-        } else {
-          const found = modelRegistry.find(context.model.provider, context.model.modelId);
-          if (found) {
-            session.model = found;
-          } else if (resolvedModel) {
-            session.model = resolvedModel;
-          }
-        }
+        const metadataPath = join(runtime.context.sessionDir, "metadata.json");
+        const existingMeta = existsSync(metadataPath)
+          ? (() => { try { return JSON.parse(readFileSync(metadataPath, "utf-8")); } catch { return {}; } })()
+          : {};
 
         const systemTools = sessionMetadataStore.getSessionTools(username, sessionId);
         const combinedTools = resolveActiveTools({
           sessionTools: systemTools,
-          persistedTools,
-          hasExaKey,
-          memoryEnabled,
-          resolvedAgentId,
-          customToolNames,
+          hasExaKey: !!(runtime.context.userEnv.EXA_API_KEY || process.env.EXA_API_KEY),
+          memoryEnabled: runtime.context.memoryEnabled,
+          resolvedAgentId: agentId,
         });
 
         let finalTools = combinedTools;
@@ -515,7 +319,6 @@ class SessionManager {
                     sessionAny._refreshToolRegistry();
                   }
                 }
-                console.log(`[MCP Dynamic Load] Successfully loaded ${mcpTools.length} tools for session ${sessionId}`);
               }
             } catch (err) {
               console.error(`[MCP Dynamic Load] Failed to load MCP tools for session ${sessionId}:`, err);

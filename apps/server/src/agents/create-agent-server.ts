@@ -21,6 +21,7 @@ import { createMemoryTools } from "../core/memory/memory-tools";
 import { mcpRegistry } from "../core/mcp-registry";
 import { assemblePromptAppends } from "../core/prompts/prompt-assembly";
 import { createBeforeToolCallHook } from "../core/session/before-tool-call-hook";
+import { createAfterToolCallHook } from "../core/session/after-tool-call-hook";
 import { scopeConfigManager } from "../core/scope";
 import { resolveProjectDir } from "../core/session/workspace-resolver";
 import { createPreviewTools } from "../core/tools/preview-tools";
@@ -39,182 +40,28 @@ function ensureAgentWorkspace(username: string, id: string): string {
 }
 
 export async function createAgentServer(definition: AgentDefinition, username: string): Promise<AgentServer> {
-  const agentDir = ensureAgentWorkspace(username, definition.id);
-  const sessionDir = join(agentDir, "sessions", "main");
+  const { createAgentRuntime } = await import("../core/session/agent-runtime");
+  const { DEFAULT_ALWAYS_ON_TOOLS } = await import("../core/session/tool-groups");
 
-  let projectId: string | undefined;
-  const membership = scopeConfigManager.getAgentMembership(username, definition.id) || definition.scope;
-  if (membership?.type === "project") {
-    projectId = membership.id;
-  }
-
-  let workspaceDir = join(agentDir, "workspace");
-  let projectName: string | undefined;
-  let projectDir: string | null = null;
-  if (projectId) {
-    projectDir = resolveProjectDir(username, projectId);
-    if (projectDir) {
-      const projectJsonPath = join(projectDir, "project.json");
-      if (existsSync(projectJsonPath)) {
-        try {
-          const projectMeta = JSON.parse(readFileSync(projectJsonPath, "utf-8"));
-          projectName = projectMeta.name;
-          workspaceDir = join(projectDir, "workspace");
-        } catch (e) {
-          console.error("Failed to read project.json for agent server scope:", e);
-        }
-      }
-    }
-  }
-
-  const previewTools = projectName ? createPreviewTools(username, projectName) : [];
-
-  const userSettings = coreSessionManager.userConfig.getUserSettings(username);
-  const memoryEnabled = userSettings.memoryEnabled ?? true;
-  const memoryDbPath = join(agentDir, "memory", "memory.db");
-  const memory = await memoryRegistry.get(`agent:${definition.id}`, memoryDbPath, memoryEnabled);
-
-  if (!existsSync(sessionDir)) mkdirSync(sessionDir, { recursive: true });
-
-  const { getResolvedSkillPaths } = await import("../core/session-manager");
-  const { authStorage, modelRegistry } = coreSessionManager.userConfig.getUserContext(username);
-  modelRegistry.refresh();
-
-  const additionalSkillPaths = [
-    // Incluir factory skills globales para el agente
-    ...getResolvedSkillPaths(workspaceDir, username),
-  ];
-  if (definition.skills && definition.skills.length > 0) {
-    for (const skill of definition.skills) {
-      const candidate = resolve(workspaceDir, ".pi", "skills", skill);
-      if (existsSync(candidate) && !additionalSkillPaths.includes(candidate)) {
-        additionalSkillPaths.push(candidate);
-      }
-    }
-  }
-
-  const systemPromptAppends = assemblePromptAppends({
-    mode: "agent-startup",
-    workspaceDir,
-    agentDef: definition,
-  });
-
-  if (projectName && projectDir) {
-    try {
-      const { getPreviewState } = await import("../core/preview-watcher");
-      const previewState = getPreviewState(username, projectName);
-      const previewUrl = `/api/preview/${encodeURIComponent(username)}/${encodeURIComponent(projectName)}/index.html`;
-
-      systemPromptAppends.push(
-        `\n\n## Project Context\n` +
-        `You are working inside a project workspace. Here is the project metadata:\n` +
-        `- **Project ID**: ${projectId}\n` +
-        `- **Project Name**: ${projectName}\n` +
-        `- **Workspace Path**: ${join(projectDir, "workspace")}\n` +
-        `\nAll your file operations are sandboxed to the workspace path above. Do NOT attempt to navigate outside it with relative paths like \`..\`.\n\n` +
-        `## Project Preview & Build Capabilities\n` +
-        `This workspace has an integrated real-time preview server and build watcher.\n` +
-        `Current Preview Configuration:\n` +
-        `- **Framework Preset**: ${previewState.config?.framework || "auto"}\n` +
-        `- **Build Command**: ${previewState.config?.buildCommand || "None (or npm run build auto-fallback)"}\n` +
-        `- **Output Directory**: ${previewState.config?.outputDir || "dist"}\n` +
-        `- **Status**: ${previewState.status} (distExists: ${previewState.distExists}, indexHtmlExists: ${previewState.indexHtmlExists})\n` +
-        `- **Preview URL**: ${previewUrl}\n\n` +
-        `You have a dedicated tool to interact with the preview system: \`manage_preview\` (supporting actions 'status', 'configure', 'build', and 'abort').\n` +
-        `Always run a build using \`manage_preview(action: "build")\` rather than manual bash scripts when you modify frontend assets (e.g. React/Vite/Next.js/Astro) so that the user's browser updates in real time, and logs are displayed in the workspace UI.`
-      );
-    } catch (e) {
-      console.error("[AgentServer] Failed to append project preview prompt:", e);
-    }
-  }
-
-  const resourceLoader = new DefaultResourceLoader({
-    cwd: workspaceDir,
-    agentDir,
-    additionalSkillPaths,
-    appendSystemPrompt: systemPromptAppends,
-  });
-  await resourceLoader.reload();
-
-  const jsonlFiles = existsSync(sessionDir)
-    ? readdirSync(sessionDir).filter((f) => f.endsWith(".jsonl")).sort().reverse()
-    : [];
-
-  let sessionManager: SessionManager;
-  if (jsonlFiles.length > 0) {
-    sessionManager = SessionManager.open(
-      join(sessionDir, jsonlFiles[0]),
-      sessionDir,
-      sessionDir
-    );
-  } else {
-    sessionManager = SessionManager.create(sessionDir, sessionDir);
-  }
-
-  const customBashTool = createBashToolDefinition(workspaceDir, {
-    spawnHook: (context) => {
-      const userEnv = coreSessionManager.userConfig.getUserEnv(username);
-      const token = createProgrammaticSessionSync(username);
-      return {
-        ...context,
-        env: {
-          ...context.env,
-          ...userEnv,
-          TOKEN: token,
-          JWT_TOKEN: token,
-        },
-      };
-    },
-    outputFilter: (output: string) => {
-      const userEnv = coreSessionManager.userConfig.getUserEnv(username);
-      const secrets = Object.values(userEnv).filter(Boolean) as string[];
-      return filterSecretsFromOutput(output, secrets);
-    },
-  });
-
-  const isLaboratory = definition.id.startsWith(SessionPrefix.LAB);
-  const uiTools = createUiTools(workspaceDir, username, isLaboratory, isLaboratory ? undefined : {
-    workspaceDir,
+  const runtime = await createAgentRuntime({
     username,
-    parentSessionId: sessionManager.getSessionId(),
-    modelRegistry,
-    authStorage,
-    resourceLoader,
-  });
-
-  const memoryTools = memoryEnabled ? createMemoryTools(memory) : [];
-
-  const beforeToolCall = createBeforeToolCallHook({
     sessionId: `agent_server_${definition.id}`,
-    isSubagent: true,
-    username,
+    agentId: definition.id,
+    agentDef: definition,
+    toolProfile: "agent-server",
   });
 
-  const { session } = await createAgentSession({
-    cwd: workspaceDir,
-    sessionManager,
-    authStorage,
-    modelRegistry,
-    resourceLoader,
-    customTools: [customBashTool as any, ...uiTools as any, ...memoryTools as any, ...previewTools as any],
-    beforeToolCall,
-  });
+  const session = runtime.session;
+  const memory = await memoryRegistry.get(`agent:${definition.id}`, runtime.context.memoryDbPath, runtime.context.memoryEnabled);
 
   const activeToolNames = [
+    ...DEFAULT_ALWAYS_ON_TOOLS,
     "read", "write", "edit", "bash", "grep", "find", "ls",
-    "request_approval",
-    "ask_question",
-    "render_images",
-    "render_html",
-    "render_chart",
-    "share_file",
-    "refresh_ui",
-    "manage_delegations"
   ];
-  if (memoryEnabled) {
+  if (runtime.context.memoryEnabled) {
     activeToolNames.push("memory_store", "memory_recall", "memory_forget");
   }
-  if (projectName) {
+  if (runtime.context.projectName) {
     activeToolNames.push("manage_preview");
   }
   session.setActiveToolsByName(activeToolNames);
@@ -240,30 +87,6 @@ export async function createAgentServer(definition: AgentDefinition, username: s
     if (memCtx) session.injectMemoryContext(memCtx);
     return originalPrompt(message);
   };
-
-  const available = modelRegistry.getAvailable();
-  if (definition.model) {
-    const found = available.find(
-      (m) => m.id === definition.model || `${m.provider}/${m.id}` === definition.model
-    );
-    if (found) {
-      try {
-        await session.setModel(found);
-        console.log(`[AgentServer:${definition.id}] Configured model: ${found.provider}/${found.id}`);
-      } catch (e) {
-        console.error(`[AgentServer:${definition.id}] Failed to set model ${definition.model}:`, e);
-      }
-    }
-  }
-
-  if (!session.model && available.length > 0) {
-    try {
-      await session.setModel(available[0]);
-      console.log(`[AgentServer:${definition.id}] Fallback default model: ${available[0].provider}/${available[0].id}`);
-    } catch (e) {
-      console.error(`[AgentServer:${definition.id}] Failed to set fallback model:`, e);
-    }
-  }
 
   const app = new Hono();
   let activeObservers = 0;

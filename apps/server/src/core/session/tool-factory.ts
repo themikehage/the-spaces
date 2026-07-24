@@ -1,5 +1,4 @@
 import { createProgrammaticSessionSync } from "../../auth/onboarding";
-import { sessionManager } from "../session-manager";
 import {
   createBashToolDefinition,
   createReadToolDefinition,
@@ -15,6 +14,9 @@ import { createWebFetchTool } from "../tools/web-fetch";
 import { createMemoryTools } from "../memory/memory-tools";
 import { createUiTools } from "../tools/ui-tools";
 import { createFactoryTool } from "../tools/factory-tool";
+import { createPreviewTools } from "../tools/preview-tools";
+import { teamStore } from "../../teams/team-store";
+import { getTeamWorkspaceDir } from "shared";
 import { userConfigManager } from "./user-config";
 import {
   createManageCustomToolsTool,
@@ -33,6 +35,8 @@ export interface CreateSessionToolsParams {
   authStorage: any;
   resourceLoader: any;
   contextAgentId?: string;
+  teamId?: string;
+  projectId?: string;
 }
 
 export class SessionToolFactory {
@@ -74,14 +78,10 @@ export class SessionToolFactory {
     const webFetchTool = createWebFetchTool({ username });
     const memoryTools = memoryEnabled ? createMemoryTools(memory) : [];
 
-    const { getTeamWorkspaceDir } = require("shared");
-    const meta = sessionManager.metadataStore.getSessionMetadata(username, sessionId);
-    const teamId = meta?.teamId;
-    const projectId = meta?.projectId ?? meta?.projectName;
+    const { teamId, projectId } = params;
     let previewTools: any[] = [];
     if (projectId) {
       try {
-        const { createPreviewTools } = require("../tools/preview-tools");
         previewTools = createPreviewTools(username, projectId);
       } catch (e) {
         console.error("[SessionToolFactory] Failed to create preview tools:", e);
@@ -92,7 +92,6 @@ export class SessionToolFactory {
 
     if (teamId) {
       try {
-        const { teamStore } = require("../../teams/team-store");
         const team = teamStore.getTeam(username, teamId);
         if (team && team.teamType === "Orchestration") {
           inheritedWorkspaceDir = getTeamWorkspaceDir(username, teamId);

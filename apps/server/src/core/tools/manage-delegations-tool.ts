@@ -15,7 +15,6 @@ import { SessionPrefix } from "shared";
 import {
   parseEnvelope,
   forwardSubagentEvents,
-  forwardChannelEvents,
   getLastAssistantText,
   handleDelegationCompletion,
 } from "../agent-utils";
@@ -24,7 +23,7 @@ import { AbortToken } from "../abort-token";
 import { getAppConfig } from "../../config/app-config";
 import { getSubagentDepth } from "../session/session-depth";
 import { buildSubagentRules } from "../sandbox";
-import { agentRegistry } from "../../agents";
+import type { DelegationRegistry } from "../delegation-registry";
 
 export interface ManageDelegationsOptions {
   workspaceDir: string;
@@ -36,6 +35,9 @@ export interface ManageDelegationsOptions {
   inheritedWorkspaceDir?: string;
   permittedAgentIds?: Set<string>;
   parentModel?: any;
+  delegationRegistry?: typeof delegationRegistry;
+  agentRegistry?: typeof agentRegistry;
+  sessionManager?: typeof sessionManager;
 }
 
 export function createManageDelegationsTool(opts: ManageDelegationsOptions) {
@@ -49,6 +51,9 @@ export function createManageDelegationsTool(opts: ManageDelegationsOptions) {
     inheritedWorkspaceDir,
     permittedAgentIds,
     parentModel,
+    delegationRegistry: activeDelegationRegistry = delegationRegistry,
+    agentRegistry: activeAgentRegistry = agentRegistry,
+    sessionManager: activeSessionManager = sessionManager,
   } = opts;
 
   return {
@@ -134,7 +139,7 @@ Use 'delegate' to delegate to a specific target.`,
         const subagentDir = join(userDir, "sessions", parentSessionId, "subagents", subagentSessionId);
         mkdirSync(subagentDir, { recursive: true });
 
-        const parentMeta = sessionManager.metadataStore.getSessionMetadata(username, parentSessionId) || {};
+        const parentMeta = activeSessionManager.metadataStore.getSessionMetadata(username, parentSessionId) || {};
         const parentExecutionMode = parentMeta.executionMode;
         const resolvedSubagentType = args.subagentType || (parentExecutionMode === "autonomous" ? "autonomous" : "builder");
 
@@ -152,10 +157,7 @@ Use 'delegate' to delegate to a specific target.`,
 
         let parentEntityType = "global";
         let parentEntityId: string | null = null;
-        if (parentMeta.channelId) {
-          parentEntityType = "channel";
-          parentEntityId = parentMeta.channelId;
-        } else if (parentMeta.agentId) {
+        if (parentMeta.agentId) {
           parentEntityType = "agent";
           parentEntityId = parentMeta.agentId;
         } else if (parentMeta.projectId || parentMeta.projectName) {
@@ -236,7 +238,7 @@ Use 'delegate' to delegate to a specific target.`,
           }
         );
 
-        const parentSession = sessionManager.getSession(username, parentSessionId);
+        const parentSession = activeSessionManager.getSession(username, parentSessionId);
         if (parentSession?.model) {
           await subSession.setModel(parentSession.model);
         }
@@ -245,14 +247,14 @@ Use 'delegate' to delegate to a specific target.`,
         childToken.register(
           () => {
             subSession.abort();
-            delegationRegistry.abortAllRecursive(subagentSessionId);
+            activeDelegationRegistry.abortAllRecursive(subagentSessionId);
           },
           `session:${subagentSessionId}`
         );
 
         const subagentUnsub = forwardSubagentEvents(subSession, parentSessionId, subagentSessionId, toolCallId);
 
-        delegationRegistry.register(
+        activeDelegationRegistry.register(
           username,
           parentSessionId,
           {
@@ -356,10 +358,10 @@ Use 'delegate' to delegate to a specific target.`,
         const delegateSessionId = `${SessionPrefix.DELEGATE}${toolCallId}`;
         const childToken = new AbortToken(parentSignal, `delegate:${delegateSessionId}`);
 
-        const parentMeta = sessionManager.metadataStore.getSessionMetadata(username, parentSessionId) || {};
+        const parentMeta = activeSessionManager.metadataStore.getSessionMetadata(username, parentSessionId) || {};
         const resolvedExecutionMode = args.autonomyMode || parentMeta.executionMode || undefined;
 
-        sessionManager.metadataStore.saveSessionMetadata(username, delegateSessionId, {
+        activeSessionManager.metadataStore.saveSessionMetadata(username, delegateSessionId, {
           name: `Delegation: ${targetType} - ${targetId}`,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -380,12 +382,12 @@ Use 'delegate' to delegate to a specific target.`,
 
           try {
             if (targetType === "agent") {
-              const entry = agentRegistry.get(targetId, username);
+              const entry = activeAgentRegistry.get(targetId, username);
               if (!entry) {
                 throw new Error(`Programmatic Agent "${targetId}" not found for user "${username}"`);
               }
 
-              const session = await sessionManager.getOrCreateSession(
+              const session = await activeSessionManager.getOrCreateSession(
                 username,
                 delegateSessionId,
                 undefined,
@@ -397,7 +399,7 @@ Use 'delegate' to delegate to a specific target.`,
               let resolvedModel = parentModel || null;
               if (!resolvedModel) {
                 try {
-                  const parentSession = sessionManager.getSession(username, parentSessionId);
+                  const parentSession = activeSessionManager.getSession(username, parentSessionId);
                   if (parentSession?.model) {
                     resolvedModel = parentSession.model;
                   }
@@ -406,7 +408,7 @@ Use 'delegate' to delegate to a specific target.`,
 
               if (args.model) {
                 try {
-                  const { modelRegistry: userModelReg } = sessionManager.userConfig.getUserContext(username);
+                  const { modelRegistry: userModelReg } = activeSessionManager.userConfig.getUserContext(username);
                   userModelReg.refresh();
                   const found = userModelReg
                     .getAvailable()
@@ -429,7 +431,7 @@ Use 'delegate' to delegate to a specific target.`,
 
               childToken.register(() => {
                 session.abort();
-                delegationRegistry.abortAllRecursive(delegateSessionId);
+                activeDelegationRegistry.abortAllRecursive(delegateSessionId);
               }, `agent:${targetId}`);
 
               const unsub = forwardSubagentEvents(session, parentSessionId, delegateSessionId, toolCallId);
@@ -450,7 +452,7 @@ Use 'delegate' to delegate to a specific target.`,
               }
 
             } else if (targetType === "project") {
-              const session = await sessionManager.getOrCreateSession(
+              const session = await activeSessionManager.getOrCreateSession(
                 username,
                 delegateSessionId,
                 targetId
@@ -459,7 +461,7 @@ Use 'delegate' to delegate to a specific target.`,
               let resolvedModel = parentModel || null;
               if (!resolvedModel) {
                 try {
-                  const parentSession = sessionManager.getSession(username, parentSessionId);
+                  const parentSession = activeSessionManager.getSession(username, parentSessionId);
                   if (parentSession?.model) {
                     resolvedModel = parentSession.model;
                   }
@@ -468,7 +470,7 @@ Use 'delegate' to delegate to a specific target.`,
 
               if (args.model) {
                 try {
-                  const { modelRegistry: userModelReg } = sessionManager.userConfig.getUserContext(username);
+                  const { modelRegistry: userModelReg } = activeSessionManager.userConfig.getUserContext(username);
                   userModelReg.refresh();
                   const found = userModelReg
                     .getAvailable()
@@ -491,7 +493,7 @@ Use 'delegate' to delegate to a specific target.`,
 
               childToken.register(() => {
                 session.abort();
-                delegationRegistry.abortAllRecursive(delegateSessionId);
+                activeDelegationRegistry.abortAllRecursive(delegateSessionId);
               }, `project:${targetId}`);
 
               const unsub = forwardSubagentEvents(session, parentSessionId, delegateSessionId, toolCallId);
@@ -522,16 +524,10 @@ Use 'delegate' to delegate to a specific target.`,
 
               childToken.register(() => {
                 teamOrchestrator.abortDispatch(username, targetId, delegateSessionId);
-                delegationRegistry.abortAllRecursive(delegateSessionId);
+                activeDelegationRegistry.abortAllRecursive(delegateSessionId);
               }, `team:${targetId}`);
 
-              const unsub = forwardChannelEvents(targetId, parentSessionId, delegateSessionId, toolCallId);
-
-              try {
-                await teamOrchestrator.dispatchUserMessage(username, targetId, task, delegateSessionId);
-              } finally {
-                unsub();
-              }
+              await teamOrchestrator.dispatchUserMessage(username, targetId, task, delegateSessionId);
 
               const teamMessages = teamStore.getMessages(username, targetId, 100, delegateSessionId);
               const lastAgentMsg = [...teamMessages].reverse().find(m => m.role === "agent");
@@ -546,11 +542,11 @@ Use 'delegate' to delegate to a specific target.`,
               }
 
             } else if (targetType === "session") {
-              const session = await sessionManager.getOrCreateSession(username, targetId);
+              const session = await activeSessionManager.getOrCreateSession(username, targetId);
 
               childToken.register(() => {
                 session.abort();
-                delegationRegistry.abortAllRecursive(targetId);
+                activeDelegationRegistry.abortAllRecursive(targetId);
               }, `session:${targetId}`);
 
               const unsub = forwardSubagentEvents(session, parentSessionId, targetId, toolCallId);
@@ -608,7 +604,7 @@ Use 'delegate' to delegate to a specific target.`,
           });
         };
 
-        delegationRegistry.register(
+        activeDelegationRegistry.register(
           username,
           parentSessionId,
           {

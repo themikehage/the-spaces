@@ -28,7 +28,6 @@ sessionsRouter.get("/", async (c) => {
   
   const search = c.req.query("search");
   const agentId = c.req.query("agentId");
-  const channelId = c.req.query("channelId");
   const projectId = c.req.query("projectId") ?? c.req.query("projectName");
   const status = c.req.query("status");
   const from = c.req.query("from");
@@ -48,7 +47,6 @@ sessionsRouter.get("/", async (c) => {
   const allFilteredSessions = await sessionManager.listSessions(username, {
     search,
     agentId,
-    channelId,
     projectId,
     status,
     from,
@@ -87,14 +85,12 @@ sessionsRouter.get("/analytics", async (c) => {
   const from = c.req.query("from");
   const to = c.req.query("to");
   const agentId = c.req.query("agentId");
-  const channelId = c.req.query("channelId");
   const projectId = c.req.query("projectId") ?? c.req.query("projectName");
 
   const sessions = await sessionManager.listSessions(username, {
     from,
     to,
     agentId,
-    channelId,
     projectId,
     archived: "false",
   });
@@ -103,7 +99,6 @@ sessionsRouter.get("/analytics", async (c) => {
     from,
     to,
     agentId,
-    channelId,
     projectId,
     archived: "true",
   });
@@ -253,7 +248,7 @@ sessionsRouter.post("/:id/unarchive", async (c) => {
 });
 
 sessionsRouter.post("/", zValidator("json", CreateSessionSchema), async (c) => {
-  const { name, projectId, agentId, channelId, teamId, experimentId } = c.req.valid("json");
+  const { name, projectId, agentId, teamId } = c.req.valid("json");
   const { username } = getAuthPayload(c);
   const sessionId = crypto.randomUUID();
 
@@ -295,9 +290,7 @@ sessionsRouter.post("/", zValidator("json", CreateSessionSchema), async (c) => {
     messageCount: 0,
     projectId: resolvedProjectId,
     agentId: ownerAgentId,
-    channelId,
     teamId,
-    experimentId,
   };
 
   const isNegotiation = team && team.teamType === "Negotiation";
@@ -308,9 +301,7 @@ sessionsRouter.post("/", zValidator("json", CreateSessionSchema), async (c) => {
     updatedAt: now,
     projectId: resolvedProjectId || null,
     agentId: ownerAgentId || null,
-    channelId: channelId || null,
     teamId: teamId || null,
-    experimentId: experimentId || null,
     ...(isNegotiation ? {
       executionMode: "readonly",
       tools: ["read", "grep", "find", "ls"]
@@ -318,7 +309,7 @@ sessionsRouter.post("/", zValidator("json", CreateSessionSchema), async (c) => {
   });
 
   if (!teamId || isOrchestration) {
-    sessionManager.getOrCreateSession(username, sessionId, resolvedProjectId, ownerAgentId, channelId, teamId ? {
+    sessionManager.getOrCreateSession(username, sessionId, resolvedProjectId, ownerAgentId, teamId ? {
       workspaceDir: getTeamWorkspaceDir(username, teamId),
     } : undefined).catch(err => {
       console.error(`[Session Start Async] Failed for ${sessionId}:`, err);

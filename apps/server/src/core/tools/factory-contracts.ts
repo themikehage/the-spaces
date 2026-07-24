@@ -84,7 +84,7 @@ export const FACTORY_CONTRACTS: Record<string, EntityContract> = {
           model: { type: "string", required: false, description: "Model identifier (e.g. anthropic/claude-3-5-sonnet-20241022)" },
           skills: { type: "array", required: false, description: "Array of skill IDs to attach" },
           avatarUrl: { type: "string", required: false, description: "URL for agent avatar image" },
-          scope: { type: "object", required: false, description: "Optional scope configuration: { type: 'global' | 'channel' | 'project', id?: string }" },
+          scope: { type: "object", required: false, description: "Optional scope configuration: { type: 'global' | 'project', id?: string }" },
         },
       },
       delete: {
@@ -261,35 +261,6 @@ export const FACTORY_CONTRACTS: Record<string, EntityContract> = {
         description: "Delete a custom skill permanently",
         params: {
           id: { type: "string", required: true, description: "Skill name to delete" },
-        },
-      },
-    },
-  },
-
-
-  experiments: {
-    entity: "experiments",
-    description: "Laboratory experiments for multi-agent evaluation",
-    actions: {
-      get: {
-        description: "List all experiments or get one by id",
-        params: {
-          id: { type: "string", required: false, description: "Experiment ID. Omit to list all." },
-        },
-      },
-      upsert: {
-        description: "Create or update an experiment",
-        params: {
-          id: { type: "string", required: true, description: "Experiment ID (UUID for new)" },
-          name: { type: "string", required: true, description: "Experiment name" },
-          taskPrompt: { type: "string", required: true, description: "Task prompt for the experiment" },
-          judge: { type: "object", required: false, description: "Judge configuration with criteria array" },
-        },
-      },
-      delete: {
-        description: "Delete an experiment permanently",
-        params: {
-          id: { type: "string", required: true, description: "Experiment ID to delete" },
         },
       },
     },

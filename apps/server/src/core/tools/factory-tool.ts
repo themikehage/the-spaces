@@ -607,9 +607,9 @@ export function createFactoryTool(opts: FactoryToolOptions) {
 
   return {
     name: "manage_factory",
-    description: `Manage Spaces entities directly. Operations on agents, projects, sessions, environment variables, LLM providers, custom skills, teams, laboratory experiments, and settings.
+    description: `Manage Spaces entities directly. Operations on agents, projects, sessions, environment variables, LLM providers, custom skills, teams, and settings.
 
-Available entities: agents, projects, sessions, env, providers, skills, teams, experiments, settings.
+Available entities: agents, projects, sessions, env, providers, skills, teams, settings.
 Actions: get (list or read), upsert (create or update), delete (permanently remove), assign (set project assignment), send (message dispatch to a team), member (add/update member of a team/project).
 
 Entity-specific notes:
@@ -628,7 +628,7 @@ After mutating any entity, call refresh_ui to update the frontend sidebar.`,
       properties: {
         entity: {
           type: "string",
-          enum: ["agents", "projects", "sessions", "env", "providers", "skills", "teams", "experiments", "settings"],
+          enum: ["agents", "projects", "sessions", "env", "providers", "skills", "teams", "settings"],
           description: "The factory entity type to operate on.",
         },
         action: {
@@ -638,7 +638,7 @@ After mutating any entity, call refresh_ui to update the frontend sidebar.`,
         },
         id: {
           type: "string",
-          description: "Entity identifier. Required for delete, send, and member. For get, omit to list all entities. For upsert on agents/skills/teams/experiments, use as the unique ID. For env, use 'key' in params instead.",
+          description: "Entity identifier. Required for delete, send, and member. For get, omit to list all entities. For upsert on agents/skills/teams, use as the unique ID. For env, use 'key' in params instead.",
         },
         params: {
           type: "object",

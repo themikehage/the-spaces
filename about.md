@@ -14,8 +14,9 @@ El repositorio es un monorepo con workspaces de `pnpm`:
 ## Capacidades principales
 
 - Gestión de proyectos, sesiones, archivos y workspaces.
-- Core SDK desacoplado en capas de contratos: `WorkspaceConfigPort` (para `.spaces/config.json` por workspace), `ModelResolver` (cascada de resolución de modelo por entidad), `ToolActivationEngine` basado en políticas (`toolOverrides` add/remove y categorización `TOOL_GROUPS`), inyección de contexto de memoria auto-recalled y hooks `afterToolCall`.
-- Orquestación de agentes y equipos mediante la herramienta unificada `manage_delegations` (con `DelegationService` aislado, registro desvinculado de singletons circulares y payloads dinámicos `outputs`), que maneja subagentes aislados (`spawn`) y derivaciones (`delegate`), con control de cancelación (abort) desde UI y flujo de actividad en tiempo real.
+- Core SDK desacoplado en capas de contratos: `WorkspaceConfigPort` (para `.spaces/config.json` por workspace), `ModelResolver` (cascada de resolución de modelo por entidad), `ToolActivationEngine` basado en políticas (`toolOverrides` add/remove y categorización `TOOL_GROUPS`), inyección de contexto de memoria auto-recalled, hooks `afterToolCall` y motor unificado de instanciación de runtimes `createAgentRuntime(config)`.
+- Orquestación de agentes y equipos mediante la herramienta unificada `manage_delegations` y el registro de delegaciones orientado a eventos `DelegationRegistry.onEvent(...)`, desvinculado de dependencias circulares con WebSocket, que maneja subagentes aislados (`spawn`) y derivaciones (`delegate`), con control de cancelación (abort) desde UI y flujo de actividad en tiempo real.
+- Interfaz de integración `SpacesHost` (`ServerSpacesHost`) y documento de arquitectura abierta `ARCHITECTURE.md` para empaquetado y uso del runtime como biblioteca/SDK de código abierto.
 - Catálogo y configuración de 9 proveedores de IA: OpenAI, Google Gemini, xAI/Grok, DeepSeek, Groq, Mistral, OpenRouter, Qwen y OpenCodeGo.
 - Motor de permisos dinámico para control granular de herramientas por usuario/sesión.
 - Generación de imágenes (`image_gen`) y videos (`generate_video`) con diagnósticos desde settings.

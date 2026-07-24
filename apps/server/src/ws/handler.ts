@@ -4,9 +4,15 @@ import { setAgentStopCallback } from "../agents/agent-stop-callback";
 import { teamOrchestrator, setTeamBroadcastHandler } from "../teams";
 import { setEventBroadcaster } from "../lib/event-broker";
 
+import { delegationRegistry } from "../core/delegation-registry";
+
 setAgentStopCallback((_agentId) => {});
 
 startHeartbeat();
+
+delegationRegistry.onEvent((username, event) => {
+  broadcastToUser(username, event);
+});
 
 export const sessionSockets = wsRegistry.sessionSockets;
 export const userSockets = wsRegistry.userSockets;
@@ -150,7 +156,6 @@ export function onClose(evt: any, _ws: WSContext, forcedWsId?: string | null) {
       const user = wsRegistry.getUser(wsId);
       if (user) wsRegistry.removeUserSocket(user.username, _ws);
       if (meta.sessionId) wsRegistry.removeSessionSocket(meta.sessionId, _ws);
-      if (meta.channelId) wsRegistry.removeChannelSocket(meta.channelId, _ws);
       if (meta.teamId) wsRegistry.removeTeamSocket(meta.teamId, _ws);
       wsRegistry.deleteMeta(wsId);
       return;
