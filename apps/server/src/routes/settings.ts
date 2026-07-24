@@ -230,7 +230,6 @@ settingsRouter.post("/test-image-gen", async (c) => {
     const { authStorage } = sessionManager.userConfig.getUserContext(username);
     const userEnv = sessionManager.userConfig.getUserEnv(username);
     const apiKey = authStorage.getApiKey("qwen") || userEnv.DASHSCOPE_API_KEY || process.env.DASHSCOPE_API_KEY || "";
-    console.log(`[DIAGNOSTIC TEST-IMAGE-GEN] Resolved key length: ${apiKey.length}. Start: '${apiKey.substring(0, 15)}' End: '${apiKey.substring(apiKey.length - 15)}'`);
 
     const workspaceDir = getWorkspaceDir(username);
     const size = body.size || "1024x1024";
@@ -263,7 +262,6 @@ settingsRouter.post("/test-video-gen", async (c) => {
     const { authStorage } = sessionManager.userConfig.getUserContext(username);
     const userEnv = sessionManager.userConfig.getUserEnv(username);
     const apiKey = authStorage.getApiKey("openrouter") || userEnv.OPENROUTER_API_KEY || process.env.OPENROUTER_API_KEY || "";
-    console.log(`[DIAGNOSTIC TEST-VIDEO-GEN] Resolved OpenRouter key length: ${apiKey.length}.`);
 
     const workspaceDir = getWorkspaceDir(username);
     const localPath = await runVideoGenModel(

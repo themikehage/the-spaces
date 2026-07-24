@@ -174,12 +174,7 @@ export function getUsername(c: any): string | null {
 
   const tokensToCheck: string[] = [];
 
-  try {
-    const tokenFromQuery = c.req.query("token");
-    if (tokenFromQuery) {
-      tokensToCheck.push(extractToken(tokenFromQuery));
-    }
-  } catch {}
+
 
   try {
     const authHeader = c.req.header("Authorization") ?? c.req.header("authorization");

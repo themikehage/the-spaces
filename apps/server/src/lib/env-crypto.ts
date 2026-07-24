@@ -6,9 +6,14 @@ const SALT = "spaces-env-salt-v1";
 const IV_LENGTH = 12; // Estándar recomendado para GCM
 
 function deriveKey(secret: string): Buffer {
-  const hashKey = secret || "dev-fallback-secret-key-spaces-default-1234567890";
+  if (!secret) {
+    throw new Error(
+      "FATAL: Secret environment variable (BETTER_AUTH_SECRET / SPACES_AUTH_SECRET) is required for encryption.\n" +
+        "Generate one with: openssl rand -hex 32"
+    );
+  }
   return createHash("sha256")
-    .update(hashKey + SALT)
+    .update(secret + SALT)
     .digest();
 }
 

@@ -1,0 +1,13 @@
+pre-commit:
+  parallel: true
+  commands:
+    formatting:
+      glob: "*.{ts,tsx,js,jsx,json,md,yml,yaml}"
+      run: pnpm run format:check
+    typecheck:
+      run: pnpm run typecheck
+    lint:
+      run: pnpm run lint
+    secret-scan:
+      run: pnpm run secret-scan
+

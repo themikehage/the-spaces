@@ -5,6 +5,7 @@ import { logger } from "hono/logger";
 import { serveStatic } from "hono/bun";
 import { createBunWebSocket } from "hono/bun";
 import { existsSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 import { auth } from "./auth/index";
 import { authRouter } from "./routes/auth";
 import { sessionsRouter } from "./routes/sessions";
@@ -30,7 +31,11 @@ import { teamStore } from "./teams/team-store";
 import { createWsContext } from "./ws/factory";
 import { ensureAuthTables } from "./auth/migrate";
 import { startPreviewServer, handleRequest as previewRequest } from "./preview-server";
-import { join } from "node:path";
+import { requestIdMiddleware } from "./core/middleware/request-id";
+import { globalErrorHandler } from "./core/middleware/error-handler";
+
+import { securityHeadersMiddleware } from "./core/middleware/security-headers";
+import { authRateLimiter, generalRateLimiter } from "./core/middleware/rate-limiter";
 
 sessionMetadataStore.setTeamReader({
   getTeamType(username: string, teamId: string): string | null {
@@ -40,21 +45,34 @@ sessionMetadataStore.setTeamReader({
 });
 
 const PREVIEW_HOST = (process.env.PREVIEW_HOST ?? "").toLowerCase();
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
 
 const { upgradeWebSocket, websocket } = createBunWebSocket();
 
 const app = new Hono();
 
+app.use("/*", requestIdMiddleware());
+app.use("/*", securityHeadersMiddleware());
+app.use("/*", generalRateLimiter());
+app.use("/api/auth/*", authRateLimiter());
 app.use(
   "/*",
   cors({
-    origin: (origin) => origin || "*",
+    origin: (origin) => {
+      if (!origin) return null;
+      if (ALLOWED_ORIGINS.length === 0) return origin; // development mode default
+      return ALLOWED_ORIGINS.includes(origin) ? origin : null;
+    },
     credentials: true,
-    allowHeaders: ["Content-Type", "Authorization"],
+    allowHeaders: ["Content-Type", "Authorization", "X-Request-Id"],
     allowMethods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   })
 );
 app.use("/*", logger());
+app.onError(globalErrorHandler);
 
 app.get("/api/health", (c) =>
   c.json({
@@ -173,4 +191,3 @@ process.on("SIGINT", async () => {
   await memoryRegistry.shutdownAll();
   process.exit(0);
 });
-

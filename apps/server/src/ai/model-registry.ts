@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 import type { AuthStorage } from "./auth-storage.ts";
+import { circuitBreakerRegistry } from "../core/circuit-breaker";
 
 type ModelsDevCache = {
   data: Record<string, any>;
@@ -16,13 +17,15 @@ async function fetchModelsDev(): Promise<Record<string, any>> {
     return modelsDevCache.data;
   }
   try {
-    const res = await fetch(MODELS_DEV_URL, {
-      headers: { Accept: "application/json" },
+    return await circuitBreakerRegistry.get("models.dev").execute(async () => {
+      const res = await fetch(MODELS_DEV_URL, {
+        headers: { Accept: "application/json" },
+      });
+      if (!res.ok) throw new Error(`models.dev status ${res.status}`);
+      const data = (await res.json()) as Record<string, any>;
+      modelsDevCache = { data, fetchedAt: now };
+      return data;
     });
-    if (!res.ok) throw new Error(`models.dev status ${res.status}`);
-    const data = (await res.json()) as Record<string, any>;
-    modelsDevCache = { data, fetchedAt: now };
-    return data;
   } catch (err) {
     console.error("[ModelRegistry] Failed to fetch models.dev:", err);
     if (modelsDevCache) return modelsDevCache.data;

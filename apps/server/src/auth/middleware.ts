@@ -69,16 +69,9 @@ export async function sessionMiddleware(c: Context, next: Next) {
 
   const tokenFromQuery = c.req.query("token");
   if (tokenFromQuery) {
-    const username = findUserByTokenSync(tokenFromQuery.trim()) ?? resolveUsernameFromToken(tokenFromQuery);
-    if (username) {
-      if (isWorkspaceProjects) console.log(`[Auth Middleware] ${path} query token auth success -> ${username}`);
-      c.set("user", { username } as AuthPayload);
-      await next();
-      return;
-    } else if (isWorkspaceProjects) {
-      console.log(`[Auth Middleware] ${path} query token auth failed`);
-    }
+    console.warn(`[Auth Middleware] Security Warning: Token via query parameter is disabled. Path: ${path}`);
   }
+
 
   const authHeader = c.req.header("Authorization") ?? c.req.header("authorization");
   if (authHeader?.startsWith("Bearer ")) {
