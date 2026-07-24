@@ -1,6 +1,6 @@
 # Hito 02 — Congelar contrato WebSocket + bugs de nombres + aislamiento por sesión
 
-**Estado:** 📝 Redactado — pendiente de confirmación  
+**Estado:** 📝 Redactado
 **Criticidad:** P0 — contrato externo mentiroso + regresiones de UI en tiempo real  
 **Estimación relativa:** M (shared schemas + server validate + client tipado parcial + fixes puntuales)  
 **Depende de:** 01 recomendado (menos ruido al probar chat/teams); no bloquea implementación paralela de 04  

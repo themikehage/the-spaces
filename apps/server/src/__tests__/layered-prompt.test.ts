@@ -102,7 +102,7 @@ describe("Layered Prompt System Tests", () => {
     expect(result.applied).toContain("instance.team.orchestration.leader-contract");
     expect(result.applied).not.toContain("role.leader.delegation");
     expect(result.applied).not.toContain("instance.channel.roster");
-    expect(result.composed).toContain("delegate_task");
+    expect(result.composed).toContain("manage_delegations");
     expect(result.composed).toContain(
       "Researcher (id: researcher, role: member, capability: Research technical options)",
     );

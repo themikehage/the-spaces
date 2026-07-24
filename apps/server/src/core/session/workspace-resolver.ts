@@ -172,6 +172,21 @@ export function resolveProjectId(username: string, nameOrId: string): string | n
   return null;
 }
 
+export function resolveCanonicalProjectId(username: string, projectId: string): string {
+  try {
+    const projectDir = resolveProjectDir(username, projectId);
+    if (projectDir) {
+      const meta = readProjectJson(projectDir);
+      if (meta?.id && typeof meta.id === "string") {
+        return meta.id;
+      }
+    }
+  } catch (e) {
+    console.error("[WorkspaceResolver] Failed to resolve canonical projectId:", e);
+  }
+  return projectId;
+}
+
 export function resolveSessionWorkspace(
   username: string,
   sessionId: string,

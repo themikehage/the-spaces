@@ -1,83 +1,17 @@
 // SPDX-License-Identifier: MIT
 import { Button } from "@/components/ui/Button";
-import { apiFetch } from "@/lib/api";
-import { wsClient } from "@/lib/ws-client";
+import { useAttention } from "@/hooks/useAttention";
+import { attentionStore } from "@/lib/attention/attention-store";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
 
-interface ApprovalRequest {
-  approvalId: string;
-  username: string;
-  sessionId: string;
-  parentSessionId?: string;
-  toolName: string;
-  args: Record<string, unknown>;
-  reason: string;
-  expiresAt: number;
-  status: "pending" | "approved" | "denied" | "timeout";
-}
+import { useEffect, useState } from "react";
+import type { AttentionItem } from "shared";
 
 export function GlobalApprovalOverlay() {
-  const [approvals, setApprovals] = useState<ApprovalRequest[]>([]);
+  const approvals = useAttention((items) => items.filter((i) => i.kind === "approval"));
 
-  const fetchApprovals = async () => {
-    try {
-      const res = await apiFetch("/api/approvals");
-      if (res.ok) {
-        const data = await res.json();
-        const securityItems = (data.pending || []).filter(
-          (item: any) => item.toolName !== "ask_question" && item.type !== "question",
-        );
-        setApprovals(securityItems);
-      }
-    } catch (e) {
-      console.error("Failed to fetch pending approvals via REST:", e);
-    }
-  };
-
-  useEffect(() => {
-    fetchApprovals();
-
-    const unsubRequest = wsClient.subscribe("approval_request", (data: any) => {
-      if (data?.approval && data.approval.toolName !== "ask_question") {
-        setApprovals((prev) => {
-          if (prev.some((a) => a.approvalId === data.approval.approvalId)) return prev;
-          return [...prev, data.approval];
-        });
-      }
-    });
-
-    const unsubResolved = wsClient.subscribe("approval_resolved", (data: any) => {
-      if (data?.approvalId) {
-        setApprovals((prev) => prev.filter((a) => a.approvalId !== data.approvalId));
-      }
-    });
-
-    // Also pull approvals when WS reconnects
-    const unsubState = wsClient.onStateChange((state) => {
-      if (state === "connected") {
-        fetchApprovals();
-      }
-    });
-
-    return () => {
-      unsubRequest();
-      unsubResolved();
-      unsubState();
-    };
-  }, []);
-
-  const handleResolve = async (id: string, action: "approve" | "deny", persist: boolean) => {
-    try {
-      await apiFetch(`/api/approvals/${id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, payload: { persist } }),
-      });
-      setApprovals((prev) => prev.filter((a) => a.approvalId !== id));
-    } catch (e) {
-      console.error("Failed to resolve approval:", e);
-    }
+  const handleResolve = (id: string, action: "approve" | "deny", persist: boolean) => {
+    attentionStore.resolveApproval(id, action, { persist });
   };
 
   if (approvals.length === 0) return null;
@@ -101,7 +35,7 @@ function ApprovalCard({
   approval,
   onResolve,
 }: {
-  approval: ApprovalRequest;
+  approval: AttentionItem;
   onResolve: (action: "approve" | "deny", persist: boolean) => void;
 }) {
   const [timeLeft, setTimeLeft] = useState(0);
@@ -109,6 +43,10 @@ function ApprovalCard({
 
   useEffect(() => {
     const updateTime = () => {
+      if (!approval.expiresAt) {
+        setTimeLeft(0);
+        return;
+      }
       const remaining = Math.max(0, Math.round((approval.expiresAt - Date.now()) / 1000));
       setTimeLeft(remaining);
     };

@@ -91,4 +91,26 @@ describe("ws/factory", () => {
     expect(ctx2.getId()).toBe(ctx2.id);
     expect(ctx1.getId()).not.toBe(ctx2.getId());
   });
+
+  it("should reject invalid client messages with WS_INVALID_MESSAGE error code", async () => {
+    const ctx = createWsContext();
+    let sentData = "";
+    const mockWs: any = {
+      send: (data: string) => {
+        sentData = data;
+      },
+      close: () => {},
+    };
+
+    await ctx.onOpen(new Event("open"), mockWs, new Headers());
+
+    const invalidEvent = {
+      data: JSON.stringify({ type: "subscribe_session", sessionId: "123" }),
+    } as MessageEvent;
+
+    await ctx.onMessage(invalidEvent as any, mockWs);
+
+    expect(sentData).toContain("WS_INVALID_MESSAGE");
+    ctx.onClose({}, mockWs);
+  });
 });

@@ -30,3 +30,14 @@ Instead, please report security vulnerabilities via GitHub Security Advisories o
 - **Acknowledgement:** Within 48 hours.
 - **Triage & Assessment:** Within 7 business days.
 - **Fix Release:** Vulnerabilities will be patched in a security patch release as soon as reasonably possible.
+
+---
+
+## Threat Model & Known Limitations
+
+**Single-Node Trusted Operator Model:**
+Spaces is designed for self-hosted, single-tenant or trusted-team environments.
+
+- **Bash Execution:** Spaces agent `bash` runs as the **server OS user** with access to that user's data directory. It is **not** a multi-tenant hardened sandbox (such as gVisor, Firecracker, or bubblewrap). Do not expose a shared host instance to untrusted end-users without additional process or container isolation.
+- **Preview Isolation:** Static previews serve workspace web applications. In production, static preview requests require session authentication by default unless `SPACES_PUBLIC_PREVIEW=1` is explicitly set.
+

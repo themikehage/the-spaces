@@ -9,7 +9,7 @@ import {
   createReadToolDefinition,
   createWriteToolDefinition,
 } from "../../ai";
-import { createProgrammaticSessionSync } from "../../auth/onboarding";
+import { getOrCreateToolSessionToken } from "../../auth/ephemeral-tool-session";
 import { teamStore } from "../../teams/team-store";
 import { filterSecretsFromOutput } from "../bash-output-filter";
 import {
@@ -60,20 +60,29 @@ export class SessionToolFactory {
     const customBashTool = createBashToolDefinition(workspaceDir, {
       spawnHook: (context) => {
         const userEnv = userConfigManager.getUserEnv(username);
-        const token = createProgrammaticSessionSync(username);
+        const injectToken = process.env.SPACES_BASH_INJECT_TOKEN !== "0";
+        const token = injectToken
+          ? getOrCreateToolSessionToken(username, sessionId)
+          : undefined;
         return {
           ...context,
           env: {
             ...context.env,
             ...userEnv,
-            TOKEN: token,
-            JWT_TOKEN: token,
+            ...(token ? { TOKEN: token, JWT_TOKEN: token } : {}),
           },
         };
       },
       outputFilter: (output: string) => {
         const userEnv = userConfigManager.getUserEnv(username);
         const secrets = Object.values(userEnv).filter(Boolean);
+        const injectToken = process.env.SPACES_BASH_INJECT_TOKEN !== "0";
+        if (injectToken) {
+          try {
+            const token = getOrCreateToolSessionToken(username, sessionId);
+            if (token) secrets.push(token);
+          } catch {}
+        }
         return filterSecretsFromOutput(output, secrets);
       },
     });

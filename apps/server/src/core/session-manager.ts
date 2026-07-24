@@ -32,6 +32,7 @@ export interface SessionOverrides {
   workspaceDir?: string;
   skipMcpTools?: boolean;
   skipMemory?: boolean;
+  teamId?: string;
 }
 
 /**
@@ -237,98 +238,25 @@ export class SessionManager {
 
     const initPromise = (async () => {
       try {
-        const { createAgentRuntime } = await import("./session/agent-runtime");
-        const runtime = await createAgentRuntime({
+        const { bootstrapAgentSession } = await import("./session/session-bootstrap");
+        const { session } = await bootstrapAgentSession({
           username,
           sessionId,
           projectId,
           agentId,
+          teamId: overrides?.teamId,
           workspaceDir: overrides?.workspaceDir,
           skipMemory: overrides?.skipMemory,
+          skipMcpTools: overrides?.skipMcpTools,
           customTools: overrides?.customTools,
           resourceLoader: overrides?.resourceLoader,
-          toolProfile:
-            sessionId.startsWith(SessionPrefix.SUBAGENT) ||
-            sessionId.startsWith(SessionPrefix.DELEGATE)
-              ? "subagent"
-              : "user-session",
         });
 
-        const session = runtime.session;
         if (projectId || agentId) {
           this.metadataStore.saveSessionMetadata(username, sessionId, {
             ...(projectId ? { projectId } : {}),
             ...(agentId ? { agentId } : {}),
           });
-        }
-        const memory = await memoryRegistry.get(
-          `session:${sessionId}`,
-          runtime.context.memoryDbPath,
-          runtime.context.memoryEnabled,
-        );
-
-        const isSubagent =
-          sessionId.startsWith(SessionPrefix.SUBAGENT) ||
-          sessionId.startsWith(SessionPrefix.DELEGATE);
-        const metadataPath = join(runtime.context.sessionDir, "metadata.json");
-        const existingMeta = existsSync(metadataPath)
-          ? (() => {
-              try {
-                return JSON.parse(readFileSync(metadataPath, "utf-8"));
-              } catch {
-                return {};
-              }
-            })()
-          : {};
-
-        const systemTools = sessionMetadataStore.getSessionTools(username, sessionId);
-        const combinedTools = resolveActiveTools({
-          sessionTools: systemTools,
-          hasExaKey: !!(runtime.context.userEnv.EXA_API_KEY || process.env.EXA_API_KEY),
-          memoryEnabled: runtime.context.memoryEnabled,
-          resolvedAgentId: agentId,
-        });
-
-        let finalTools = combinedTools;
-        if (isSubagent) {
-          const effectiveRules = buildSubagentRules(
-            username,
-            sessionId,
-            existingMeta ? (existingMeta as any).parentSessionId : undefined,
-            existingMeta ? (existingMeta as any).subagentType : undefined,
-          );
-          finalTools = combinedTools.filter((toolName) => {
-            const verdict = evaluateSubagentRules(toolName, {}, effectiveRules);
-            return !(verdict && verdict.allow === false);
-          });
-        }
-
-        session.setActiveToolsByName(finalTools);
-
-        if (!overrides?.skipMemory) {
-          enrichSessionWithMemory(session, memory);
-        }
-
-        if (!overrides?.skipMcpTools) {
-          (async () => {
-            try {
-              const mcpTools = await mcpRegistry.getSessionMcpTools(username, sessionId);
-              if (mcpTools.length > 0) {
-                const sessionAny = session as any;
-                if (sessionAny._customTools) {
-                  sessionAny._customTools.push(...mcpTools);
-                  if (typeof sessionAny._refreshToolRegistry === "function") {
-                    sessionAny._refreshToolRegistry();
-                  }
-                }
-              }
-            } catch (err) {
-              console.error(
-                `[MCP Dynamic Load] Failed to load MCP tools for session ${sessionId}:`,
-                err,
-              );
-            }
-          })();
         }
 
         const globalLogUnsub = subscribeSessionEvents({

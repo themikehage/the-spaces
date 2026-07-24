@@ -6,6 +6,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSy
 import { join } from "node:path";
 import {
   CreateSessionSchema,
+  DEFAULT_ALWAYS_ON_TOOLS,
   ModelSettingsSchema,
   PromptSchema,
   SessionPrefix,
@@ -31,62 +32,7 @@ export const sessionsRouter = new Hono();
 
 sessionsRouter.use("/*", authMiddleware);
 
-sessionsRouter.get("/", async (c) => {
-  const { username } = getAuthPayload(c);
 
-  const search = c.req.query("search");
-  const agentId = c.req.query("agentId");
-  const projectId = c.req.query("projectId") ?? c.req.query("projectName");
-  const status = c.req.query("status");
-  const from = c.req.query("from");
-  const to = c.req.query("to");
-
-  const pageQuery = c.req.query("page");
-  const perPageQuery = c.req.query("perPage");
-  const page = pageQuery ? parseInt(pageQuery, 10) : undefined;
-  const perPage = perPageQuery ? parseInt(perPageQuery, 10) : undefined;
-
-  const sortBy = c.req.query("sortBy") || "updatedAt";
-  const sortDir = c.req.query("sortDir") || "desc";
-
-  const isExecutionQuery = c.req.query("isExecution");
-  const isExecution = isExecutionQuery !== undefined ? isExecutionQuery === "true" : undefined;
-
-  const allFilteredSessions = await sessionManager.listSessions(username, {
-    search,
-    agentId,
-    projectId,
-    status,
-    from,
-    to,
-    sortBy,
-    sortDir,
-    isExecution,
-  });
-
-  const total = allFilteredSessions.length;
-
-  if (page !== undefined || perPage !== undefined) {
-    const p = page || 1;
-    const pp = perPage || 50;
-    const startIndex = (p - 1) * pp;
-    const paginatedSessions = allFilteredSessions.slice(startIndex, startIndex + pp);
-    return c.json({
-      sessions: paginatedSessions,
-      total,
-      page: p,
-      perPage: pp,
-    });
-  }
-
-  return c.json({ sessions: allFilteredSessions });
-});
-
-sessionsRouter.get("/statuses", async (c) => {
-  const { username } = getAuthPayload(c);
-  const statuses = sessionManager.getLiveStatuses(username);
-  return c.json({ statuses });
-});
 
 sessionsRouter.get("/analytics", async (c) => {
   const { username } = getAuthPayload(c);
@@ -285,87 +231,7 @@ sessionsRouter.post("/:id/unarchive", async (c) => {
   return c.json({ success: true, archived: false });
 });
 
-sessionsRouter.post("/", zValidator("json", CreateSessionSchema), async (c) => {
-  const { name, projectId, agentId, teamId } = c.req.valid("json");
-  const { username } = getAuthPayload(c);
-  const sessionId = crypto.randomUUID();
 
-  const team = teamId ? teamStore.getTeam(username, teamId) : null;
-  const isOrchestration = team?.teamType === "Orchestration";
-  const leader = isOrchestration ? team.members.find((member) => member.role === "lead") : null;
-  if (teamId && isOrchestration && !leader) {
-    return c.json({ error: "Orchestration team requires a leader" }, 400);
-  }
-  const ownerAgentId = leader?.agentId || agentId;
-
-  const now = new Date().toISOString();
-
-  let resolvedProjectId = projectId;
-  if (projectId) {
-    try {
-      const projectDir = resolveProjectDir(username, projectId);
-      if (projectDir) {
-        const metaPath = _join(projectDir, "project.json");
-        if (_existsSync(metaPath)) {
-          const meta = JSON.parse(_readFileSync(metaPath, "utf-8"));
-          if (meta.id && meta.id !== projectId) {
-            resolvedProjectId = meta.id;
-          }
-        }
-      }
-    } catch (e) {
-      console.error("[Sessions] Failed to resolve canonical projectId:", e);
-    }
-  }
-
-  const session = {
-    id: sessionId,
-    name,
-    createdAt: now,
-    updatedAt: now,
-    messageCount: 0,
-    projectId: resolvedProjectId,
-    agentId: ownerAgentId,
-    teamId,
-  };
-
-  const isNegotiation = team && team.teamType === "Negotiation";
-
-  sessionManager.metadataStore.saveSessionMetadata(username, sessionId, {
-    name,
-    createdAt: now,
-    updatedAt: now,
-    projectId: resolvedProjectId || null,
-    agentId: ownerAgentId || null,
-    teamId: teamId || null,
-    ...(isNegotiation
-      ? {
-          executionMode: "readonly",
-          tools: ["read", "grep", "find", "ls"],
-        }
-      : {}),
-  });
-
-  if (!teamId || isOrchestration) {
-    sessionManager
-      .getOrCreateSession(
-        username,
-        sessionId,
-        resolvedProjectId,
-        ownerAgentId,
-        teamId
-          ? {
-              workspaceDir: getTeamWorkspaceDir(username, teamId),
-            }
-          : undefined,
-      )
-      .catch((err) => {
-        console.error(`[Session Start Async] Failed for ${sessionId}:`, err);
-      });
-  }
-
-  return c.json(session, 201);
-});
 
 sessionsRouter.post("/:id/prompt", zValidator("json", PromptSchema), async (c) => {
   const sessionId = c.req.param("id");
@@ -934,22 +800,7 @@ sessionsRouter.post("/:id/tools", zValidator("json", ToolPermissionsSchema), asy
 
   const currentActive = session.getActiveToolNames();
 
-  const ALWAYS_ON = [
-    "request_approval",
-    "ask_question",
-    "render_images",
-    "render_chart",
-    "share_file",
-    "refresh_ui",
-    "manage_delegations",
-    "decompose_tasks",
-    "update_task_status",
-    "complete_task_list",
-    "vision",
-    "generate_image",
-    "manage_factory",
-    "manage_custom_tools",
-  ] as const;
+  const ALWAYS_ON = DEFAULT_ALWAYS_ON_TOOLS;
   const BUILTIN_AND_ALWAYS = new Set<string>([
     "read",
     "write",

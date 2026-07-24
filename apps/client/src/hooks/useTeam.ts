@@ -125,7 +125,7 @@ export function useTeam(teamId: string | null, sessionId?: string | null) {
   useEffect(() => {
     if (!teamId) return;
 
-    const unsubMessage = wsClient.subscribe("*", (rawData: unknown) => {
+    const unsubMessage = wsClient.subscribeAll((rawData: unknown) => {
       const data = rawData as Record<string, any>;
 
       if (data.teamId && data.teamId !== teamIdRef.current) return;
@@ -206,7 +206,12 @@ export function useTeam(teamId: string | null, sessionId?: string | null) {
   const sendMessage = useCallback(
     async (content: string) => {
       if (!teamId || !content.trim()) return;
-      const sent = wsClient.send({ type: "team_send", teamId, sessionId, message: content });
+      const sent = wsClient.send({
+        type: "team_send",
+        teamId,
+        sessionId: sessionId ?? undefined,
+        message: content,
+      });
       if (!sent) {
         await apiFetch(`/api/teams/${teamId}/send`, {
           method: "POST",
@@ -221,7 +226,11 @@ export function useTeam(teamId: string | null, sessionId?: string | null) {
   const abortDispatch = useCallback(async () => {
     if (!teamId) return;
     setStreamingAgents({});
-    const sent = wsClient.send({ type: "team_abort", teamId, sessionId });
+    const sent = wsClient.send({
+      type: "team_abort",
+      teamId,
+      sessionId: sessionId ?? undefined,
+    });
     if (!sent) {
       await apiFetch(`/api/teams/${teamId}/abort`, {
         method: "POST",

@@ -6,6 +6,7 @@ import { readdir } from "node:fs/promises";
 import { join, relative } from "node:path";
 import { getUserDir } from "shared";
 import { agentRegistry } from "../agents";
+import { safeExtractZip } from "../core/backup/safe-zip-extract";
 import { sessionManager } from "../core/session-manager";
 import { authMiddleware, getAuthPayload } from "../middleware/auth";
 
@@ -138,10 +139,10 @@ backupRouter.post("/import", async (c) => {
       mkdirSync(userDir, { recursive: true });
     }
 
-    // 5. Read file buffer and extract
+    // 5. Read file buffer and extract safely
     const arrayBuffer = await file.arrayBuffer();
     const zip = new AdmZip(Buffer.from(arrayBuffer));
-    zip.extractAllTo(userDir, true);
+    safeExtractZip(zip, userDir);
 
     // 6. Reload agent registry
     await agentRegistry.reloadUserAgents(username);

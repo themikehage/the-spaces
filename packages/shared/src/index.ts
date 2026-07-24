@@ -7,4 +7,6 @@ export * from "./schemas";
 export * from "./session-prefix";
 export * from "./stores";
 export * from "./tools";
+export * from "./tools-catalog";
 export * from "./ws-messages";
+export * from "./attention";

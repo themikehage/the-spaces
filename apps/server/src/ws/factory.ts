@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import type { WSContext, WSMessageReceive } from "hono/ws";
 import { existsSync, readFileSync } from "node:fs";
-import { SessionPrefix, getSessionMetadataPath } from "shared";
+import { DEFAULT_ALWAYS_ON_TOOLS, SessionPrefix, WS_PROTOCOL_VERSION, WsClientMessageSchema, getSessionMetadataPath } from "shared";
 import { approvalManager } from "../core/approvals/approval-manager";
 import { ensureWatcher, setBuilding, setError, setReady } from "../core/preview-watcher";
 import { sessionManager } from "../core/session-manager";
@@ -64,7 +64,11 @@ async function subscribeWsToSession(
   let hadBuildInSession = false;
 
   const unsub = session.subscribe((agentEvent) => {
-    safeSend(ws, JSON.stringify(agentEvent));
+    const eventWithEnvelope =
+      typeof agentEvent === "object" && agentEvent !== null && !("sessionId" in agentEvent)
+        ? { ...agentEvent, sessionId }
+        : agentEvent;
+    safeSend(ws, JSON.stringify(eventWithEnvelope));
 
     if (agentEvent.type === "tool_execution_start") {
       const ev = agentEvent as any;
@@ -267,6 +271,20 @@ export function createWsContext(): WsConnectionContext {
       return;
     }
 
+    const parsed = WsClientMessageSchema.safeParse(data);
+    if (!parsed.success) {
+      wsLogger.warn(`Invalid WS message received from wsId=${id}`);
+      safeSend(
+        ws,
+        JSON.stringify({
+          type: "error",
+          error: "Invalid message",
+          code: "WS_INVALID_MESSAGE",
+        }),
+      );
+      return;
+    }
+
     try {
       if (data.type === "pong") {
         const meta = wsRegistry.getMeta(id);
@@ -278,10 +296,12 @@ export function createWsContext(): WsConnectionContext {
 
       if (data.type === "auth") {
         const sessionToken = (data.token as string) || "";
-        wsLogger.info(
-          `Auth request token prefix: ${sessionToken ? sessionToken.slice(0, 8) : "none"}...`,
-          { wsId: id },
-        );
+        if (process.env.SPACES_DEBUG_AUTH === "1") {
+          wsLogger.info(
+            `Auth request token prefix: ${sessionToken ? sessionToken.slice(0, 8) : "none"}...`,
+            { wsId: id },
+          );
+        }
 
         try {
           let username: string | null = null;
@@ -312,7 +332,14 @@ export function createWsContext(): WsConnectionContext {
             await subscribeWsToSession(id, ws, user, sessionId);
           }
 
-          safeSend(ws, JSON.stringify({ type: "auth_success", wsId: id }));
+          safeSend(
+            ws,
+            JSON.stringify({
+              type: "auth_success",
+              wsId: id,
+              protocolVersion: WS_PROTOCOL_VERSION,
+            }),
+          );
         } catch (err: any) {
           wsLogger.error("Auth exception", { wsId: id, error: err });
           const existingUser = wsRegistry.getUser(id);
@@ -345,6 +372,22 @@ export function createWsContext(): WsConnectionContext {
         return;
       }
 
+      if (data.type === "session_unsubscribe") {
+        const sessionId = data.sessionId as string;
+        if (!sessionId) return;
+        wsLogger.info(`session_unsubscribe session=${sessionId}`, {
+          wsId: id,
+          username: user.username,
+        });
+        const meta = wsRegistry.getMeta(id);
+        if (meta?.sessionId === sessionId) {
+          wsRegistry.removeSessionSocket(sessionId, ws);
+          wsRegistry.updateMeta(id, { sessionId: undefined });
+        }
+        safeSend(ws, JSON.stringify({ type: "session_unsubscribed", sessionId }));
+        return;
+      }
+
       if (data.type === "prompt") {
         const sessionId = data.sessionId as string;
         const message = data.message as string;
@@ -362,7 +405,8 @@ export function createWsContext(): WsConnectionContext {
             JSON.stringify({
               type: "agent_error",
               sessionId,
-              error: "Esta sesion de ejecucion es de solo lectura y no acepta prompts.",
+              error: "Execution sessions are read-only and do not accept prompts.",
+              code: "SESSION_READONLY",
             }),
           );
           return;
@@ -383,22 +427,7 @@ export function createWsContext(): WsConnectionContext {
         if (tools && Array.isArray(tools)) {
           const currentActive = session.getActiveToolNames();
 
-          const ALWAYS_ON = [
-            "request_approval",
-            "ask_question",
-            "render_images",
-            "render_chart",
-            "share_file",
-            "refresh_ui",
-            "manage_delegations",
-            "decompose_tasks",
-            "update_task_status",
-            "complete_task_list",
-            "vision",
-            "generate_image",
-            "manage_factory",
-            "manage_custom_tools",
-          ] as const;
+          const ALWAYS_ON = DEFAULT_ALWAYS_ON_TOOLS;
           const BUILTIN_AND_ALWAYS = new Set<string>([
             "read",
             "write",

@@ -3,6 +3,8 @@ import { EntityAvatar } from "@/components/shared/EntityAvatar";
 import { Button } from "@/components/ui/Button";
 import { apiFetch } from "@/lib/api";
 import { wsClient } from "@/lib/ws-client";
+import { useAttention } from "@/hooks/useAttention";
+import { attentionStore } from "@/lib/attention/attention-store";
 import { AlertTriangle, Check, HelpCircle, Play, Send, Shield, Users, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { ProjectAssignmentModal } from "./ProjectAssignmentModal";
@@ -28,19 +30,11 @@ interface Session {
   updatedAt?: string;
 }
 
-interface ApprovalRequest {
-  id: string;
-  sessionId: string;
-  toolName: string;
-  args: Record<string, any>;
-  reason: string;
-}
-
 export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
+  const approvals = useAttention();
   const [project, setProject] = useState<any>(null);
   const [agents, setAgents] = useState<Agent[]>([]);
   const [sessions, setSessions] = useState<Session[]>([]);
-  const [approvals, setApprovals] = useState<ApprovalRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [autonomyMap, setAutonomyMap] = useState<Record<string, "auto" | "propose" | "suggest">>(
@@ -98,12 +92,6 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
         }
       }
 
-      // Fetch pending approvals
-      const approvalsRes = await apiFetch("/api/approvals");
-      if (approvalsRes.ok) {
-        const data = await approvalsRes.json();
-        setApprovals(data.pending || []);
-      }
     } catch (err: any) {
       setError(err.message || "Failed to load floor data");
     } finally {
@@ -122,13 +110,11 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
     };
 
     const unsubProject = wsClient.subscribe("project_updated", handleWsUpdate);
-    const unsubSession = wsClient.subscribe("session_updated", handleWsUpdate);
-    const unsubApproval = wsClient.subscribe("approval_requested", handleWsUpdate);
+    const unsubApproval = wsClient.subscribe("approval_request", handleWsUpdate);
     const unsubGlobal = wsClient.subscribe("global_log", handleWsUpdate);
 
     return () => {
       unsubProject();
-      unsubSession();
       unsubApproval();
       unsubGlobal();
     };
@@ -203,19 +189,8 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
     }
   };
 
-  const handleResolveApproval = async (approvalId: string, action: "approve" | "deny") => {
-    try {
-      const res = await apiFetch(`/api/approvals/${approvalId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action }),
-      });
-      if (res.ok) {
-        await fetchProjectData();
-      }
-    } catch (err) {
-      console.error("Failed to resolve approval:", err);
-    }
+  const handleResolveApproval = (approvalId: string, action: "approve" | "deny") => {
+    attentionStore.resolveApproval(approvalId, action);
   };
 
   const handleSendSteerMessage = async (sessionId: string) => {
@@ -446,7 +421,7 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
                                 size="sm"
                                 variant="outline"
                                 className="flex-1 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/10 text-[10px] font-bold py-1 h-7 cursor-pointer"
-                                onClick={() => handleResolveApproval(pendingApproval.id, "approve")}
+                                onClick={() => handleResolveApproval(pendingApproval.approvalId, "approve")}
                               >
                                 <Check size={12} className="mr-1" />
                                 Aprobar
@@ -455,7 +430,7 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
                                 size="sm"
                                 variant="outline"
                                 className="flex-1 border-rose-500/20 text-rose-400 hover:bg-rose-500/10 text-[10px] font-bold py-1 h-7 cursor-pointer"
-                                onClick={() => handleResolveApproval(pendingApproval.id, "deny")}
+                                onClick={() => handleResolveApproval(pendingApproval.approvalId, "deny")}
                               >
                                 <X size={12} className="mr-1" />
                                 Rechazar

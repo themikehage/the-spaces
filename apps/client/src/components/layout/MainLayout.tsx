@@ -10,6 +10,7 @@ import { useSessionResolver } from "@/hooks/useSessionResolver";
 import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
 import { useLiterals } from "@/lib";
 import { apiFetch } from "@/lib/api";
+import { attentionStore } from "@/lib/attention/attention-store";
 import { getSessionPath } from "@/lib/session-utils";
 import { wsClient, type ConnectionState } from "@/lib/ws-client";
 import type { RoutePage } from "@/router/useRoutePage";
@@ -47,6 +48,10 @@ export function MainLayout({
   canGoBack = false,
   onBack,
 }: Props) {
+  useEffect(() => {
+    attentionStore.start();
+  }, []);
+
   const workspace = useWorkspaceContext();
   const {
     activeProjectId,

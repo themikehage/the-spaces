@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: MIT
+import type { WsClientMessage, WsServerMessage, WsServerMessageType } from "shared";
+
 type EventHandler = (data: unknown) => void;
 export type ConnectionState =
   "disconnected" | "connecting" | "connected" | "permanently_disconnected";
@@ -67,7 +69,7 @@ class WsClient {
     this.setState("disconnected");
   }
 
-  send(data: Record<string, unknown>): boolean {
+  send(data: WsClientMessage): boolean {
     if (this.ws?.readyState === WebSocket.OPEN && this.state === "connected") {
       this.ws.send(JSON.stringify(data));
       return true;
@@ -79,7 +81,7 @@ class WsClient {
         dropped?.type ?? "unknown",
       );
     }
-    this.offlineQueue.push(data);
+    this.offlineQueue.push(data as Record<string, unknown>);
     return false;
   }
 
@@ -102,22 +104,23 @@ class WsClient {
     }
   }
 
-  subscribe(type: string, handler: EventHandler): () => void {
-    if (!this.messageHandlers.has(type)) {
-      this.messageHandlers.set(type, new Set());
+  subscribe<T extends WsServerMessageType>(
+    type: T,
+    handler: (data: Extract<WsServerMessage, { type: T }> | any) => void,
+  ): () => void {
+    if (!this.messageHandlers.has(type as string)) {
+      this.messageHandlers.set(type as string, new Set());
     }
-    const handlers = this.messageHandlers.get(type)!;
-    handlers.add(handler);
-    console.log(
-      `[wsClient] Subscribed to "${type}". Active handlers for "${type}": ${handlers.size}`,
-    );
+    const handlers = this.messageHandlers.get(type as string)!;
+    handlers.add(handler as EventHandler);
     if (this.state === "disconnected") this.connect();
     return () => {
-      const exists = handlers.delete(handler);
-      console.log(
-        `[wsClient] Unsubscribed from "${type}". Existed: ${exists}. Active handlers for "${type}": ${handlers.size}`,
-      );
+      handlers.delete(handler as EventHandler);
     };
+  }
+
+  subscribeAll(handler: (data: unknown) => void): () => void {
+    return this.subscribe("*" as any, handler);
   }
 
   onStateChange(handler: StateHandler): () => void {

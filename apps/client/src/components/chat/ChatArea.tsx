@@ -509,21 +509,6 @@ export function ChatArea({
       window.dispatchEvent(new CustomEvent(`tool-update-${toolCallId}`, { detail: evt }));
     });
 
-    const unsubToolApproval = subscribe("tool_approval_request", (data: any) => {
-      setMessages((prev) => {
-        if (prev.some((m) => m.toolCallId === data.toolCallId)) return prev;
-        const approvalMsg: Message = {
-          role: "tool_approval_request" as any,
-          toolCallId: data.toolCallId,
-          toolName: data.toolName,
-          content: data.reason || "Action requires approval",
-          args: data.args,
-          timestamp: Date.now(),
-        } as any;
-        return [...prev, approvalMsg];
-      });
-    });
-
     return () => {
       unsubStart();
       unsubEnd();
@@ -536,7 +521,6 @@ export function ChatArea({
       unsubSubagent();
       unsubContext();
       unsubToolUpdate();
-      unsubToolApproval();
     };
   }, [sessionId, subscribe, loadMessages]);
 
@@ -638,6 +622,7 @@ export function ChatArea({
   }, [sessionId, handleSend]);
 
   const handleAbort = useCallback(() => {
+    if (!sessionId) return;
     send({ type: "abort", sessionId });
   }, [sessionId, send]);
 

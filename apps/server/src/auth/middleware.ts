@@ -99,22 +99,17 @@ export async function sessionMiddleware(c: Context, next: Next) {
     } catch {}
   }
 
-  if (isWorkspaceProjects) {
+  if (isWorkspaceProjects && process.env.SPACES_DEBUG_AUTH === "1") {
     console.log(
       `[Auth Middleware] ${path} cookieHeader present: ${!!cookieHeader}, length: ${cookieHeader?.length ?? 0}`,
     );
     if (cookieHeader) {
-      console.log(
-        `[Auth Middleware] ${path} cookieHeader preview: ${cookieHeader.slice(0, 100)}...`,
-      );
       const tokens = getSessionTokensFromCookieHeader(cookieHeader);
       console.log(
         `[Auth Middleware] ${path} extracted ${tokens.length} session tokens from cookie`,
       );
       for (const tok of tokens) {
-        console.log(`[Auth Middleware] ${path} trying token prefix: ${tok.slice(0, 8)}...`);
         const username = findUserByTokenSync(tok);
-        console.log(`[Auth Middleware] ${path} findUserByTokenSync result: ${username ?? "null"}`);
         if (username) {
           c.set("user", { username } as AuthPayload);
           await next();

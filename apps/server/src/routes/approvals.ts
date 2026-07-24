@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
-import { z } from "zod";
+import { ResolveAttentionSchema } from "shared";
 import { approvalManager } from "../core/approvals/approval-manager";
+import { sessionMetadataStore } from "../core/session/metadata-store";
 import { uiApprovalRegistry } from "../core/ui-approval-registry";
 import { authMiddleware, getAuthPayload } from "../middleware/auth";
 
@@ -10,25 +11,40 @@ export const approvalsRouter = new Hono();
 
 approvalsRouter.use("/*", authMiddleware);
 
+function enrichItem(username: string, item: any) {
+  const meta = item.sessionId
+    ? sessionMetadataStore.getSessionMetadata(username, item.sessionId)
+    : null;
+  return {
+    ...item,
+    projectId: item.projectId ?? meta?.projectId ?? meta?.projectName,
+    agentId: item.agentId ?? meta?.agentId,
+    teamId: item.teamId ?? meta?.teamId,
+  };
+}
+
 approvalsRouter.get("/", async (c) => {
   const { username } = getAuthPayload(c);
-  const securityApprovals = approvalManager.getAll(username).map((a) => ({
-    ...a,
-    type: "approval" as const,
-  }));
-  const questionActions = uiApprovalRegistry.getAll(username).map((q) => ({
-    ...q,
-    type: "question" as const,
-  }));
+  const securityApprovals = approvalManager.getAll(username).map((a) => {
+    const kind = "approval" as const;
+    return enrichItem(username, {
+      ...a,
+      kind,
+      type: kind,
+    });
+  });
+  const questionActions = uiApprovalRegistry.getAll(username).map((q) => {
+    const kind = q.type === "ui_action" ? ("ui_action" as const) : ("question" as const);
+    return enrichItem(username, {
+      ...q,
+      kind,
+      type: kind,
+    });
+  });
   return c.json({ pending: [...securityApprovals, ...questionActions] });
 });
 
-const ResolveApprovalSchema = z.object({
-  action: z.enum(["approve", "deny", "submit", "cancel", "confirm"]),
-  payload: z.record(z.any()).optional(),
-});
-
-approvalsRouter.post("/:id", zValidator("json", ResolveApprovalSchema), async (c) => {
+approvalsRouter.post("/:id", zValidator("json", ResolveAttentionSchema), async (c) => {
   const { id } = c.req.param();
   const { action, payload } = c.req.valid("json");
   const success =

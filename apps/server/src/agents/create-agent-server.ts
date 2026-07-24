@@ -23,63 +23,15 @@ export async function createAgentServer(
   username: string,
 ): Promise<AgentServer> {
   const agentDir = ensureAgentWorkspace(username, definition.id);
-  const { createAgentRuntime } = await import("../core/session/agent-runtime");
-  const { DEFAULT_ALWAYS_ON_TOOLS } = await import("../core/session/tool-groups");
+  const { bootstrapAgentSession } = await import("../core/session/session-bootstrap");
 
-  const runtime = await createAgentRuntime({
+  const { session, memory } = await bootstrapAgentSession({
     username,
     sessionId: `agent_server_${definition.id}`,
     agentId: definition.id,
     agentDef: definition,
-    toolProfile: "agent-server",
+    profile: "agent-server",
   });
-
-  const session = runtime.session;
-  const memory = await memoryRegistry.get(
-    `agent:${definition.id}`,
-    runtime.context.memoryDbPath,
-    runtime.context.memoryEnabled,
-  );
-
-  const activeToolNames = [
-    ...DEFAULT_ALWAYS_ON_TOOLS,
-    "read",
-    "write",
-    "edit",
-    "bash",
-    "grep",
-    "find",
-    "ls",
-  ];
-  if (runtime.context.memoryEnabled) {
-    activeToolNames.push("memory_store", "memory_recall", "memory_forget");
-  }
-  if (runtime.context.projectName) {
-    activeToolNames.push("manage_preview");
-  }
-  session.setActiveToolsByName(activeToolNames);
-
-  (async () => {
-    try {
-      const mcpTools = await mcpRegistry.getSessionMcpTools(username, definition.id);
-      if (mcpTools.length > 0) {
-        if (session._customTools) {
-          session._customTools.push(...mcpTools);
-          session._refreshToolRegistry();
-        }
-        console.log(`[AgentServer:${definition.id}] Loaded ${mcpTools.length} MCP tools`);
-      }
-    } catch (err) {
-      console.error(`[AgentServer:${definition.id}] Failed to load MCP tools:`, err);
-    }
-  })();
-
-  const originalPrompt = session.prompt.bind(session);
-  session.prompt = async (message: string) => {
-    const memCtx = await memory.buildContext(message);
-    if (memCtx) session.injectMemoryContext(memCtx);
-    return originalPrompt(message);
-  };
 
   const app = new Hono();
   let activeObservers = 0;

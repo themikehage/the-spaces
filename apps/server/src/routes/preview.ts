@@ -261,6 +261,17 @@ previewRouter.get("/:username/:project/*", async (c) => {
   const username = c.req.param("username");
   const projectName = c.req.param("project");
 
+  const isProduction =
+    process.env.NODE_ENV === "production" ||
+    process.env.SPACES_ENV === "production";
+
+  if (isProduction && process.env.SPACES_PUBLIC_PREVIEW !== "1") {
+    const authUser = getUsername(c);
+    if (!authUser || authUser !== username) {
+      return c.text("Unauthorized", 401);
+    }
+  }
+
   if (
     !username ||
     !projectName ||

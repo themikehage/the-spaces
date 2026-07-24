@@ -56,8 +56,9 @@ export function createAuth() {
 }
 
 function getOrCreateSecret(): string {
-  if (process.env.BETTER_AUTH_SECRET) {
-    return process.env.BETTER_AUTH_SECRET;
+  const envSecret = process.env.BETTER_AUTH_SECRET || process.env.SPACES_AUTH_SECRET;
+  if (envSecret) {
+    return envSecret;
   }
 
   const { existsSync, readFileSync, writeFileSync, mkdirSync } = require("node:fs");

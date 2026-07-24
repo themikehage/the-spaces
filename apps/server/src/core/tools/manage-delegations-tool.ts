@@ -8,7 +8,7 @@ import {
   ModelRegistry,
   createBashToolDefinition,
 } from "../../ai";
-import { createProgrammaticSessionSync } from "../../auth/onboarding";
+import { getOrCreateToolSessionToken } from "../../auth/ephemeral-tool-session";
 import { getAppConfig } from "../../config/app-config";
 import { AbortToken } from "../abort-token";
 import {
@@ -210,20 +210,29 @@ Use 'delegate' to delegate to a specific target.`,
         const customBashTool = createBashToolDefinition(workspaceDir, {
           spawnHook: (context) => {
             const userEnv = activeSessionManager.userConfig.getUserEnv(username);
-            const token = createProgrammaticSessionSync(username);
+            const injectToken = process.env.SPACES_BASH_INJECT_TOKEN !== "0";
+            const token = injectToken
+              ? getOrCreateToolSessionToken(username, parentSessionId)
+              : undefined;
             return {
               ...context,
               env: {
                 ...context.env,
                 ...userEnv,
-                TOKEN: token,
-                JWT_TOKEN: token,
+                ...(token ? { TOKEN: token, JWT_TOKEN: token } : {}),
               },
             };
           },
           outputFilter: (output: string) => {
             const userEnv = activeSessionManager.userConfig.getUserEnv(username);
             const secrets = Object.values(userEnv).filter(Boolean);
+            const injectToken = process.env.SPACES_BASH_INJECT_TOKEN !== "0";
+            if (injectToken) {
+              try {
+                const token = getOrCreateToolSessionToken(username, parentSessionId);
+                if (token) secrets.push(token);
+              } catch {}
+            }
             return filterSecretsFromOutput(output, secrets);
           },
         });

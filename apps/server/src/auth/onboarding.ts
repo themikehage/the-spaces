@@ -31,11 +31,11 @@ export async function getUserByUsername(
   }
 }
 
-function buildProgrammaticSessionPayload() {
+function buildProgrammaticSessionPayload(ttlSeconds = 600) {
   const token = randomBytes(32).toString("base64url");
   const id = randomUUID();
   const now = new Date();
-  const expiresAt = new Date(now.getTime() + 1000 * 60 * 60 * 24 * 7);
+  const expiresAt = new Date(now.getTime() + 1000 * ttlSeconds);
   return {
     id,
     token,
@@ -61,7 +61,7 @@ function insertSessionRaw(
   ).run(id, token, expValue, nowValue, nowValue, userId);
 }
 
-export async function createProgrammaticSession(username: string): Promise<string> {
+export async function createProgrammaticSession(username: string, ttlSeconds = 600): Promise<string> {
   const user = await getUserByUsername(username);
   if (!user) throw new Error(`User not found: ${username}`);
 
@@ -73,18 +73,18 @@ export async function createProgrammaticSession(username: string): Promise<strin
     };
     if (api?.createProgrammaticSession) {
       const result = await api.createProgrammaticSession({
-        body: { userId: user.id, expiresIn: 60 * 60 * 24 * 7 },
+        body: { userId: user.id, expiresIn: ttlSeconds },
       });
       if (result?.token) return result.token;
     }
   } catch {}
 
-  const { id, token, expiresAt, now } = buildProgrammaticSessionPayload();
+  const { id, token, expiresAt, now } = buildProgrammaticSessionPayload(ttlSeconds);
   insertSessionRaw(id, token, expiresAt, now, user.id);
   return token;
 }
 
-export function createProgrammaticSessionSync(username: string): string {
+export function createProgrammaticSessionSync(username: string, ttlSeconds = 600): string {
   const db = getDb();
   const row = db.query("SELECT id, email, username FROM user WHERE username = ?").get(username) as {
     id: string;
@@ -93,7 +93,7 @@ export function createProgrammaticSessionSync(username: string): string {
   } | null;
   if (!row) throw new Error(`User not found: ${username}`);
 
-  const { id, token, expiresAt, now } = buildProgrammaticSessionPayload();
+  const { id, token, expiresAt, now } = buildProgrammaticSessionPayload(ttlSeconds);
   insertSessionRaw(id, token, expiresAt, now, row.id);
   return token;
 }

@@ -5,6 +5,8 @@ import { CreateSessionSchema } from "shared";
 import { sessionManager } from "../../core/session-manager";
 import { authMiddleware, getAuthPayload } from "../../middleware/auth";
 
+import { createUserSession, SessionDomainError } from "../../core/session/create-user-session";
+
 export const sessionCrudRouter = new Hono();
 
 sessionCrudRouter.use("/*", authMiddleware);
@@ -62,39 +64,23 @@ sessionCrudRouter.get("/statuses", async (c) => {
 sessionCrudRouter.post("/", zValidator("json", CreateSessionSchema), async (c) => {
   const { username } = getAuthPayload(c);
   const data = c.req.valid("json");
-  const newSessionId = crypto.randomUUID();
-  await sessionManager.getOrCreateSession(
-    username,
-    newSessionId,
-    data.projectId,
-    data.agentId,
-  );
 
-  const now = new Date().toISOString();
-  sessionManager.metadataStore.saveSessionMetadata(username, newSessionId, {
-    name: data.name || newSessionId,
-    projectId: data.projectId,
-    agentId: data.agentId,
-    teamId: data.teamId,
-    createdAt: now,
-    updatedAt: now,
-  });
-
-  const meta = sessionManager.metadataStore.getSessionMetadata(username, newSessionId) || {};
-
-  const createdSessionItem = {
-    id: newSessionId,
-    name: data.name || meta.name || newSessionId,
-    createdAt: meta.createdAt || now,
-    updatedAt: meta.updatedAt || now,
-    messageCount: 0,
-    status: "active",
-    projectId: data.projectId,
-    agentId: data.agentId,
-    teamId: data.teamId,
-  };
-
-  return c.json(createdSessionItem, 201);
+  try {
+    const createdSessionItem = await createUserSession({
+      username,
+      name: data.name,
+      projectId: data.projectId,
+      agentId: data.agentId,
+      teamId: data.teamId,
+    });
+    return c.json(createdSessionItem, 201);
+  } catch (err) {
+    if (err instanceof SessionDomainError) {
+      return c.json({ error: err.message }, err.statusCode as any);
+    }
+    console.error("[SessionCrudRouter] Failed to create session:", err);
+    return c.json({ error: "Failed to create session" }, 500);
+  }
 });
 
 sessionCrudRouter.delete("/:id", async (c) => {

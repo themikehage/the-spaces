@@ -44,11 +44,12 @@ authRouter.get("/status", async (c) => {
   }
 
   const session = await auth.api.getSession({ headers: c.req.raw.headers });
+  const returnToken = c.req.header("X-Spaces-Return-Token") === "1";
   return c.json({
     needsSetup: false,
     authenticated: !!session,
     user: session ? { username: (session.user as any).username } : null,
-    token: session ? session.session.token : null,
+    token: returnToken && session ? session.session.token : null,
   });
 });
 
@@ -94,7 +95,8 @@ authRouter.post("/register", zValidator("json", RegisterSchema), async (c) => {
       }
     }
 
-    return c.json({ user: { username }, token });
+    const returnToken = c.req.header("X-Spaces-Return-Token") === "1";
+    return c.json({ user: { username }, token: returnToken ? token : null });
   } catch (err: any) {
     if (err?.statusCode) throw err;
     const message = err?.message || "Registration failed";
@@ -135,7 +137,8 @@ authRouter.post("/login", zValidator("json", LoginSchema), async (c) => {
       }
     }
 
-    return c.json({ user: { username }, token });
+    const returnToken = c.req.header("X-Spaces-Return-Token") === "1";
+    return c.json({ user: { username }, token: returnToken ? token : null });
   } catch (err: any) {
     if (err?.statusCode) throw err;
     throw new UnauthorizedError("INVALID_CREDENTIALS", "Invalid credentials");

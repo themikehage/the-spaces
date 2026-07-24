@@ -1,39 +1,50 @@
-# WebSocket Protocol Specification
+# WebSocket Protocol Specification (v1)
 
-This document specifies the bidirectional communication protocol between Spaces client applications and the backend server over `/ws`.
+This document specifies the canonical bidirectional communication protocol between Spaces client applications and the backend server over `/ws`.
 
-All messages are JSON objects with a discriminating `type` property.
+All messages are JSON objects with a discriminating `type` string property.
+
+The single source of truth schemas and types are defined in `packages/shared/src/ws-messages.ts`.
 
 ---
 
-## Server to Client Messages (`WsServerMessage`)
+## Connection Lifecycle & Authentication
 
-### 1. `auth_success`
+1. **Client Connection**: Connecting to `ws://<host>/ws` (or `wss://`). Authentication is attempted automatically via cookies or an explicit `auth` message.
+2. **`auth` Message**:
+   ```json
+   {
+     "type": "auth",
+     "token": "optional-session-token",
+     "sessionId": "optional-auto-subscribe-session-id"
+   }
+   ```
+3. **`auth_success` Response**:
+   ```json
+   {
+     "type": "auth_success",
+     "wsId": "ws-uuid-string",
+     "protocolVersion": 1
+   }
+   ```
+4. **Heartbeat (`ping` / `pong`)**:
+   - Server sends `{ "type": "ping" }`.
+   - Client responds with `{ "type": "pong" }`.
 
-Sent upon successful WebSocket authentication handshake.
+---
 
+## Session Subscriptions
+
+### 1. `session_subscribe` (Client -> Server)
+Subscribe WebSocket client connection to agent session events.
 ```json
 {
-  "type": "auth_success",
-  "wsId": "ws-abc123"
+  "type": "session_subscribe",
+  "sessionId": "session-xyz"
 }
 ```
 
-### 2. `auth_error`
-
-Sent when authentication fails or session token is invalid.
-
-```json
-{
-  "type": "auth_error",
-  "error": "Invalid or expired token"
-}
-```
-
-### 3. `session_subscribed`
-
-Sent after subscribing to session events.
-
+Server response:
 ```json
 {
   "type": "session_subscribed",
@@ -41,72 +52,97 @@ Sent after subscribing to session events.
 }
 ```
 
-### 4. `session_stream`
-
-Streamed event payload from an active agent session execution.
-
+### 2. `session_unsubscribe` (Client -> Server)
+Unsubscribe WebSocket client connection from agent session events without destroying the underlying session.
 ```json
 {
-  "type": "session_stream",
-  "sessionId": "session-xyz",
-  "data": { ... }
+  "type": "session_unsubscribe",
+  "sessionId": "session-xyz"
 }
 ```
 
-### 5. `approval_request`
-
-Sent when a tool requires explicit human UI approval.
-
+Server response:
 ```json
 {
-  "type": "approval_request",
-  "requestId": "req-123",
-  "tool": "bash",
-  "params": { "command": "rm -rf /tmp/test" }
-}
-```
-
-### 6. `error`
-
-Generic WebSocket error.
-
-```json
-{
-  "type": "error",
-  "error": "Not authenticated",
-  "code": "UNAUTHORIZED"
+  "type": "session_unsubscribed",
+  "sessionId": "session-xyz"
 }
 ```
 
 ---
 
-## Client to Server Messages (`WsClientMessage`)
+## Control & Execution Messages (Client -> Server)
 
-### 1. `auth`
+- **`prompt`**: Send a message prompt to the agent session.
+  ```json
+  {
+    "type": "prompt",
+    "sessionId": "session-xyz",
+    "message": "User prompt text",
+    "tools": ["read", "write"],
+    "images": []
+  }
+  ```
+- **`steer`**: Guide an active session execution.
+  ```json
+  {
+    "type": "steer",
+    "sessionId": "session-xyz",
+    "message": "Steer instruction"
+  }
+  ```
+- **`abort`**: Abort active session loop execution.
+  ```json
+  {
+    "type": "abort",
+    "sessionId": "session-xyz"
+  }
+  ```
+- **`ui_action`**: Respond to an interactive tool UI prompt (ask question, approval form).
+  ```json
+  {
+    "type": "ui_action",
+    "componentId": "comp-123",
+    "action": "submit",
+    "payload": { "answer": "yes" }
+  }
+  ```
 
-```json
-{
-  "type": "auth",
-  "token": "<jwt-or-session-token>"
-}
-```
+---
 
-### 2. `subscribe_session`
+## Server to Client Event Stream (`WsServerMessage`)
 
-```json
-{
-  "type": "subscribe_session",
-  "sessionId": "session-xyz"
-}
-```
+### Control Plane Events
+- **`approval_request`**: Broadcast when a tool execution requires human approval.
+  ```json
+  {
+    "type": "approval_request",
+    "approval": {
+      "id": "appr-123",
+      "toolName": "bash",
+      "status": "pending"
+    }
+  }
+  ```
+- **`project_updated`**: Broadcast on workspace project modifications.
+  ```json
+  {
+    "type": "project_updated",
+    "projectId": "proj-123"
+  }
+  ```
+- **`error`**: Error response for malformed or unauthorized requests.
+  ```json
+  {
+    "type": "error",
+    "error": "Invalid message",
+    "code": "WS_INVALID_MESSAGE"
+  }
+  ```
 
-### 3. `approval_response`
-
-```json
-{
-  "type": "approval_response",
-  "requestId": "req-123",
-  "approved": true,
-  "result": { ... }
-}
-```
+### Agent Runtime Events (Session Scoped)
+All session-scoped agent events emitted via session subscription carry a top-level `sessionId` property:
+- `agent_start`, `agent_end`
+- `message_start`, `message_update`, `message_end`
+- `tool_execution_start`, `tool_execution_update`, `tool_execution_end`
+- `agent_error`

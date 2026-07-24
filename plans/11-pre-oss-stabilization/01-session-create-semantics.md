@@ -1,9 +1,9 @@
 # Hito 01 — Restaurar semántica de `POST /api/sessions`
 
-**Estado:** 📝 Redactado — pendiente de confirmación  
+**Estado:** ✅ Completado  
 **Criticidad:** P0 — regresión de producto introducida por el split modular del Plan 10  
 **Estimación relativa:** S–M (1 archivo principal + tests + limpieza de duplicados)  
-**Bloquea:** flujos de team Orchestration/Negotiation y consistencia de `projectId` en listados/filtros  
+**Bloquea:** flujos de team Orchestration y consistencia de `projectId` en listados/filtros  
 **No bloquea:** DI global, WS tipado, SDK publish (hitos posteriores)
 
 ---

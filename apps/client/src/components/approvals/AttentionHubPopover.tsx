@@ -1,95 +1,21 @@
 // SPDX-License-Identifier: MIT
-import { apiFetch } from "@/lib/api";
-import { wsClient } from "@/lib/ws-client";
+import { useAttention } from "@/hooks/useAttention";
+import { attentionStore } from "@/lib/attention/attention-store";
 import { AnimatePresence, motion } from "framer-motion";
 import { Bell, ExternalLink, HelpCircle, ShieldAlert, X } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { AttentionItem } from "shared";
 
-export interface AttentionItem {
-  approvalId: string;
-  username: string;
-  sessionId: string;
-  toolName: string;
-  args: Record<string, unknown>;
-  reason: string;
-  expiresAt: number;
-  type?: "question" | "approval" | "ui_action";
-}
+export type { AttentionItem };
 
 interface Props {
   onNavigate: (path: string) => void;
 }
 
 export function AttentionHubPopover({ onNavigate }: Props) {
-  const [items, setItems] = useState<AttentionItem[]>([]);
+  const items = useAttention();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  const fetchItems = useCallback(async () => {
-    try {
-      const res = await apiFetch("/api/approvals");
-      if (res.ok) {
-        const data = await res.json();
-        setItems(data.pending || []);
-      }
-    } catch (e) {
-      console.error("Failed to fetch attention items:", e);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchItems();
-
-    const unsubReq = wsClient.subscribe("approval_request", (data: any) => {
-      if (data?.approval) {
-        const item: AttentionItem = {
-          ...data.approval,
-          type: data.approval.toolName === "ask_question" ? "question" : "approval",
-        };
-        setItems((prev) => {
-          if (prev.some((i) => i.approvalId === item.approvalId)) return prev;
-          return [item, ...prev];
-        });
-      }
-    });
-
-    const unsubRes = wsClient.subscribe("approval_resolved", (data: any) => {
-      if (data?.approvalId) {
-        setItems((prev) => prev.filter((i) => i.approvalId !== data.approvalId));
-      }
-    });
-
-    const unsubAttCreated = wsClient.subscribe("attention_item_created", (data: any) => {
-      if (data?.item) {
-        const item: AttentionItem = {
-          ...data.item,
-          type: data.item.toolName === "ask_question" ? "question" : "ui_action",
-        };
-        setItems((prev) => {
-          if (prev.some((i) => i.approvalId === item.approvalId)) return prev;
-          return [item, ...prev];
-        });
-      }
-    });
-
-    const unsubAttResolved = wsClient.subscribe("attention_item_resolved", (data: any) => {
-      if (data?.approvalId) {
-        setItems((prev) => prev.filter((i) => i.approvalId !== data.approvalId));
-      }
-    });
-
-    const unsubWs = wsClient.onStateChange((state) => {
-      if (state === "connected") fetchItems();
-    });
-
-    return () => {
-      unsubReq();
-      unsubRes();
-      unsubAttCreated();
-      unsubAttResolved();
-      unsubWs();
-    };
-  }, [fetchItems]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -107,25 +33,19 @@ export function AttentionHubPopover({ onNavigate }: Props) {
 
   const handleItemClick = (item: AttentionItem) => {
     setIsOpen(false);
-    onNavigate(`/session/${item.sessionId}`);
+    const targetPath = item.projectId
+      ? `/workspace/projects/${item.projectId}/session/${item.sessionId}`
+      : `/session/${item.sessionId}`;
+    onNavigate(targetPath);
   };
 
-  const handleResolveApproval = async (
+  const handleResolveApproval = (
     e: React.MouseEvent,
     id: string,
     action: "approve" | "deny",
   ) => {
     e.stopPropagation();
-    try {
-      await apiFetch(`/api/approvals/${id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action }),
-      });
-      setItems((prev) => prev.filter((i) => i.approvalId !== id));
-    } catch (e) {
-      console.error("Failed to resolve attention item:", e);
-    }
+    attentionStore.resolveApproval(id, action);
   };
 
   return (
