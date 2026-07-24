@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useState, useEffect } from "react";
 import { wsClient } from "@/lib/ws-client";
 import { useToast } from "@/contexts/ToastContext";

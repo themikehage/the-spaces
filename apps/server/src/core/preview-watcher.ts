@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { watch, existsSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 import type { FSWatcher } from "node:fs";

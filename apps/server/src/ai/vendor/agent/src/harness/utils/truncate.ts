@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 /**
  * Shared truncation utilities for tool outputs.
  *

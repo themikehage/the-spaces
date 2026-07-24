@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { createAuth } from "./config";
 
 export const auth = createAuth();

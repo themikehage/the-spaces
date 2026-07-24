@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 interface ProgressProps {
   value: number; // 0 to 100
   label?: string;

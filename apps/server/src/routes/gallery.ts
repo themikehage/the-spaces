@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { Hono } from "hono";
 import { authMiddleware } from "../middleware/auth";
 import { getUsername } from "../lib/auth-helpers";

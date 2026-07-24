@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
@@ -55,7 +56,15 @@ app.use(
 );
 app.use("/*", logger());
 
-app.get("/api/health", (c) => c.json({ status: "ok", time: Date.now() }));
+app.get("/api/health", (c) =>
+  c.json({
+    status: "ok",
+    version: "1.0.0",
+    uptime: process.uptime(),
+    dataPath: SPACES_DATA_PATH(),
+    timestamp: Date.now(),
+  })
+);
 
 app.on(["GET", "POST"], "/api/auth/**", (c) => auth.handler(c.req.raw));
 

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { access, readFile, writeFile } from "node:fs/promises";
 import { constants } from "node:fs";
 import { resolveSafePath } from "./path-safety";

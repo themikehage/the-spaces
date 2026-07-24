@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { Home, Library, Settings, Terminal, Cpu } from "lucide-react";
 import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
 

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 export { agentRegistry } from "./agent-registry";
 export { createAgentServer } from "./create-agent-server";
 export { setAgentStopCallback } from "./agent-stop-callback";

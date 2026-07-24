@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { expect, test, describe, beforeEach, afterEach, mock } from "bun:test";
 import { AgentSession } from "../ai/agent-session";
 import { SessionManager } from "../ai/session-persistence";

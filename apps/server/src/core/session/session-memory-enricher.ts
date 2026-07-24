@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { AgentSession } from "../../ai";
 
 export function enrichSessionWithMemory(session: AgentSession, memory: any): void {

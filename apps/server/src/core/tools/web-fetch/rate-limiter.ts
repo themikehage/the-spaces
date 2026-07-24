@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 export class RateLimiter {
   private maxRequestsPerMinute: number;
   private maxConcurrent: number;

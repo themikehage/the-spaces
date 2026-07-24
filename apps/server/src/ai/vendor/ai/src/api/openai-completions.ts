@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 // @ts-nocheck
 import OpenAI from "openai";
 import type {

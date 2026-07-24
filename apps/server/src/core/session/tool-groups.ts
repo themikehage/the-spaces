@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 export const TOOL_GROUPS = {
   FILESYSTEM: ["read", "write", "edit", "bash", "grep", "find", "ls"],
   COMMUNICATION: [

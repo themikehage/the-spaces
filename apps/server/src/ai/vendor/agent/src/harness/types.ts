@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { ImageContent, Model, Models, SimpleStreamOptions, TextContent, Transport } from "../../../ai/src/index.ts";
 import type { AgentEvent, AgentMessage, AgentTool, QueueMode, ThinkingLevel } from "../index.ts";
 import type { Session } from "./session/session.ts";

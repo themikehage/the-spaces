@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { PreviewState } from "shared";
 import { useAuth } from "@/contexts/AuthContext";

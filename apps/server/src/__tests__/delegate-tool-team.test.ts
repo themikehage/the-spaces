@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { expect, test, describe, beforeAll, mock } from "bun:test";
 import { createManageDelegationsTool } from "../core/tools/manage-delegations-tool";
 import { agentRegistry } from "../agents";

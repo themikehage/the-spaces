@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { AgentDefinition, AgentStatus } from "shared";
 import type { AgentSession } from "../ai";
 import type { Hono } from "hono";

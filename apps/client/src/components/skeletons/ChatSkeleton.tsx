@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { Skeleton } from "@/components/ui/Skeleton";
 
 export function ChatSkeleton() {

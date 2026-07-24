@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { Api, AssistantMessage, AssistantMessageEvent, Model, ProviderStreams } from "../types.ts";
 import { AssistantMessageEventStream } from "../utils/event-stream.ts";
 import { sanitizeUserErrorMessage } from "../utils/error-body.ts";

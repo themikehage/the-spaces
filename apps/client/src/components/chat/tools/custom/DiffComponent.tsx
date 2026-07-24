@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 interface DiffProps {
   oldCode: string;
   newCode: string;

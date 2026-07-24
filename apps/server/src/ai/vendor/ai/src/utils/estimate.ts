@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { AssistantMessage, Context, ImageContent, Message, TextContent, Usage } from "../types.ts";
 
 export interface ContextUsageEstimate {

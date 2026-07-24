@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { apiFetch } from "@/lib/api";
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { Team, TeamMessage, TeamMember, UpdateTeam } from "shared";

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { resolveSafePath } from "./path-safety";

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 export interface ParamDef {
   type: string;
   required: boolean;

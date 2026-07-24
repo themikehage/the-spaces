@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useLiterals } from "@/lib";
 import { literals as u } from "@/pages/LogsConsolePage.literals";

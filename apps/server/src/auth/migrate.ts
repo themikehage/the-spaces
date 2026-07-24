@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { getMigrations } from "better-auth/db/migration";
 import { auth } from "./index";
 

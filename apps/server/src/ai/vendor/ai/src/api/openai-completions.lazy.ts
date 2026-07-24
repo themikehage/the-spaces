@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { ProviderStreams } from "../types.ts";
 import { lazyApi } from "./lazy.ts";
 

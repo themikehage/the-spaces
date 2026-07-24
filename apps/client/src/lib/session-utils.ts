@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { buildSessionPath, type ContextPathInput } from "@/router/paths";
 
 export interface SessionContext {

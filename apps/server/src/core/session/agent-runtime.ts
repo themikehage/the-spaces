@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { existsSync, mkdirSync } from "node:fs";
 import { type AgentDefinition } from "shared";
 import { createAgentSession, DefaultResourceLoader } from "../../ai";

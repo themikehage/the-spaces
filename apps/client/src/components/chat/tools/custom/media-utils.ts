@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 export function resolveMediaUrl(src: string, sessionId: string | null): string {
   if (!src) return "";
   if (src.startsWith("http://") || src.startsWith("https://") || src.startsWith("data:")) {

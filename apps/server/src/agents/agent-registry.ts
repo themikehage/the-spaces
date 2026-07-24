@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { createAgentServer } from "./create-agent-server";
 import { type AgentDefinition, type AgentInfo, type AgentStatus, SessionPrefix, getUserDir, SPACES_DATA_PATH, USERS_DIR, type AgentScopeTarget } from "shared";
 import type { AgentEntry } from "./types";

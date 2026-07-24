@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { motion } from "framer-motion";
 import type { Team, AgentInfo } from "shared";
 import { useLiterals } from "@/lib";

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { apiFetch } from "@/lib/api";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";

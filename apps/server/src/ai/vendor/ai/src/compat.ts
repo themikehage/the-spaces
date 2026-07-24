@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 /**
  * Compatibility entrypoint — vendored, stripped to OpenAI-compatible providers only.
  * Replaces the vendored ai compat module for Spaces.

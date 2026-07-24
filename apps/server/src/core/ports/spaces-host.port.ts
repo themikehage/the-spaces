@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 ﻿import type { EnvelopeResult } from "shared";
 import type { WorkspaceConfig } from "./workspace-config.port";
 import type { ModelResolutionContext } from "./model-resolver";

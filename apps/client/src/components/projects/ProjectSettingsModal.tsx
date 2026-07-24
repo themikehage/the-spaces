@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useLiterals } from "@/lib";

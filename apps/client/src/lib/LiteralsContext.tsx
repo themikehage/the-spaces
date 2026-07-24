@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { createContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import type { SupportedLocale, LiteralsContextValue } from "./types";
 

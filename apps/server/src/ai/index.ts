@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 // Classes
 export { createAgentSession, AgentSession } from "./agent-session";
 export { AuthStorage } from "./auth-storage";

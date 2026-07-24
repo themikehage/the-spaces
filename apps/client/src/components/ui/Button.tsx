@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { type ButtonHTMLAttributes, type ReactNode, forwardRef } from "react";
 
 type Variant = "solid" | "outline" | "ghost" | "destructive" | "accent" | "ghost-destructive";

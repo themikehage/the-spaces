@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { openInWorkspace } from "./workspace";
 import { useLiterals } from "@/lib";
 import { literals as u } from "./GrepResult.literals";

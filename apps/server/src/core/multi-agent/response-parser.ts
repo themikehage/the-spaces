@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 export interface ParsedResponse {
   content: string;
   stripped: string;

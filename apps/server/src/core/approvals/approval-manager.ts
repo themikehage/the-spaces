@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { broadcastToUser } from "../../ws/handler";
 
 export interface ApprovalRequest {

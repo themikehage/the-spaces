@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 export { permissionEngine } from "./permission-engine";
 export type { PermissionVerdict, PermissionRule } from "./permission-engine";
 export { userPermissionStore } from "./user-permission-store";

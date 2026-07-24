@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useState } from "react";
 import type { McpServerConfig } from "shared";
 import { Button } from "@/components/ui/Button";

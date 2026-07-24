@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { uiApprovalRegistry } from "../ui-approval-registry";
 import { createVisionTool } from "./vision-tool";
 import { createImageGenTool } from "./image-gen-tool";

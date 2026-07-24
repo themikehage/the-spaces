@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 ﻿import { getToolCallLogs, type ToolCallAuditEvent } from "../audit-log";
 
 export interface ToolMetric {

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useLiterals } from "@/lib";
 import { literals as u } from "./FloatingDelegations.literals";
 

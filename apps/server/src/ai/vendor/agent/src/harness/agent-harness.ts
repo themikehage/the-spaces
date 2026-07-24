@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { AssistantMessage, ImageContent, Model, Models, UserMessage } from "../../../ai/src/index.ts";
 import { runAgentLoop } from "../agent-loop.ts";
 import type {

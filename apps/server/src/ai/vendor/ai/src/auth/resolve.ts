@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { Api, ImagesApi, ImagesModel, Model, ProviderEnv } from "../types.ts";
 import type {
 	ApiKeyAuth,

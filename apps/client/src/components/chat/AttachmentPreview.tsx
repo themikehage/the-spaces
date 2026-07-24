@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { motion, AnimatePresence } from "framer-motion";
 import { X, FileText } from "lucide-react";
 

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useState, type FormEvent } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLiterals } from "@/lib";

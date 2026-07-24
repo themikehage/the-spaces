@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 
 interface TaskItem {
   id: string;

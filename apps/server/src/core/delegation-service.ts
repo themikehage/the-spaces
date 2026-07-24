@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { EnvelopeResult } from "shared";
 import type { ManageDelegationsOptions } from "./tools/manage-delegations-tool";
 

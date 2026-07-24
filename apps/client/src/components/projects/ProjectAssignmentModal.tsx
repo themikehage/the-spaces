@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { Modal } from "@/components/ui/Modal";
 import { ProjectAssignmentPanel } from "./ProjectAssignmentPanel";
 

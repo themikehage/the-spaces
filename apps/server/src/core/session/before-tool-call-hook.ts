@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { permissionEngine, userPermissionStore, extractSubject } from "../sandbox";
 import { approvalManager } from "../approvals/approval-manager";
 import { SessionPrefix } from "shared";

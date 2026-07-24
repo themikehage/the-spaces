@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { AssistantMessage, AssistantMessageEvent } from "../types.ts";
 
 // Generic event stream class for async iteration

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { SessionConsoleView } from "@/components/sessions/SessionConsoleView";
 
 interface LogsConsolePageProps {

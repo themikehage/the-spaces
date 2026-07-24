@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useState, useRef, useCallback } from "react";
 import { PortalPopover } from "@/components/chat/PortalPopover";
 

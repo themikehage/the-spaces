@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { teamStore } from "./team-store";
 import { type TeamMessage, SessionPrefix } from "shared";
 import { OrchestrationRunner } from "./orchestration/orchestration-runner";

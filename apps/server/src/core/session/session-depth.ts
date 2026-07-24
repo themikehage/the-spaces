@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { sessionMetadataStore } from "./metadata-store";
 
 export function getSubagentDepth(username: string, parentSessionId: string): number {

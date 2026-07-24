@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { loadPreviewConfig, savePreviewConfig } from "../preview-config";
 import { getPreviewState } from "../preview-watcher";
 import { runBuild, abortBuild } from "../preview-builder";

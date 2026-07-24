@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useReducer, type ReactNode } from "react";
 import { matchPath, useLocation, useNavigate } from "react-router-dom";
 import { buildContextPath } from "@/router/paths";

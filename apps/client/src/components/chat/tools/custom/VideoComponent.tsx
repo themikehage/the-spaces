@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { resolveMediaUrl } from "./media-utils";
 
 interface VideoProps {

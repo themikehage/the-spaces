@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { agentRegistry } from "../../agents";
 import { type TeamMember, type TeamMessage } from "shared";
 

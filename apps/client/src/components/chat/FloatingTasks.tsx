@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { TaskRunnerState } from "shared";

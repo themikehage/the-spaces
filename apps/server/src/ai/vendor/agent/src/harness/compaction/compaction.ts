@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { AssistantMessage, ImageContent, Model, Models, TextContent, Usage } from "../../../../ai/src/index.ts";
 import type { AgentMessage, ThinkingLevel } from "../../types.ts";
 import {

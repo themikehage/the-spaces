@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 let onAgentStopCallback: ((agentId: string) => void) | null = null;
 
 export function setAgentStopCallback(fn: (agentId: string) => void) {

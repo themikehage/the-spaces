@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useState, useCallback } from "react";
 import { apiFetch } from "@/lib/api";
 import { buildCreateSessionBody, getSessionPath as resolveSessionPath } from "@/lib/session-utils";

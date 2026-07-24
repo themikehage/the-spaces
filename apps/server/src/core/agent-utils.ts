@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { ModelRegistry } from "../ai";
 import type { EnvelopeResult, DelegationNotificationDetails } from "shared";
 import { DELEGATION_NOTIFICATION_TYPE } from "shared";

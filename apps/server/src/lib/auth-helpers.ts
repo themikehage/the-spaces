@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { getAuthPayload } from "../auth/middleware";
 import { getDb } from "../auth/db";
 

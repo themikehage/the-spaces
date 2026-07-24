@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { encryptEnv, decryptEnv } from "../lib/env-crypto";

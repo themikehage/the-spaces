@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 interface StatItem {
   label: string;
   value: string;

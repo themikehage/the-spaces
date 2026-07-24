@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { loadSkills, type Skill } from "./load-skills";

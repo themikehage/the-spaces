@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 export interface WorkspaceConfig {
   rules?: string[];
   skills?: string[];

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { HtmlPreview } from "../../HtmlPreview";
 
 interface CustomHtmlProps {

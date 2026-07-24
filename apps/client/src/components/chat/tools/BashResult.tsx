@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 interface Props {
   text: string;
   command: string;

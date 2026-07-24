@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { openrouterImagesApi } from "../api/openrouter-images.lazy.ts";
 import { envApiKeyAuth } from "../auth/helpers.ts";
 import { IMAGE_MODELS } from "../image-models.generated.ts";

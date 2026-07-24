@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 interface TableProps {
   title?: string;
   columns: string[];

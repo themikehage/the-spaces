@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import {
   createAgentSession,
   SessionManager as VendoredSessionManager,

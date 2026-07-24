@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { ReactNode } from "react";
 import type { RoutePage } from "@/router/useRoutePage";
 

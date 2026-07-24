@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { ImageContent, TextContent } from "../../../../ai/src/index.ts";
 import type { AgentMessage } from "../../types.ts";
 import { createBranchSummaryMessage, createCompactionSummaryMessage, createCustomMessage } from "../messages.ts";

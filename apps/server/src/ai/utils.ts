@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { isAbsolute, resolve as nodeResolvePath } from "node:path";
 import { homedir } from "node:os";
 

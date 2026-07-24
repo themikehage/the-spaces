@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import type { ReactNode } from "react";

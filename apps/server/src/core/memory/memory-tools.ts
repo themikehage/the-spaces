@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { MemoryProvider, MemoryType } from "./types";
 
 export function createMemoryTools(memory: MemoryProvider) {

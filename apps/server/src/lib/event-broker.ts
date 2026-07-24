@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { GlobalLogEvent } from "shared";
 
 type BroadcastFn = (username: string, data: unknown) => void;

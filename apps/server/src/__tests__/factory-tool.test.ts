@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { mock, describe, it, expect, beforeEach } from "bun:test";
 import { createFactoryTool, validateParams } from "../core/tools/factory-tool";
 import { agentRegistry } from "../agents";

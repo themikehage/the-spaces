@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { describe, expect, it } from "bun:test";
 import { parseEnvelope, getLastAssistantText, resolveModelWithFallback } from "../core/agent-utils";
 

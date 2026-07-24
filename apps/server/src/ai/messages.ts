@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { ImageContent, Message, TextContent } from "./vendor/ai/src/index.ts";
 
 export const COMPACTION_SUMMARY_PREFIX = `The conversation history before this point was compacted into the following summary:

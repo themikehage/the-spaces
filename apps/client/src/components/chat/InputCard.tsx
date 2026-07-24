@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { motion } from "framer-motion";
 import { AttachmentPreview, type Attachment } from "./AttachmentPreview";
 import { ChatTextarea } from "./ChatTextarea";

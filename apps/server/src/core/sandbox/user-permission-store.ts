@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { getUserDir } from "shared";

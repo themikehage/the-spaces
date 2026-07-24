@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { apiFetch } from "@/lib/api";
 import { useCallback, useState, useEffect, useRef } from "react";
 import { resolveFileUrl } from "@/lib/file-urls";

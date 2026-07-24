@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { createProgrammaticSessionSync } from "../../auth/onboarding";
 import {
   createBashToolDefinition,

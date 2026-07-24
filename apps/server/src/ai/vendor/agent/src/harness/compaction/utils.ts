@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { Message } from "../../../../ai/src/index.ts";
 import type { AgentMessage } from "../../types.ts";
 

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 // Mock ws/handler to avoid circular initialization errors at module load time
 import { mock } from "bun:test";
 

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { defaultProviderAuthContext as defaultAuthContext } from "./auth/context.ts";
 import { InMemoryCredentialStore } from "./auth/credential-store.ts";
 import { ModelsError, resolveProviderAuth } from "./auth/resolve.ts";

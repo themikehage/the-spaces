@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { resolve, relative, isAbsolute } from "node:path";
 
 /**

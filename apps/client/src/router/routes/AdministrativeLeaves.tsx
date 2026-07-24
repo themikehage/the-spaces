@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { Navigate, useNavigate } from "react-router-dom";
 import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
 import { AgentsPage } from "@/pages/AgentsPage";

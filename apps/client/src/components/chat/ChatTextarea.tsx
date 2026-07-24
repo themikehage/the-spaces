@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useEffect } from "react";
 
 interface ChatTextareaProps {

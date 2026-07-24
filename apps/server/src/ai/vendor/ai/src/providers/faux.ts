@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { createProvider, type Provider } from "../models.ts";
 import type {
 	AssistantMessage,

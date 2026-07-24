@@ -1,5 +1,6 @@
 {
-  "name": "openai-hack-scaffold",
+  "name": "spaces",
+  "license": "MIT",
   "private": true,
   "workspaces": [
     "apps/*",
@@ -7,7 +8,11 @@
   ],
   "scripts": {
     "dev": "pnpm -r --parallel run dev",
-    "build": "pnpm -r --parallel run build",
-    "start": "pnpm -r --parallel run start"
+    "build": "pnpm -r run build",
+    "start": "pnpm -r run start",
+    "lint": "pnpm -r run lint",
+    "typecheck": "pnpm -r run typecheck",
+    "test": "pnpm -r run test",
+    "check-license": "bun run scripts/check-license.ts"
   }
 }

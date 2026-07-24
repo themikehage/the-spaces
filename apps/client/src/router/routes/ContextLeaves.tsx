@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useNavigate, useParams } from "react-router-dom";
 import { ChatArea } from "@/components/chat/ChatArea";
 import { DelegationsPanel } from "@/components/chat/DelegationsPanel";

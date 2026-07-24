@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { Database } from "bun:sqlite";
 import { existsSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";

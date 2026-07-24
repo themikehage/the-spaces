@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 type LogLevel = "info" | "warn" | "error" | "debug";
 
 interface LogContext {

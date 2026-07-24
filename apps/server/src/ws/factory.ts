@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { WSContext, WSMessageReceive } from "hono/ws";
 import { wsRegistry } from "./registry";
 import { wsLogger } from "./logger";

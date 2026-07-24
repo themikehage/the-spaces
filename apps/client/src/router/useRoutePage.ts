@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useLocation } from "react-router-dom";
 
 export type RoutePage = "chat" | "delegations" | "timeline" | "workspace" | "preview" | "projects" | "settings" | "skills" | "agents" | "org" | "benchmark" | "teams" | "team" | "logs" | "plugins" | "sessions" | "analytics" | "not-found" | "dashboard" | "floor";

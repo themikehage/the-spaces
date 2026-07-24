@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { WSContext } from "hono/ws";
 import { wsRegistry, startHeartbeat } from "./registry";
 import { setAgentStopCallback } from "../agents/agent-stop-callback";

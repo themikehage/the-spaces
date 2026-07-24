@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { apiFetch } from "@/lib/api";
 import { useState } from "react";
 import { resolveImageUrl } from "../ImageGrid";

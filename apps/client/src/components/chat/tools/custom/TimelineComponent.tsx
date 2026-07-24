@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 interface TimelineItem {
   date?: string;
   title: string;

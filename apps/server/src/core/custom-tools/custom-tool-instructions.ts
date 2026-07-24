@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 export const CUSTOM_TOOL_INSTRUCTIONS = `
 ## Custom Tool Builder
 

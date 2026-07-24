@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { expect, test, describe, beforeEach } from "bun:test";
 import { delegationRegistry } from "../core/delegation-registry";
 import { AbortToken } from "../core/abort-token";

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { join } from "node:path";
 import { sessionManager } from "../session-manager";
 import { broadcastToSession } from "../../ws/handler";

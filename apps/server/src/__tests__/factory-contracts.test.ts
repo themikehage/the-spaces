@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { describe, expect, it } from "bun:test";
 import { FACTORY_CONTRACTS } from "../core/tools/factory-contracts";
 

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { MemoryProvider, RecallOptions, RecalledMemory, MemoryType } from "./types";
 
 export class NullMemoryProvider implements MemoryProvider {

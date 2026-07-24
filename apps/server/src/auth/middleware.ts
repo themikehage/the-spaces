@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { Context, Next } from "hono";
 import { auth } from "./index";
 import { resolveUsernameFromToken, getSessionTokensFromCookieHeader } from "../lib/auth-helpers";

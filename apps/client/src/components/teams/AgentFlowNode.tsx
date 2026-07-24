@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { Handle, Position, type NodeProps, type Node } from "@xyflow/react";
 import type { TeamMember, AgentInfo, TeamRole } from "shared";
 import { AgentAvatar } from "@/components/shared/AgentAvatar";

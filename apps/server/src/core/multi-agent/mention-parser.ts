@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { TeamMember } from "shared";
 
 export interface MentionTarget {

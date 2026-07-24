@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { describe, it, expect } from "bun:test";
 import { createBeforeToolCallHook } from "../core/session/before-tool-call-hook";
 import { userPermissionStore } from "../core/sandbox/user-permission-store";

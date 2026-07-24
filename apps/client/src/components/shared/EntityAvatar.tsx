@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useMemo, useState } from "react";
 import type { FC } from "react";
 import { getAvatarComponent, isDefaultAvatar } from "@/lib/defaultAvatars";

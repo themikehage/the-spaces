@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 export type MemoryType = "semantic" | "episodic" | "procedural";
 
 export interface RecalledMemory {

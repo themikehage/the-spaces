@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useTeam } from "@/hooks/useTeam";
 import { useAgents } from "@/hooks/useAgents";

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 
 export const DEFAULT_AGENTS_MD = `# Global Spaces Director - AGENTS.md
 

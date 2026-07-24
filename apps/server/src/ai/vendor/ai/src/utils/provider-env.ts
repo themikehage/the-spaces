@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { ProviderEnv } from "../types.ts";
 
 let procEnvCache: Map<string, string> | null = null;

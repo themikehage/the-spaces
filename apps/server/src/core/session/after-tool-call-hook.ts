@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 ﻿import { recordToolCallAudit } from "../audit-log";
 
 export interface CreateAfterToolCallHookParams {

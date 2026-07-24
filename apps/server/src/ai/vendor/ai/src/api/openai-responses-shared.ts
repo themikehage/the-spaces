@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type OpenAI from "openai";
 import type {
 	Tool as OpenAITool,

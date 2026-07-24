@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { FactoryToolOptions } from "./factory-tool";
 import { broadcastToUser } from "../../ws/handler";
 import { PipelineStageSchema } from "shared";

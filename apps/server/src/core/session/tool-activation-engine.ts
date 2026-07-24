@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { DEFAULT_ALWAYS_ON_TOOLS } from "./tool-groups";
 
 export interface ResolveActiveToolsParams {

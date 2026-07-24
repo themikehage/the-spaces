@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 export class AbortToken {
   private controllers: Array<{ abort: () => void; label: string }> = [];
   private parentListener?: () => void;

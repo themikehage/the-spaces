@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 // @ts-nocheck
 export * from "./agent.ts";
 export * from "./agent-loop.ts";

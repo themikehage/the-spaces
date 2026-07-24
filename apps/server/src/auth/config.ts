@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { betterAuth } from "better-auth";
 import { getDb } from "./db";
 import { SPACES_DATA_PATH } from "shared";

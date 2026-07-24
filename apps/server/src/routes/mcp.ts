@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { join } from "node:path";

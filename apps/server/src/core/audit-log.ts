@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 ﻿import { appendFileSync, mkdirSync, existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { getAuditDir } from "shared";

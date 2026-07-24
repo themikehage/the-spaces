@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { sessionManager } from "../session-manager";
 
 export interface ExaSearchOptions {

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { ProviderHeaders } from "../types.ts";
 
 export function headersToRecord(headers: Headers): Record<string, string> {

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 export function filterSecretsFromOutput(
   output: string,
   secrets: string[]

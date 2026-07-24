@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 export async function apiFetch(url: string, init?: RequestInit): Promise<Response> {
   const headers = new Headers(init?.headers);
   const res = await fetch(url, { ...init, headers, credentials: "include" });

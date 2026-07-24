@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 interface TabDef {
   id: string;
   label: string;

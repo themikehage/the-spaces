@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { parseHTML } from "linkedom";
 import { Readability } from "@mozilla/readability";
 import TurndownService from "turndown";

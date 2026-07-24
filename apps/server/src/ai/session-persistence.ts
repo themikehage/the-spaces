@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { type AgentMessage, uuidv7 } from "./vendor/agent/src/index.ts";
 import type { ImageContent, Message, TextContent } from "./vendor/ai/src/index.ts";
 import { randomUUID } from "node:crypto";

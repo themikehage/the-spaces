@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { describe, expect, it, afterEach } from "bun:test";
 import { LocalMemoryProvider } from "../core/memory/local-provider";
 import { unlinkSync, existsSync } from "node:fs";

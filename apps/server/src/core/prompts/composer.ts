@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { promptFragmentRegistry, type PromptFragment } from "./registry";
 
 export interface DeploymentMember {

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { existsSync, writeFileSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { generateImages } from "../../ai/vendor/ai/src/images.ts";

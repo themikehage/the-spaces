@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { existsSync, writeFileSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { sessionManager } from "../session-manager";

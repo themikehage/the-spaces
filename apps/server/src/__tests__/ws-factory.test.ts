@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { describe, it, expect, beforeEach } from "bun:test";
 import { createWsContext } from "../ws/factory";
 import { wsRegistry } from "../ws/registry";

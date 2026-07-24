@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { RoutePage } from "@/router/useRoutePage";
 
 interface BreadcrumbsProps {

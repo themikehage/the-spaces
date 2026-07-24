@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 interface LogoProps {
   className?: string;
   size?: number;

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 export type SupportedLocale = "en" | "es";
 
 export type LiteralsRecord = Record<SupportedLocale, Record<string, string>>;

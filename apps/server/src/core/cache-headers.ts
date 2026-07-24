@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { Context } from "hono";
 import { statSync, existsSync } from "node:fs";
 

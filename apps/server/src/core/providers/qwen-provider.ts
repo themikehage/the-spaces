@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { ModelRegistry } from "../../ai";
 import { loadProviderModels } from "./provider-persistence";
 

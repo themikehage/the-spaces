@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { openInWorkspace } from "./workspace";
 
 function getExt(name: string) {

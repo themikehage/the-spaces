@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useLiterals } from "@/lib";
 import { literals as u } from "./AvatarUploadField.literals";
 import { AgentAvatar } from "@/components/shared/AgentAvatar";

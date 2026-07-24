@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 export interface CacheEntry {
   url: string;
   title: string;

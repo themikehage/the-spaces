@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { ModelRegistry } from "../../ai";
 
 export function registerOpenAIProvider(registry: ModelRegistry) {

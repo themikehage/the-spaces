@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { wsClient } from "@/lib/ws-client";

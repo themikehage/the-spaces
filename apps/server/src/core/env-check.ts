@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { spawnSync } from "node:child_process";
 import { platform, arch, release, tmpdir, homedir } from "node:os";
 

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { IMAGE_MODELS } from "./image-models.generated.ts";
 import type { ImagesApi, ImagesModel, KnownImagesProvider } from "./types.ts";
 

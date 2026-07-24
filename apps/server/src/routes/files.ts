@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { Hono } from "hono";
 import { resolve, normalize, sep, join, basename, dirname } from "node:path";
 import { existsSync, readdirSync, statSync, mkdirSync, writeFileSync, unlinkSync, rmSync, renameSync, readFileSync } from "node:fs";

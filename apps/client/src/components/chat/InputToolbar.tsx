@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useState, useRef } from "react";
 import { Paperclip, BookOpen, Sliders } from "lucide-react";
 import { ModelSelector } from "./ModelSelector";

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { getDb } from "./db";
 import { randomBytes, randomUUID } from "node:crypto";
 import { auth } from "./index";

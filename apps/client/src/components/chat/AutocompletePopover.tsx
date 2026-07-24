@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useRef } from "react";
 import { PortalPopover } from "./PortalPopover";
 import { useLiterals } from "@/lib";

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { AuthStorage } from "./auth-storage.ts";
 
 type ModelsDevCache = {

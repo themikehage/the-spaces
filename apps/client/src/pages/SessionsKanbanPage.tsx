@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useLiterals } from "@/lib";
 import { literals as u } from "./SessionsKanbanPage.literals";

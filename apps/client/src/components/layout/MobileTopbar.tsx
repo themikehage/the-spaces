@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { Menu, Plus } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import type { ConnectionState } from "@/lib/ws-client";

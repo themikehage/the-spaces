@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { SpacesHost } from "./ports/spaces-host.port";
 import type { WorkspaceConfig } from "./ports/workspace-config.port";
 import { existsSync, readFileSync, writeFileSync, readdirSync } from "node:fs";

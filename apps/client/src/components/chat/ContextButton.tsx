@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useRef, useState, useMemo } from "react";
 import { Zap } from "lucide-react";
 import { useLiterals, type ContextUsage } from "@/lib";

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { describe, it, expect, beforeAll, afterAll } from "bun:test";
 import { permissionEngine } from "../core/sandbox/permission-engine";
 import { resolveSessionAllowedWriteDir } from "../core/session/workspace-resolver";

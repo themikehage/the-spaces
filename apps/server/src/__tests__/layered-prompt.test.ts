@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { expect, test, describe } from "bun:test";
 import { promptFragmentRegistry } from "../core/prompts/registry";
 import { promptComposer, type DeploymentContext } from "../core/prompts/composer";

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useContext } from "react";
 import { LiteralsContext } from "./LiteralsContext";
 import type { SupportedLocale } from "./types";

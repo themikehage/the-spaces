@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useId, type FC, type SVGProps } from "react";
 
 type AvatarSvgProps = SVGProps<SVGSVGElement>;

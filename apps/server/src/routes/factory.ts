@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { Hono } from "hono";
 import { authMiddleware, getAuthPayload } from "../middleware/auth";
 import { FACTORY_CONTRACTS } from "../core/tools/factory-contracts";

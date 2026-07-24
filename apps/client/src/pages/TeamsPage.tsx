@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTeams } from "@/hooks/useTeams";

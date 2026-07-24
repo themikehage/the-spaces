@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useSearchParams } from "react-router-dom";
 import { useLiterals } from "@/lib";
 import { literals as u } from "./SessionsPage.literals";

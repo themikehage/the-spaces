@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync, appendFileSync, statSync, openSync, fstatSync, readSync, closeSync, renameSync } from "node:fs";
 import { join } from "node:path";
 import type { Team, TeamMember, TeamMessage, CreateTeam, UpdateTeam, TeamContextItem } from "shared";

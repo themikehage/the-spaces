@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useEffect, useRef } from "react";
 import type { TeamMessage } from "shared";
 import type { StreamingAgentState } from "@/hooks/useTeam";

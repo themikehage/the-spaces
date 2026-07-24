@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { buildSubagentRules, evaluateSubagentRules } from "./subagent-permissions";
 import { resolve, sep, isAbsolute } from "node:path";
 import { tmpdir } from "node:os";

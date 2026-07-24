@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { AVAILABLE_TOOLS } from "shared";
 import { sessionMetadataStore } from "../session/metadata-store";
 import { sessionManager } from "../session-manager";

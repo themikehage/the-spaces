@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { createAuthEndpoint } from "better-auth/api";
 import type { BetterAuthPlugin } from "better-auth";
 

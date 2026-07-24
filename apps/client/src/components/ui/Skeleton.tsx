@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 interface SkeletonProps {
   className?: string;
 }

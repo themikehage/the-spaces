@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { SupportedLocale } from "@/lib/types";
 
 export const literals = {

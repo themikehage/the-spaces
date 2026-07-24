@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { AsyncLocalStorage } from "node:async_hooks";
 import { type CustomToolDefinition } from "./schemas";
 import { type PipelineContext, executePipeline, resolveVariables } from "./pipeline-engine";

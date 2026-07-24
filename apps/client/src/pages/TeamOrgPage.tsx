@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useState } from "react";
 import { useTeam } from "@/hooks/useTeam";
 import { useAgents } from "@/hooks/useAgents";

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { Hono } from "hono";
 import { loadSkills } from "../ai/load-skills";
 import { existsSync, writeFileSync, mkdirSync, rmSync } from "node:fs";

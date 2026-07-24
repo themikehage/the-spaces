@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { approvalManager } from "./approvals/approval-manager";
 
 type PendingApprovalValue = {

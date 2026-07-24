@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import dns from "node:dns/promises";
 import net from "node:net";
 

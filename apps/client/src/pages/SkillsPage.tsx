@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { apiFetch } from "@/lib/api";
 import { useState, useEffect, useCallback } from "react";
 import { RichMarkdown } from "@/components/chat/RichMarkdown";

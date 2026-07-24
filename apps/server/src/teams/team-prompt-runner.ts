@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { teamStore } from "./team-store";
 import { agentRegistry } from "../agents";
 import { sessionManager } from "../core/session-manager";

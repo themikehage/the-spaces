@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 export interface DiagnosticErrorInfo {
 	name?: string;
 	message: string;

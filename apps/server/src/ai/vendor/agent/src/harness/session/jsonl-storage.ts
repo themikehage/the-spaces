@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { FileSystem, JsonlSessionMetadata, LeafEntry, SessionStorage, SessionTreeEntry } from "../types.ts";
 import { SessionError, toError } from "../types.ts";
 import { getFileSystemResultOrThrow } from "./repo-utils.ts";

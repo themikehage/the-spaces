@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { AuthContext } from "./types.ts";
 
 interface NodeFsModule {

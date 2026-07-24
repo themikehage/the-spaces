@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Trash2, Archive, RotateCcw } from "lucide-react";
 import { useSessions, type SessionStatus } from "@/contexts/SessionsContext";

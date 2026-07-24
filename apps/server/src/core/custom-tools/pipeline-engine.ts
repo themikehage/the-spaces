@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { type PipelineStep, type CustomToolDefinition } from "./schemas";
 import { type AgentSession } from "../../ai";
 

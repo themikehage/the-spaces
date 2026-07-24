@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useState, useEffect, useCallback } from "react";
 import type { FileInfo } from "shared";
 import { apiFetch } from "@/lib/api";

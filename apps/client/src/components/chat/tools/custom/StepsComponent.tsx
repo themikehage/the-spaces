@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 interface StepItem {
   label: string;
   status: "done" | "active" | "pending" | "error";

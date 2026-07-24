@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useState, useMemo } from "react";
 import {
   ChevronDown,

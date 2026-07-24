@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 export function resolveFileUrl(
   url: string,
   sessionId: string | null,

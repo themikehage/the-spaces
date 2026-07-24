@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 let lastTimestamp = -Infinity;
 let sequence = 0;
 

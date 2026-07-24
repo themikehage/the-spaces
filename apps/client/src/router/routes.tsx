@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { Route, Routes } from "react-router-dom";
 import { AppRouter } from "@/components/layout/AppRouter";
 import { McpRedirectRoute } from "@/router/routes/McpRedirectRoute";

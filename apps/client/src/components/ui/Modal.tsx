@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { type FC, type ReactNode, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 

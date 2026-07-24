@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useEffect, useRef, useState } from "react";
 import { ALL_TOOLS } from "./ToolsSelector";
 import { PortalPopover } from "./PortalPopover";

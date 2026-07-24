@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { ImagesModel, ProviderImages } from "../types.ts";
 
 export const openrouterImagesApi = (): ProviderImages => ({

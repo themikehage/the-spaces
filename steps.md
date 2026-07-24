@@ -29,12 +29,13 @@
   - Fase 1: Desacoplamiento de singletons (`DelegationRegistry` orientado a eventos con `onEvent`, `SessionToolFactory` con inyección estática, `ManageDelegationsTool` con inyección de puertos).
   - Fase 2: Unificación de runtimes con `createAgentRuntime(config)` y `resolveAgentContext()`, simplificando `createAgentServer()` y `sessionManager`.
   - Fase 3: Formalización del contrato `SpacesHost` (`ServerSpacesHost`) y creación de `ARCHITECTURE.md`.
-- [ ] Definir comandos estándar para typecheck, lint y pruebas en todos los workspaces.
+- [x] Definir comandos estándar para typecheck, lint y pruebas en todos los workspaces (TurboRepo + `check-license`, `typecheck`, `lint`, `build`, `test`).
 - [ ] Añadir pruebas de integración para rutas críticas: autenticación, sesiones, archivos y WebSocket.
 - [ ] Ampliar las pruebas de la orquestación de agentes, equipos y aprobaciones.
 - [ ] Eliminar los usos restantes de `any` y reforzar los contratos de API.
 - [x] Sustituir enlaces locales fijos de la landing por configuración de entorno o rutas de despliegue.
-- [ ] Documentar variables de entorno, persistencia local y procedimiento de despliegue.
+- [x] Documentar variables de entorno (`.env.example`), persistencia local, guía de self-hosting (`docs/self-hosting.md`) y procedimiento de despliegue.
+- [x] Completar las Bases para Open-Source (`06-foundations.md`): Licencia MIT, SPDX headers en los 495 archivos fuente, CI/CD pipeline (`ci.yml`, `release.yml`, `turbo.json`), Changesets, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, templates de GitHub y endpoint `GET /api/health` enriquecido.
 
 ## Criterio de cierre del sprint
 

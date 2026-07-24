@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { McpClient } from "./mcp-client.js";
 import type { McpServerConfig, McpConfig, McpCatalogItem } from "shared";

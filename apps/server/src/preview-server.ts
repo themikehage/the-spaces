@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { resolve, normalize, sep, extname, join } from "node:path";
 import { existsSync } from "node:fs";
 import { getProjectWorkspaceDir } from "shared";

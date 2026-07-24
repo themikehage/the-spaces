@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 // Shared normalization for provider HTTP error objects.
 //
 // Endpoints behind a proxy / gateway may return a non-2xx response whose body

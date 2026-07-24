@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
 import { ToastContainer, type ToastMessage } from "@/components/ui/Toast";
 

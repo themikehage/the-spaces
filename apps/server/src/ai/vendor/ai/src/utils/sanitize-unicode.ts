@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 /**
  * Removes unpaired Unicode surrogate characters from a string.
  *

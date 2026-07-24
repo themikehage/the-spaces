@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useState, useCallback } from "react";
 import type { FileInfo } from "shared";
 import { useLiterals } from "@/lib";

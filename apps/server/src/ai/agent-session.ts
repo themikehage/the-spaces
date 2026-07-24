@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { Agent } from "./vendor/agent/src/agent.ts";
 import { prepareCompaction, compact } from "./vendor/agent/src/harness/compaction/compaction.ts";
 import { completeSimple, streamSimple } from "./vendor/ai/src/compat.ts";

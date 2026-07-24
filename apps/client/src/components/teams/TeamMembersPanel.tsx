@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useState } from "react";
 import type { TeamMember, AgentInfo, TeamRole } from "shared";
 import { useLiterals } from "@/lib";

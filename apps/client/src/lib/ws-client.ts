@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 type EventHandler = (data: unknown) => void;
 export type ConnectionState = "disconnected" | "connecting" | "connected" | "permanently_disconnected";
 type StateHandler = (state: ConnectionState) => void;

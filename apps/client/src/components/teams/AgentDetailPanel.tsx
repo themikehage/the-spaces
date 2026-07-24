@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { TeamMember, AgentInfo, TeamRole } from "shared";

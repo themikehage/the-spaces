@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { TeamMember, AgentInfo } from "shared";
 import type { StreamingAgentState } from "@/hooks/useTeam";
 import { AgentAvatar } from "@/components/shared/AgentAvatar";

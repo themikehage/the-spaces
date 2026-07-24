@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 export type ContextType = "project" | "agent" | "team";
 
 export interface ContextPathInput {

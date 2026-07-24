@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { getEnvironmentContext } from "../env-check";
 import { promptComposer, type DeploymentContext } from "./composer";
 import {

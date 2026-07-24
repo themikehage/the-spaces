@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { apiFetch } from "@/lib/api";
 import { useState, useRef, useEffect, useCallback, type KeyboardEvent } from "react";
 import { useLiterals, type ContextUsage } from "@/lib";

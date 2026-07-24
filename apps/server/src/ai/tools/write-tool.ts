@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { writeFile, mkdir } from "node:fs/promises";
 import { dirname } from "node:path";
 import { resolveSafePath } from "./path-safety";

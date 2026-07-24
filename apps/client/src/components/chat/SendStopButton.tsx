@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { motion } from "framer-motion";
 import { ArrowRight, Square } from "lucide-react";
 import { useLiterals } from "@/lib";

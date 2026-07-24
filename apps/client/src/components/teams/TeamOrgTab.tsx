@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useState, useMemo } from "react";
 import type { TeamMember, AgentInfo } from "shared";
 import { useIsMobile } from "@/hooks/useIsMobile";

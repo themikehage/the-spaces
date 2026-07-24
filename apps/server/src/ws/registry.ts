@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import type { WSContext } from "hono/ws";
 import type { AuthPayload } from "../middleware/auth";
 

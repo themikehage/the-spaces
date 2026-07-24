@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 export { CustomToolBody } from "./CustomToolBody";
 export { CustomUiRenderer } from "./CustomUiRenderer";
 export { BadgeComponent } from "./BadgeComponent";

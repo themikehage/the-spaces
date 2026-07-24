@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { expect, test, describe, beforeEach, afterEach } from "bun:test";
 import { sessionMetadataStore } from "../core/session/metadata-store";
 import { getSubagentDepth } from "../core/session/session-depth";

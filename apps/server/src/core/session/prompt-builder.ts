@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { TaskStateManager } from "../tools/task-state-manager";
 import { SessionPrefix } from "shared";
 import { promptComposer } from "../prompts/composer";

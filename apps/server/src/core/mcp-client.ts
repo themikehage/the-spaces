@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { spawn, type Subprocess } from "bun";
 import type { McpServerConfig } from "shared";
 

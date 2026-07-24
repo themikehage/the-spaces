@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useEffect, useCallback, useState } from "react";
 import { wsClient } from "@/lib/ws-client";
 import { useConnectionAwareEffect } from "./useConnectionAware";

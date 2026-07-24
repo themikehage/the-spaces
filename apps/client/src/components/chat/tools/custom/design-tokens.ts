@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 export const CUSTOM_TOOL_THEME_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import * as Diff from "diff";
 import { constants } from "node:fs";
 import { access, readFile } from "node:fs/promises";

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { join, dirname } from "node:path";
 import { existsSync, mkdirSync } from "node:fs";
 import type { MemoryProvider } from "./types";

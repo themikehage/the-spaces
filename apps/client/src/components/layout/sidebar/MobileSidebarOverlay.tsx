@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { motion, AnimatePresence } from "framer-motion";
 import type { ReactNode } from "react";
 import { Logo } from "@/components/ui/Logo";

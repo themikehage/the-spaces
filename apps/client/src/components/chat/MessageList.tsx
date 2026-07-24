@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { type FC } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import clsx from "clsx";

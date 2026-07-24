@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { LiteralsProvider } from "@/lib";

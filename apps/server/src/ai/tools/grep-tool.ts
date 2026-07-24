@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { execSync, spawn } from "node:child_process";
 import { readFile, readdir, stat } from "node:fs/promises";
 import { join, relative, basename } from "node:path";

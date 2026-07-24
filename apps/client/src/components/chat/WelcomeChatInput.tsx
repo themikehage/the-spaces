@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useLiterals } from "@/lib";
 import { literals as u } from "./WelcomeChatInput.literals";

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useState, useEffect, useCallback, Fragment } from "react";
 import { useLiterals } from "@/lib";
 import { literals as u } from "./ProvidersTab.literals";

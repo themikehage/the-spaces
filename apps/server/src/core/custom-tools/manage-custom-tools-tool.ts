@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { type CustomToolDefinition, CustomToolDefinitionSchema } from "./schemas";
 import { customToolStorage } from "./storage";
 import { createCustomToolRuntime } from "./runtime";

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { CustomUiRenderer } from "./CustomUiRenderer";
 
 interface CustomToolBodyProps {

@@ -217,6 +217,19 @@ Provider API keys are configured through the UI (Settings → Providers) and sto
 
 ---
 
-## License
+## License & Open Source
 
-Proprietary — internal use.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+Spaces is open-source software licensed under the [MIT License](LICENSE).
+
+---
+
+## Community & Contributing
+
+- [Contributing Guide](CONTRIBUTING.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Security Policy](SECURITY.md)
+- [Self-Hosting Guide](docs/self-hosting.md)
+- [Changelog](CHANGELOG.md)
+

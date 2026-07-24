@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { resolveAndValidate, validateUrl } from "./security";
 import { extractContent } from "./extractor";
 import { webFetchCache, type CacheEntry } from "./cache";

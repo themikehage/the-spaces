@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { useEffect, useState, useRef, useCallback } from "react";
 import {
   ReactFlow,

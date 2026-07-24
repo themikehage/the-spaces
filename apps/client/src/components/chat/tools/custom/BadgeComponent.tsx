@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 interface BadgeProps {
   text: string;
   variant?: "success" | "warning" | "error" | "info" | "neutral";

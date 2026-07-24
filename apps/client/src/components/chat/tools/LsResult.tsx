@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { openInWorkspace } from "./workspace";
 
 function getExtColor(name: string): string {
