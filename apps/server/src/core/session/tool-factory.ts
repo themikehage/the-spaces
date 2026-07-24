@@ -17,7 +17,7 @@ import { createUiTools } from "../tools/ui-tools";
 import { createFactoryTool } from "../tools/factory-tool";
 import { createPreviewTools } from "../tools/preview-tools";
 import { teamStore } from "../../teams/team-store";
-import { getTeamWorkspaceDir } from "shared";
+import { getTeamWorkspaceDir, type BaseTool, legacyToolToBaseTool } from "shared";
 import { userConfigManager } from "./user-config";
 import {
   createManageCustomToolsTool,
@@ -41,7 +41,7 @@ export interface CreateSessionToolsParams {
 }
 
 export class SessionToolFactory {
-  createSessionTools(params: CreateSessionToolsParams) {
+  createSessionTools(params: CreateSessionToolsParams): { customTools: BaseTool[]; hasExaKey: boolean } {
     const {
       username,
       sessionId,
@@ -135,8 +135,6 @@ export class SessionToolFactory {
       parentSessionId: sessionId,
     });
 
-
-
     const manageCustomToolsTool = createManageCustomToolsTool({
       username,
       sessionId,
@@ -152,29 +150,31 @@ export class SessionToolFactory {
     const activeCustomTools = activeCustomDefs.map((def: any) =>
       createCustomToolRuntime(def, {
         cwd: workspaceDir,
-        session: null as any, // resolved dynamically from sessionManager at execute time
+        session: null as any,
         username,
         sessionId,
       })
     );
 
-    const customTools = [
-      customBashTool as any,
-      readTool as any,
-      writeTool as any,
-      editTool as any,
-      grepTool as any,
-      findTool as any,
-      lsTool as any,
-      factoryTool as any,
-      manageCustomToolsTool as any,
-      ...activeCustomTools as any,
-      ...uiTools as any,
-      exaSearchTool as any,
-      webFetchTool as any,
-      ...memoryTools as any,
-      ...previewTools as any,
+    const rawTools = [
+      customBashTool,
+      readTool,
+      writeTool,
+      editTool,
+      grepTool,
+      findTool,
+      lsTool,
+      factoryTool,
+      manageCustomToolsTool,
+      ...activeCustomTools,
+      ...uiTools,
+      exaSearchTool,
+      webFetchTool,
+      ...memoryTools,
+      ...previewTools,
     ];
+
+    const customTools: BaseTool[] = rawTools.map((t) => legacyToolToBaseTool(t));
 
     return {
       customTools,

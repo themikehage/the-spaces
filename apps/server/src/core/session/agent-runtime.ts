@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { existsSync, mkdirSync } from "node:fs";
-import { type AgentDefinition } from "shared";
+import { type AgentDefinition, type BaseTool } from "shared";
 import { createAgentSession, DefaultResourceLoader } from "../../ai";
 import { resolveAgentContext, type ResolvedAgentContext } from "./agent-context-resolver";
 import { DefaultModelResolver } from "./model-resolver";
@@ -27,7 +27,7 @@ export interface AgentRuntimeConfig {
   };
   skipMemory?: boolean;
   resourceLoader?: DefaultResourceLoader;
-  customTools?: any[];
+  customTools?: BaseTool[];
 }
 
 export interface AgentRuntimeInstance {
@@ -150,6 +150,12 @@ export async function createAgentRuntime(config: AgentRuntimeConfig): Promise<Ag
     username,
   });
 
+  const { PluginManager } = await import("shared");
+  const { AuditLogPlugin, MemoryEnricherPlugin } = await import("../plugins");
+  const pluginManager = new PluginManager();
+  pluginManager.register(new AuditLogPlugin({ sessionId, username }));
+  pluginManager.register(new MemoryEnricherPlugin({ memory }));
+
   const { sessionManager: sessionStore } = await import("../../ai");
   const sessionManagerInstance = sessionStore.create(context.sessionDir, context.sessionDir);
 
@@ -159,7 +165,7 @@ export async function createAgentRuntime(config: AgentRuntimeConfig): Promise<Ag
     authStorage,
     modelRegistry,
     resourceLoader,
-    customTools: finalCustomTools,
+    customTools: finalCustomTools.map((t) => (t.toVendorFormat ? t.toVendorFormat() : t)),
     beforeToolCall,
     afterToolCall,
   });

@@ -10,10 +10,12 @@ El repositorio es un monorepo con workspaces de `pnpm`:
 - **`apps/landing`**: landing de producto en React, Vite y Tailwind CSS v4, rediseñada como una sala de control editorial que explica el flujo de delegación, ejecución y aprobación entre personas y agentes.
 - **`apps/server`**: servidor Bun + Hono. Expone API REST, autenticación, WebSocket y los servicios de ejecución del producto.
 - **`packages/shared`**: contratos, esquemas Zod, tipos y utilidades compartidos entre aplicaciones.
+- **`packages/spaces-sdk`**: paquete de espacio de trabajo que re-exporta la superficie pública de extensibilidad (Service Store, BaseTool, LLMRegistry, PluginManager y SpacesHost).
 
 ## Capacidades principales
 
 - Gestión de proyectos, sesiones, archivos y workspaces.
+- Extensibilidad de Arquitectura (Plan 09): Abstracción de Servicios (`ISessionStore`, `IArtifactStore`, `IMemoryStore` con implementaciones `File*Store` y `Memory*Store`), Abstracción de Herramientas (`BaseTool`, `FunctionTool`, `ToolRegistry` con namespaces y `legacyToolToBaseTool` adapter), Abstracción de Proveedores de Modelo (`BaseLlmProvider`, `LLMRegistry` y `ModelEnrichmentService`), Sistema de Plugins (`BasePlugin` y `PluginManager` con plugins `AuditLogPlugin`, `WsNotifyPlugin` y `MemoryEnricherPlugin`), y Empaquetado SDK interno `packages/spaces-sdk`.
 - Core SDK desacoplado en capas de contratos: `WorkspaceConfigPort` (para `.spaces/config.json` por workspace), `ModelResolver` (cascada de resolución de modelo por entidad), `ToolActivationEngine` basado en políticas (`toolOverrides` add/remove y categorización `TOOL_GROUPS`), inyección de contexto de memoria auto-recalled, hooks `afterToolCall` y motor unificado de instanciación de runtimes `createAgentRuntime(config)`.
 - Orquestación de agentes y equipos mediante la herramienta unificada `manage_delegations` y el registro de delegaciones orientado a eventos `DelegationRegistry.onEvent(...)`, desvinculado de dependencias circulares con WebSocket, que maneja subagentes aislados (`spawn`) y derivaciones (`delegate`), con control de cancelación (abort) desde UI y flujo de actividad en tiempo real.
 - Interfaz de integración `SpacesHost` (`ServerSpacesHost`) y documento de arquitectura abierta `ARCHITECTURE.md` para empaquetado y uso del runtime como biblioteca/SDK de código abierto.

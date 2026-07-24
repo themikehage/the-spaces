@@ -10,7 +10,15 @@ import { delegationRegistry } from "./delegation-registry";
 import { mcpRegistry } from "./mcp-registry";
 import { uiApprovalRegistry } from "./ui-approval-registry";
 
+import { FileSessionStore } from "./stores/file-session-store";
+import { FileArtifactStore } from "./stores/file-artifact-store";
+
 export class ServerSpacesHost implements SpacesHost {
+  stores = {
+    session: new FileSessionStore(),
+    artifact: new FileArtifactStore(process.cwd()),
+  };
+
   fs = {
     async readFile(path: string): Promise<string> {
       return readFileSync(path, "utf-8");

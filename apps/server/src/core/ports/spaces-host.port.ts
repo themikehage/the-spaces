@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-﻿import type { EnvelopeResult } from "shared";
+﻿import type { EnvelopeResult, ISessionStore, IArtifactStore, IMemoryStore } from "shared";
 import type { WorkspaceConfig } from "./workspace-config.port";
 import type { ModelResolutionContext } from "./model-resolver";
 
@@ -80,9 +80,15 @@ export interface SpacesHost {
   config: {
     load(workspaceDir: string): Promise<WorkspaceConfig | null>;
   };
+  stores?: {
+    session?: ISessionStore;
+    artifact?: IArtifactStore;
+    memory?: IMemoryStore;
+  };
   memory?: MemoryPort;
   mcp?: McpPort;
   agents?: AgentDirectoryPort;
   teams?: TeamDirectoryPort;
   scope?: ScopePort;
 }
+
