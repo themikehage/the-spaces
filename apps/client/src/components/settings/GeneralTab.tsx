@@ -60,6 +60,7 @@ export function GeneralTab() {
   >([]);
   const [settingsLoading, setSettingsLoading] = useState(true);
   const [subagentMaxDepth, setSubagentMaxDepth] = useState<number>(1);
+  const [showPromptPreviews, setShowPromptPreviews] = useState<boolean>(false);
 
   // Vision Diagnostic Test State
   const [visionTestPrompt, setVisionTestPrompt] = useState("Describe this image in one word");
@@ -210,6 +211,7 @@ export function GeneralTab() {
           setVideoGenModel(settingsData.videoGenModel || "");
           setVideoGenEnabled(settingsData.videoGenEnabled ?? true);
           setSubagentMaxDepth(settingsData.subagentMaxDepth ?? 1);
+          setShowPromptPreviews(settingsData.showPromptPreviews ?? false);
         }
 
         const modelsRes = await apiFetch("/api/models");
@@ -350,6 +352,21 @@ export function GeneralTab() {
       });
     } catch (err) {
       console.error("Failed to update subagent max depth settings:", err);
+    }
+  };
+
+  const handleToggleShowPromptPreviews = async (enabled: boolean) => {
+    setShowPromptPreviews(enabled);
+    try {
+      await apiFetch("/api/settings", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ showPromptPreviews: enabled }),
+      });
+    } catch (err) {
+      console.error("Failed to update show prompt previews setting:", err);
     }
   };
 
@@ -842,6 +859,21 @@ export function GeneralTab() {
               {l.warningMaxDepth}
             </p>
           )}
+        </div>
+      </div>
+
+      <div className="bg-card rounded-lg p-4 border border-input/30 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="pr-4">
+            <h3 className="text-foreground font-semibold text-sm">{l.showPromptPreviews}</h3>
+            <p className="text-muted-foreground text-[11px] mt-0.5">{l.showPromptPreviewsDesc}</p>
+          </div>
+          <input
+            type="checkbox"
+            checked={showPromptPreviews}
+            onChange={(e) => handleToggleShowPromptPreviews(e.target.checked)}
+            className="w-4 h-4 accent-accent rounded border-input bg-background cursor-pointer"
+          />
         </div>
       </div>
 

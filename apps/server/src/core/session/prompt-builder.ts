@@ -251,6 +251,173 @@ export class SessionPromptBuilder {
     }
     return { mode: "solo" };
   }
+
+  async previewSystemPrompt(params: {
+    username: string;
+    entityType: "global" | "agent" | "project" | "team" | "subagent";
+    agentId?: string;
+    projectId?: string;
+    teamId?: string;
+    subagentId?: string;
+  }): Promise<{
+    sections: Array<{ title: string; content: string }>;
+    fullPrompt: string;
+    estimatedTokens: number;
+  }> {
+    const { username, entityType, agentId, projectId, teamId, subagentId } = params;
+    const settings = userConfig.getUserSettings(username);
+    const sections: Array<{ title: string; content: string }> = [];
+
+    // 1. Agent Persona (if agent or subagent)
+    const targetAgentId = agentId || subagentId;
+    let agentDef: any = null;
+    if (targetAgentId) {
+      try {
+        const { agentRegistry } = await import("../../agents");
+        const entry = agentRegistry.get(targetAgentId, username);
+        if (entry?.server?.definition) {
+          agentDef = entry.server.definition;
+          sections.push({
+            title: `Agent Persona (${agentDef.name || targetAgentId})`,
+            content: agentDef.systemPrompt || "No custom system prompt defined.",
+          });
+        }
+      } catch (e) {
+        console.error("[PromptBuilder] Failed to load preview agent persona:", e);
+      }
+    }
+
+    // 2. Global Factory Instructions
+    if (settings.factorySystemPrompt) {
+      sections.push({
+        title: "Global Custom Spaces Instructions",
+        content: settings.factorySystemPrompt,
+      });
+    }
+
+    // 3. Project Context
+    const targetProjectId = projectId;
+    if (targetProjectId) {
+      try {
+        const projectDir = resolveProjectDir(username, targetProjectId);
+        if (projectDir) {
+          const projectJsonPath = join(projectDir, "project.json");
+          if (existsSync(projectJsonPath)) {
+            const projectMeta = JSON.parse(readFileSync(projectJsonPath, "utf-8"));
+            const { getPreviewState } = await import("../preview-watcher");
+            const previewState = getPreviewState(username, projectMeta.name);
+            const previewUrl = `/api/preview/${encodeURIComponent(username)}/${encodeURIComponent(projectMeta.name)}/index.html`;
+
+            const projectPrompt = buildProjectContextPrompt({
+              projectId: projectMeta.id,
+              projectName: projectMeta.name,
+              projectDir,
+              cloneUrl: projectMeta.cloneUrl,
+              previewState,
+              previewUrl,
+            });
+
+            let projectContextFull = projectPrompt;
+
+            if (projectMeta.assignment) {
+              const { assignment } = projectMeta;
+              if (assignment.leaderId) {
+                try {
+                  const { agentRegistry } = await import("../../agents");
+                  const leaderEntry = agentRegistry.get(assignment.leaderId, username);
+                  if (leaderEntry?.server.definition.systemPrompt) {
+                    projectContextFull +=
+                      `\n\n## Project Lead Agent Persona & Directives\n` +
+                      `This project has an assigned Lead Agent (${leaderEntry.server.definition.name || assignment.leaderId}). Incorporate the following lead instructions into your reasoning and execution:\n\n` +
+                      leaderEntry.server.definition.systemPrompt;
+                  }
+                } catch (err) {
+                  console.error("[PromptBuilder] Failed to load leader agent prompt in preview:", err);
+                }
+              }
+
+              if (Array.isArray(assignment.members) && assignment.members.length > 0) {
+                const roster = assignment.members
+                  .map(
+                    (m: { id: string; name: string; role: string }) =>
+                      `- **${m.name}** (ID: \`${m.id}\`, Role: ${m.role})`,
+                  )
+                  .join("\n");
+                projectContextFull +=
+                  `\n\n## Project Assigned Team Roster\n` +
+                  `The following team members are assigned to work on this project:\n` +
+                  roster;
+              }
+            }
+
+            sections.push({
+              title: `Project Context (${projectMeta.name})`,
+              content: projectContextFull,
+            });
+          }
+        }
+      } catch (e) {
+        console.error("[PromptBuilder] Failed to load project preview prompt:", e);
+      }
+    }
+
+    // 4. Team Context
+    const targetTeamId = teamId;
+    if (targetTeamId) {
+      try {
+        const { teamStore } = await import("../../teams/team-store");
+        const team = teamStore.getTeam(username, targetTeamId);
+        if (team) {
+          let teamContent = `Team: ${team.name} (Type: ${team.teamType || "General"})\nDescription: ${team.description || "N/A"}`;
+          if (team.context && team.context.length > 0) {
+            teamContent +=
+              `\n\n## Team Context Variables\n` +
+              team.context.map((it: any) => `- ${it.key}: ${it.value}`).join("\n");
+          }
+          sections.push({
+            title: `Team Context (${team.name})`,
+            content: teamContent,
+          });
+        }
+      } catch (e) {
+        console.error("[PromptBuilder] Failed to load team preview prompt:", e);
+      }
+    }
+
+    // 5. Custom Tools Context
+    try {
+      const { customToolStorage } = await import("../custom-tools/storage");
+      const customDefs = customToolStorage
+        .loadAll(username)
+        .filter((d: any) => d.enabled !== false);
+      if (customDefs.length > 0) {
+        sections.push({
+          title: "Custom Registered Tools",
+          content:
+            `You have ${customDefs.length} custom tool(s) registered:\n` +
+            `${customDefs.map((t: any) => `- ${t.name}: ${t.description}`).join("\n")}`,
+        });
+      }
+    } catch (e) {
+      console.error("[PromptBuilder] Failed to load custom tools for preview:", e);
+    }
+
+    // 6. Custom Tool Instructions
+    sections.push({
+      title: "Built-in Tool Guidelines",
+      content: CUSTOM_TOOL_INSTRUCTIONS,
+    });
+
+    const fullPrompt = sections.map((s) => `--- ${s.title} ---\n${s.content}`).join("\n\n");
+    const estimatedTokens = Math.ceil(fullPrompt.length / 4);
+
+    return {
+      sections,
+      fullPrompt,
+      estimatedTokens,
+    };
+  }
 }
 
 export const sessionPromptBuilder = new SessionPromptBuilder();
+

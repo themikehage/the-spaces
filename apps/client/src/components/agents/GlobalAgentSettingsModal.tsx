@@ -6,6 +6,7 @@ import { apiFetch } from "@/lib/api";
 import { DEFAULT_AVATAR_PREFIX, isDefaultAvatar } from "@/lib/defaultAvatars";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { SystemPromptViewer } from "@/components/prompts/SystemPromptViewer";
 import { literals as u } from "./GlobalAgentSettingsModal.literals";
 
 interface Props {
@@ -190,6 +191,8 @@ export function GlobalAgentSettingsModal({ onClose, onSaveSuccess }: Props) {
               className="w-full px-3 py-2 bg-bg border border-input rounded-xl text-sm text-foreground focus:outline-none focus:border-accent font-mono resize-none"
             />
           </div>
+
+          <SystemPromptViewer entityType="global" title="Global System Prompt Inspector" />
 
           {error && (
             <div className="p-3 bg-error/10 border border-error/20 text-error rounded-xl text-xs font-semibold">

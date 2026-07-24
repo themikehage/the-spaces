@@ -6,6 +6,7 @@ import { DEFAULT_AVATAR_PREFIX, isDefaultAvatar } from "@/lib/defaultAvatars";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import type { Team } from "shared";
+import { SystemPromptViewer } from "@/components/prompts/SystemPromptViewer";
 import { literals as u } from "./TeamSettingsModal.literals";
 
 interface Props {
@@ -259,6 +260,12 @@ export function TeamSettingsModal({
                 <span>{l.streamingEnabled}</span>
               </label>
             </div>
+
+            <SystemPromptViewer
+              entityType="team"
+              teamId={team.id}
+              title={`Team System Prompt Inspector (${name})`}
+            />
 
             <div className="flex justify-end gap-2 pt-4 border-t border-input bg-card flex-shrink-0">
               <button

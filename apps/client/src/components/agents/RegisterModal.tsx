@@ -7,6 +7,7 @@ import { DEFAULT_AVATAR_PREFIX, isDefaultAvatar } from "@/lib/defaultAvatars";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import type { AgentDefinition, AgentInfo } from "shared";
+import { SystemPromptViewer } from "@/components/prompts/SystemPromptViewer";
 import { literals as u } from "./RegisterModal.literals";
 
 const KNOWN_SERIAL_TOOLS = [
@@ -318,6 +319,12 @@ export function RegisterModal({
               className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none font-mono leading-relaxed"
             />
           </div>
+
+          <SystemPromptViewer
+            entityType="agent"
+            agentId={form.id || agent?.id}
+            title={`Agent System Prompt Inspector (${form.name || form.id || "New Agent"})`}
+          />
 
           <details className="group border border-input rounded-lg bg-background/30 overflow-hidden">
             <summary className="flex items-center justify-between px-3 py-2 cursor-pointer select-none hover:bg-card-hover/40 transition-colors text-xs font-semibold text-foreground">

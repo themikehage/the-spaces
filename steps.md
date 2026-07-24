@@ -91,6 +91,9 @@
   - [x] Corregir regresión de metadatos de contexto (projectId, agentId, teamId) en la creación de sesiones (`POST /api/sessions`).
 - [x] Desacoplar `ask_question` de las modales globales de aprobaciones e implementar el **Attention Hub** (centro de atención en la TopBar con popover y navegación a sesiones).
 - [x] Auditoría y saneamiento del módulo de delegaciones: eliminación de acoplamiento a singletons en `manage_delegations` y rutas REST, protección contra bucles infinitos en `getSubagentDepth`, sincronización WS de delegaciones interrumpidas y corrección del typecheck de TypeScript en `apps/server`.
+- [x] Implementar Hito 01 de Pre-OSS Stabilization (`plans/11-pre-oss-stabilization/01-session-create-semantics.md`): Restaurar la semántica completa de `POST /api/sessions` (Orchestration-Only), extraer el helper `createUserSession`, eliminar handlers sombra legacy y remover referencias a `Negotiation`.
+- [x] Implementar Hito 05 de Pre-OSS Stabilization (`plans/11-pre-oss-stabilization/05-runtime-tool-catalog.md`): Unificar el catálogo de herramientas en `packages/shared/src/tools-catalog.ts`, refactorizar los perfiles de inicio mediante `bootstrapAgentSession`, consolidar la política de memoria y eliminar arrays hardcodeados locales de tools.
+- [x] Implementar la configuración "Show System Prompts" (Inspector de Prompts del Sistema): Motor dry-run en `SessionPromptBuilder.previewSystemPrompt`, endpoint `POST /api/prompts/preview`, switch de usuario `showPromptPreviews` y componente UI `<SystemPromptViewer />` inyectado en ajustes de Agente Global, Agentes, Sub-agentes, Repositorios y Equipos.
 
 ## Criterio de cierre del sprint
 

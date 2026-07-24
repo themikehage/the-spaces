@@ -64,6 +64,7 @@ settingsRouter.get("/", (c) => {
     factoryName: settings.factoryName ?? "Spaces",
     factoryAvatarUrl: settings.factoryAvatarUrl ?? null,
     factorySystemPrompt: settings.factorySystemPrompt ?? "",
+    showPromptPreviews: settings.showPromptPreviews ?? false,
     previewBaseUrl: process.env.PREVIEW_BASE_URL ?? null,
   });
 });
@@ -83,6 +84,7 @@ settingsRouter.patch("/", async (c) => {
       factoryName?: string;
       factoryAvatarUrl?: string | null;
       factorySystemPrompt?: string;
+      showPromptPreviews?: boolean;
     }>();
 
     const updates: Record<string, any> = {};
@@ -122,6 +124,9 @@ settingsRouter.patch("/", async (c) => {
     }
     if (body.factorySystemPrompt !== undefined) {
       updates.factorySystemPrompt = String(body.factorySystemPrompt);
+    }
+    if (body.showPromptPreviews !== undefined) {
+      updates.showPromptPreviews = !!body.showPromptPreviews;
     }
 
     sessionManager.userConfig.saveUserSettings(username, updates);

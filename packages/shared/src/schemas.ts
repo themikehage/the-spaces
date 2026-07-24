@@ -48,52 +48,14 @@ export const ModelSettingsSchema = z.object({
   thinkingLevel: z.enum(["off", "minimal", "low", "medium", "high", "xhigh"]),
 });
 
-export const AVAILABLE_TOOLS = [
-  "read",
-  "write",
-  "edit",
-  "bash",
-  "grep",
-  "find",
-  "ls",
-  "request_approval",
-  "ask_question",
-  "render_images",
-  "render_chart",
-  "render_html",
-  "share_file",
-  "refresh_ui",
-  "manage_delegations",
-  "exa_search",
-  "web_fetch",
-  "decompose_tasks",
-  "update_task_status",
-  "complete_task_list",
-  "memory_store",
-  "memory_recall",
-  "memory_forget",
-  "create_experiment",
-  "vision",
-  "generate_image",
-  "manage_factory",
-  "manage_pipelines",
-  "manage_preview",
-] as const;
-export type ToolName = (typeof AVAILABLE_TOOLS)[number];
+export {
+  AVAILABLE_TOOLS,
+  TOOL_GROUPS,
+  DEFAULT_ALWAYS_ON_TOOLS,
+  type ToolName,
+  type ToolGroup,
+} from "./tools-catalog";
 
-export const TOOL_GROUPS = {
-  fs: ["read", "write", "edit", "grep", "find", "ls"],
-  execution: ["bash", "manage_preview"],
-  communication: ["request_approval", "ask_question", "share_file", "refresh_ui"],
-  ui: ["render_images", "render_chart", "render_html"],
-  delegation: ["manage_delegations"],
-  web: ["exa_search", "web_fetch"],
-  task: ["decompose_tasks", "update_task_status", "complete_task_list"],
-  memory: ["memory_store", "memory_recall", "memory_forget"],
-  media: ["vision", "generate_image"],
-  meta: ["manage_factory", "create_experiment", "manage_pipelines"],
-} as const;
-export type ToolGroup = keyof typeof TOOL_GROUPS;
 
 export const ToolPermissionsSchema = z.object({
   tools: z.array(z.string().min(1)),
@@ -864,3 +826,35 @@ export type Project = z.infer<typeof ProjectSchema>;
 
 export const AutonomyLevelSchema = z.enum(["auto", "propose", "suggest"]);
 export type AutonomyLevel = z.infer<typeof AutonomyLevelSchema>;
+
+export const PromptPreviewEntityTypeSchema = z.enum([
+  "global",
+  "agent",
+  "project",
+  "team",
+  "subagent",
+]);
+export type PromptPreviewEntityType = z.infer<typeof PromptPreviewEntityTypeSchema>;
+
+export const PromptPreviewRequestSchema = z.object({
+  entityType: PromptPreviewEntityTypeSchema,
+  agentId: z.string().optional(),
+  projectId: z.string().optional(),
+  teamId: z.string().optional(),
+  subagentId: z.string().optional(),
+});
+export type PromptPreviewRequest = z.infer<typeof PromptPreviewRequestSchema>;
+
+export const PromptPreviewSectionSchema = z.object({
+  title: z.string(),
+  content: z.string(),
+});
+export type PromptPreviewSection = z.infer<typeof PromptPreviewSectionSchema>;
+
+export const PromptPreviewResponseSchema = z.object({
+  sections: z.array(PromptPreviewSectionSchema),
+  fullPrompt: z.string(),
+  estimatedTokens: z.number(),
+});
+export type PromptPreviewResponse = z.infer<typeof PromptPreviewResponseSchema>;
+

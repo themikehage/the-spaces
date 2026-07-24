@@ -26,6 +26,7 @@ import { logsRouter } from "./routes/logs";
 import { mcpRouter } from "./routes/mcp";
 import { modelsRouter } from "./routes/models";
 import { previewRouter } from "./routes/preview";
+import { promptsRouter } from "./routes/prompts";
 import { providersRouter } from "./routes/providers";
 import { sessionsRouter } from "./routes/sessions/index";
 import { settingsRouter } from "./routes/settings";
@@ -36,6 +37,8 @@ import { createWsContext } from "./ws/factory";
 
 import { authRateLimiter, generalRateLimiter } from "./core/middleware/rate-limiter";
 import { securityHeadersMiddleware } from "./core/middleware/security-headers";
+import { resolveCorsOrigin } from "./core/security/cors";
+import { purgeExpiredSessions } from "./auth/ephemeral-tool-session";
 
 sessionMetadataStore.setTeamReader({
   getTeamType(username: string, teamId: string): string | null {
@@ -47,8 +50,23 @@ sessionMetadataStore.setTeamReader({
 const PREVIEW_HOST = (process.env.PREVIEW_HOST ?? "").toLowerCase();
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? "")
   .split(",")
-  .map((o) => o.trim())
-  .filter(Boolean);
+const isProduction =
+  process.env.NODE_ENV === "production" ||
+  process.env.SPACES_ENV === "production";
+
+if (isProduction && ALLOWED_ORIGINS.length === 0) {
+  console.warn(
+    "[Security Warning] Running in production with empty ALLOWED_ORIGINS. Cross-origin browser requests will be blocked (CORS fail-closed).",
+  );
+  if (process.env.SPACES_STRICT_SECURITY === "1") {
+    console.error(
+      "[Security Error] SPACES_STRICT_SECURITY=1 requires ALLOWED_ORIGINS to be configured in production.",
+    );
+    process.exit(1);
+  }
+}
+
+purgeExpiredSessions();
 
 const { upgradeWebSocket, websocket } = createBunWebSocket();
 
@@ -62,11 +80,12 @@ app.use("/api/auth/*", authRateLimiter());
 app.use(
   "/*",
   cors({
-    origin: (origin) => {
-      if (!origin) return null;
-      if (ALLOWED_ORIGINS.length === 0) return origin; // development mode default
-      return ALLOWED_ORIGINS.includes(origin) ? origin : null;
-    },
+    origin: (origin) =>
+      resolveCorsOrigin({
+        origin,
+        allowedOrigins: ALLOWED_ORIGINS,
+        isProduction,
+      }),
     credentials: true,
     allowHeaders: ["Content-Type", "Authorization", "X-Request-Id"],
     allowMethods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
@@ -80,12 +99,15 @@ app.get("/api/health", (c) =>
     status: "ok",
     version: "1.0.0",
     uptime: process.uptime(),
-    dataPath: SPACES_DATA_PATH(),
+    ...(!isProduction || process.env.SPACES_HEALTH_VERBOSE === "1"
+      ? { dataPath: SPACES_DATA_PATH() }
+      : {}),
     timestamp: Date.now(),
   }),
 );
 
 app.route("/api/preview", previewRouter);
+app.route("/api/prompts", promptsRouter);
 app.route("/api/auth", authRouter);
 app.on(["GET", "POST"], "/api/auth/**", (c) => auth.handler(c.req.raw));
 app.route("/api/sessions", sessionsRouter);

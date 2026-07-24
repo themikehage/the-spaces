@@ -6,6 +6,7 @@ import { DEFAULT_AVATAR_PREFIX, isDefaultAvatar } from "@/lib/defaultAvatars";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { ProjectAssignmentPanel } from "./ProjectAssignmentPanel";
+import { SystemPromptViewer } from "@/components/prompts/SystemPromptViewer";
 import { literals as u } from "./ProjectSettingsModal.literals";
 
 interface Project {
@@ -262,6 +263,12 @@ export function ProjectSettingsModal({
             <div className="pt-2">
               <ProjectAssignmentPanel projectId={project.id} />
             </div>
+
+            <SystemPromptViewer
+              entityType="project"
+              projectId={project.id}
+              title={`Project System Prompt Inspector (${name})`}
+            />
 
             {error && (
               <div className="p-3 bg-error/10 border border-error/20 text-error rounded-xl text-xs font-semibold">
