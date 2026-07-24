@@ -164,10 +164,16 @@ export class AgentSession {
         parameters,
         execute: async (toolCallId, params, signal, onUpdate) => {
           let res: any;
-          if (toolDef.declaration || (toolDef.execute && toolDef.execute.length <= 2)) {
-            res = await toolDef.execute(params, signal);
+          if (typeof toolDef.execute === "function") {
+            if (toolDef.execute.length === 1) {
+              res = await toolDef.execute(params, signal);
+            } else if (toolDef.execute.length === 0) {
+              res = await toolDef.execute();
+            } else {
+              res = await toolDef.execute(toolCallId, params, signal, onUpdate);
+            }
           } else {
-            res = await toolDef.execute(toolCallId, params, signal, onUpdate);
+            res = "";
           }
 
           if (res && typeof res === "object" && "content" in res && Array.isArray(res.content)) {

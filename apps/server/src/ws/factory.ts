@@ -606,7 +606,10 @@ export function createWsContext(): WsConnectionContext {
         const action = data.action as string;
         const payload = data.payload as Record<string, any> | undefined;
         if (componentId && action) {
-          const resolved = uiApprovalRegistry.resolve(componentId, { action, payload });
+          const mappedAction = action === "confirm" ? "approve" : action === "deny" ? "deny" : action;
+          const resolved =
+            uiApprovalRegistry.resolve(componentId, { action, payload }) ||
+            approvalManager.resolve(componentId, { action: mappedAction as any, payload });
           if (resolved) {
             safeSend(ws, JSON.stringify({ type: "ui_action_acknowledged", componentId }));
           } else {

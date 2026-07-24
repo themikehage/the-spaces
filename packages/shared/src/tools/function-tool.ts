@@ -7,6 +7,7 @@ export interface FunctionToolConfig<T = Record<string, unknown>> {
   schema?: unknown;
   parameters?: Record<string, unknown>;
   execute: (
+    toolCallId: string,
     args: T,
     signal?: AbortSignal,
   ) => Promise<ToolResult | string | Record<string, unknown>>;
@@ -17,6 +18,7 @@ export class FunctionTool<T = Record<string, unknown>> implements BaseTool {
   readonly description: string;
   readonly declaration: ToolDeclaration;
   private readonly executeFn: (
+    toolCallId: string,
     args: T,
     signal?: AbortSignal,
   ) => Promise<ToolResult | string | Record<string, unknown>>;
@@ -33,10 +35,10 @@ export class FunctionTool<T = Record<string, unknown>> implements BaseTool {
     this.executeFn = config.execute;
   }
 
-  async execute(args: unknown, signal?: AbortSignal): Promise<ToolResult> {
+  async execute(toolCallId: string, args: unknown, signal?: AbortSignal): Promise<ToolResult> {
     const startTime = Date.now();
     try {
-      const rawRes = await this.executeFn(args as T, signal);
+      const rawRes = await this.executeFn(toolCallId, args as T, signal);
       const durationMs = Date.now() - startTime;
       if (typeof rawRes === "string") {
         return { content: rawRes, metadata: { durationMs } };
@@ -73,8 +75,8 @@ export class FunctionTool<T = Record<string, unknown>> implements BaseTool {
       name: this.name,
       description: this.description,
       schema: this.declaration.schema || this.declaration.parameters,
-      execute: async (args: any) => {
-        const res = await this.execute(args);
+      execute: async (toolCallId: string, args: any) => {
+        const res = await this.execute(toolCallId, args);
         return res.content;
       },
     };

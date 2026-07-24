@@ -25,6 +25,6 @@ export interface BaseTool {
   readonly name: string;
   readonly description: string;
   readonly declaration: ToolDeclaration;
-  execute(args: unknown, signal?: AbortSignal): Promise<ToolResult>;
+  execute(toolCallId: string, args: unknown, signal?: AbortSignal): Promise<ToolResult>;
   toVendorFormat?(): Record<string, unknown>;
 }
