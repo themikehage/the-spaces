@@ -24,3 +24,8 @@ export type { BaseLlmProvider, ProviderCapabilities, ProviderModelInfo } from "s
 // Plugin System Abstraction
 export { BasePlugin, PluginManager } from "shared";
 export type { ModelCallContext, SessionContext, ToolCallContext } from "shared";
+
+// Declarative Agent Config Schema
+export { SpacesAgentConfigSchema } from "shared";
+export type { SpacesAgentConfig } from "shared";
+

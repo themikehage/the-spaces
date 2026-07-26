@@ -7,7 +7,6 @@ import { DEFAULT_AVATAR_PREFIX, isDefaultAvatar } from "@/lib/defaultAvatars";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import type { AgentDefinition, AgentInfo } from "shared";
-import { EntityConfigEditor } from "@/components/shared/EntityConfigEditor";
 import { SystemPromptViewer } from "@/components/prompts/SystemPromptViewer";
 import { literals as u } from "./RegisterModal.literals";
 
@@ -320,15 +319,6 @@ export function RegisterModal({
               className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none font-mono leading-relaxed"
             />
           </div>
-
-          {(agent?.id || form.id) && (
-            <EntityConfigEditor
-              entityType="agent"
-              entityId={agent?.id || form.id}
-              title={`Configuración de Workspace (${form.name || form.id})`}
-              description="Sobreescribe modelos, herramientas y permisos específicos de este agente."
-            />
-          )}
 
           <SystemPromptViewer
             entityType="agent"

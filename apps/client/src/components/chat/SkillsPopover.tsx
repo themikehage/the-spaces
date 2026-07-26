@@ -96,7 +96,7 @@ export function SkillsPopover({
               const isSelected = idx === selectedIndex;
               return (
                 <button
-                  key={s.name}
+                  key={`${s.scope}-${s.name}-${idx}`}
                   type="button"
                   onClick={() => {
                     onSelectSkill(s.name);

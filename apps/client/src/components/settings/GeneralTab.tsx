@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-import { EntityConfigEditor } from "@/components/shared/EntityConfigEditor";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLiterals } from "@/lib";
@@ -1119,15 +1118,6 @@ export function GeneralTab() {
             </button>
           )}
         </div>
-      </div>
-
-      <div className="pt-6 border-t border-neutral-800">
-        <EntityConfigEditor
-          entityType="global"
-          entityId="global"
-          title="Configuración Global de Workspace"
-          description="Establece los defaults base para toda la plataforma (modelos, permisos y herramientas)."
-        />
       </div>
 
       {showOverwriteModal && (

@@ -19,7 +19,7 @@ import { authMiddleware, getAuthPayload } from "../middleware/auth";
 
 import { existsSync as _existsSync, readFileSync as _readFileSync } from "node:fs";
 import { join as _join } from "node:path";
-import { getTeamWorkspaceDir } from "shared";
+import { getAgentWorkspaceDir, getProjectWorkspaceDir, getTeamWorkspaceDir } from "shared";
 import { agentRegistry } from "../agents";
 import { delegationRegistry } from "../core/delegation-registry";
 import { resolveProjectDir } from "../core/session/workspace-resolver";
@@ -707,6 +707,35 @@ sessionsRouter.post("/:id/model", zValidator("json", ModelSettingsSchema), async
   }
 
   try {
+    const meta = sessionManager.metadataStore.getSessionMetadata(username, sessionId);
+    if (meta?.agentId || meta?.projectId || meta?.teamId) {
+      const targetDir = meta.teamId
+        ? getTeamWorkspaceDir(username, meta.teamId)
+        : meta.projectId
+          ? getProjectWorkspaceDir(username, meta.projectId)
+          : getAgentWorkspaceDir(username, meta.agentId!);
+
+      if (targetDir) {
+        const dotSpacesDir = join(targetDir, ".spaces");
+        if (!existsSync(dotSpacesDir)) {
+          mkdirSync(dotSpacesDir, { recursive: true });
+        }
+        const cfgPath = join(dotSpacesDir, "config.json");
+        let cfg: Record<string, unknown> = {};
+        if (existsSync(cfgPath)) {
+          try {
+            cfg = JSON.parse(readFileSync(cfgPath, "utf-8"));
+          } catch {}
+        }
+        cfg.defaultModel = `${provider}/${modelId}`;
+        writeFileSync(cfgPath, JSON.stringify(cfg, null, 2), "utf-8");
+      }
+    }
+  } catch (e) {
+    console.error("[POST /:id/model] Error persisting entity model config:", e);
+  }
+
+  try {
     const contextUsage = session.getContextUsage();
     const sessionStats = session.getSessionStats();
     if (contextUsage || sessionStats) {
@@ -859,6 +888,42 @@ sessionsRouter.post("/:id/tools", zValidator("json", ToolPermissionsSchema), asy
   }
   if (autonomyLevel) {
     sessionManager.metadataStore.setAutonomyLevel(username, sessionId, autonomyLevel);
+  }
+
+  try {
+    const meta = sessionManager.metadataStore.getSessionMetadata(username, sessionId);
+    if (meta?.agentId || meta?.projectId || meta?.teamId) {
+      const targetDir = meta.teamId
+        ? getTeamWorkspaceDir(username, meta.teamId)
+        : meta.projectId
+          ? getProjectWorkspaceDir(username, meta.projectId)
+          : getAgentWorkspaceDir(username, meta.agentId!);
+
+      if (targetDir) {
+        const dotSpacesDir = join(targetDir, ".spaces");
+        if (!existsSync(dotSpacesDir)) {
+          mkdirSync(dotSpacesDir, { recursive: true });
+        }
+        const cfgPath = join(dotSpacesDir, "config.json");
+        let cfg: Record<string, unknown> = {};
+        if (existsSync(cfgPath)) {
+          try {
+            cfg = JSON.parse(readFileSync(cfgPath, "utf-8"));
+          } catch {}
+        }
+        if (executionMode) {
+          cfg.executionMode = executionMode;
+        }
+        if (Array.isArray(tools)) {
+          cfg.toolOverrides = {
+            add: tools,
+          };
+        }
+        writeFileSync(cfgPath, JSON.stringify(cfg, null, 2), "utf-8");
+      }
+    }
+  } catch (e) {
+    console.error("[POST /:id/tools] Error persisting entity tools config:", e);
   }
 
   return c.json({ success: true, tools, executionMode, autonomyLevel });

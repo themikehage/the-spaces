@@ -58,9 +58,9 @@ export function SkillsSelector({ skills, loading, onSelectSkill, disabled = fals
         title={`Session Skills (${skills.length} detected)`}
       >
         <div className="p-3 space-y-1.5 bg-card">
-          {skills.map((s) => (
+          {skills.map((s, idx) => (
             <div
-              key={s.name}
+              key={`${s.scope}-${s.name}-${idx}`}
               onClick={() => {
                 if (onSelectSkill) {
                   onSelectSkill(s.name);

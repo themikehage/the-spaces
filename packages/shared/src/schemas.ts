@@ -881,4 +881,24 @@ export const EntityConfigSchema = z
   .passthrough();
 export type EntityConfigType = z.infer<typeof EntityConfigSchema>;
 
+export const SpacesAgentConfigSchema = z.object({
+  name: z.string(),
+  model: z.string().optional(),
+  instruction: z.string(),
+  description: z.string().optional(),
+  tools: z.array(z.any()).optional(),
+  temperature: z.number().optional(),
+  maxTokens: z.number().int().optional(),
+  thinkingLevel: z.enum(["off", "minimal", "low", "medium", "high"]).optional(),
+  executionMode: z.enum(["readonly", "standard", "autonomous"]).optional(),
+  skills: z.array(z.string()).optional(),
+  memory: z.boolean().optional().default(true),
+  workspaceDir: z.string().optional(),
+  plugins: z.array(z.any()).optional(),
+});
+export type SpacesAgentConfig = z.input<typeof SpacesAgentConfigSchema>;
+export type ResolvedSpacesAgentConfig = z.output<typeof SpacesAgentConfigSchema>;
+
+
+
 

@@ -171,9 +171,9 @@ export function SkillsPage() {
               </div>
             </div>
             <div className="flex-1 overflow-y-auto p-2 space-y-1">
-              {filteredSkills.map((s) => (
+              {filteredSkills.map((s, idx) => (
                 <button
-                  key={s.name}
+                  key={`${s.scope}-${s.name}-${idx}`}
                   onClick={() => {
                     setSelectedSkill(s);
                     setMobileShowDetails(true);

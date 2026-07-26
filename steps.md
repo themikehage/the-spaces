@@ -96,6 +96,8 @@
 - [x] Implementar la configuración "Show System Prompts" (Inspector de Prompts del Sistema): Motor dry-run en `SessionPromptBuilder.previewSystemPrompt`, endpoint `POST /api/prompts/preview`, switch de usuario `showPromptPreviews` y componente UI `<SystemPromptViewer />` inyectado en ajustes de Agente Global, Agentes, Sub-agentes, Repositorios y Equipos.
 - [x] Implementar Hito 12 — Entity Config Cascade (`CascadeConfigLoader`): Abstracción `EntityConfig`, `deepMerge` con deduplicación y overrides, resolución en cascada `global -> entity (team > project > agent)`, wiring en runtimes (`DefaultModelResolver`, `ToolActivationEngine`, `PermissionEngine`), sub-router REST `/api/config` y endpoint de conveniencia `GET /api/sessions/:id/config`.
 - [x] Implementar Interfaz UI de Configuración por Entidad: Componente reutilizable `EntityConfigEditor`, hook de React `useEntityConfig`, indicadores visuales de herencia/override e integración completa en paneles de Ajustes Globales (`GeneralTab`), Proyectos (`ProjectSettingsModal`), Agentes (`RegisterModal`) y Equipos (`TeamDetailPage`). Verificación completa de cero regresiones.
+- [x] Implementar Plan 13 — Agent SDK Abstraction: `SpacesAgent` declarativo, `SpacesRunner` standalone, esquema `SpacesAgentConfigSchema`, re-exportación pública de contratos en `spaces-sdk` y factorías de herramientas built-in (`createBashTool`, `createReadTool`, `createWriteTool`, etc.) con suite de pruebas unitarias (`spaces-agent.test.ts`).
+
 
 ## Criterio de cierre del sprint
 

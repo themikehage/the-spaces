@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-import { EntityConfigEditor } from "@/components/shared/EntityConfigEditor";
 import { EntityAvatar } from "@/components/shared/EntityAvatar";
 import { TeamInput } from "@/components/teams/TeamInput";
 import { AddTeamMemberModal } from "@/components/teams/TeamMembersModal";
@@ -9,7 +8,7 @@ import { useAgents } from "@/hooks/useAgents";
 import { useTeam } from "@/hooks/useTeam";
 import { useLiterals } from "@/lib";
 import { apiFetch } from "@/lib/api";
-import { BarChart, MessageSquare, RefreshCw, Sliders } from "lucide-react";
+import { BarChart, MessageSquare, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Cell,
@@ -54,7 +53,7 @@ export function TeamDetailPage({ teamId, onNavigate }: Props) {
 
   const { agents: registeredAgents } = useAgents();
 
-  const [activeSubTab, setActiveSubTab] = useState<"chat" | "analytics" | "config">("chat");
+  const [activeSubTab, setActiveSubTab] = useState<"chat" | "analytics">("chat");
 
   const [showMembersSidebar, setShowMembersSidebar] = useState(true);
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
@@ -163,10 +162,6 @@ export function TeamDetailPage({ teamId, onNavigate }: Props) {
             <button onClick={() => setActiveSubTab("analytics")} className={tabClass("analytics")}>
               <BarChart className="w-3.5 h-3.5" />
               <span>{l.tabAnalytics}</span>
-            </button>
-            <button onClick={() => setActiveSubTab("config")} className={tabClass("config")}>
-              <Sliders className="w-3.5 h-3.5" />
-              <span>Configuración</span>
             </button>
           </div>
         </div>
@@ -326,17 +321,6 @@ export function TeamDetailPage({ teamId, onNavigate }: Props) {
                 </div>
               </div>
             )}
-          </div>
-        )}
-
-        {activeSubTab === "config" && (
-          <div className="flex-1 overflow-y-auto p-6 max-w-3xl mx-auto w-full">
-            <EntityConfigEditor
-              entityType="team"
-              entityId={teamId}
-              title={`Configuración de Workspace (${team.name})`}
-              description="Define los defaults heredables de modelo, permisos y herramientas para todos los miembros del equipo."
-            />
           </div>
         )}
       </div>
