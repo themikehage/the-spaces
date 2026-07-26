@@ -9,6 +9,7 @@ import {
   getTeamWorkspaceDir,
   getUserDir,
   getWorkspaceDir,
+  getGlobalAgentsMdPath,
   getWorkspaceSkillsDir,
   SessionPrefix,
 } from "shared";
@@ -76,12 +77,14 @@ export function ensureWorkspaceStructure(username: string): string {
   ensureWorkspaceSubdirs(workspaceDir);
   mkdirSync(getProjectsDir(username), { recursive: true });
 
-  const agentsMdPath = join(workspaceDir, "AGENTS.md");
+  const agentsMdPath = getGlobalAgentsMdPath(username);
   if (!existsSync(agentsMdPath)) {
     try {
-      writeFileSync(agentsMdPath, DEFAULT_AGENTS_MD, "utf-8");
+      const legacyPath = join(workspaceDir, "AGENTS.md");
+      const content = existsSync(legacyPath) ? readFileSync(legacyPath, "utf-8") : DEFAULT_AGENTS_MD;
+      writeFileSync(agentsMdPath, content, "utf-8");
     } catch (e) {
-      console.error("Failed to write AGENTS.md:", e);
+      console.error("Failed to write .spaces/AGENTS.md:", e);
     }
   }
 

@@ -21,7 +21,7 @@ export type PromptAssemblyMode =
 export interface PromptAssemblyContext {
   mode: PromptAssemblyMode;
   workspaceDir: string;
-  agentDef?: { name: string; role: string; systemPrompt: string };
+  agentDef?: { name: string; systemPrompt: string };
   deployment?: DeploymentContext;
   subagentTask?: string;
   subagentRole?: string;
@@ -91,7 +91,7 @@ export function assemblePromptAppends(ctx: PromptAssemblyContext): string[] {
     case "agent-startup": {
       const deployment = ctx.deployment || { mode: "solo" };
       const layered = promptComposer.compose(
-        ctx.agentDef || { name: "", role: "", systemPrompt: "" },
+        ctx.agentDef || { name: "", systemPrompt: "" },
         deployment,
         ctx.workspaceDir,
       );
@@ -107,7 +107,7 @@ export function assemblePromptAppends(ctx: PromptAssemblyContext): string[] {
       // Agents must stay focused on the debate topic.
       const deployment = ctx.deployment || { mode: "negotiation-team" };
       const layered = promptComposer.compose(
-        ctx.agentDef || { name: "", role: "", systemPrompt: "" },
+        ctx.agentDef || { name: "", systemPrompt: "" },
         deployment,
         ctx.workspaceDir,
       );

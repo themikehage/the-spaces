@@ -63,8 +63,8 @@ export function AgentFlowNode({ data }: NodeProps<AgentNode>) {
   const theme = ROLE_THEME[role] ?? ROLE_THEME.member;
   const name = agentInfo?.name || member.agentId;
   const isOrphan = !agentInfo;
-  const agentRole = agentInfo ? agentInfo.role || "agent" : "Deleted Agent";
-  const skills = agentInfo?.skills || [];
+  const agentRole = member.role || "member";
+  const skills: string[] = [];
 
   const isStreaming = !!streamingState;
   const sessionDot =

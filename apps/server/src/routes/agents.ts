@@ -79,7 +79,6 @@ agentsRouter.post("/", zValidator("json", AgentDefinitionSchema), async (c) => {
       {
         id: definition.id,
         name: definition.name,
-        role: definition.role,
         status: entry.status,
         createdAt: entry.createdAt,
       },
@@ -100,10 +99,8 @@ agentsRouter.get("/:id", (c) => {
   return c.json({
     id,
     name: entry.server.definition.name,
-    role: entry.server.definition.role,
     status: entry.status,
     streaming: entry.server.session.isStreaming,
-    port: entry.server.definition.port,
     createdAt: entry.createdAt,
     definition: entry.server.definition,
     activeObservers: entry.server.getActiveObservers ? entry.server.getActiveObservers() : 0,
@@ -145,7 +142,6 @@ agentsRouter.patch("/:id", zValidator("json", UpdateAgentDefinitionSchema), asyn
     return c.json({
       id,
       name: updatedEntry.server.definition.name,
-      role: updatedEntry.server.definition.role,
       status: updatedEntry.status,
       createdAt: updatedEntry.createdAt,
     });

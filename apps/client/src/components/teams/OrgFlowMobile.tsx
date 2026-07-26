@@ -64,7 +64,7 @@ export function OrgFlowMobile({
             const info = getAgentInfo(m.agentId);
             const name = info?.name || m.agentId;
             const isOrphan = !info;
-            const role = info ? info.role || "agent" : "Deleted Agent";
+            const role = m.role || "member";
             const isStreaming = !!streamingAgents[m.agentId];
             const streaming = streamingAgents[m.agentId];
 

@@ -117,8 +117,7 @@ export class ServerSpacesHost implements SpacesHost {
       if (!entry) return null;
       return {
         name: entry.server.definition.name,
-        role: entry.server.definition.role,
-        systemPrompt: entry.server.definition.systemPrompt,
+        systemPrompt: entry.server.definition.systemPrompt || "",
       };
     },
   };

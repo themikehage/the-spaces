@@ -31,7 +31,7 @@ export interface LayeredPrompt {
 
 export class PromptComposer {
   compose(
-    agentDef: { name: string; role: string; systemPrompt: string },
+    agentDef: { name: string; systemPrompt: string },
     deployment: DeploymentContext,
     workspaceDir?: string,
   ): LayeredPrompt {
@@ -42,7 +42,6 @@ export class PromptComposer {
     if (identityCore) {
       const content = identityCore.content
         .replace("{name}", agentDef.name)
-        .replace("{role}", agentDef.role)
         .replace("{systemPrompt}", agentDef.systemPrompt || "");
       fragments.push({ ...identityCore, content });
     }

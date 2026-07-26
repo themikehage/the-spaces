@@ -29,16 +29,7 @@ const STATUS_DOT: Record<string, string> = {
   stopped: "bg-text-secondary",
 };
 
-const ROLE_COLORS: Record<string, string> = {
-  "web-builder": "text-purple-400 bg-purple-400/10 border-purple-400/20",
-  researcher: "text-sky-400 bg-sky-400/10 border-sky-400/20",
-  supervisor: "text-amber-400 bg-amber-400/10 border-amber-400/20",
-  default: "text-muted-foreground bg-card border-input",
-};
 
-function roleColor(role: string) {
-  return ROLE_COLORS[role] ?? ROLE_COLORS.default;
-}
 
 function AgentCard({
   agent,
@@ -101,14 +92,6 @@ function AgentCard({
       </div>
 
       <div className="flex items-center gap-2 flex-wrap">
-        <span className={`text-xs font-medium p-2 rounded-lg border ${roleColor(agent.role)}`}>
-          {agent.role}
-        </span>
-        {agent.port && (
-          <span className="text-xs font-mono text-muted-foreground bg-background border border-input px-2 py-0.5 rounded-full">
-            :{agent.port}
-          </span>
-        )}
         <span className="text-xs text-muted-foreground ml-auto">
           {new Date(agent.createdAt).toLocaleTimeString()}
         </span>

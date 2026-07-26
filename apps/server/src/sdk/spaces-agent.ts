@@ -29,10 +29,7 @@ export class SpacesAgent {
     return {
       id: sanitizedId,
       name: this.config.name,
-      role: this.config.description ?? this.config.instruction.slice(0, 100),
       systemPrompt: this.config.instruction,
-      model: this.config.model,
-      skills: this.config.skills ?? [],
       serialTools: [],
     };
   }

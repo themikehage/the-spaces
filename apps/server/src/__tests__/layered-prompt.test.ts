@@ -21,7 +21,6 @@ describe("Layered Prompt System Tests", () => {
   test("PromptComposer - Solo Deployment Context", () => {
     const agentDef = {
       name: "CEO",
-      role: "Chief Executive Officer",
       systemPrompt: "Define startup strategies.",
     };
     const deployment: DeploymentContext = {
@@ -34,7 +33,7 @@ describe("Layered Prompt System Tests", () => {
     expect(result.applied).not.toContain("role.leader.delegation");
     expect(result.applied).not.toContain("role.member.communication");
 
-    expect(result.composed).toContain("Eres CEO, con el rol de Chief Executive Officer.");
+    expect(result.composed).toContain("Eres CEO.");
     expect(result.composed).toContain("Define startup strategies.");
     expect(result.composed).toContain("CONTEXTO DE EJECUCIÓN: Individual (Solo).");
   });
@@ -42,7 +41,6 @@ describe("Layered Prompt System Tests", () => {
   test("PromptComposer - Broadcast / Member Context", () => {
     const agentDef = {
       name: "Dev",
-      role: "Frontend Developer",
       systemPrompt: "Build UI components.",
     };
     const deployment: DeploymentContext = {
@@ -62,7 +60,7 @@ describe("Layered Prompt System Tests", () => {
     expect(result.applied).toContain("instance.channel.broadcast");
     expect(result.applied).not.toContain("role.leader.delegation");
 
-    expect(result.composed).toContain("Eres Dev, con el rol de Frontend Developer.");
+    expect(result.composed).toContain("Eres Dev.");
     expect(result.composed).toContain("Build UI components.");
     expect(result.composed).toContain("PROTOCOLO DE COLABORACIÓN ENTRE PARES:");
     expect(result.composed).toContain("MODO DE CANAL: Colaboración Horizontal (Leaderless).");
@@ -72,7 +70,6 @@ describe("Layered Prompt System Tests", () => {
   test("PromptComposer - Orchestration Team Context", () => {
     const agentDef = {
       name: "Coordinator",
-      role: "Technical Lead",
       systemPrompt: "Coordinate the delivery.",
     };
     const deployment: DeploymentContext = {
@@ -113,7 +110,6 @@ describe("Layered Prompt System Tests", () => {
   test("PromptComposer - Senior Role Context", () => {
     const agentDef = {
       name: "SeniorDev",
-      role: "Senior Developer",
       systemPrompt: "Architect solutions.",
     };
     const deployment: DeploymentContext = {
@@ -135,7 +131,6 @@ describe("Layered Prompt System Tests", () => {
   test("PromptComposer - Observer Role Context", () => {
     const agentDef = {
       name: "Auditor",
-      role: "Observer Auditor",
       systemPrompt: "Audit logs.",
     };
     const deployment: DeploymentContext = {

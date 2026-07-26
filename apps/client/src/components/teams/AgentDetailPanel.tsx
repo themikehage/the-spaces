@@ -86,8 +86,8 @@ export function AgentDetailPanel({
 
   const name = agentInfo?.name || member.agentId;
   const isOrphan = !agentInfo;
-  const agentRole = agentInfo ? agentInfo.role || "agent" : l.deletedAgent;
-  const skills = agentInfo?.skills || [];
+  const agentRole = member.role || "member";
+  const skills: string[] = [];
 
   const panelVariants = {
     "slide-over": {

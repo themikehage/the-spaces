@@ -2,7 +2,13 @@
 import { Hono } from "hono";
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { getUserDir, getWorkspaceDir } from "shared";
+import {
+  getAgentWorkspaceDir,
+  getProjectWorkspaceDir,
+  getTeamWorkspaceDir,
+  getUserDir,
+  getWorkspaceDir,
+} from "shared";
 import { loadSkills } from "../ai/load-skills";
 import { getResolvedSkillPaths } from "../core/session-manager";
 import { authMiddleware, getAuthPayload } from "../middleware/auth";
@@ -13,10 +19,23 @@ skillsRouter.use("/*", authMiddleware);
 
 skillsRouter.get("/", async (c) => {
   const { username } = getAuthPayload(c);
+  const entityType = c.req.query("entityType");
+  const entityId = c.req.query("entityId");
 
   try {
-    const workspaceDir = getWorkspaceDir(username);
-    const skillPaths = getResolvedSkillPaths(workspaceDir);
+    let workspaceDir = getWorkspaceDir(username);
+    if (entityType && entityId) {
+      if (entityType === "agent") workspaceDir = getAgentWorkspaceDir(username, entityId);
+      else if (entityType === "project") workspaceDir = getProjectWorkspaceDir(username, entityId);
+      else if (entityType === "team") workspaceDir = getTeamWorkspaceDir(username, entityId);
+    }
+
+    const skillPaths = getResolvedSkillPaths(workspaceDir, username);
+    const dotSpacesSkills = join(workspaceDir, ".spaces", "skills");
+    if (existsSync(dotSpacesSkills) && !skillPaths.includes(dotSpacesSkills)) {
+      skillPaths.unshift(dotSpacesSkills);
+    }
+
     const result = loadSkills({
       cwd: workspaceDir,
       agentDir: getUserDir(username),
@@ -25,12 +44,13 @@ skillsRouter.get("/", async (c) => {
     });
 
     const skillsWithContent = result.skills.map((skill) => {
+      const isEntityLocal = skill.filePath ? skill.filePath.startsWith(workspaceDir) : false;
       return {
         name: skill.name,
         description: skill.description,
         filePath: skill.filePath,
         disableModelInvocation: skill.disableModelInvocation,
-        scope: skill.sourceInfo?.scope || "project",
+        scope: isEntityLocal && entityType && entityType !== "global" ? entityType : (skill.sourceInfo?.scope || "project"),
         content: skill.content,
       };
     });

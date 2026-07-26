@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import type { AgentDefinition, AgentInfo } from "shared";
 import { SystemPromptViewer } from "@/components/prompts/SystemPromptViewer";
+import { EntitySkillsEditor } from "@/components/shared/EntitySkillsEditor";
 import { literals as u } from "./RegisterModal.literals";
 
 const KNOWN_SERIAL_TOOLS = [
@@ -41,11 +42,7 @@ const KNOWN_SERIAL_TOOLS = [
 const DEFAULT_FORM: AgentDefinition = {
   id: "",
   name: "",
-  role: "",
   systemPrompt: "",
-  model: "",
-  skills: [],
-  port: undefined,
   serialTools: ["request_approval", "ask_question"],
 };
 
@@ -66,7 +63,6 @@ export function RegisterModal({
 }: RegisterModalProps) {
   const l = useLiterals(u);
   const [form, setForm] = useState<AgentDefinition>(DEFAULT_FORM);
-  const [skillsInput, setSkillsInput] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -88,7 +84,6 @@ export function RegisterModal({
                     ? data.definition.serialTools
                     : ["request_approval", "ask_question"],
               });
-              setSkillsInput(data.definition.skills?.join(", ") || "");
               const avUrl = data.definition.avatarUrl || null;
               setAvatarPreview(avUrl);
               if (isDefaultAvatar(avUrl)) {
@@ -112,14 +107,7 @@ export function RegisterModal({
       const def: AgentDefinition = {
         ...form,
         id: form.id.trim().toLowerCase().replace(/\s+/g, "-"),
-        skills: skillsInput
-          ? skillsInput
-              .split(",")
-              .map((s) => s.trim())
-              .filter(Boolean)
-          : undefined,
-        model: form.model?.trim() || undefined,
-        port: form.port || undefined,
+        systemPrompt: form.systemPrompt?.trim() || "",
         avatarUrl: selectedDefaultAvatar
           ? DEFAULT_AVATAR_PREFIX + selectedDefaultAvatar
           : avatarPreview && !avatarPreview.startsWith("blob:") && !isDefaultAvatar(avatarPreview)
@@ -248,73 +236,15 @@ export function RegisterModal({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-medium text-muted-foreground block mb-1">
-                {l.roleField}
-              </label>
-              <input
-                required
-                value={form.role}
-                onChange={set("role")}
-                placeholder={l.idPlaceholder}
-                className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground block mb-1">
-                {l.portField}
-              </label>
-              <input
-                type="number"
-                min={1024}
-                max={65535}
-                value={form.port || ""}
-                onChange={(e) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    port: e.target.value ? parseInt(e.target.value) : undefined,
-                  }))
-                }
-                placeholder={l.portPlaceholder}
-                className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 font-mono"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-xs font-medium text-muted-foreground block mb-1">
-              {l.modelField}
-            </label>
-            <input
-              value={form.model || ""}
-              onChange={set("model")}
-              placeholder={l.modelPlaceholder}
-              className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 font-mono"
-            />
-          </div>
-
-          <div>
-            <label className="text-xs font-medium text-muted-foreground block mb-1">
-              {l.skillsField}
-            </label>
-            <input
-              value={skillsInput}
-              onChange={(e) => setSkillsInput(e.target.value)}
-              placeholder={l.skillsPlaceholder}
-              className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
-            />
-          </div>
-
           <div>
             <label className="text-xs font-medium text-muted-foreground block mb-1">
               {l.systemPromptField}
             </label>
             <textarea
               required
-              value={form.systemPrompt}
+              value={form.systemPrompt || ""}
               onChange={set("systemPrompt")}
-              rows={5}
+              rows={6}
               placeholder={l.systemPromptPlaceholder}
               className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none font-mono leading-relaxed"
             />
@@ -340,6 +270,9 @@ export function RegisterModal({
               </svg>
             </summary>
             <div className="px-3 py-3 border-t border-input space-y-3 bg-card/10 text-xs">
+              {agent && agent.id && (
+                <EntitySkillsEditor entityType="agent" entityId={agent.id} />
+              )}
               <div>
                 <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
                   {l.serialToolsLabel}

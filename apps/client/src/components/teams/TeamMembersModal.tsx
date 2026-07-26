@@ -239,7 +239,7 @@ function TeamMembersAdd({ candidates, hasLeader, adding, onAdd, l }: AddProps) {
             onChange={setSelectedAgentId}
             options={candidates.map((a) => ({
               value: a.id,
-              label: a.name + (a.role ? ` (${a.role})` : ""),
+              label: a.name,
             }))}
             placeholder="Select agent"
             matchWidth
@@ -352,7 +352,6 @@ export function AddTeamMemberModal({
                           @{a.id}
                         </span>
                       </div>
-                      <p className="text-[10px] text-muted-foreground truncate mt-0.5">{a.role}</p>
                     </div>
                   </button>
                 ))}

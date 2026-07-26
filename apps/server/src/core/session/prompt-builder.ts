@@ -1,8 +1,16 @@
 // SPDX-License-Identifier: MIT
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { getWorkspaceDir, SessionPrefix } from "shared";
+import {
+  getWorkspaceDir,
+  getGlobalAgentsMdPath,
+  getAgentAgentsMdPath,
+  getProjectAgentsMdPath,
+  getTeamAgentsMdPath,
+  SessionPrefix,
+} from "shared";
 import { loadSkills } from "../../ai";
+import type { EntityConfig } from "../config";
 import { CUSTOM_TOOL_INSTRUCTIONS } from "../custom-tools";
 import { DEFAULT_AGENTS_MD } from "../default-factory-skills";
 import { promptComposer } from "../prompts/composer";
@@ -27,9 +35,10 @@ export interface BuildPromptsParams {
   workspaceDir: string;
   sessionDir: string;
   resolvedAgentId?: string;
-  agentDef?: { name: string; role: string; systemPrompt: string };
+  agentDef?: { name: string; systemPrompt: string };
   cachedMcpToolNames: string[];
   projectId?: string;
+  entityConfig?: EntityConfig;
 }
 
 export class SessionPromptBuilder {
@@ -44,15 +53,25 @@ export class SessionPromptBuilder {
       cachedMcpToolNames,
     } = params;
 
-    const settings = userConfig.getUserSettings(username);
-
     const appendPrompts = assemblePromptAppends({
       mode: "standard-session",
       workspaceDir,
     });
 
-    if (!agentDef && settings.factorySystemPrompt) {
-      appendPrompts.push(`\n\n## Custom Spaces Instructions:\n${settings.factorySystemPrompt}`);
+    if (params.entityConfig) {
+      if (Array.isArray(params.entityConfig.rules) && params.entityConfig.rules.length > 0) {
+        appendPrompts.push(
+          `\n\n## Entity Directives & Rules (.spaces/config.json)\n${params.entityConfig.rules.join("\n\n")}`,
+        );
+      }
+      if (
+        Array.isArray(params.entityConfig.workflows) &&
+        params.entityConfig.workflows.length > 0
+      ) {
+        appendPrompts.push(
+          `\n\n## Entity Workflows (.spaces/config.json)\n${params.entityConfig.workflows.join("\n\n")}`,
+        );
+      }
     }
 
     if (sessionId.startsWith(SessionPrefix.DELEGATE)) {
@@ -89,6 +108,13 @@ export class SessionPromptBuilder {
               previewUrl,
             });
             appendPrompts.push(projectPrompt);
+
+            const projectAgentsMd = getProjectAgentsMdPath(username, params.projectId);
+            if (existsSync(projectAgentsMd)) {
+              appendPrompts.push(
+                `\n\n## Project Directives (.spaces/AGENTS.md)\n${readFileSync(projectAgentsMd, "utf-8")}`,
+              );
+            }
 
             if (projectMeta.assignment) {
               const { assignment } = projectMeta;
@@ -171,14 +197,32 @@ export class SessionPromptBuilder {
             team.context.map((it: any) => `- ${it.key}: ${it.value}`).join("\n");
           appendPrompts.push(contextSnippet);
         }
+        const teamAgentsMd = getTeamAgentsMdPath(username, teamId);
+        if (existsSync(teamAgentsMd)) {
+          appendPrompts.push(
+            `\n\n## Team Directives (.spaces/AGENTS.md)\n${readFileSync(teamAgentsMd, "utf-8")}`,
+          );
+        }
       }
     } catch (e) {
       console.error("[PromptBuilder] Failed to inject team context:", e);
     }
 
-    if (agentDef?.systemPrompt) {
+    let activeSystemPrompt = agentDef?.systemPrompt;
+    if (resolvedAgentId) {
+      const agentAgentsMd = getAgentAgentsMdPath(username, resolvedAgentId);
+      if (existsSync(agentAgentsMd)) {
+        activeSystemPrompt = readFileSync(agentAgentsMd, "utf-8");
+      }
+    }
+
+    if (activeSystemPrompt) {
       const deployment = await this.resolveDeploymentContext(params);
-      const layered = promptComposer.compose(agentDef, deployment, workspaceDir);
+      const layered = promptComposer.compose(
+        { name: agentDef?.name || "", systemPrompt: activeSystemPrompt },
+        deployment,
+        workspaceDir,
+      );
       appendPrompts.push(`\n\n${layered.composed}`);
     }
 
@@ -243,7 +287,6 @@ export class SessionPromptBuilder {
                 const entry = agentRegistry.get(member.agentId, username);
                 const capability =
                   entry?.server.definition.systemPrompt?.replace(/\s+/g, " ").slice(0, 180) ||
-                  entry?.server.definition.role ||
                   member.role;
                 return {
                   agentId: member.agentId,
@@ -279,12 +322,15 @@ export class SessionPromptBuilder {
     const workspaceDir = getWorkspaceDir(username);
     const sections: Array<{ title: string; content: string }> = [];
 
-    // 1. Global Workspace Directives (AGENTS.md / Global Spaces Director)
+    // 1. Global Workspace Directives (.spaces/AGENTS.md / Global Spaces Director)
     try {
-      const agentsMdPath = join(workspaceDir, "AGENTS.md");
+      const globalMdPath = getGlobalAgentsMdPath(username);
+      const legacyMdPath = join(workspaceDir, "AGENTS.md");
       let agentsMdContent = DEFAULT_AGENTS_MD;
-      if (existsSync(agentsMdPath)) {
-        agentsMdContent = readFileSync(agentsMdPath, "utf-8");
+      if (existsSync(globalMdPath)) {
+        agentsMdContent = readFileSync(globalMdPath, "utf-8");
+      } else if (existsSync(legacyMdPath)) {
+        agentsMdContent = readFileSync(legacyMdPath, "utf-8");
       }
       sections.push({
         title: "Global Workspace Directives & Director Persona (AGENTS.md)",
@@ -303,9 +349,14 @@ export class SessionPromptBuilder {
         const entry = agentRegistry.get(targetAgentId, username);
         if (entry?.server?.definition) {
           agentDef = entry.server.definition;
+          let promptContent = agentDef.systemPrompt || "";
+          const agentMdPath = getAgentAgentsMdPath(username, targetAgentId);
+          if (existsSync(agentMdPath)) {
+            promptContent = readFileSync(agentMdPath, "utf-8");
+          }
           sections.push({
             title: `Agent Specific Persona (${agentDef.name || targetAgentId})`,
-            content: agentDef.systemPrompt || "No custom system prompt defined.",
+            content: promptContent || "No custom system prompt defined.",
           });
         }
       } catch (e) {
@@ -313,15 +364,7 @@ export class SessionPromptBuilder {
       }
     }
 
-    // 3. Global Custom Spaces Instructions
-    if (settings.factorySystemPrompt) {
-      sections.push({
-        title: "Global Custom Spaces Instructions",
-        content: settings.factorySystemPrompt,
-      });
-    }
-
-    // 4. Standard Spaces Platform Protocols
+    // 3. Standard Spaces Platform Protocols
     const platformProtocols = [
       ENVIRONMENT_INSTRUCTIONS,
       HTML_PREVIEW_INSTRUCTIONS,
@@ -336,7 +379,7 @@ export class SessionPromptBuilder {
       content: platformProtocols,
     });
 
-    // 5. Project Context
+    // 4. Project Context
     const targetProjectId = projectId;
     if (targetProjectId) {
       try {
@@ -359,6 +402,13 @@ export class SessionPromptBuilder {
             });
 
             let projectContextFull = projectPrompt;
+
+            const projectAgentsMd = getProjectAgentsMdPath(username, targetProjectId);
+            if (existsSync(projectAgentsMd)) {
+              projectContextFull +=
+                `\n\n## Project Directives (.spaces/AGENTS.md)\n` +
+                readFileSync(projectAgentsMd, "utf-8");
+            }
 
             if (projectMeta.assignment) {
               const { assignment } = projectMeta;
@@ -402,7 +452,7 @@ export class SessionPromptBuilder {
       }
     }
 
-    // 6. Team Context
+    // 5. Team Context
     const targetTeamId = teamId;
     if (targetTeamId) {
       try {
@@ -414,6 +464,12 @@ export class SessionPromptBuilder {
             teamContent +=
               `\n\n## Team Context Variables\n` +
               team.context.map((it: any) => `- ${it.key}: ${it.value}`).join("\n");
+          }
+          const teamAgentsMd = getTeamAgentsMdPath(username, targetTeamId);
+          if (existsSync(teamAgentsMd)) {
+            teamContent +=
+              `\n\n## Team Directives (.spaces/AGENTS.md)\n` +
+              readFileSync(teamAgentsMd, "utf-8");
           }
           sections.push({
             title: `Team Context (${team.name})`,

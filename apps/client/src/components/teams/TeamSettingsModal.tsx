@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import type { Team } from "shared";
 import { SystemPromptViewer } from "@/components/prompts/SystemPromptViewer";
+import { EntitySkillsEditor } from "@/components/shared/EntitySkillsEditor";
 import { literals as u } from "./TeamSettingsModal.literals";
 
 interface Props {
@@ -260,6 +261,8 @@ export function TeamSettingsModal({
                 <span>{l.streamingEnabled}</span>
               </label>
             </div>
+
+            <EntitySkillsEditor entityType="team" entityId={team.id} />
 
             <SystemPromptViewer
               entityType="team"

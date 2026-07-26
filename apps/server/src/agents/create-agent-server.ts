@@ -40,7 +40,6 @@ export async function createAgentServer(
     c.json({
       id: definition.id,
       name: definition.name,
-      role: definition.role,
       streaming: session.isStreaming,
       activeObservers,
     }),
@@ -252,12 +251,7 @@ export async function createAgentServer(
       return activeObservers;
     },
     async start() {
-      if (!definition.port) throw new Error("No port defined for standalone start");
-      bunServer = Bun.serve({
-        port: definition.port,
-        fetch: app.fetch,
-      });
-      console.log(`Agent [${definition.id}] running on port ${definition.port}`);
+      console.log(`Agent [${definition.id}] initialized in-process`);
     },
     async stop() {
       if (session.isStreaming) await session.abort();

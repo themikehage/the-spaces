@@ -41,6 +41,10 @@ export function getWorkspaceSkillsDir(username: string): string {
   return join(getWorkspaceDir(username), SKILLS_SUBDIR);
 }
 
+export function getGlobalAgentsMdPath(username: string): string {
+  return join(getWorkspaceDir(username), ".spaces", "AGENTS.md");
+}
+
 export function getProjectsDir(username: string): string {
   return join(getUserDir(username), PROJECTS_DIR);
 }
@@ -57,6 +61,10 @@ export function getProjectExecutionsDir(username: string, projectId: string): st
   return join(getProjectDir(username, projectId), EXECUTIONS_DIR);
 }
 
+export function getProjectAgentsMdPath(username: string, projectId: string): string {
+  return join(getProjectWorkspaceDir(username, projectId), ".spaces", "AGENTS.md");
+}
+
 export function getAgentDir(username: string, agentId: string): string {
   return join(getUserDir(username), AGENTS_DIR, agentId);
 }
@@ -67,6 +75,10 @@ export function getAgentWorkspaceDir(username: string, agentId: string): string 
 
 export function getAgentExecutionsDir(username: string, agentId: string): string {
   return join(getAgentDir(username, agentId), EXECUTIONS_DIR);
+}
+
+export function getAgentAgentsMdPath(username: string, agentId: string): string {
+  return join(getAgentWorkspaceDir(username, agentId), ".spaces", "AGENTS.md");
 }
 
 export function getTeamsDir(username: string): string {
@@ -83,6 +95,10 @@ export function getTeamWorkspaceDir(username: string, teamId: string): string {
 
 export function getTeamMemoriesDir(username: string, teamId: string): string {
   return join(getTeamDir(username, teamId), MEMORIES_DIR);
+}
+
+export function getTeamAgentsMdPath(username: string, teamId: string): string {
+  return join(getTeamWorkspaceDir(username, teamId), ".spaces", "AGENTS.md");
 }
 
 export function getSessionsDir(username: string): string {

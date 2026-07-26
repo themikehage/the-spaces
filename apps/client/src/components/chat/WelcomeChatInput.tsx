@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: MIT
 import { useLiterals } from "@/lib";
+import { apiFetch } from "@/lib/api";
+import { BookOpen, Sliders } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ModelSelector } from "./ModelSelector";
+import { SkillsPopover } from "./SkillsPopover";
+import type { SkillInfo } from "./SkillsSelector";
+import { ToolsPopover } from "./ToolsPopover";
 import { literals as u } from "./WelcomeChatInput.literals";
 
 export interface SuggestionPill {
@@ -19,6 +24,11 @@ interface Props {
   showModelSelector?: boolean;
   selectedModel?: string;
   onModelChange?: (modelId: string) => void;
+  activeTools?: string[];
+  onToolsChange?: (tools: string[], executionMode?: "readonly" | "standard" | "autonomous") => void;
+  executionMode?: "readonly" | "standard" | "autonomous";
+  activeSkills?: string[];
+  onSkillsChange?: (skills: string[]) => void;
   allowAttachments?: boolean;
   disabled?: boolean;
   loading?: boolean;
@@ -36,6 +46,11 @@ export function WelcomeChatInput({
   onSend,
   suggestions = [],
   showModelSelector = true,
+  activeTools,
+  onToolsChange,
+  executionMode,
+  activeSkills,
+  onSkillsChange,
   allowAttachments = true,
   disabled = false,
   loading = false,
@@ -50,8 +65,40 @@ export function WelcomeChatInput({
   const textareaRef = externalTextareaRef || localTextareaRef;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const toolsTriggerRef = useRef<HTMLButtonElement>(null);
+  const skillsTriggerRef = useRef<HTMLButtonElement>(null);
+  const [openTools, setOpenTools] = useState(false);
+  const [openSkills, setOpenSkills] = useState(false);
+  const [allSkills, setAllSkills] = useState<SkillInfo[]>([]);
+  const [skillsLoading, setSkillsLoading] = useState(false);
+
   const input = value !== undefined ? value : internalInput;
   const setInput = onChange || setInternalInput;
+
+  useEffect(() => {
+    if (onSkillsChange) {
+      setSkillsLoading(true);
+      apiFetch("/api/skills")
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data && Array.isArray(data.skills)) {
+            setAllSkills(data.skills);
+          }
+        })
+        .catch((e) => console.error("Failed to load skills in WelcomeChatInput:", e))
+        .finally(() => setSkillsLoading(false));
+    }
+  }, [onSkillsChange]);
+
+  const handleToggleSkill = (skillName: string) => {
+    if (!onSkillsChange) return;
+    const current = activeSkills || [];
+    if (current.includes(skillName)) {
+      onSkillsChange(current.filter((s) => s !== skillName));
+    } else {
+      onSkillsChange([...current, skillName]);
+    }
+  };
 
   // Dynamic Time Greeting
   const getGreeting = useCallback(() => {
@@ -193,6 +240,71 @@ export function WelcomeChatInput({
                   disabled={disabled || loading}
                   value={selectedModel}
                   onChange={onModelChange}
+                />
+              </div>
+            )}
+
+            {/* Tools Selector Button & Popover */}
+            {onToolsChange && (
+              <div className="relative border-l border-border/40 pl-2">
+                <button
+                  ref={toolsTriggerRef}
+                  type="button"
+                  onClick={() => !disabled && !loading && setOpenTools((prev) => !prev)}
+                  disabled={disabled || loading}
+                  className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border border-border/40 bg-[#171717] hover:bg-[#313131] text-xs font-semibold text-text-secondary hover:text-text-primary transition-all cursor-pointer disabled:opacity-50 ${
+                    openTools ? "text-primary border-primary/45" : ""
+                  }`}
+                  title="Tools configuration"
+                >
+                  <Sliders size={14} />
+                  <span>Tools</span>
+                  {activeTools && (
+                    <span className="ml-0.5 px-1.5 py-0.2 rounded-full bg-primary/20 text-primary text-[10px] font-mono font-bold">
+                      {activeTools.length}
+                    </span>
+                  )}
+                </button>
+                <ToolsPopover
+                  activeTools={activeTools || []}
+                  onChange={onToolsChange}
+                  open={openTools}
+                  onClose={() => setOpenTools(false)}
+                  triggerRef={toolsTriggerRef}
+                  disabled={disabled || loading}
+                  executionMode={executionMode}
+                />
+              </div>
+            )}
+
+            {/* Skills Selector Button & Popover */}
+            {onSkillsChange && (
+              <div className="relative border-l border-border/40 pl-2">
+                <button
+                  ref={skillsTriggerRef}
+                  type="button"
+                  onClick={() => !disabled && !loading && setOpenSkills((prev) => !prev)}
+                  disabled={disabled || loading}
+                  className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border border-border/40 bg-[#171717] hover:bg-[#313131] text-xs font-semibold text-text-secondary hover:text-text-primary transition-all cursor-pointer disabled:opacity-50 ${
+                    openSkills ? "text-primary border-primary/45" : ""
+                  }`}
+                  title="Skills configuration"
+                >
+                  <BookOpen size={14} />
+                  <span>Skills</span>
+                  {activeSkills && (
+                    <span className="ml-0.5 px-1.5 py-0.2 rounded-full bg-primary/20 text-primary text-[10px] font-mono font-bold">
+                      {activeSkills.length}
+                    </span>
+                  )}
+                </button>
+                <SkillsPopover
+                  skills={allSkills}
+                  loading={skillsLoading}
+                  open={openSkills}
+                  onClose={() => setOpenSkills(false)}
+                  onSelectSkill={handleToggleSkill}
+                  triggerRef={skillsTriggerRef}
                 />
               </div>
             )}

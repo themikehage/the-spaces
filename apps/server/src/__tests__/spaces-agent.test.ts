@@ -18,7 +18,6 @@ describe("SpacesAgent", () => {
     const agentDef = agent.toAgentDefinition();
     expect(agentDef.id).toBe("devops-engineer");
     expect(agentDef.name).toBe("devops-engineer");
-    expect(agentDef.role).toBe("Handles infrastructure tasks");
     expect(agentDef.systemPrompt).toBe("You are a DevOps engineer.");
   });
 

@@ -71,7 +71,7 @@ export function TeamMembersPanel({
   const renderMember = (m: TeamMember) => {
     const info = getAgentInfo(m.agentId);
     const name = info?.name || m.agentId;
-    const roleDesc = info ? info.role || "agent" : l.agentNotFound;
+    const roleDesc = info ? m.role || "member" : l.agentNotFound;
     const isOrphan = !info;
 
     let badgeStyle = "border-input bg-background text-muted-foreground";

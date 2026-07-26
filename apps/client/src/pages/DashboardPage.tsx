@@ -351,9 +351,6 @@ export function DashboardPage({ onNavigate, onSelectProject }: Props) {
                     <h3 className="font-extrabold text-[11px] text-foreground truncate w-full group-hover:text-accent transition-colors leading-tight">
                       {agent.name}
                     </h3>
-                    <p className="text-[9px] text-text-secondary truncate w-full mt-0.5 font-medium leading-none">
-                      {agent.role}
-                    </p>
                   </div>
                 ))}
 

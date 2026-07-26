@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { ProjectAssignmentPanel } from "./ProjectAssignmentPanel";
 import { SystemPromptViewer } from "@/components/prompts/SystemPromptViewer";
+import { EntitySkillsEditor } from "@/components/shared/EntitySkillsEditor";
 import { literals as u } from "./ProjectSettingsModal.literals";
 
 interface Project {
@@ -263,6 +264,8 @@ export function ProjectSettingsModal({
             <div className="pt-2">
               <ProjectAssignmentPanel projectId={project.id} />
             </div>
+
+            <EntitySkillsEditor entityType="project" entityId={project.id} />
 
             <SystemPromptViewer
               entityType="project"

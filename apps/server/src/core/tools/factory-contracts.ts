@@ -114,22 +114,11 @@ export const FACTORY_CONTRACTS: Record<string, EntityContract> = {
         params: {
           id: { type: "string", required: true, description: "Unique agent identifier" },
           name: { type: "string", required: true, description: "Display name for the agent" },
-          role: {
-            type: "string",
-            required: true,
-            description: "Agent role (e.g. reviewer, builder, tester)",
-          },
           systemPrompt: {
             type: "string",
             required: false,
             description: "System prompt defining agent behavior",
           },
-          model: {
-            type: "string",
-            required: false,
-            description: "Model identifier (e.g. anthropic/claude-3-5-sonnet-20241022)",
-          },
-          skills: { type: "array", required: false, description: "Array of skill IDs to attach" },
           avatarUrl: { type: "string", required: false, description: "URL for agent avatar image" },
           scope: {
             type: "object",

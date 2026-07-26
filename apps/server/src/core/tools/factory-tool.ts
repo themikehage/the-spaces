@@ -107,10 +107,7 @@ async function handleAgents(action: string, id: string | undefined, params: any,
     if (existing) {
       await agentRegistry.update(username, id, {
         name: params.name ?? existing.server.definition.name,
-        role: params.role ?? existing.server.definition.role,
         systemPrompt: params.systemPrompt ?? existing.server.definition.systemPrompt,
-        model: params.model ?? existing.server.definition.model,
-        skills: params.skills ?? existing.server.definition.skills,
         avatarUrl: params.avatarUrl ?? existing.server.definition.avatarUrl,
         scope: params.scope,
       });
@@ -119,10 +116,7 @@ async function handleAgents(action: string, id: string | undefined, params: any,
     const definition = {
       id,
       name: params.name,
-      role: params.role,
       systemPrompt: params.systemPrompt ?? "",
-      model: params.model ?? "",
-      skills: params.skills ?? [],
       avatarUrl: params.avatarUrl,
       scope: params.scope,
     };

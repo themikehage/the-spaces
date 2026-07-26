@@ -72,6 +72,9 @@ sessionCrudRouter.post("/", zValidator("json", CreateSessionSchema), async (c) =
       projectId: data.projectId,
       agentId: data.agentId,
       teamId: data.teamId,
+      tools: data.tools,
+      skills: data.skills,
+      executionMode: data.executionMode,
     });
     return c.json(createdSessionItem, 201);
   } catch (err) {

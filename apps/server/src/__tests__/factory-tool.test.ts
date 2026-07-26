@@ -20,7 +20,6 @@ describe("Spaces Tool Validation & Broadcast Tests", () => {
     it("should pass validation with valid parameters for agent upsert", () => {
       const error = validateParams("agents", "upsert", "my-agent", {
         name: "My Agent",
-        role: "developer",
       });
       expect(error).toBeNull();
     });
@@ -30,7 +29,7 @@ describe("Spaces Tool Validation & Broadcast Tests", () => {
         "agents",
         "upsert",
         undefined,
-        { role: "developer" }, // missing id/name
+        { systemPrompt: "test" }, // missing id/name
       );
       expect(error).toContain("required");
     });
@@ -38,10 +37,9 @@ describe("Spaces Tool Validation & Broadcast Tests", () => {
     it("should fail validation if parameter type is incorrect", () => {
       const error = validateParams("agents", "upsert", "my-agent", {
         name: "My Agent",
-        role: "developer",
-        skills: "not-an-array",
+        avatarUrl: 123,
       });
-      expect(error).toContain("must be an array");
+      expect(error).toContain("must be a string");
     });
 
     it("should pass validation for env delete with either key in params or key as id", () => {
@@ -93,7 +91,6 @@ describe("Spaces Tool Validation & Broadcast Tests", () => {
           id: "test-agent",
           params: {
             name: "Test Agent",
-            role: "tester",
           },
         });
 

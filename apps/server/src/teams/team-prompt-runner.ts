@@ -173,7 +173,10 @@ export class TeamPromptRunner {
     const appendSystemPrompts = assemblePromptAppends({
       mode: "debate-stateless",
       workspaceDir,
-      agentDef: agentEntry.server.definition,
+      agentDef: {
+        name: agentEntry.server.definition.name,
+        systemPrompt: agentEntry.server.definition.systemPrompt || "",
+      },
       deployment: deployment as any,
     });
 

@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import {
   SPACES_DATA_PATH,
   SessionPrefix,
   USERS_DIR,
   getUserDir,
+  getAgentAgentsMdPath,
   type AgentDefinition,
   type AgentInfo,
   type AgentScopeTarget,
@@ -50,6 +51,10 @@ class AgentRegistry {
                 if (existsSync(defPath)) {
                   try {
                     const def: AgentDefinition = JSON.parse(readFileSync(defPath, "utf-8"));
+                    const agentsMdPath = getAgentAgentsMdPath(username, def.id);
+                    if (existsSync(agentsMdPath)) {
+                      def.systemPrompt = readFileSync(agentsMdPath, "utf-8");
+                    }
                     if (!this.agents.has(def.id)) {
                       await this.register(username, def, false);
                     }
@@ -100,12 +105,18 @@ class AgentRegistry {
 
       if (saveToDisk) {
         const agentDir = this.getAgentDir(username, definition.id);
-        const { scope: defScope, ...defWithoutScope } = definition;
+        const { scope: defScope, systemPrompt, ...defWithoutScope } = definition;
         writeFileSync(
           join(agentDir, "definition.json"),
           JSON.stringify(defWithoutScope, null, 2),
           "utf-8",
         );
+        if (systemPrompt) {
+          const agentsMdPath = getAgentAgentsMdPath(username, definition.id);
+          const dotSpacesDir = dirname(agentsMdPath);
+          if (!existsSync(dotSpacesDir)) mkdirSync(dotSpacesDir, { recursive: true });
+          writeFileSync(agentsMdPath, systemPrompt, "utf-8");
+        }
         await scopeConfigManager.registerAgent(username, definition.id, scope || defScope);
       }
 
@@ -132,11 +143,8 @@ class AgentRegistry {
         result.push({
           id,
           name: entry.server.definition.name,
-          role: entry.server.definition.role,
           status: entry.status,
-          port: entry.server.definition.port,
           createdAt: entry.createdAt,
-          skills: entry.server.definition.skills,
           avatarUrl: entry.server.definition.avatarUrl,
           blueprintId: entry.server.definition.blueprintId,
         });
@@ -153,11 +161,8 @@ class AgentRegistry {
         result.push({
           id,
           name: entry.server.definition.name,
-          role: entry.server.definition.role,
           status: entry.status,
-          port: entry.server.definition.port,
           createdAt: entry.createdAt,
-          skills: entry.server.definition.skills,
           avatarUrl: entry.server.definition.avatarUrl,
           blueprintId: entry.server.definition.blueprintId,
         });
@@ -270,7 +275,11 @@ class AgentRegistry {
             const defPath = join(agentsDir, entry.name, "definition.json");
             if (existsSync(defPath)) {
               try {
-                const def = JSON.parse(readFileSync(defPath, "utf-8"));
+                const def: AgentDefinition = JSON.parse(readFileSync(defPath, "utf-8"));
+                const agentsMdPath = getAgentAgentsMdPath(username, def.id);
+                if (existsSync(agentsMdPath)) {
+                  def.systemPrompt = readFileSync(agentsMdPath, "utf-8");
+                }
                 if (!this.agents.has(def.id)) {
                   await this.register(username, def, false);
                 }

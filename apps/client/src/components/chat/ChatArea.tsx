@@ -7,6 +7,7 @@ import { useChatScroll } from "@/hooks/useChatScroll";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { useLiterals, type ContextUsage, type MessageUsage } from "@/lib";
 import { apiFetch } from "@/lib/api";
+import { useEntityConfig } from "@/hooks/useEntityConfig";
 import {
   buildCreateSessionBody,
   getSessionMeta,
@@ -81,6 +82,44 @@ export function ChatArea({
   const [settledApprovals, setSettledApprovals] = useState<Record<string, "confirm" | "deny">>({});
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
 
+  const entityType = activeTeam ? "team" : activeAgent ? "agent" : activeProjectId || activeProjectName ? "project" : "global";
+  const entityId = activeTeam?.id || activeAgent?.id || activeProjectId || activeProjectName || "global";
+  const { resolvedConfig } = useEntityConfig(entityType, entityId);
+
+  const [welcomeTools, setWelcomeTools] = useState<string[]>([]);
+  const [welcomeSkills, setWelcomeSkills] = useState<string[]>([]);
+  const [welcomeExecutionMode, setWelcomeExecutionMode] = useState<
+    "readonly" | "standard" | "autonomous" | undefined
+  >(undefined);
+  const [hasUserModifiedWelcome, setHasUserModifiedWelcome] = useState(false);
+
+  useEffect(() => {
+    if (resolvedConfig && !hasUserModifiedWelcome) {
+      if (resolvedConfig.toolOverrides?.add && resolvedConfig.toolOverrides.add.length > 0) {
+        setWelcomeTools(resolvedConfig.toolOverrides.add);
+      } else {
+        setWelcomeTools([
+          "read",
+          "write",
+          "edit",
+          "bash",
+          "grep",
+          "find",
+          "ls",
+          "request_approval",
+          "ask_question",
+          "render_html",
+        ]);
+      }
+      if (resolvedConfig.skills) {
+        setWelcomeSkills(resolvedConfig.skills);
+      }
+      if (resolvedConfig.executionMode) {
+        setWelcomeExecutionMode(resolvedConfig.executionMode as any);
+      }
+    }
+  }, [resolvedConfig, hasUserModifiedWelcome]);
+
   const createSessionAndSend = async (messageText: string, attachments?: File[]) => {
     const sessionName = getSessionName({ activeTeam, activeAgent, activeProjectName });
 
@@ -108,11 +147,19 @@ export function ChatArea({
           "Content-Type": "application/json",
         },
         body: JSON.stringify(
-          buildCreateSessionBody(sessionName, {
-            activeTeam,
-            activeAgent,
-            activeProjectName,
-          }),
+          buildCreateSessionBody(
+            sessionName,
+            {
+              activeTeam,
+              activeAgent,
+              activeProjectName,
+            },
+            {
+              tools: welcomeTools,
+              skills: welcomeSkills,
+              executionMode: welcomeExecutionMode,
+            },
+          ),
         ),
       });
 
@@ -667,6 +714,18 @@ export function ChatArea({
           onSend={(msg, attachments) => createSessionAndSend(msg, attachments)}
           suggestions={getSuggestions()}
           showModelSelector={true}
+          activeTools={welcomeTools}
+          onToolsChange={(t, mode) => {
+            setHasUserModifiedWelcome(true);
+            setWelcomeTools(t);
+            if (mode) setWelcomeExecutionMode(mode);
+          }}
+          executionMode={welcomeExecutionMode}
+          activeSkills={welcomeSkills}
+          onSkillsChange={(s) => {
+            setHasUserModifiedWelcome(true);
+            setWelcomeSkills(s);
+          }}
           allowAttachments={!activeTeam}
           disabled={streaming || !connected}
           loading={streaming}

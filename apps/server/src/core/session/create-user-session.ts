@@ -42,6 +42,9 @@ export interface CreateUserSessionInput {
   projectId?: string;
   agentId?: string;
   teamId?: string;
+  tools?: string[];
+  skills?: string[];
+  executionMode?: "readonly" | "standard" | "autonomous";
 }
 
 export interface CreatedSessionDto {
@@ -59,7 +62,7 @@ export interface CreatedSessionDto {
 export async function createUserSession(
   input: CreateUserSessionInput,
 ): Promise<CreatedSessionDto> {
-  const { username, name, projectId, agentId, teamId } = input;
+  const { username, name, projectId, agentId, teamId, tools, skills, executionMode } = input;
   const newSessionId = crypto.randomUUID();
 
   let ownerAgentId = agentId;
@@ -100,7 +103,13 @@ export async function createUserSession(
     projectId: resolvedProjectId || null,
     agentId: ownerAgentId || null,
     teamId: teamId || null,
+    ...(executionMode ? { executionMode } : {}),
+    ...(skills ? { skills } : {}),
   });
+
+  if (tools && tools.length > 0) {
+    sessionManager.metadataStore.persistSessionTools(username, newSessionId, tools);
+  }
 
   await sessionManager.getOrCreateSession(
     username,

@@ -13,6 +13,9 @@ export interface CreateSessionBody {
   projectId?: string;
   agentId?: string;
   teamId?: string;
+  tools?: string[];
+  skills?: string[];
+  executionMode?: "readonly" | "standard" | "autonomous";
 }
 
 type ResolvedContext =
@@ -43,17 +46,27 @@ function resolveContext(context: SessionContext): ResolvedContext {
 export function buildCreateSessionBody(
   sessionName: string,
   context: SessionContext,
+  options?: { tools?: string[]; skills?: string[]; executionMode?: string },
 ): CreateSessionBody {
   const resolved = resolveContext(context);
+  const base: CreateSessionBody = {
+    name: sessionName,
+    ...(options?.tools && options.tools.length > 0 ? { tools: options.tools } : {}),
+    ...(options?.skills && options.skills.length > 0 ? { skills: options.skills } : {}),
+    ...(options?.executionMode
+      ? { executionMode: options.executionMode as "readonly" | "standard" | "autonomous" }
+      : {}),
+  };
+
   switch (resolved.type) {
     case "team":
-      return { name: sessionName, teamId: resolved.id };
+      return { ...base, teamId: resolved.id };
     case "agent":
-      return { name: sessionName, agentId: resolved.id };
+      return { ...base, agentId: resolved.id };
     case "project":
-      return { name: sessionName, projectId: resolved.id };
+      return { ...base, projectId: resolved.id };
     case "global":
-      return { name: sessionName };
+      return base;
   }
 }
 

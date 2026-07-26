@@ -70,7 +70,7 @@ export async function createAgentRuntime(
     agentId,
     teamId,
     customWorkspaceDir,
-    agentSkills: agentDef?.skills || [],
+    agentSkills: [],
     skipMemory,
   });
 
@@ -86,7 +86,6 @@ export async function createAgentRuntime(
 
   const modelResolver = new DefaultModelResolver(modelRegistry);
   const resolvedModel = modelResolver.resolve({
-    agentModel: agentDef?.model,
     userDefaultModel: userConfigManager.getUserDefaultModel(username) ?? undefined,
     workspaceConfigModel: context.entityConfig.defaultModel,
   });
@@ -105,9 +104,10 @@ export async function createAgentRuntime(
       workspaceDir: context.workspaceDir,
       sessionDir: context.sessionDir,
       resolvedAgentId: agentId,
-      agentDef,
+      agentDef: agentDef ? { name: agentDef.name, systemPrompt: agentDef.systemPrompt || "" } : undefined,
       cachedMcpToolNames: context.cachedMcpToolNames,
       projectId: context.projectId,
+      entityConfig: context.entityConfig,
     });
 
     resourceLoader = new DefaultResourceLoader({

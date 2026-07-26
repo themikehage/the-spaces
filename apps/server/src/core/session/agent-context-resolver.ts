@@ -4,6 +4,7 @@ import { join, resolve } from "node:path";
 import { cascadeConfigLoader, type EntityConfig } from "../config";
 import { mcpRegistry } from "../mcp-registry";
 import { getResolvedSkillPaths } from "../session-manager";
+import { sessionMetadataStore } from "./metadata-store";
 import { userConfigManager } from "./user-config";
 import { resolveProjectDir, resolveSessionWorkspace } from "./workspace-resolver";
 
@@ -85,11 +86,24 @@ export async function resolveAgentContext(
   });
 
   const skillPaths = getResolvedSkillPaths(workspaceDir, username);
-  if (agentSkills.length > 0) {
-    for (const sk of agentSkills) {
-      const candidate = resolve(workspaceDir, ".pi", "skills", sk);
-      if (existsSync(candidate) && !skillPaths.includes(candidate)) {
-        skillPaths.push(candidate);
+  const metadata = sessionMetadataStore.getSessionMetadata(username, sessionId);
+  const metadataSkills: string[] = metadata && Array.isArray(metadata.skills) ? metadata.skills : [];
+  const entityConfigSkills: string[] = entityConfig.skills || [];
+  const combinedSkills = Array.from(
+    new Set([...agentSkills, ...metadataSkills, ...entityConfigSkills]),
+  );
+
+  if (combinedSkills.length > 0) {
+    for (const sk of combinedSkills) {
+      const candidates = [
+        sk,
+        resolve(workspaceDir, ".pi", "skills", sk),
+        resolve(workspaceDir, ".agents", "skills", sk),
+      ];
+      for (const candidate of candidates) {
+        if (existsSync(candidate) && !skillPaths.includes(candidate)) {
+          skillPaths.push(candidate);
+        }
       }
     }
   }

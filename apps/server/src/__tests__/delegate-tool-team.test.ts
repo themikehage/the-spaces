@@ -19,7 +19,7 @@ describe("delegate_task Tool Team Integration Tests", () => {
           username,
           status: "idle",
           server: {
-            definition: { id: specialistId, name: "Specialist", role: "Developer" },
+            definition: { id: specialistId, name: "Specialist" },
             session: {
               id: `del_specialist`,
               cwd: teamWorkspace,
@@ -46,7 +46,7 @@ describe("delegate_task Tool Team Integration Tests", () => {
           username,
           status: "idle",
           server: {
-            definition: { id: unauthorizedId, name: "Unauthorized", role: "Auditor" },
+            definition: { id: unauthorizedId, name: "Unauthorized" },
           },
         } as any;
       }

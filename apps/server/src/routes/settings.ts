@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 import { Hono } from "hono";
-import { existsSync, mkdirSync, readdirSync, unlinkSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { getUserDir, getWorkspaceDir } from "shared";
+import { getGlobalAgentsMdPath, getUserDir, getWorkspaceDir } from "shared";
 import { getAppConfig } from "../config/app-config";
 import { applyCacheHeaders } from "../core/cache-headers";
 import { sessionManager } from "../core/session-manager";
@@ -24,7 +24,6 @@ settingsRouter.get("/avatar", async (c) => {
   const files = readdirSync(userDir);
   const avatarFile = files.find((f) => f.startsWith("factory-avatar."));
   if (!avatarFile) return c.notFound();
-
   const avatarPath = join(userDir, avatarFile);
   const cacheResponse = applyCacheHeaders(c, avatarPath);
   if (cacheResponse) {
@@ -49,6 +48,12 @@ settingsRouter.get("/", (c) => {
   const settings = sessionManager.userConfig.getUserSettings(username);
   const appConfig = getAppConfig();
 
+  const globalAgentsMd = getGlobalAgentsMdPath(username);
+  let factorySystemPrompt = settings.factorySystemPrompt ?? "";
+  if (existsSync(globalAgentsMd)) {
+    factorySystemPrompt = readFileSync(globalAgentsMd, "utf-8");
+  }
+
   return c.json({
     memoryEnabled: settings.memoryEnabled ?? true,
     memoryAutoStore: settings.memoryAutoStore ?? false,
@@ -63,7 +68,7 @@ settingsRouter.get("/", (c) => {
         : appConfig.subagent.maxDepth,
     factoryName: settings.factoryName ?? "Spaces",
     factoryAvatarUrl: settings.factoryAvatarUrl ?? null,
-    factorySystemPrompt: settings.factorySystemPrompt ?? "",
+    factorySystemPrompt,
     showPromptPreviews: settings.showPromptPreviews ?? false,
     previewBaseUrl: process.env.PREVIEW_BASE_URL ?? null,
   });
@@ -123,7 +128,12 @@ settingsRouter.patch("/", async (c) => {
       updates.factoryAvatarUrl = body.factoryAvatarUrl ? String(body.factoryAvatarUrl) : null;
     }
     if (body.factorySystemPrompt !== undefined) {
-      updates.factorySystemPrompt = String(body.factorySystemPrompt);
+      const globalAgentsMd = getGlobalAgentsMdPath(username);
+      const dotSpacesDir = join(getWorkspaceDir(username), ".spaces");
+      if (!existsSync(dotSpacesDir)) {
+        mkdirSync(dotSpacesDir, { recursive: true });
+      }
+      writeFileSync(globalAgentsMd, String(body.factorySystemPrompt), "utf-8");
     }
     if (body.showPromptPreviews !== undefined) {
       updates.showPromptPreviews = !!body.showPromptPreviews;
