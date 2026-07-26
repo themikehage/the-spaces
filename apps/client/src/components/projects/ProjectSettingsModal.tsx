@@ -6,6 +6,7 @@ import { DEFAULT_AVATAR_PREFIX, isDefaultAvatar } from "@/lib/defaultAvatars";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { ProjectAssignmentPanel } from "./ProjectAssignmentPanel";
+import { EntityConfigEditor } from "@/components/shared/EntityConfigEditor";
 import { SystemPromptViewer } from "@/components/prompts/SystemPromptViewer";
 import { literals as u } from "./ProjectSettingsModal.literals";
 
@@ -262,6 +263,15 @@ export function ProjectSettingsModal({
 
             <div className="pt-2">
               <ProjectAssignmentPanel projectId={project.id} />
+            </div>
+
+            <div className="pt-2 border-t border-input">
+              <EntityConfigEditor
+                entityType="project"
+                entityId={project.id}
+                title={`Configuración de Workspace (${name})`}
+                description="Define modelos, herramientas y permisos específicos para este proyecto."
+              />
             </div>
 
             <SystemPromptViewer

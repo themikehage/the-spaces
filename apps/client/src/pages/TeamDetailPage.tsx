@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+import { EntityConfigEditor } from "@/components/shared/EntityConfigEditor";
 import { EntityAvatar } from "@/components/shared/EntityAvatar";
 import { TeamInput } from "@/components/teams/TeamInput";
 import { AddTeamMemberModal } from "@/components/teams/TeamMembersModal";
@@ -8,7 +9,7 @@ import { useAgents } from "@/hooks/useAgents";
 import { useTeam } from "@/hooks/useTeam";
 import { useLiterals } from "@/lib";
 import { apiFetch } from "@/lib/api";
-import { BarChart, MessageSquare, RefreshCw } from "lucide-react";
+import { BarChart, MessageSquare, RefreshCw, Sliders } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Cell,
@@ -53,7 +54,8 @@ export function TeamDetailPage({ teamId, onNavigate }: Props) {
 
   const { agents: registeredAgents } = useAgents();
 
-  const [activeSubTab, setActiveSubTab] = useState<"chat" | "analytics">("chat");
+  const [activeSubTab, setActiveSubTab] = useState<"chat" | "analytics" | "config">("chat");
+
   const [showMembersSidebar, setShowMembersSidebar] = useState(true);
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
 
@@ -162,6 +164,10 @@ export function TeamDetailPage({ teamId, onNavigate }: Props) {
               <BarChart className="w-3.5 h-3.5" />
               <span>{l.tabAnalytics}</span>
             </button>
+            <button onClick={() => setActiveSubTab("config")} className={tabClass("config")}>
+              <Sliders className="w-3.5 h-3.5" />
+              <span>Configuración</span>
+            </button>
           </div>
         </div>
 
@@ -185,7 +191,7 @@ export function TeamDetailPage({ teamId, onNavigate }: Props) {
       </div>
 
       <div className="flex-1 flex min-h-0 relative overflow-hidden">
-        {activeSubTab === "chat" ? (
+        {activeSubTab === "chat" && (
           <div className="flex-1 flex min-h-0 relative overflow-hidden w-full">
             <div className="flex-1 flex flex-col min-w-0 h-full">
               <TeamMessages
@@ -206,7 +212,9 @@ export function TeamDetailPage({ teamId, onNavigate }: Props) {
               />
             )}
           </div>
-        ) : (
+        )}
+
+        {activeSubTab === "analytics" && (
           <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 bg-background">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-foreground">Team Performance Metrics</h3>
@@ -230,7 +238,6 @@ export function TeamDetailPage({ teamId, onNavigate }: Props) {
               </div>
             ) : (
               <div className="space-y-6">
-                {/* KPI Cards Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="border border-input/60 rounded-xl p-4 bg-card/20 shadow-xs">
                     <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider block mb-1">
@@ -274,7 +281,6 @@ export function TeamDetailPage({ teamId, onNavigate }: Props) {
                   </div>
                 </div>
 
-                {/* Agent turns distribution */}
                 <div className="bg-card border border-input rounded-2xl p-4 md:p-6 shadow-xs max-w-xl">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-foreground mb-4">
                     {l.chartTurnsTitle}
@@ -320,6 +326,17 @@ export function TeamDetailPage({ teamId, onNavigate }: Props) {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {activeSubTab === "config" && (
+          <div className="flex-1 overflow-y-auto p-6 max-w-3xl mx-auto w-full">
+            <EntityConfigEditor
+              entityType="team"
+              entityId={teamId}
+              title={`Configuración de Workspace (${team.name})`}
+              description="Define los defaults heredables de modelo, permisos y herramientas para todos los miembros del equipo."
+            />
           </div>
         )}
       </div>
