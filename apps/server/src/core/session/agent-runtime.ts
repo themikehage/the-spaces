@@ -63,7 +63,7 @@ export async function createAgentRuntime(
     agentDef = resolved.agentDef;
   }
 
-  const context = resolveAgentContext({
+  const context = await resolveAgentContext({
     username,
     sessionId,
     projectId,
@@ -88,6 +88,7 @@ export async function createAgentRuntime(
   const resolvedModel = modelResolver.resolve({
     agentModel: agentDef?.model,
     userDefaultModel: userConfigManager.getUserDefaultModel(username) ?? undefined,
+    workspaceConfigModel: context.entityConfig.defaultModel,
   });
 
   const memory = await memoryRegistry.get(
@@ -145,6 +146,7 @@ export async function createAgentRuntime(
     sessionId,
     isSubagent: toolProfile === "subagent" || toolProfile === "agent-server",
     username,
+    permissionOverrides: context.entityConfig.permissionOverrides,
   });
 
   const afterToolCall = createAfterToolCallHook({

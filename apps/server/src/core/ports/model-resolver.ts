@@ -7,6 +7,7 @@ export interface ModelResolutionContext {
   projectModel?: string;
   teamModel?: string;
   userDefaultModel?: string;
+  workspaceConfigModel?: string;
 }
 
 export interface ModelResolver {

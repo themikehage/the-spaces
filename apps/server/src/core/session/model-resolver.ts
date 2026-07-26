@@ -12,6 +12,7 @@ export class DefaultModelResolver implements ModelResolver {
       ctx.projectModel,
       ctx.teamModel,
       ctx.userDefaultModel,
+      ctx.workspaceConfigModel,
     ].filter((m): m is string => Boolean(m));
 
     const available = this.modelRegistry.getAvailable();

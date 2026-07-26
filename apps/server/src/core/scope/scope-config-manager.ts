@@ -28,7 +28,7 @@ export interface ScopeConfig {
 
 export type AgentMembership = { type: "global" } | { type: "project"; id: string };
 
-class ScopeConfigManager {
+export class ScopeConfigManager {
   private cache = new Map<string, ScopeConfig>();
   private locks = new Map<string, Promise<void>>();
 

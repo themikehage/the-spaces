@@ -11,6 +11,7 @@ export interface CreateBeforeToolCallHookParams {
   parentSessionId?: string;
   username?: string;
   executionMode?: "readonly" | "standard" | "autonomous";
+  permissionOverrides?: Record<string, "allow" | "deny" | "ask">;
 }
 
 export function createBeforeToolCallHook({
@@ -19,6 +20,7 @@ export function createBeforeToolCallHook({
   parentSessionId,
   username,
   executionMode,
+  permissionOverrides,
 }: CreateBeforeToolCallHookParams) {
   const resolvedIsSubagent =
     isSubagent ||
@@ -58,6 +60,7 @@ export function createBeforeToolCallHook({
       parentSessionId,
       executionMode: resolvedMode,
       allowedWriteDir,
+      permissionOverrides,
     });
     if (verdict.allow === false) {
       return { block: true, reason: `[Permission Denied] ${verdict.reason}` };

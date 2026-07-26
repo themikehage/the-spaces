@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: MIT
-export interface WorkspaceConfig {
-  rules?: string[];
-  skills?: string[];
-  workflows?: string[];
-  defaultModel?: string;
-  permissionOverrides?: Record<string, "allow" | "deny" | "ask">;
-}
+import type { EntityConfig } from "../config/entity-config";
+
+export type WorkspaceConfig = EntityConfig;
 
 export interface WorkspaceConfigPort {
-  load(workspaceDir: string): Promise<WorkspaceConfig | null>;
+  load(workspaceDir: string): Promise<EntityConfig | null>;
 }
+

@@ -858,3 +858,27 @@ export const PromptPreviewResponseSchema = z.object({
 });
 export type PromptPreviewResponse = z.infer<typeof PromptPreviewResponseSchema>;
 
+export const EntityTypeSchema = z.enum(["global", "agent", "project", "team"]);
+export type EntityType = z.infer<typeof EntityTypeSchema>;
+
+export const EntityConfigSchema = z
+  .object({
+    defaultModel: z.string().optional(),
+    toolOverrides: z
+      .object({
+        add: z.array(z.string()).optional(),
+        remove: z.array(z.string()).optional(),
+      })
+      .optional(),
+    permissionOverrides: z
+      .record(z.string(), z.enum(["allow", "deny", "ask"]))
+      .optional(),
+    skills: z.array(z.string()).optional(),
+    rules: z.array(z.string()).optional(),
+    workflows: z.array(z.string()).optional(),
+    hooks: z.record(z.string(), z.unknown()).optional(),
+  })
+  .passthrough();
+export type EntityConfigType = z.infer<typeof EntityConfigSchema>;
+
+

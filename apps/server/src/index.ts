@@ -18,6 +18,7 @@ import { agentsRouter } from "./routes/agents";
 import { approvalsRouter } from "./routes/approvals";
 import { authRouter } from "./routes/auth";
 import { backupRouter } from "./routes/backup";
+import { configRouter } from "./routes/config";
 import { envRouter } from "./routes/env";
 import { factoryRouter } from "./routes/factory";
 import { filesRouter } from "./routes/files";
@@ -108,6 +109,7 @@ app.get("/api/health", (c) =>
 
 app.route("/api/preview", previewRouter);
 app.route("/api/prompts", promptsRouter);
+app.route("/api/config", configRouter);
 app.route("/api/auth", authRouter);
 app.on(["GET", "POST"], "/api/auth/**", (c) => auth.handler(c.req.raw));
 app.route("/api/sessions", sessionsRouter);

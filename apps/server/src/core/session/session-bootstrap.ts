@@ -87,12 +87,23 @@ export async function bootstrapAgentSession(
   }
 
   const systemTools = sessionMetadataStore.getSessionTools(username, sessionId);
+  const mergedToolOverrides = {
+    add: [
+      ...(context.entityConfig?.toolOverrides?.add || []),
+      ...(config.toolOverrides?.add || []),
+    ],
+    remove: [
+      ...(context.entityConfig?.toolOverrides?.remove || []),
+      ...(config.toolOverrides?.remove || []),
+    ],
+  };
+
   const combinedTools = resolveActiveTools({
     sessionTools: systemTools,
     hasExaKey: !!(context.userEnv.EXA_API_KEY || process.env.EXA_API_KEY),
     memoryEnabled: context.memoryEnabled,
     resolvedAgentId: agentId,
-    toolOverrides: config.toolOverrides,
+    toolOverrides: mergedToolOverrides,
   });
 
   let finalTools = combinedTools;

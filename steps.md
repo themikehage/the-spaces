@@ -94,6 +94,7 @@
 - [x] Implementar Hito 01 de Pre-OSS Stabilization (`plans/11-pre-oss-stabilization/01-session-create-semantics.md`): Restaurar la semántica completa de `POST /api/sessions` (Orchestration-Only), extraer el helper `createUserSession`, eliminar handlers sombra legacy y remover referencias a `Negotiation`.
 - [x] Implementar Hito 05 de Pre-OSS Stabilization (`plans/11-pre-oss-stabilization/05-runtime-tool-catalog.md`): Unificar el catálogo de herramientas en `packages/shared/src/tools-catalog.ts`, refactorizar los perfiles de inicio mediante `bootstrapAgentSession`, consolidar la política de memoria y eliminar arrays hardcodeados locales de tools.
 - [x] Implementar la configuración "Show System Prompts" (Inspector de Prompts del Sistema): Motor dry-run en `SessionPromptBuilder.previewSystemPrompt`, endpoint `POST /api/prompts/preview`, switch de usuario `showPromptPreviews` y componente UI `<SystemPromptViewer />` inyectado en ajustes de Agente Global, Agentes, Sub-agentes, Repositorios y Equipos.
+- [x] Implementar Hito 12 — Entity Config Cascade (`CascadeConfigLoader`): Abstracción `EntityConfig`, `deepMerge` con deduplicación y overrides, resolución en cascada `global -> entity (team > project > agent)`, wiring en runtimes (`DefaultModelResolver`, `ToolActivationEngine`, `PermissionEngine`), sub-router REST `/api/config` y endpoint de conveniencia `GET /api/sessions/:id/config`.
 
 ## Criterio de cierre del sprint
 

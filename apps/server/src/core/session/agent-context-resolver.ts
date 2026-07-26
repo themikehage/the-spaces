@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { cascadeConfigLoader, type EntityConfig } from "../config";
 import { mcpRegistry } from "../mcp-registry";
 import { getResolvedSkillPaths } from "../session-manager";
 import { userConfigManager } from "./user-config";
@@ -28,9 +29,12 @@ export interface ResolvedAgentContext {
   userEnv: Record<string, string>;
   memoryEnabled: boolean;
   memoryDbPath: string;
+  entityConfig: EntityConfig;
 }
 
-export function resolveAgentContext(params: ResolveAgentContextParams): ResolvedAgentContext {
+export async function resolveAgentContext(
+  params: ResolveAgentContextParams,
+): Promise<ResolvedAgentContext> {
   const {
     username,
     sessionId,
@@ -47,6 +51,7 @@ export function resolveAgentContext(params: ResolveAgentContextParams): Resolved
     sessionId,
     projectId,
     agentId,
+    teamId,
   );
 
   if (customWorkspaceDir) {
@@ -72,6 +77,12 @@ export function resolveAgentContext(params: ResolveAgentContextParams): Resolved
       }
     }
   }
+
+  const entityConfig = await cascadeConfigLoader.load(username, {
+    agentId,
+    projectId: resolvedProjectId,
+    teamId,
+  });
 
   const skillPaths = getResolvedSkillPaths(workspaceDir, username);
   if (agentSkills.length > 0) {
@@ -109,5 +120,7 @@ export function resolveAgentContext(params: ResolveAgentContextParams): Resolved
     userEnv,
     memoryEnabled,
     memoryDbPath,
+    entityConfig,
   };
 }
+

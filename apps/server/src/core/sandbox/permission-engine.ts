@@ -13,6 +13,7 @@ export interface PermissionEngineOptions {
   parentSessionId?: string;
   executionMode?: "readonly" | "standard" | "autonomous";
   allowedWriteDir?: string;
+  permissionOverrides?: Record<string, "allow" | "deny" | "ask">;
 }
 
 export interface PermissionRule {

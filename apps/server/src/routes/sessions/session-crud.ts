@@ -89,3 +89,18 @@ sessionCrudRouter.delete("/:id", async (c) => {
   await sessionManager.destroySession(username, id);
   return c.json({ success: true });
 });
+
+sessionCrudRouter.get("/:id/config", async (c) => {
+  const { username } = getAuthPayload(c);
+  const id = c.req.param("id");
+  const { sessionMetadataStore } = await import("../../core/session/metadata-store");
+  const { cascadeConfigLoader } = await import("../../core/config");
+
+  const meta = sessionMetadataStore.getSessionMetadata(username, id);
+  const resolved = await cascadeConfigLoader.load(username, {
+    agentId: meta?.agentId,
+    projectId: meta?.projectId,
+    teamId: meta?.teamId,
+  });
+  return c.json(resolved);
+});
