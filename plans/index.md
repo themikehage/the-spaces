@@ -12,6 +12,8 @@
 | 08  | [08-security.md](./08-security.md)                                     | 📋 Planificado | Hardening de seguridad: clave hardcodeada, secretlint, auth, sandbox bash, rate limiting   |
 | 09  | [09-architecture-extensibility.md](./09-architecture-extensibility.md) | 📋 Planificado | Extensibilidad vs. Google ADK: plugins, providers, tools, stores, SDK packaging            |
 | 10  | [10-technical-debt.md](./10-technical-debt.md)                         | 📋 Planificado | Deuda técnica: singletons, AgentSession god object, route splitting, WS contract           |
+| 12  | [12-entity-config-cascade.md](./12-entity-config-cascade.md)          | 📋 Planificado | Config por entidad: CascadeConfigLoader genérico, `.spaces/config.json`, herencia global→entidad |
+| 13  | [13-agent-sdk-abstraction.md](./13-agent-sdk-abstraction.md)          | 📋 Planificado | Abstracción ADK-level: `new SpacesAgent({...})` declarativo, `SpacesRunner` standalone, SDK portable |
 
 ## Referencia
 
