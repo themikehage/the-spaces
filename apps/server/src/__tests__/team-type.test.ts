@@ -9,7 +9,7 @@ mock.module("../ws/handler", () => {
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { UpdateTeamSchema, type UpdateTeam } from "shared";
+import { UpdateTeamSchema, getTeamDir, type UpdateTeam } from "shared";
 import { teamStore } from "../teams/team-store";
 
 const TMP_TEST_DIR = join(import.meta.dirname, "../../tmp-team-type-tests");
@@ -59,7 +59,6 @@ describe("Team Type - Schema and Store Tests", () => {
     };
 
     // Write over the team.json without teamType
-    const { getTeamDir } = require("shared");
     const teamJsonPath = join(getTeamDir(username, created.id), "team.json");
     writeFileSync(teamJsonPath, JSON.stringify(legacyData, null, 2));
 

@@ -4,6 +4,10 @@ import { createImageGenTool } from "./image-gen-tool";
 import { createVideoGenTool } from "./video-gen-tool";
 import { createVisionTool } from "./vision-tool";
 
+import { createDecomposeTasksTool } from "./decompose-tool";
+import { createManageDelegationsTool } from "./manage-delegations-tool";
+import { createUpdateTaskTools } from "./update-task-tool";
+
 export function createUiTools(
   workspaceDir: string,
   username: string,
@@ -317,7 +321,7 @@ export function createUiTools(
   const visionTool = createVisionTool(workspaceDir, username);
   const imageGenTool = createImageGenTool(workspaceDir, username);
 
-  const tools = [
+  const tools: any[] = [
     requestApprovalTool,
     askQuestionTool,
     renderImagesTool,
@@ -331,16 +335,13 @@ export function createUiTools(
   ];
 
   if (subagentOptions) {
-    const { createManageDelegationsTool } = require("./manage-delegations-tool");
     tools.push(createManageDelegationsTool(subagentOptions));
-    const { createDecomposeTasksTool } = require("./decompose-tool");
     tools.push(
       createDecomposeTasksTool({
         username: subagentOptions.username,
         parentSessionId: subagentOptions.parentSessionId,
       }),
     );
-    const { createUpdateTaskTools } = require("./update-task-tool");
     const updateTools = createUpdateTaskTools({
       username: subagentOptions.username,
       parentSessionId: subagentOptions.parentSessionId,

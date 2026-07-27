@@ -116,7 +116,7 @@ export function useScheduleRuns(jobId: string | null) {
         try {
           const data = await fetchScheduleRuns(jobId);
           setRuns(data);
-        } catch {}
+        } catch { /* noop */ }
       }, 3000);
     } else if (pollTimer.current) {
       clearInterval(pollTimer.current);

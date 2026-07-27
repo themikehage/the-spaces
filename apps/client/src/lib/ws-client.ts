@@ -209,7 +209,7 @@ class WsClient {
 
         this.messageHandlers.get(data.type)?.forEach((h) => h(data));
         this.messageHandlers.get("*")?.forEach((h) => h(data));
-      } catch {}
+      } catch { /* noop */ }
     };
 
     ws.onclose = (event) => {

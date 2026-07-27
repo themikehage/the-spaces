@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: MIT
 import { betterAuth } from "better-auth";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { randomBytes } from "node:crypto";
 import { SPACES_DATA_PATH } from "shared";
 import { getDb } from "./db";
 import { programmaticSessionPlugin } from "./plugins/programmatic-session";
@@ -60,10 +63,6 @@ function getOrCreateSecret(): string {
   if (envSecret) {
     return envSecret;
   }
-
-  const { existsSync, readFileSync, writeFileSync, mkdirSync } = require("node:fs");
-  const { join } = require("node:path");
-  const { randomBytes } = require("node:crypto");
 
   const dataPath = SPACES_DATA_PATH();
   if (!existsSync(dataPath)) {

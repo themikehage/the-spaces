@@ -176,7 +176,7 @@ class AgentRegistry {
       const files = readdirSync(agentDir);
       const avatarFile = files.find((f) => f.startsWith("avatar."));
       if (avatarFile) return join(agentDir, avatarFile);
-    } catch {}
+    } catch { /* noop */ }
     return null;
   }
 

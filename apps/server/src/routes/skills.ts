@@ -32,10 +32,6 @@ skillsRouter.get("/", async (c) => {
     }
 
     const skillPaths = getResolvedSkillPaths(workspaceDir, username);
-    const dotSpacesSkills = join(workspaceDir, ".spaces", "skills");
-    if (existsSync(dotSpacesSkills) && !skillPaths.includes(dotSpacesSkills)) {
-      skillPaths.unshift(dotSpacesSkills);
-    }
 
     const result = loadSkills({
       cwd: workspaceDir,

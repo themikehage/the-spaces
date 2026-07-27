@@ -498,7 +498,7 @@ export function ChatInput({
         },
         body: JSON.stringify({ tools, executionMode: nextMode || executionMode }),
       });
-    } catch {}
+    } catch { /* noop */ }
   };
 
   // Focus tracking

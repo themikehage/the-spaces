@@ -16,7 +16,7 @@ function cleanupTestUser(userDir: string) {
     if (existsSync(userDir)) {
       rmSync(userDir, { recursive: true, force: true });
     }
-  } catch {}
+  } catch { /* noop */ }
 }
 
 describe("session-bootstrap profile and tool catalog integration", () => {

@@ -377,7 +377,7 @@ export function ChatArea({
           setSandboxTools(data.tools ?? ALL_TOOL_NAMES);
           setSerialTools(data.serialTools ?? ["request_approval", "ask_question"]);
         }
-      } catch {}
+      } catch { /* noop */ }
     };
     fetchTools();
 
@@ -388,7 +388,7 @@ export function ChatArea({
           const data = await res.json();
           setTasksState(data);
         }
-      } catch {}
+      } catch { /* noop */ }
     };
     fetchTasks();
 

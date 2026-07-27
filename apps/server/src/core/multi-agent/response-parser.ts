@@ -11,7 +11,7 @@ export interface ParsedResponse {
 
 export function isSilentContent(content: string): boolean {
   if (!content) return true;
-  const SILENT_REGEX = /^\s*[\(\[\*]*\s*silent(ioso)?\s*[\)\]\*]*[\s\.]*$/i;
+  const SILENT_REGEX = /^\s*[([*]*\s*silent(ioso)?\s*[)\]*]*[\s.]*$/i;
   return SILENT_REGEX.test(content.trim());
 }
 

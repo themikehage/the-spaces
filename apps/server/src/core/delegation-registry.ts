@@ -163,11 +163,11 @@ export class DelegationRegistry {
               status: "blocked",
               result: d.result,
             });
-          } catch {}
+          } catch { /* noop */ }
         }
         list.push(d);
       }
-    } catch {}
+    } catch { /* noop */ }
     return list;
   }
 

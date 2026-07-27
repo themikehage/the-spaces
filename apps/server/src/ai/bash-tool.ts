@@ -253,7 +253,7 @@ export function createBashToolDefinition(
         const onAbort = () => {
           try {
             child.kill();
-          } catch {}
+          } catch { /* noop */ }
           let finalOutput = output + errorOutput + "\n[Command aborted by user]";
           if (truncated) {
             finalOutput += "\n[...output truncated at 50KB limit]";
@@ -291,7 +291,7 @@ export function createBashToolDefinition(
         const timeoutHandle = setTimeout(() => {
           try {
             child.kill();
-          } catch {}
+          } catch { /* noop */ }
           let finalOutput =
             output + errorOutput + `\n[Command timed out after ${effectiveTimeout} seconds]`;
           if (truncated) {

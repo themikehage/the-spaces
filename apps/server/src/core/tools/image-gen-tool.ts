@@ -92,7 +92,7 @@ export async function runImageGenModel(
               errorMsg = rawText.substring(0, 300);
             }
           }
-        } catch {}
+        } catch { /* noop */ }
 
         // If it's a client error (e.g. 400, 401, 429), throw immediately and do not try the other endpoint.
         if (res.status >= 400 && res.status < 500) {

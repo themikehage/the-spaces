@@ -143,7 +143,7 @@ export class SessionManager {
             children.push(dir);
           }
         }
-      } catch {}
+      } catch { /* noop */ }
     }
 
     // 3. Sesiones de tipo delegate (guardadas directamente en userDir/sessions/)
@@ -159,11 +159,11 @@ export class SessionManager {
                 if (meta.parentSessionId === parentSessionId && !children.includes(dir)) {
                   children.push(dir);
                 }
-              } catch {}
+              } catch { /* noop */ }
             }
           }
         }
-      } catch {}
+      } catch { /* noop */ }
     }
 
     return children;

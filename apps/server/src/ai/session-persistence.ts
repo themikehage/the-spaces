@@ -231,7 +231,7 @@ export function parseSessionEntries(content: string): FileEntry[] {
     try {
       const entry = JSON.parse(line) as FileEntry;
       entries.push(entry);
-    } catch {}
+    } catch { /* noop */ }
   }
 
   return entries;

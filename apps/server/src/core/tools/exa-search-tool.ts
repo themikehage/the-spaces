@@ -247,6 +247,6 @@ function getExaApiKey(username: string): string | null {
   try {
     const env = sessionManager.userConfig.getUserEnv(username);
     if (env.EXA_API_KEY) return env.EXA_API_KEY;
-  } catch {}
+  } catch { /* noop */ }
   return process.env.EXA_API_KEY || null;
 }

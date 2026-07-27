@@ -218,7 +218,7 @@ export function ChartView({
           </AreaChart>
         );
 
-      case "pie":
+      case "pie": {
         const pieKey = keysToRender[0] || "value";
         return (
           <PieChart>
@@ -253,6 +253,7 @@ export function ChartView({
             />
           </PieChart>
         );
+      }
 
       case "bar":
       default:

@@ -89,7 +89,7 @@ export function ProvidersTab() {
         const data = await res.json();
         setInfoProvider({ ...provider, models: data.models ?? provider.models });
       }
-    } catch {
+    } catch { /* noop */
     } finally {
       setInfoLoading(false);
     }

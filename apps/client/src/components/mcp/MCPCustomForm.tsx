@@ -98,7 +98,7 @@ export function MCPCustomForm({ initialConfig, onSubmit, onCancel, onTest }: MCP
     let parsedArgs: string[] = [];
     try {
       parsedArgs = JSON.parse(argsStr);
-    } catch {}
+    } catch { /* noop */ }
 
     const envMap: Record<string, string> = {};
     for (const row of envRows) {

@@ -105,7 +105,7 @@ class TeamStore {
               try {
                 const stats = statSync(msgPath);
                 team.updatedAt = stats.mtime.toISOString();
-              } catch {}
+              } catch { /* noop */ }
             }
             teams.push(team);
           }
@@ -235,7 +235,7 @@ class TeamStore {
                 break;
               }
             }
-          } catch {}
+          } catch { /* noop */ }
         }
       }
 
@@ -245,7 +245,7 @@ class TeamStore {
           if (!sessionId || parsed.sessionId === sessionId) {
             messages.unshift(parsed);
           }
-        } catch {}
+        } catch { /* noop */ }
       }
 
       return messages;
@@ -256,7 +256,7 @@ class TeamStore {
       if (fd !== null) {
         try {
           closeSync(fd);
-        } catch {}
+        } catch { /* noop */ }
       }
     }
   }

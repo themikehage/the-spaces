@@ -28,7 +28,7 @@ function getProjectNameForSession(username: string, sessionId: string): string |
     try {
       const meta = JSON.parse(readFileSync(p, "utf-8"));
       return meta.projectId ?? meta.projectName;
-    } catch {}
+    } catch { /* noop */ }
   }
 }
 
@@ -140,7 +140,7 @@ async function subscribeWsToSession(
         for (const s of sockets) {
           try {
             s.send(payload);
-          } catch {}
+          } catch { /* noop */ }
         }
       }
       sendContextUsage();
@@ -156,7 +156,7 @@ async function subscribeWsToSession(
         for (const s of sockets) {
           try {
             s.send(payload);
-          } catch {}
+          } catch { /* noop */ }
         }
       }
       sendContextUsage();
@@ -223,7 +223,7 @@ export function createWsContext(): WsConnectionContext {
         if (validated?.username) {
           username = validated.username;
         }
-      } catch {}
+      } catch { /* noop */ }
 
       if (!username) {
         const cookieHeader =
@@ -322,7 +322,7 @@ export function createWsContext(): WsConnectionContext {
               safeSend(ws, JSON.stringify({ type: "auth_error", error: "Invalid session" }));
               try {
                 ws.close();
-              } catch {}
+              } catch { /* noop */ }
             }
             return;
           }
@@ -353,7 +353,7 @@ export function createWsContext(): WsConnectionContext {
             safeSend(ws, JSON.stringify({ type: "auth_error", error: "Invalid session" }));
             try {
               ws.close();
-            } catch {}
+            } catch { /* noop */ }
           }
         }
         return;
@@ -470,7 +470,7 @@ export function createWsContext(): WsConnectionContext {
               .loadAll(user.username)
               .filter((d: any) => d.enabled !== false)
               .map((d: any) => d.name);
-          } catch {}
+          } catch { /* noop */ }
 
           const mergedCustom = Array.from(new Set([...customActive, ...enabledCustomFromStorage]));
 
@@ -675,7 +675,7 @@ export function createWsContext(): WsConnectionContext {
             sessionId: (data as any)?.sessionId,
           }),
         );
-      } catch {}
+      } catch { /* noop */ }
     }
   };
 

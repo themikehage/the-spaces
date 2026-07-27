@@ -126,7 +126,7 @@ Call \`manage_pipelines\` with \`action: "upsert"\`, \`id: "pipeline-id"\`. You 
       }
     ],
     "scripts": {
-      "lint.sh": "#!/bin/bash\\nset -e\\npnpm lint\\necho '---OUTPUT---'\\necho '{\\\"passed\\\":true}'\\necho '---END OUTPUT---'"
+      "lint.sh": "#!/bin/bash\\nset -e\\npnpm lint\\necho '---OUTPUT---'\\necho '{"passed":true}'\\necho '---END OUTPUT---'"
     }
   }
 }

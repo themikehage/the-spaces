@@ -188,7 +188,7 @@ async function runNativeGrep(
     try {
       const gitignoreContent = await readFile(gitignorePath, "utf-8");
       ig.add(gitignoreContent);
-    } catch {}
+    } catch { /* noop */ }
   }
 
   const files: string[] = [];
@@ -257,7 +257,7 @@ async function runNativeGrep(
           if (matches.length >= opts.limit) break;
         }
       }
-    } catch {}
+    } catch { /* noop */ }
   }
 
   if (matches.length === 0) {

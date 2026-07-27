@@ -70,7 +70,7 @@ export function extractFileMarkers(text: string): FileMarker[] {
 
   // Local filesystem paths with image extensions
   const localImageRegex =
-    /(?:[a-zA-Z]:[\\/]|[\/])(?:[\w.-]+[\\/])+\w+\.(?:jpg|jpeg|png|webp|gif|svg)/gi;
+    /(?:[a-zA-Z]:[\\/]|[/])(?:[\w.-]+[\\/])+\w+\.(?:jpg|jpeg|png|webp|gif|svg)/gi;
   const localMatches = text.match(localImageRegex) ?? [];
   for (const path of localMatches) {
     if (!isDuplicate(path)) {

@@ -8,7 +8,7 @@ describe("UI Tools Integration Tests", () => {
 
   it("should register ask_question with user context and resolve on submit via uiApprovalRegistry", async () => {
     const uiTools = createUiTools(workspaceDir, username, false, { sessionId: "session_1" });
-    const askTool = uiTools.find((t) => t.name === "ask_question");
+    const askTool = uiTools.find((t: any) => t.name === "ask_question");
     expect(askTool).toBeDefined();
 
     const toolCallId = "call_ask_123";
@@ -38,7 +38,7 @@ describe("UI Tools Integration Tests", () => {
 
   it("should register request_approval with user context and resolve on confirm", async () => {
     const uiTools = createUiTools(workspaceDir, username, false, { sessionId: "session_2" });
-    const approvalTool = uiTools.find((t) => t.name === "request_approval");
+    const approvalTool = uiTools.find((t: any) => t.name === "request_approval");
     expect(approvalTool).toBeDefined();
 
     const toolCallId = "call_appr_456";

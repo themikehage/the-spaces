@@ -194,7 +194,7 @@ export function WorkspacePanel({
       const data = await res.json();
       setSelectedFile(data);
     },
-    [, getWorkspaceUrl],
+    [getWorkspaceUrl],
   );
 
   // Create new file or folder
@@ -223,7 +223,7 @@ export function WorkspacePanel({
         setError(err.message || "Create failed");
       }
     },
-    [, loadWorkspace, getWorkspaceUrl],
+    [loadWorkspace, getWorkspaceUrl],
   );
 
   // Rename file or folder
@@ -257,7 +257,7 @@ export function WorkspacePanel({
         setError(err.message || "Rename failed");
       }
     },
-    [, selectedFile, loadWorkspace, getWorkspaceUrl],
+    [selectedFile, loadWorkspace, getWorkspaceUrl],
   );
 
   const executeDelete = useCallback(async () => {

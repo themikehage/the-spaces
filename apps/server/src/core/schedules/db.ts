@@ -9,14 +9,20 @@ let dbInstance: Database | null = null;
 export function getSchedulesDb(): Database {
   if (dbInstance) return dbInstance;
 
-  const dbPath = getSchedulesDbPath();
-  const dir = dirname(dbPath);
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true });
+  const isTest = process.env.NODE_ENV === "test" || process.env.BUN_ENV === "test";
+  const dbPath = isTest ? ":memory:" : getSchedulesDbPath();
+
+  if (dbPath !== ":memory:") {
+    const dir = dirname(dbPath);
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true });
+    }
   }
 
   const db = new Database(dbPath);
-  db.exec("PRAGMA journal_mode = WAL;");
+  if (dbPath !== ":memory:") {
+    db.exec("PRAGMA journal_mode = WAL;");
+  }
   db.exec("PRAGMA foreign_keys = ON;");
 
   dbInstance = db;
@@ -71,7 +77,23 @@ export function initSchedulesTables(db: Database = getSchedulesDb()): void {
 
   try {
     db.exec("ALTER TABLE schedule_jobs ADD COLUMN preserve_session INTEGER NOT NULL DEFAULT 1;");
-  } catch {}
+  } catch { /* noop */ }
+
+  try {
+    db.exec("DELETE FROM schedule_jobs WHERE username LIKE 'test_user_%';");
+  } catch { /* noop */ }
+
+  try {
+    db.exec(`
+      DELETE FROM schedule_jobs
+      WHERE id NOT IN (
+        SELECT MIN(id) FROM schedule_jobs GROUP BY username, name
+      );
+    `);
+    db.exec(
+      "CREATE UNIQUE INDEX IF NOT EXISTS idx_schedule_jobs_username_name ON schedule_jobs(username, name);",
+    );
+  } catch { /* noop - index may already exist */ }
 }
 
 function mapRowToJob(row: any): ScheduleJob {

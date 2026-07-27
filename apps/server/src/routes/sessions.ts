@@ -436,7 +436,7 @@ sessionsRouter.get("/projects/:projectName/executions", async (c) => {
       if (existsSync(summaryPath)) {
         executions.push(JSON.parse(readFileSync(summaryPath, "utf-8")));
       }
-    } catch {}
+    } catch { /* noop */ }
   }
   executions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   return c.json({ executions });
@@ -716,7 +716,7 @@ sessionsRouter.post("/:id/model", zValidator("json", ModelSettingsSchema), async
         if (existsSync(cfgPath)) {
           try {
             cfg = JSON.parse(readFileSync(cfgPath, "utf-8"));
-          } catch {}
+          } catch { /* noop */ }
         }
         cfg.defaultModel = `${provider}/${modelId}`;
         writeFileSync(cfgPath, JSON.stringify(cfg, null, 2), "utf-8");
@@ -737,7 +737,7 @@ sessionsRouter.post("/:id/model", zValidator("json", ModelSettingsSchema), async
         sessionStats,
       });
     }
-  } catch {}
+  } catch { /* noop */ }
 
   return c.json({
     success: true,
@@ -856,7 +856,7 @@ sessionsRouter.post("/:id/tools", zValidator("json", ToolPermissionsSchema), asy
       .loadAll(username)
       .filter((d: any) => d.enabled !== false)
       .map((d: any) => d.name);
-  } catch {}
+  } catch { /* noop */ }
 
   const mergedCustom = Array.from(new Set([...customActive, ...enabledCustomFromStorage]));
 
@@ -900,7 +900,7 @@ sessionsRouter.post("/:id/tools", zValidator("json", ToolPermissionsSchema), asy
         if (existsSync(cfgPath)) {
           try {
             cfg = JSON.parse(readFileSync(cfgPath, "utf-8"));
-          } catch {}
+          } catch { /* noop */ }
         }
         if (executionMode) {
           cfg.executionMode = executionMode;
@@ -990,7 +990,7 @@ sessionsRouter.get("/:id/export", async (c) => {
         if (totalSize > 10 * 1024 * 1024) {
           return c.json({ error: "Session size exceeds 10MB limit. Export is not allowed." }, 422);
         }
-      } catch {}
+      } catch { /* noop */ }
     }
   }
 
@@ -1039,7 +1039,7 @@ sessionsRouter.get("/:id/export", async (c) => {
           if (existsSync(summaryPath)) {
             metadata = JSON.parse(readFileSync(summaryPath, "utf-8"));
           }
-        } catch {}
+        } catch { /* noop */ }
       } else if (tipo === "project") {
         const messagesPath = getExecutionMessagesPath(username, "projects", entidad, execId);
         if (existsSync(messagesPath)) {
@@ -1074,7 +1074,7 @@ sessionsRouter.get("/:id/export", async (c) => {
           if (existsSync(summaryPath)) {
             metadata = JSON.parse(readFileSync(summaryPath, "utf-8"));
           }
-        } catch {}
+        } catch { /* noop */ }
       }
     } else {
       const session = await sessionManager.getOrCreateSession(username, sessionId);
@@ -1275,7 +1275,7 @@ sessionsRouter.get("/:parentId/subagents/:subagentId/messages", async (c) => {
   if (existsSync(metadataPath)) {
     try {
       metadata = JSON.parse(readFileSync(metadataPath, "utf-8"));
-    } catch {}
+    } catch { /* noop */ }
   }
 
   return c.json({ messages, metadata });

@@ -161,7 +161,7 @@ async function runNativeFind(
     try {
       const gitignoreContent = await readFile(gitignorePath, "utf-8");
       ig.add(gitignoreContent);
-    } catch {}
+    } catch { /* noop */ }
   }
 
   const results: string[] = [];

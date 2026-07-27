@@ -59,7 +59,7 @@ export class DefaultResourceLoader {
             globalContent = readFileSync(filePath, "utf-8");
             this.agentsFiles.push({ path: filePath, content: globalContent });
             break;
-          } catch {}
+          } catch { /* noop */ }
         }
       }
 
@@ -72,7 +72,7 @@ export class DefaultResourceLoader {
             localContent = readFileSync(filePath, "utf-8");
             this.agentsFiles.push({ path: filePath, content: localContent });
             break;
-          } catch {}
+          } catch { /* noop */ }
         }
       }
 

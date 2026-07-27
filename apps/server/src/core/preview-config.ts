@@ -217,7 +217,7 @@ export function loadPreviewConfig(username: string, projectName: string): Previe
         outputDir: raw.outputDir,
         autoDetected: false,
       };
-    } catch {}
+    } catch { /* noop */ }
   }
 
   return autoDetectFramework(username, projectName);

@@ -63,7 +63,7 @@ export function TeamChatArea({ activeTeam, sessionId, variantMode = false }: Pro
         const data = await agRes.json();
         setRegisteredAgents(data.agents || []);
       }
-    } catch {}
+    } catch { /* noop */ }
   }, [activeTeam.id]);
 
   useEffect(() => {

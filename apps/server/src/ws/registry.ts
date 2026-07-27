@@ -54,7 +54,7 @@ class WsRegistry {
     if (unsub) {
       try {
         unsub();
-      } catch {}
+      } catch { /* noop */ }
       this.unsubById.delete(wsId);
     }
   }
@@ -78,7 +78,7 @@ class WsRegistry {
     if (old) {
       try {
         old();
-      } catch {}
+      } catch { /* noop */ }
     }
     this.unsubById.set(wsId, unsub);
   }
@@ -88,7 +88,7 @@ class WsRegistry {
     if (unsub) {
       try {
         unsub();
-      } catch {}
+      } catch { /* noop */ }
       this.unsubById.delete(wsId);
     }
   }

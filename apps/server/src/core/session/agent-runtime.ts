@@ -305,7 +305,7 @@ export async function createAgentRuntime(
         const meta = JSON.parse(readFileSync(metadataPath, "utf-8"));
         if (!existingParentId) existingParentId = meta.parentSessionId;
         if (!existingSubagentType) existingSubagentType = meta.subagentType;
-      } catch {}
+      } catch { /* noop */ }
     }
   }
 

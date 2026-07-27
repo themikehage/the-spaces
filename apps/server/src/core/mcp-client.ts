@@ -167,7 +167,7 @@ export class McpClient {
           console.warn(`[MCP Server ${this.name} stderr] ${errText}`);
         }
       }
-    } catch {}
+    } catch { /* noop */ }
   }
 
   private async readSseStream(body: ReadableStream<Uint8Array> | null): Promise<void> {
@@ -262,22 +262,24 @@ export class McpClient {
           throw new Error(`[MCP HTTP] Server ${this.name} has no active POST endpoint`);
         }
 
-        return new Promise(async (resolve, reject) => {
-          this.pendingRequests.set(id, { resolve, reject });
-          try {
-            const res = await fetch(this.postUrl!, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: payload,
-            });
-            if (!res.ok) {
+        return new Promise((resolve, reject) => {
+          (async () => {
+            this.pendingRequests.set(id, { resolve, reject });
+            try {
+              const res = await fetch(this.postUrl!, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: payload,
+              });
+              if (!res.ok) {
+                this.pendingRequests.delete(id);
+                reject(new Error(`HTTP request failed: ${res.statusText}`));
+              }
+            } catch (e) {
               this.pendingRequests.delete(id);
-              reject(new Error(`HTTP request failed: ${res.statusText}`));
+              reject(e);
             }
-          } catch (e) {
-            this.pendingRequests.delete(id);
-            reject(e);
-          }
+          })();
         });
       } else {
         const stdin = this.proc?.stdin;
@@ -319,7 +321,7 @@ export class McpClient {
       try {
         stdin.write(payload + "\n");
         stdin.flush();
-      } catch {}
+      } catch { /* noop */ }
     }
   }
 

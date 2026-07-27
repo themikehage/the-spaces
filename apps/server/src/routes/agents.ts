@@ -294,7 +294,6 @@ agentsRouter.post("/:id/avatar", async (c) => {
 
   const agentDir = getAgentDir(username, id);
   if (!existsSync(agentDir)) {
-    // @ts-ignore
     const { mkdirSync } = await import("node:fs");
     mkdirSync(agentDir, { recursive: true });
   }
@@ -306,7 +305,7 @@ agentsRouter.post("/:id/avatar", async (c) => {
         unlinkSync(join(agentDir, f));
       }
     }
-  } catch {}
+  } catch { /* noop */ }
 
   const ext = file.name.split(".").pop() || "png";
   const avatarPath = join(agentDir, `avatar.${ext}`);
@@ -335,7 +334,7 @@ agentsRouter.delete("/:id/avatar", async (c) => {
           unlinkSync(join(agentDir, f));
         }
       }
-    } catch {}
+    } catch { /* noop */ }
   }
 
   agentRegistry.setAvatarUrl(username, id, null);

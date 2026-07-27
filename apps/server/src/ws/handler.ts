@@ -152,7 +152,9 @@ export function onClose(evt: any, _ws: WSContext, forcedWsId?: string | null) {
     if (meta.ws === _ws) {
       const ctx2 = createWsContext();
       (ctx2 as any).id = wsId;
-      wsRegistry.getMeta(wsId)?.ws === _ws && wsRegistry.deleteMeta(wsId);
+      if (wsRegistry.getMeta(wsId)?.ws === _ws) {
+        wsRegistry.deleteMeta(wsId);
+      }
       console.log(`[WS] onClose fallback cleanup for wsId: ${wsId}`);
       const user = wsRegistry.getUser(wsId);
       if (user) wsRegistry.removeUserSocket(user.username, _ws);

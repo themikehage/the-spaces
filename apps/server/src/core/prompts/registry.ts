@@ -55,7 +55,7 @@ export class PromptFragmentRegistry {
               priority: def?.priority || 1,
             };
           }
-        } catch {}
+        } catch { /* noop */ }
       }
     }
     return this.defaults.get(key);

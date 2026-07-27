@@ -39,7 +39,7 @@ export const SchedulesPage: React.FC<Props> = ({ projectId }) => {
           }));
           setProjects(items);
         }
-      } catch {}
+      } catch { /* noop */ }
     }
     fetchProjects();
   }, []);
