@@ -35,7 +35,9 @@ export const Modal: FC<Props> = ({ open, onClose, title, children, footer }) => 
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
             className="absolute inset-0 bg-black/60 backdrop-blur-xs"
-            onClick={onClose}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) onClose();
+            }}
           />
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -43,6 +45,7 @@ export const Modal: FC<Props> = ({ open, onClose, title, children, footer }) => 
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.15 }}
             className="relative bg-card border border-input rounded-xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
           >
             {title && (
               <header className="px-4 py-3 border-b border-input flex items-center justify-between flex-shrink-0 bg-card">

@@ -103,7 +103,6 @@ export function PortalPopover({
     if (!open) return;
 
     const handleOutsideClick = (e: MouseEvent) => {
-      e.stopPropagation();
       const target = e.target as Node;
       if (
         popoverRef.current &&
@@ -111,6 +110,7 @@ export function PortalPopover({
         triggerRef.current &&
         !triggerRef.current.contains(target)
       ) {
+        e.stopPropagation();
         onClose();
       }
     };
