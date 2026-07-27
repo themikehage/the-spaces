@@ -13,10 +13,7 @@ import {
 } from "./session/session-lister";
 import { userConfigManager } from "./session/user-config";
 
-import { buildSubagentRules, evaluateSubagentRules } from "./sandbox";
 import { subscribeSessionEvents } from "./session/session-event-publisher";
-import { enrichSessionWithMemory } from "./session/session-memory-enricher";
-import { resolveActiveTools } from "./session/tool-activation-engine";
 import { ensureWorkspaceStructure, getResolvedSkillPaths } from "./session/workspace-resolver";
 
 export { ensureWorkspaceStructure, getResolvedSkillPaths };
@@ -221,7 +218,7 @@ export class SessionManager {
     const existing = this.sessions.get(key);
     if (existing) {
       if (!existing.session.model) {
-        const context = existing.session.sessionManager.buildSessionContext();
+        const context = existing.session.sessionStore.buildSessionContext();
         if (context.model) {
           const { modelRegistry } = this.userConfig.getUserContext(username);
           const found = modelRegistry.find(context.model.provider, context.model.modelId);
@@ -238,8 +235,8 @@ export class SessionManager {
 
     const initPromise = (async () => {
       try {
-        const { bootstrapAgentSession } = await import("./session/session-bootstrap");
-        const { session } = await bootstrapAgentSession({
+        const { createAgentRuntime } = await import("./session/agent-runtime");
+        const { session } = await createAgentRuntime({
           username,
           sessionId,
           projectId,

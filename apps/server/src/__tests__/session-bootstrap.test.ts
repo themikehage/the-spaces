@@ -2,7 +2,7 @@
 import { describe, expect, it } from "bun:test";
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { getUserDir } from "shared";
-import { bootstrapAgentSession } from "../core/session/session-bootstrap";
+import { bootstrapAgentSession } from "../core/session/agent-runtime";
 
 function setupTestUser(prefix: string) {
   const username = `${prefix}_${Date.now()}_${Math.floor(Math.random() * 10000)}`;

@@ -28,4 +28,3 @@ export type { ModelCallContext, SessionContext, ToolCallContext } from "shared";
 // Declarative Agent Config Schema
 export { SpacesAgentConfigSchema } from "shared";
 export type { SpacesAgentConfig } from "shared";
-

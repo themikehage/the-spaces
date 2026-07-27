@@ -1,5 +1,4 @@
 import { describe, expect, it } from "bun:test";
-import { approvalManager } from "../core/approvals/approval-manager";
 import { createUiTools } from "../core/tools/ui-tools";
 import { uiApprovalRegistry } from "../core/ui-approval-registry";
 

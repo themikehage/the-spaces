@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
+import { apiFetch } from "@/lib/api";
 import { useCallback, useEffect, useState } from "react";
 import type { EntityConfigType, EntityType } from "shared";
-import { apiFetch } from "@/lib/api";
 
 export function useEntityConfig(entityType: EntityType, entityId: string) {
   const [config, setConfig] = useState<EntityConfigType>({});
@@ -44,14 +44,11 @@ export function useEntityConfig(entityType: EntityType, entityId: string) {
     setIsSaving(true);
     setError(null);
     try {
-      const res = await apiFetch(
-        `/api/config/${entityType}/${encodeURIComponent(entityId)}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newConfig),
-        },
-      );
+      const res = await apiFetch(`/api/config/${entityType}/${encodeURIComponent(entityId)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newConfig),
+      });
 
       if (!res.ok) {
         const errData = await res.json();

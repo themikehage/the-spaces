@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { useToast } from "@/contexts/ToastContext";
+import { toSafeString } from "@/lib/safe-string";
 import { wsClient } from "@/lib/ws-client";
 import { useEffect, useState } from "react";
 
@@ -8,7 +9,7 @@ interface Props {
   args: {
     question: string;
     isMultiSelect?: boolean;
-    options: string[];
+    options: any[];
     placeholder?: string;
     allowCustom?: boolean;
   };
@@ -30,10 +31,15 @@ export function AskQuestionForm({ toolCallId, args, result, sessionId }: Props) 
   const { addToast } = useToast();
   const {
     isMultiSelect = false,
-    options = [],
-    placeholder = "Escribe tu respuesta personalizada aquí...",
+    options: rawOptions = [],
+    placeholder: rawPlaceholder = "Escribe tu respuesta personalizada aquí...",
     allowCustom = true,
   } = args || {};
+
+  const options = Array.isArray(rawOptions)
+    ? rawOptions.map((opt) => toSafeString(opt)).filter(Boolean)
+    : [];
+  const placeholder = toSafeString(rawPlaceholder);
 
   const noOptions = options.length === 0;
   const showCustom = allowCustom || noOptions;

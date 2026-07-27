@@ -4,13 +4,13 @@ import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { getProjectsDir, getTeamWorkspaceDir, getUserDir } from "shared";
 import { agentRegistry } from "../agents";
+import { sessionManager } from "../core/session-manager";
 import {
   createUserSession,
   LeaderNotRegisteredError,
   LeaderRequiredError,
   TeamNotFoundError,
 } from "../core/session/create-user-session";
-import { sessionManager } from "../core/session-manager";
 import { teamStore } from "../teams/team-store";
 
 describe("createUserSession domain helper", () => {
@@ -119,13 +119,9 @@ describe("createUserSession domain helper", () => {
     expect(result.agentId).toBe("leader-agent");
 
     const expectedWorkspace = getTeamWorkspaceDir(username, "team-alpha");
-    expect(spyGetOrCreate).toHaveBeenCalledWith(
-      username,
-      result.id,
-      undefined,
-      "leader-agent",
-      { workspaceDir: expectedWorkspace },
-    );
+    expect(spyGetOrCreate).toHaveBeenCalledWith(username, result.id, undefined, "leader-agent", {
+      workspaceDir: expectedWorkspace,
+    });
 
     spyGetOrCreate.mockRestore();
     spyGetTeam.mockRestore();

@@ -3,6 +3,7 @@
 ## Objetivo
 
 Que al crear una nueva sesión:
+
 1. Se respete la configuración guardada en `.spaces/config.json` de la entidad correspondiente (agente/proyecto/equipo/global), especialmente **skills**, **tools** y **rules**.
 2. El `WelcomeChatInput` (pantalla de bienvenida previa a la creación de sesión) incluya selectores de **tools** y **skills**, pre-poblados con los valores del cascade config de la entidad.
 
@@ -12,21 +13,21 @@ Que al crear una nueva sesión:
 
 ### Lo que SÍ funciona
 
-| Aspecto | Estado | Detalle |
-|---|---|---|
-| `defaultModel` de entity config | OK | `agent-runtime.ts:90` usa `context.entityConfig.defaultModel` |
-| `toolOverrides` (add/remove) de entity config | OK | `session-bootstrap.ts:90-99` mergea `context.entityConfig.toolOverrides` |
-| Cascade config loader | OK | `cascadeConfigLoader.load()` resuelve `global → entity` correctamente |
-| Persistencia de tools a `config.json` | OK | `POST /:id/tools` escribe a `.spaces/config.json` |
+| Aspecto                                       | Estado | Detalle                                                                  |
+| --------------------------------------------- | ------ | ------------------------------------------------------------------------ |
+| `defaultModel` de entity config               | OK     | `agent-runtime.ts:90` usa `context.entityConfig.defaultModel`            |
+| `toolOverrides` (add/remove) de entity config | OK     | `session-bootstrap.ts:90-99` mergea `context.entityConfig.toolOverrides` |
+| Cascade config loader                         | OK     | `cascadeConfigLoader.load()` resuelve `global → entity` correctamente    |
+| Persistencia de tools a `config.json`         | OK     | `POST /:id/tools` escribe a `.spaces/config.json`                        |
 
 ### Lo que NO funciona (gaps)
 
-| Gap | Impacto |
-|---|---|
-| `skills` de entity config se ignora en sesiones nuevas | Si un agente tiene skills configuradas en su `config.json`, las sesiones nuevas no las cargan automáticamente |
-| `rules` y `workflows` de entity config se ignoran | Configurados en `EntityConfig` pero no se inyectan en el prompt ni en la sesión |
-| `WelcomeChatInput` no tiene selectores de tools/skills | El usuario no puede elegir qué tools o skills activar antes de crear la sesión |
-| No hay endpoint para resolver entity config sin sesión previa | El cliente no puede saber qué tools/skills tiene configurados una entidad ANTES de crear la sesión |
+| Gap                                                           | Impacto                                                                                                       |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `skills` de entity config se ignora en sesiones nuevas        | Si un agente tiene skills configuradas en su `config.json`, las sesiones nuevas no las cargan automáticamente |
+| `rules` y `workflows` de entity config se ignoran             | Configurados en `EntityConfig` pero no se inyectan en el prompt ni en la sesión                               |
+| `WelcomeChatInput` no tiene selectores de tools/skills        | El usuario no puede elegir qué tools o skills activar antes de crear la sesión                                |
+| No hay endpoint para resolver entity config sin sesión previa | El cliente no puede saber qué tools/skills tiene configurados una entidad ANTES de crear la sesión            |
 
 ---
 
@@ -106,7 +107,7 @@ En el estado sin sesión (`!sessionId`), cargar la config resuelta de la entidad
 // Nuevo hook o lógica en ChatArea
 const { resolvedConfig } = useEntityConfig(
   activeTeam ? "team" : activeAgent ? "agent" : activeProjectName ? "project" : "global",
-  activeTeam?.id || activeAgent?.id || activeProjectName || "global"
+  activeTeam?.id || activeAgent?.id || activeProjectName || "global",
 );
 ```
 
@@ -189,18 +190,19 @@ export function buildCreateSessionBody(
 
 #### 4.1 Edge cases a considerar
 
-| Caso | Comportamiento esperado |
-|---|---|
-| Entidad sin `config.json` | Selectores arrancan con defaults (Standard tools, sin skills) |
-| Entidad con `config.json` parcial (solo skills, sin tools) | Tools = default Standard, Skills = las del config |
-| Usuario cambia tools/skills en WelcomeInput y luego crea sesión | Las selecciones del usuario prevalecen sobre entity config |
-| Sesión creada sin pasar tools/skills explícitos | Se usan los del entity config (comportamiento actual para tools) |
-| Skills de entity config que no existen en disco | Se ignoran silenciosamente (mismo comportamiento que agentSkills) |
-| Global config define tools → project/agent los sobreescribe | Respetar cascade: entity pisa global |
+| Caso                                                            | Comportamiento esperado                                           |
+| --------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Entidad sin `config.json`                                       | Selectores arrancan con defaults (Standard tools, sin skills)     |
+| Entidad con `config.json` parcial (solo skills, sin tools)      | Tools = default Standard, Skills = las del config                 |
+| Usuario cambia tools/skills en WelcomeInput y luego crea sesión | Las selecciones del usuario prevalecen sobre entity config        |
+| Sesión creada sin pasar tools/skills explícitos                 | Se usan los del entity config (comportamiento actual para tools)  |
+| Skills de entity config que no existen en disco                 | Se ignoran silenciosamente (mismo comportamiento que agentSkills) |
+| Global config define tools → project/agent los sobreescribe     | Respetar cascade: entity pisa global                              |
 
 #### 4.2 Archivos a modificar (resumen)
 
 **Server:**
+
 - `apps/server/src/core/session/create-user-session.ts` — aceptar tools/skills/executionMode
 - `apps/server/src/core/session/agent-context-resolver.ts` — cargar skills del entityConfig
 - `apps/server/src/routes/sessions/session-crud.ts` — pasar nuevos campos
@@ -208,15 +210,18 @@ export function buildCreateSessionBody(
 - `apps/server/src/core/session/prompt-builder.ts` — verificar inyección de rules/workflows
 
 **Shared:**
+
 - `packages/shared/src/schemas.ts` — extender `CreateSessionSchema`
 - `packages/shared/src/tools-catalog.ts` — posiblemente exponer helpers de presets
 
 **Client:**
+
 - `apps/client/src/components/chat/WelcomeChatInput.tsx` — agregar selectores de tools/skills
 - `apps/client/src/components/chat/ChatArea.tsx` — cargar entity config, pasar selecciones a createSessionAndSend
 - `apps/client/src/lib/session-utils.ts` — extender `buildCreateSessionBody`
 
 **Nuevos archivos (posibles):**
+
 - `apps/client/src/components/chat/InlineToolsSelector.tsx` — versión compacta del ToolsSelector para WelcomeChatInput
 - `apps/client/src/components/chat/InlineSkillsSelector.tsx` — versión compacta del SkillsPopover para WelcomeChatInput
 

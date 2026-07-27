@@ -2,11 +2,11 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
-  getWorkspaceDir,
-  getGlobalAgentsMdPath,
   getAgentAgentsMdPath,
+  getGlobalAgentsMdPath,
   getProjectAgentsMdPath,
   getTeamAgentsMdPath,
+  getWorkspaceDir,
   SessionPrefix,
 } from "shared";
 import { loadSkills } from "../../ai";
@@ -423,7 +423,10 @@ export class SessionPromptBuilder {
                       leaderEntry.server.definition.systemPrompt;
                   }
                 } catch (err) {
-                  console.error("[PromptBuilder] Failed to load leader agent prompt in preview:", err);
+                  console.error(
+                    "[PromptBuilder] Failed to load leader agent prompt in preview:",
+                    err,
+                  );
                 }
               }
 
@@ -468,8 +471,7 @@ export class SessionPromptBuilder {
           const teamAgentsMd = getTeamAgentsMdPath(username, targetTeamId);
           if (existsSync(teamAgentsMd)) {
             teamContent +=
-              `\n\n## Team Directives (.spaces/AGENTS.md)\n` +
-              readFileSync(teamAgentsMd, "utf-8");
+              `\n\n## Team Directives (.spaces/AGENTS.md)\n` + readFileSync(teamAgentsMd, "utf-8");
           }
           sections.push({
             title: `Team Context (${team.name})`,
@@ -519,9 +521,7 @@ export class SessionPromptBuilder {
         includeDefaults: true,
       });
       if (loaded.skills.length > 0) {
-        const skillList = loaded.skills
-          .map((s) => `- **${s.name}**: ${s.description}`)
-          .join("\n");
+        const skillList = loaded.skills.map((s) => `- **${s.name}**: ${s.description}`).join("\n");
         sections.push({
           title: "Available Skills Catalog",
           content: `<available_skills>\n${skillList}\n</available_skills>`,
@@ -543,4 +543,3 @@ export class SessionPromptBuilder {
 }
 
 export const sessionPromptBuilder = new SessionPromptBuilder();
-

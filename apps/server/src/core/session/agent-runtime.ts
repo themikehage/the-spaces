@@ -1,16 +1,31 @@
 // SPDX-License-Identifier: MIT
-import { existsSync, mkdirSync } from "node:fs";
-import { type AgentDefinition, type BaseTool } from "shared";
-import { createAgentSession, DefaultResourceLoader } from "../../ai";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
+import { join, resolve } from "node:path";
+import { SessionPrefix, type AgentDefinition, type BaseTool } from "shared";
+import { agentRegistry } from "../../agents";
+import { createAgentSession, DefaultResourceLoader, type AgentSession } from "../../ai";
+import type { AvailableModel } from "../../ai/model-registry";
+import { cascadeConfigLoader } from "../config";
+import { mcpRegistry } from "../mcp-registry";
 import { memoryRegistry } from "../memory/registry";
+import { buildSubagentRules, evaluateSubagentRules } from "../sandbox";
 import { createAfterToolCallHook } from "./after-tool-call-hook";
-import { resolveAgentContext, type ResolvedAgentContext } from "./agent-context-resolver";
-import { resolveAgentDefinition } from "./agent-definition-resolver";
 import { createBeforeToolCallHook } from "./before-tool-call-hook";
+import { attachSessionMcpTools } from "./mcp-attach";
+import { sessionMetadataStore } from "./metadata-store";
 import { DefaultModelResolver } from "./model-resolver";
 import { sessionPromptBuilder } from "./prompt-builder";
+import { enrichSessionWithMemory } from "./session-memory-enricher";
+import { resolveActiveTools } from "./tool-activation-engine";
 import { sessionToolFactory } from "./tool-factory";
 import { userConfigManager } from "./user-config";
+import {
+  getResolvedSkillPaths,
+  resolveProjectDir,
+  resolveSessionWorkspace,
+} from "./workspace-resolver";
+
+export type SessionBootstrapProfile = "user-session" | "agent-server" | "subagent" | "delegate";
 
 export interface AgentRuntimeConfig {
   username: string;
@@ -18,24 +33,35 @@ export interface AgentRuntimeConfig {
   projectId?: string;
   agentId?: string;
   teamId?: string;
+  parentSessionId?: string;
+  subagentType?: string;
   workspaceDir?: string;
   agentDef?: AgentDefinition;
+  profile?: SessionBootstrapProfile;
   toolProfile?: "user-session" | "agent-server" | "subagent";
   toolOverrides?: {
     add?: string[];
     remove?: string[];
   };
   skipMemory?: boolean;
+  skipMcpTools?: boolean;
   resourceLoader?: DefaultResourceLoader;
   customTools?: BaseTool[];
 }
 
 export interface AgentRuntimeInstance {
-  session: any;
+  session: AgentSession;
   workspaceDir: string;
   sessionDir: string;
-  model: any;
-  context: ResolvedAgentContext;
+  model: AvailableModel | null;
+  memory: any;
+  runtime: AgentRuntimeInstance;
+  context: {
+    workspaceDir: string;
+    sessionDir: string;
+    memoryEnabled: boolean;
+    memoryDbPath: string;
+  };
 }
 
 export async function createAgentRuntime(
@@ -47,39 +73,124 @@ export async function createAgentRuntime(
     projectId,
     agentId,
     teamId,
+    parentSessionId,
+    subagentType,
     workspaceDir: customWorkspaceDir,
-    skipMemory,
-    toolProfile = "user-session",
+    skipMemory = false,
+    skipMcpTools = false,
+    profile = sessionId.startsWith(SessionPrefix.SUBAGENT) ||
+    sessionId.startsWith(SessionPrefix.DELEGATE)
+      ? "subagent"
+      : "user-session",
+    toolProfile = profile === "agent-server"
+      ? "agent-server"
+      : profile === "subagent" || profile === "delegate"
+        ? "subagent"
+        : "user-session",
     toolOverrides,
   } = config;
 
   let agentDef = config.agentDef;
   if (!agentDef && agentId) {
-    const resolved = await resolveAgentDefinition({
-      username,
-      resolvedAgentId: agentId,
-      getDefaultModel: () => userConfigManager.getUserDefaultModel(username),
-    });
-    agentDef = resolved.agentDef;
+    const agentEntry = agentRegistry.get(agentId);
+    agentDef = agentEntry?.server.definition;
   }
 
-  const context = await resolveAgentContext({
+  let { sessionDir, workspaceDir } = resolveSessionWorkspace(
     username,
     sessionId,
     projectId,
     agentId,
     teamId,
-    customWorkspaceDir,
-    agentSkills: [],
-    skipMemory,
+  );
+
+  if (customWorkspaceDir) {
+    workspaceDir = customWorkspaceDir;
+  }
+
+  if (!existsSync(sessionDir)) {
+    mkdirSync(sessionDir, { recursive: true });
+  }
+  if (!existsSync(workspaceDir)) {
+    mkdirSync(workspaceDir, { recursive: true });
+  }
+
+  let projectDir: string | null = null;
+  let resolvedProjectId = projectId;
+
+  if (resolvedProjectId) {
+    projectDir = resolveProjectDir(username, resolvedProjectId);
+    if (projectDir) {
+      const projectJsonPath = join(projectDir, "project.json");
+      if (existsSync(projectJsonPath)) {
+        try {
+          const meta = JSON.parse(readFileSync(projectJsonPath, "utf-8"));
+          if (meta.id) resolvedProjectId = meta.id;
+        } catch (e) {
+          console.error("[createAgentRuntime] Failed to read project.json:", e);
+        }
+      }
+    }
+  }
+
+  const entityConfig = await cascadeConfigLoader.load(username, {
+    agentId,
+    projectId: resolvedProjectId,
+    teamId,
   });
 
-  if (!existsSync(context.sessionDir)) {
-    mkdirSync(context.sessionDir, { recursive: true });
+  const metadata = sessionMetadataStore.getSessionMetadata(username, sessionId);
+
+  if (entityConfig.autonomyLevel && (!metadata || !metadata.autonomyLevel)) {
+    sessionMetadataStore.setAutonomyLevel(username, sessionId, entityConfig.autonomyLevel);
   }
-  if (!existsSync(context.workspaceDir)) {
-    mkdirSync(context.workspaceDir, { recursive: true });
+  if (entityConfig.executionMode && (!metadata || !metadata.executionMode)) {
+    sessionMetadataStore.setExecutionMode(
+      username,
+      sessionId,
+      entityConfig.executionMode as any,
+    );
   }
+  const skillPaths = getResolvedSkillPaths(workspaceDir, username);
+  const metadataSkills: string[] =
+    metadata && Array.isArray(metadata.skills) ? metadata.skills : [];
+  const entityConfigSkills: string[] = entityConfig.skills || [];
+  const combinedSkills = Array.from(new Set([...metadataSkills, ...entityConfigSkills]));
+
+  if (combinedSkills.length > 0) {
+    for (const sk of combinedSkills) {
+      const candidates = [
+        sk,
+        resolve(workspaceDir, ".spaces", "skills", sk),
+        resolve(workspaceDir, ".pi", "skills", sk),
+        resolve(workspaceDir, ".agents", "skills", sk),
+      ];
+      for (const candidate of candidates) {
+        if (existsSync(candidate) && !skillPaths.includes(candidate)) {
+          skillPaths.push(candidate);
+        }
+      }
+    }
+  }
+
+  const mcpConfig = mcpRegistry.loadConfig(username);
+  const cachedMcpToolNames: string[] = [];
+  for (const srv of Object.values(mcpConfig.mcpServers)) {
+    if (srv.enabled && Array.isArray(srv.tools)) {
+      for (const tName of srv.tools) {
+        cachedMcpToolNames.push(`mcp_${srv.id}_${tName}`);
+      }
+    }
+  }
+
+  const userSettings = userConfigManager.getUserSettings(username);
+  const memoryEnabled = skipMemory ? false : (userSettings.memoryEnabled ?? true);
+  const memoryDbPath = join(sessionDir, "memory", "memory.db");
+
+  const memoryKey =
+    profile === "agent-server" ? `agent:${agentId || sessionId}` : `session:${sessionId}`;
+
+  const memory = await memoryRegistry.get(memoryKey, memoryDbPath, memoryEnabled);
 
   const { authStorage, modelRegistry } = userConfigManager.getUserContext(username);
   modelRegistry.refresh();
@@ -87,33 +198,29 @@ export async function createAgentRuntime(
   const modelResolver = new DefaultModelResolver(modelRegistry);
   const resolvedModel = modelResolver.resolve({
     userDefaultModel: userConfigManager.getUserDefaultModel(username) ?? undefined,
-    workspaceConfigModel: context.entityConfig.defaultModel,
+    workspaceConfigModel: entityConfig.defaultModel,
   });
-
-  const memory = await memoryRegistry.get(
-    toolProfile === "agent-server" ? `agent:${agentId}` : `session:${sessionId}`,
-    context.memoryDbPath,
-    context.memoryEnabled,
-  );
 
   let resourceLoader = config.resourceLoader;
   if (!resourceLoader) {
     const appendPrompts = await sessionPromptBuilder.buildSystemPrompts({
       username,
       sessionId,
-      workspaceDir: context.workspaceDir,
-      sessionDir: context.sessionDir,
+      workspaceDir,
+      sessionDir,
       resolvedAgentId: agentId,
-      agentDef: agentDef ? { name: agentDef.name, systemPrompt: agentDef.systemPrompt || "" } : undefined,
-      cachedMcpToolNames: context.cachedMcpToolNames,
-      projectId: context.projectId,
-      entityConfig: context.entityConfig,
+      agentDef: agentDef
+        ? { name: agentDef.name, systemPrompt: agentDef.systemPrompt || "" }
+        : undefined,
+      cachedMcpToolNames,
+      projectId: resolvedProjectId,
+      entityConfig,
     });
 
     resourceLoader = new DefaultResourceLoader({
-      cwd: context.workspaceDir,
-      agentDir: context.sessionDir,
-      additionalSkillPaths: context.skillPaths,
+      cwd: workspaceDir,
+      agentDir: sessionDir,
+      additionalSkillPaths: skillPaths,
       appendSystemPrompt: appendPrompts,
     });
     await resourceLoader.reload();
@@ -122,15 +229,15 @@ export async function createAgentRuntime(
   const { customTools: factoryCustomTools, hasExaKey } = sessionToolFactory.createSessionTools({
     username,
     sessionId,
-    workspaceDir: context.workspaceDir,
-    memoryEnabled: context.memoryEnabled,
+    workspaceDir,
+    memoryEnabled,
     memory,
     modelRegistry,
     authStorage,
     resourceLoader,
     contextAgentId: agentId,
     teamId,
-    projectId: context.projectId,
+    projectId: resolvedProjectId,
   });
 
   let finalCustomTools = factoryCustomTools;
@@ -146,7 +253,7 @@ export async function createAgentRuntime(
     sessionId,
     isSubagent: toolProfile === "subagent" || toolProfile === "agent-server",
     username,
-    permissionOverrides: context.entityConfig.permissionOverrides,
+    permissionOverrides: entityConfig.permissionOverrides,
   });
 
   const afterToolCall = createAfterToolCallHook({
@@ -161,11 +268,11 @@ export async function createAgentRuntime(
   pluginManager.register(new MemoryEnricherPlugin({ memory }));
 
   const { JsonlSessionStore } = await import("../../ai");
-  const sessionManagerInstance = JsonlSessionStore.create(context.sessionDir, context.sessionDir);
+  const sessionStore = JsonlSessionStore.create(sessionDir, sessionDir);
 
   const { session } = await createAgentSession({
-    cwd: context.workspaceDir,
-    sessionManager: sessionManagerInstance,
+    cwd: workspaceDir,
+    sessionStore,
     authStorage,
     modelRegistry,
     resourceLoader,
@@ -182,11 +289,84 @@ export async function createAgentRuntime(
     }
   }
 
-  return {
-    session,
-    workspaceDir: context.workspaceDir,
-    sessionDir: context.sessionDir,
-    model: resolvedModel,
-    context,
+  const isSubagent =
+    profile === "subagent" ||
+    profile === "delegate" ||
+    sessionId.startsWith(SessionPrefix.SUBAGENT) ||
+    sessionId.startsWith(SessionPrefix.DELEGATE);
+
+  let existingParentId = parentSessionId;
+  let existingSubagentType = subagentType;
+
+  if (isSubagent && (!existingParentId || !existingSubagentType)) {
+    const metadataPath = join(sessionDir, "metadata.json");
+    if (existsSync(metadataPath)) {
+      try {
+        const meta = JSON.parse(readFileSync(metadataPath, "utf-8"));
+        if (!existingParentId) existingParentId = meta.parentSessionId;
+        if (!existingSubagentType) existingSubagentType = meta.subagentType;
+      } catch {}
+    }
+  }
+
+  const systemTools = sessionMetadataStore.getSessionTools(username, sessionId);
+  const mergedToolOverrides = {
+    add: [...(entityConfig?.toolOverrides?.add || []), ...(toolOverrides?.add || [])],
+    remove: [...(entityConfig?.toolOverrides?.remove || []), ...(toolOverrides?.remove || [])],
   };
+
+  const combinedTools = resolveActiveTools({
+    sessionTools: systemTools,
+    hasExaKey,
+    memoryEnabled,
+    resolvedAgentId: agentId,
+    toolOverrides: mergedToolOverrides,
+  });
+
+  let activeToolsList = combinedTools;
+  if (isSubagent) {
+    const effectiveRules = buildSubagentRules(
+      username,
+      sessionId,
+      existingParentId,
+      existingSubagentType,
+    );
+    activeToolsList = combinedTools.filter((toolName) => {
+      const verdict = evaluateSubagentRules(toolName, {}, effectiveRules);
+      return !(verdict && verdict.allow === false);
+    });
+  }
+
+  session.setActiveToolsByName(activeToolsList);
+
+  if (!skipMemory) {
+    enrichSessionWithMemory(session, memory);
+  }
+
+  if (!skipMcpTools) {
+    const mcpKey = profile === "agent-server" ? agentId || sessionId : sessionId;
+    await attachSessionMcpTools(session, username, mcpKey);
+  }
+
+  const instance: AgentRuntimeInstance = {
+    session,
+    workspaceDir,
+    sessionDir,
+    model: resolvedModel ?? null,
+    memory,
+    get runtime() {
+      return instance;
+    },
+    get context() {
+      return {
+        workspaceDir,
+        sessionDir,
+        memoryEnabled,
+        memoryDbPath,
+      };
+    },
+  };
+  return instance;
 }
+
+export const bootstrapAgentSession = createAgentRuntime;

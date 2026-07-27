@@ -9,14 +9,14 @@ describe("deepMerge", () => {
     const base: EntityConfig = {
       defaultModel: "gpt-4o",
       skills: ["skill-a"],
-      permissionOverrides: { "bash": "allow" },
+      permissionOverrides: { bash: "allow" },
       toolOverrides: { add: ["tool-1"] },
     };
 
     const override: EntityConfig = {
       defaultModel: "claude-3-5-sonnet",
       skills: ["skill-b"],
-      permissionOverrides: { "web_fetch": "deny" },
+      permissionOverrides: { web_fetch: "deny" },
       toolOverrides: { add: ["tool-2"], remove: ["tool-1"] },
     };
 

@@ -50,6 +50,14 @@ describe("Spaces Tool Validation & Broadcast Tests", () => {
       expect(error2).toBeNull();
     });
 
+    it("should pass validation for contract action", () => {
+      const error1 = validateParams("skills", "contract", undefined, {});
+      expect(error1).toBeNull();
+
+      const error2 = validateParams("invalid", "contract", undefined, {});
+      expect(error2).toContain("Unknown entity");
+    });
+
     it("should fail validation for env delete if key is missing completely", () => {
       const error = validateParams("env", "delete", undefined, {});
       expect(error).toContain("required");
@@ -124,6 +132,39 @@ describe("Spaces Tool Validation & Broadcast Tests", () => {
       } finally {
         agentRegistry.list = originalList;
       }
+    });
+
+    it("should return contract details when action is 'contract'", async () => {
+      const tool = createFactoryTool({
+        username: "testuser",
+        parentSessionId: "session-1",
+      });
+
+      const res: any = await tool.execute("call-4", {
+        entity: "skills",
+        action: "contract",
+      });
+
+      expect(res.isError).toBeUndefined();
+      expect(res.details.entity).toBe("contract");
+      expect(res.details.data.entity).toBe("skills");
+    });
+  });
+
+  describe("verifyCommandSafety word boundaries", () => {
+    it("should allow commands containing 'skills' and port '3000'", async () => {
+      const { verifyCommandSafety } = await import("../ai/bash-tool");
+      const cmd = "python -c \"import urllib.request; req=urllib.request.Request('http://localhost:3000/api/factory/contract/skills')\"";
+      const result = verifyCommandSafety(cmd);
+      expect(result.safe).toBe(true);
+    });
+
+    it("should reject actual kill commands targeting port 3000", async () => {
+      const { verifyCommandSafety } = await import("../ai/bash-tool");
+      const cmd = "kill -9 $(lsof -t -i:3000)";
+      const result = verifyCommandSafety(cmd);
+      expect(result.safe).toBe(false);
+      expect(result.reason).toContain("port: 3000");
     });
   });
 });

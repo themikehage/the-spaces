@@ -32,7 +32,10 @@ export class SpacesRunner {
     const session = runtime.session;
 
     let fullText = "";
-    const toolCallsMap = new Map<string, { id: string; name: string; arguments?: any; result?: any }>();
+    const toolCallsMap = new Map<
+      string,
+      { id: string; name: string; arguments?: any; result?: any }
+    >();
 
     const unsubscribe = session.subscribe((evt: any) => {
       if (evt.type === "message_update") {

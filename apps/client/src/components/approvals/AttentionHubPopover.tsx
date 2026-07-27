@@ -39,11 +39,7 @@ export function AttentionHubPopover({ onNavigate }: Props) {
     onNavigate(targetPath);
   };
 
-  const handleResolveApproval = (
-    e: React.MouseEvent,
-    id: string,
-    action: "approve" | "deny",
-  ) => {
+  const handleResolveApproval = (e: React.MouseEvent, id: string, action: "approve" | "deny") => {
     e.stopPropagation();
     attentionStore.resolveApproval(id, action);
   };

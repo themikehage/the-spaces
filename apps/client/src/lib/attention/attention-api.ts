@@ -15,10 +15,7 @@ export async function fetchPendingAttention(): Promise<AttentionItem[]> {
     .filter((item: AttentionItem | null): item is AttentionItem => item !== null);
 }
 
-export async function resolveAttentionApi(
-  id: string,
-  body: ResolveAttention,
-): Promise<boolean> {
+export async function resolveAttentionApi(id: string, body: ResolveAttention): Promise<boolean> {
   const res = await apiFetch(`/api/approvals/${id}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

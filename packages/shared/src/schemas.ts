@@ -45,7 +45,6 @@ export const CreateSessionSchema = z.object({
   executionMode: z.enum(["readonly", "standard", "autonomous"]).optional(),
 });
 
-
 export const ModelSettingsSchema = z.object({
   provider: z.string(),
   modelId: z.string(),
@@ -54,12 +53,11 @@ export const ModelSettingsSchema = z.object({
 
 export {
   AVAILABLE_TOOLS,
-  TOOL_GROUPS,
   DEFAULT_ALWAYS_ON_TOOLS,
-  type ToolName,
+  TOOL_GROUPS,
   type ToolGroup,
+  type ToolName,
 } from "./tools-catalog";
-
 
 export const ToolPermissionsSchema = z.object({
   tools: z.array(z.string().min(1)),
@@ -867,9 +865,7 @@ export const EntityConfigSchema = z
         remove: z.array(z.string()).optional(),
       })
       .optional(),
-    permissionOverrides: z
-      .record(z.string(), z.enum(["allow", "deny", "ask"]))
-      .optional(),
+    permissionOverrides: z.record(z.string(), z.enum(["allow", "deny", "ask"])).optional(),
     skills: z.array(z.string()).optional(),
     rules: z.array(z.string()).optional(),
     workflows: z.array(z.string()).optional(),
@@ -896,6 +892,4 @@ export const SpacesAgentConfigSchema = z.object({
 export type SpacesAgentConfig = z.input<typeof SpacesAgentConfigSchema>;
 export type ResolvedSpacesAgentConfig = z.output<typeof SpacesAgentConfigSchema>;
 
-
-
-
+export * from "./schemas/schedules";

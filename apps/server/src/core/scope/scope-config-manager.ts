@@ -263,11 +263,7 @@ export class ScopeConfigManager {
     return this.cache.get(username)?.global.agents ?? [];
   }
 
-  getScopedAgentIds(
-    username: string,
-    parentType: "projects",
-    parentId: string,
-  ): string[] {
+  getScopedAgentIds(username: string, parentType: "projects", parentId: string): string[] {
     this.ensureLoaded(username);
     const config = this.cache.get(username);
     if (!config) return [];

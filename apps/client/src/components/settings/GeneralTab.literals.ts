@@ -116,7 +116,8 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     directSubagentsOnly: "1 - Direct subagents only (recommended)",
     nestedSubagents: "{depth} - Nested subagents allowed",
     showPromptPreviews: "Show System Prompt Previews",
-    showPromptPreviewsDesc: "Displays full runtime system prompt inspectors in Agent, Repo, Team, Sub-agent, and Global settings.",
+    showPromptPreviewsDesc:
+      "Displays full runtime system prompt inspectors in Agent, Repo, Team, Sub-agent, and Global settings.",
   },
   es: {
     appearance: "Apariencia",
@@ -232,6 +233,7 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     directSubagentsOnly: "1 - Solo subagentes directos (recomendado)",
     nestedSubagents: "{depth} - Permite subagentes anidados",
     showPromptPreviews: "Mostrar Previsualización de Prompts del Sistema",
-    showPromptPreviewsDesc: "Muestra el inspector del system prompt completo en los ajustes de Agentes, Repos, Equipos, Sub-agentes y Global.",
+    showPromptPreviewsDesc:
+      "Muestra el inspector del system prompt completo en los ajustes de Agentes, Repos, Equipos, Sub-agentes y Global.",
   },
 };

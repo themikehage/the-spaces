@@ -8,6 +8,7 @@ import {
   getTeamWorkspaceDir,
   getUserDir,
   getWorkspaceDir,
+  getWorkspaceSkillsDir,
 } from "shared";
 import { loadSkills } from "../ai/load-skills";
 import { getResolvedSkillPaths } from "../core/session-manager";
@@ -43,14 +44,20 @@ skillsRouter.get("/", async (c) => {
       includeDefaults: true,
     });
 
+    const userGlobalWorkspaceDir = getWorkspaceDir(username);
+
     const skillsWithContent = result.skills.map((skill) => {
-      const isEntityLocal = skill.filePath ? skill.filePath.startsWith(workspaceDir) : false;
+      const isEntityLocal =
+        entityType && entityType !== "global" && entityId && skill.filePath
+          ? skill.filePath.startsWith(workspaceDir) && !skill.filePath.startsWith(userGlobalWorkspaceDir)
+          : false;
+
       return {
         name: skill.name,
         description: skill.description,
         filePath: skill.filePath,
         disableModelInvocation: skill.disableModelInvocation,
-        scope: isEntityLocal && entityType && entityType !== "global" ? entityType : (skill.sourceInfo?.scope || "project"),
+        scope: isEntityLocal ? entityType! : "global",
         content: skill.content,
       };
     });
@@ -65,9 +72,7 @@ skillsRouter.post("/reset", async (c) => {
   const { username } = getAuthPayload(c);
   try {
     const { DEFAULT_FACTORY_SKILLS } = await import("../core/default-factory-skills");
-    const userDir = getUserDir(username);
-    const workspaceDir = join(userDir, "workspace");
-    const skillsBaseDir = join(workspaceDir, ".agents", "skills");
+    const skillsBaseDir = getWorkspaceSkillsDir(username);
 
     const OBSOLETE_SKILLS = [
       "factory-skills",

@@ -82,7 +82,7 @@ export class FileSessionStore implements ISessionStore {
             } catch {}
           }
 
-          let messageCount = typeof metadata.messageCount === "number" ? metadata.messageCount : 0;
+          const messageCount = typeof metadata.messageCount === "number" ? metadata.messageCount : 0;
 
           return {
             id: sessionId,

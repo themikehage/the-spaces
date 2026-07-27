@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: MIT
 import type { WSContext, WSMessageReceive } from "hono/ws";
 import { existsSync, readFileSync } from "node:fs";
-import { DEFAULT_ALWAYS_ON_TOOLS, SessionPrefix, WS_PROTOCOL_VERSION, WsClientMessageSchema, getSessionMetadataPath } from "shared";
+import {
+  DEFAULT_ALWAYS_ON_TOOLS,
+  SessionPrefix,
+  WS_PROTOCOL_VERSION,
+  WsClientMessageSchema,
+  getSessionMetadataPath,
+} from "shared";
 import { approvalManager } from "../core/approvals/approval-manager";
 import { ensureWatcher, setBuilding, setError, setReady } from "../core/preview-watcher";
 import { sessionManager } from "../core/session-manager";
@@ -635,7 +641,8 @@ export function createWsContext(): WsConnectionContext {
         const action = data.action as string;
         const payload = data.payload as Record<string, any> | undefined;
         if (componentId && action) {
-          const mappedAction = action === "confirm" ? "approve" : action === "deny" ? "deny" : action;
+          const mappedAction =
+            action === "confirm" ? "approve" : action === "deny" ? "deny" : action;
           const resolved =
             uiApprovalRegistry.resolve(componentId, { action, payload }) ||
             approvalManager.resolve(componentId, { action: mappedAction as any, payload });

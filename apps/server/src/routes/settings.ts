@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: MIT
 import { Hono } from "hono";
-import { existsSync, mkdirSync, readFileSync, readdirSync, unlinkSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  unlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { join } from "node:path";
 import { getGlobalAgentsMdPath, getUserDir, getWorkspaceDir } from "shared";
 import { getAppConfig } from "../config/app-config";

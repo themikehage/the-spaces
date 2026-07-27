@@ -50,7 +50,7 @@ describe("Spaces Contracts Tests", () => {
     const agentsUpsert = FACTORY_CONTRACTS.agents.actions.upsert.params;
     expect(agentsUpsert.id.required).toBe(true);
     expect(agentsUpsert.name.required).toBe(true);
-    expect(agentsUpsert.role.required).toBe(true);
+    expect(agentsUpsert.systemPrompt).toBeDefined();
 
     // Env
     const envUpsert = FACTORY_CONTRACTS.env.actions.upsert.params;

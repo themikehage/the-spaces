@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: MIT
 import { useLiterals, type ContextUsage } from "@/lib";
 import { BookOpen, Paperclip, Sliders } from "lucide-react";
 import { useRef, useState } from "react";
+import type { EntityType } from "shared";
 import { literals as u } from "./ChatInput.literals";
 import { ContextButton } from "./ContextButton";
 import { ModelSelector } from "./ModelSelector";
@@ -27,6 +27,8 @@ interface InputToolbarProps {
   onCompact?: () => void;
   compacting?: boolean;
   executionMode?: "readonly" | "standard" | "autonomous";
+  entityType?: EntityType;
+  entityId?: string;
 }
 
 export function InputToolbar({
@@ -46,6 +48,8 @@ export function InputToolbar({
   onCompact,
   compacting = false,
   executionMode,
+  entityType,
+  entityId,
 }: InputToolbarProps) {
   const l = useLiterals(u);
   const [openSkills, setOpenSkills] = useState(false);
@@ -89,30 +93,30 @@ export function InputToolbar({
 
         <ModelSelector sessionId={sessionId} disabled={disabled} compact={true} />
 
-        {sessionId && (
-          <div className="relative">
-            <button
-              ref={skillsTriggerRef}
-              type="button"
-              onClick={() => !disabled && setOpenSkills((prev) => !prev)}
-              disabled={disabled}
-              title={`${l.skillsLabel} (${skills.length})`}
-              className={`p-1.5 rounded-lg border border-border/40 bg-[#171717] hover:bg-[#313131] text-muted-foreground hover:text-foreground transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
-                openSkills ? "text-primary border-primary/45" : ""
-              }`}
-            >
-              <BookOpen size={14} />
-            </button>
-            <SkillsPopover
-              skills={skills}
-              loading={skillsLoading}
-              open={openSkills}
-              onClose={() => setOpenSkills(false)}
-              onSelectSkill={onSelectSkill}
-              triggerRef={skillsTriggerRef}
-            />
-          </div>
-        )}
+        <div className="relative">
+          <button
+            ref={skillsTriggerRef}
+            type="button"
+            onClick={() => !disabled && setOpenSkills((prev) => !prev)}
+            disabled={disabled}
+            title={`${l.skillsLabel} (${skills.length})`}
+            className={`p-1.5 rounded-lg border border-border/40 bg-[#171717] hover:bg-[#313131] text-muted-foreground hover:text-foreground transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+              openSkills ? "text-primary border-primary/45" : ""
+            }`}
+          >
+            <BookOpen size={14} />
+          </button>
+          <SkillsPopover
+            skills={skills}
+            loading={skillsLoading}
+            open={openSkills}
+            onClose={() => setOpenSkills(false)}
+            onSelectSkill={onSelectSkill}
+            triggerRef={skillsTriggerRef}
+            entityType={entityType}
+            entityId={entityId}
+          />
+        </div>
 
         <div className="relative">
           <button

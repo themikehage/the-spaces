@@ -131,15 +131,9 @@ teamsRouter.post("/:id/orchestration-session", async (c) => {
     });
   }
 
-  await sessionManager.getOrCreateSession(
-    username,
-    sessionId,
-    undefined,
-    leader.agentId,
-    {
-      workspaceDir: getTeamWorkspaceDir(username, team.id),
-    },
-  );
+  await sessionManager.getOrCreateSession(username, sessionId, undefined, leader.agentId, {
+    workspaceDir: getTeamWorkspaceDir(username, team.id),
+  });
   return c.json({ sessionId, leaderAgentId: leader.agentId });
 });
 
@@ -581,7 +575,7 @@ teamsRouter.get("/:id/analytics", async (c) => {
   const avgResponseTimeMs = responseCount > 0 ? Math.round(totalResponseTime / responseCount) : 0;
 
   const sessions = await sessionManager.listSessions(username, { teamId: id });
-  let totalSessions = sessions.length;
+  const totalSessions = sessions.length;
 
   return c.json({
     turnsPerAgent,

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
+import { RichMarkdown } from "@/components/chat/RichMarkdown";
+import { Modal } from "@/components/ui/Modal";
+import { useEntitySkills, type SkillInfo } from "@/hooks/useEntitySkills";
+import { BookOpen, Check, RefreshCw, Zap } from "lucide-react";
 import { useState } from "react";
 import type { EntityType } from "shared";
-import { BookOpen, Check, RefreshCw, Zap } from "lucide-react";
-import { useEntitySkills, type SkillInfo } from "@/hooks/useEntitySkills";
-import { Modal } from "@/components/ui/Modal";
-import { RichMarkdown } from "@/components/chat/RichMarkdown";
 
 interface Props {
   entityType: EntityType;
@@ -13,8 +13,16 @@ interface Props {
 }
 
 export function EntitySkillsEditor({ entityType, entityId, title }: Props) {
-  const { installedSkills, activeSkills, resolvedSkills, isLoading, isSaving, error, toggleSkill, refresh } =
-    useEntitySkills(entityType, entityId);
+  const {
+    installedSkills,
+    activeSkills,
+    resolvedSkills,
+    isLoading,
+    isSaving,
+    error,
+    toggleSkill,
+    refresh,
+  } = useEntitySkills(entityType, entityId);
 
   const [viewingSkill, setViewingSkill] = useState<SkillInfo | null>(null);
 
@@ -69,7 +77,9 @@ export function EntitySkillsEditor({ entityType, entityId, title }: Props) {
           <BookOpen className="w-6 h-6 text-muted-foreground mx-auto mb-2 opacity-50" />
           <p className="text-xs font-semibold text-foreground">No skills detected</p>
           <p className="text-[11px] text-muted-foreground mt-1 max-w-xs mx-auto">
-            Add custom skills under <code className="bg-muted px-1 py-0.5 rounded text-[10px]">.spaces/skills</code> in this workspace.
+            Add custom skills under{" "}
+            <code className="bg-muted px-1 py-0.5 rounded text-[10px]">.spaces/skills</code> in this
+            workspace.
           </p>
         </div>
       ) : (

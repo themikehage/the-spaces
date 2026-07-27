@@ -30,9 +30,7 @@ export function deepMerge(base: EntityConfig, override: EntityConfig): EntityCon
 
   if (override.toolOverrides?.remove && Array.isArray(result.toolOverrides?.add)) {
     const removeSet = new Set(override.toolOverrides.remove);
-    const updatedAdd = (result.toolOverrides.add as string[]).filter(
-      (t) => !removeSet.has(t),
-    );
+    const updatedAdd = (result.toolOverrides.add as string[]).filter((t) => !removeSet.has(t));
     result.toolOverrides = {
       ...result.toolOverrides,
       add: updatedAdd,

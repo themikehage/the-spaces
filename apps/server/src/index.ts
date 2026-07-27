@@ -11,6 +11,7 @@ import { ensureAuthTables } from "./auth/migrate";
 import { memoryRegistry } from "./core/memory/registry";
 import { globalErrorHandler } from "./core/middleware/error-handler";
 import { requestIdMiddleware } from "./core/middleware/request-id";
+import { scheduleRunner } from "./core/schedules/index";
 import { createServerContext } from "./core/server-context";
 import { sessionMetadataStore } from "./core/session/metadata-store";
 import { handleRequest as previewRequest, startPreviewServer } from "./preview-server";
@@ -29,6 +30,7 @@ import { modelsRouter } from "./routes/models";
 import { previewRouter } from "./routes/preview";
 import { promptsRouter } from "./routes/prompts";
 import { providersRouter } from "./routes/providers";
+import { schedulesRouter } from "./routes/schedules/index";
 import { sessionsRouter } from "./routes/sessions/index";
 import { settingsRouter } from "./routes/settings";
 import { skillsRouter } from "./routes/skills";
@@ -36,10 +38,10 @@ import { teamsRouter } from "./routes/teams";
 import { teamStore } from "./teams/team-store";
 import { createWsContext } from "./ws/factory";
 
+import { purgeExpiredSessions } from "./auth/ephemeral-tool-session";
 import { authRateLimiter, generalRateLimiter } from "./core/middleware/rate-limiter";
 import { securityHeadersMiddleware } from "./core/middleware/security-headers";
 import { resolveCorsOrigin } from "./core/security/cors";
-import { purgeExpiredSessions } from "./auth/ephemeral-tool-session";
 
 sessionMetadataStore.setTeamReader({
   getTeamType(username: string, teamId: string): string | null {
@@ -49,11 +51,9 @@ sessionMetadataStore.setTeamReader({
 });
 
 const PREVIEW_HOST = (process.env.PREVIEW_HOST ?? "").toLowerCase();
-const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? "")
-  .split(",")
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? "").split(",");
 const isProduction =
-  process.env.NODE_ENV === "production" ||
-  process.env.SPACES_ENV === "production";
+  process.env.NODE_ENV === "production" || process.env.SPACES_ENV === "production";
 
 if (isProduction && ALLOWED_ORIGINS.length === 0) {
   console.warn(
@@ -126,6 +126,7 @@ app.route("/api/settings", settingsRouter);
 app.route("/api/gallery", galleryRouter);
 app.route("/api/factory", factoryRouter);
 app.route("/api/approvals", approvalsRouter);
+app.route("/api/schedules", schedulesRouter);
 app.route("/api", filesRouter);
 
 app.get(
@@ -207,14 +208,20 @@ console.log(`Server running at http://0.0.0.0:${server.port}`);
 
 if (!PREVIEW_HOST) startPreviewServer();
 
+scheduleRunner.start().catch((err) => {
+  console.error("Failed to start schedule runner:", err);
+});
+
 process.on("SIGTERM", async () => {
-  console.log("SIGTERM received, shutting down memory providers...");
+  console.log("SIGTERM received, shutting down memory providers and schedule runner...");
+  scheduleRunner.stop();
   await memoryRegistry.shutdownAll();
   process.exit(0);
 });
 
 process.on("SIGINT", async () => {
-  console.log("SIGINT received, shutting down memory providers...");
+  console.log("SIGINT received, shutting down memory providers and schedule runner...");
+  scheduleRunner.stop();
   await memoryRegistry.shutdownAll();
   process.exit(0);
 });

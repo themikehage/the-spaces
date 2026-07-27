@@ -13,7 +13,7 @@ interface Props {
 export const Modal: FC<Props> = ({ open, onClose, title, children, footer }) => {
   const handleEscape = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape" && !e.defaultPrevented) onClose();
     },
     [onClose],
   );

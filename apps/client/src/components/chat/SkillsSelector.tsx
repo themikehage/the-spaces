@@ -6,10 +6,10 @@ import { RichMarkdown } from "./RichMarkdown";
 export interface SkillInfo {
   name: string;
   description: string;
-  filePath: string;
-  disableModelInvocation: boolean;
-  scope: "project" | "user" | "temporary";
-  content: string;
+  filePath?: string;
+  disableModelInvocation?: boolean;
+  scope?: string;
+  content?: string;
 }
 
 interface Props {

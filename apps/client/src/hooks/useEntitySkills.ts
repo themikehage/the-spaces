@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
+import { apiFetch } from "@/lib/api";
 import { useCallback, useEffect, useState } from "react";
 import type { EntityType } from "shared";
-import { apiFetch } from "@/lib/api";
 import { useEntityConfig } from "./useEntityConfig";
 
 export interface SkillInfo {
@@ -14,8 +14,15 @@ export interface SkillInfo {
 }
 
 export function useEntitySkills(entityType: EntityType, entityId: string) {
-  const { config, resolvedConfig, isLoading: configLoading, isSaving, error: configError, updateConfig, refresh: refreshConfig } =
-    useEntityConfig(entityType, entityId);
+  const {
+    config,
+    resolvedConfig,
+    isLoading: configLoading,
+    isSaving,
+    error: configError,
+    updateConfig,
+    refresh: refreshConfig,
+  } = useEntityConfig(entityType, entityId);
 
   const [installedSkills, setInstalledSkills] = useState<SkillInfo[]>([]);
   const [skillsLoading, setSkillsLoading] = useState<boolean>(true);
@@ -26,7 +33,10 @@ export function useEntitySkills(entityType: EntityType, entityId: string) {
     setSkillsLoading(true);
     setSkillsError(null);
     try {
-      const query = entityType && entityId ? `?entityType=${entityType}&entityId=${encodeURIComponent(entityId)}` : "";
+      const query =
+        entityType && entityId
+          ? `?entityType=${entityType}&entityId=${encodeURIComponent(entityId)}`
+          : "";
       const res = await apiFetch(`/api/skills${query}`);
       if (res.ok) {
         const data = await res.json();
@@ -48,7 +58,8 @@ export function useEntitySkills(entityType: EntityType, entityId: string) {
   }, [fetchSkills]);
 
   const activeSkills: string[] = config.skills && Array.isArray(config.skills) ? config.skills : [];
-  const resolvedSkills: string[] = resolvedConfig.skills && Array.isArray(resolvedConfig.skills) ? resolvedConfig.skills : [];
+  const resolvedSkills: string[] =
+    resolvedConfig.skills && Array.isArray(resolvedConfig.skills) ? resolvedConfig.skills : [];
 
   const toggleSkill = async (skillName: string) => {
     const isCurrentlyActive = activeSkills.includes(skillName);
@@ -59,6 +70,18 @@ export function useEntitySkills(entityType: EntityType, entityId: string) {
     const success = await updateConfig({
       ...config,
       skills: updatedSkills,
+    });
+
+    if (success) {
+      await fetchSkills();
+    }
+    return success;
+  };
+
+  const setActiveSkills = async (newSkills: string[]) => {
+    const success = await updateConfig({
+      ...config,
+      skills: newSkills,
     });
 
     if (success) {
@@ -79,6 +102,7 @@ export function useEntitySkills(entityType: EntityType, entityId: string) {
     isSaving,
     error: configError || skillsError,
     toggleSkill,
+    setActiveSkills,
     refresh: refreshAll,
   };
 }

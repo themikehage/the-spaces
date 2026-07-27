@@ -87,7 +87,7 @@ describe("Subagent Permission Inheritance", () => {
   it("should respect user decisions (last-match-wins) and persist to disk", () => {
     // Initially, bash command ls is 'ask'
     let rules = buildSubagentRules(testUser, subagentSessionId);
-    let bashVerdict = evaluateSubagentRules("bash", { command: "git status" }, rules);
+    const bashVerdict = evaluateSubagentRules("bash", { command: "git status" }, rules);
     expect(bashVerdict).toBeDefined();
     expect(bashVerdict!.allow).toBe("ask");
 

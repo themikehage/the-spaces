@@ -70,7 +70,8 @@ export function createUiTools(
         options: {
           type: "array",
           items: { type: "string" },
-          description: "List of predefined options for the user. Must have at least 2 options.",
+          description:
+            'List of predefined options for the user. Must have at least 2 options. IMPORTANT: Every item MUST be a flat string (e.g. ["Option A", "Option B"]), NOT objects or arrays.',
         },
         placeholder: {
           type: "string",
@@ -95,7 +96,9 @@ export function createUiTools(
         reason: args.question || "Question requires answer",
       });
       if (
-        (result.action === "submit" || result.action === "approve" || result.action === "confirm") &&
+        (result.action === "submit" ||
+          result.action === "approve" ||
+          result.action === "confirm") &&
         result.payload
       ) {
         const selectedStr = Array.isArray(result.payload.selectedOptions)

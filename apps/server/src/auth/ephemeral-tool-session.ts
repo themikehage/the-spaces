@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { createProgrammaticSessionSync } from "./onboarding";
 import { getDb } from "./db";
+import { createProgrammaticSessionSync } from "./onboarding";
 
 interface CachedToken {
   token: string;

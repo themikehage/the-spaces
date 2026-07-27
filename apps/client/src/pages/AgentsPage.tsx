@@ -29,8 +29,6 @@ const STATUS_DOT: Record<string, string> = {
   stopped: "bg-text-secondary",
 };
 
-
-
 function AgentCard({
   agent,
   onDelete,

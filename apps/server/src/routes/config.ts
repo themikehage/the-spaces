@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
+import { Hono } from "hono";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { Hono } from "hono";
 import {
   EntityConfigSchema,
   EntityTypeSchema,

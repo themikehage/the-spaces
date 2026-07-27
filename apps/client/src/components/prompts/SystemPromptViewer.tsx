@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
+import { RichMarkdown } from "@/components/chat/RichMarkdown";
 import { apiFetch } from "@/lib/api";
-import type { PromptPreviewResponse } from "shared";
+import { Check, Copy, Loader2, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
+import type { PromptPreviewResponse } from "shared";
 
 export interface SystemPromptViewerProps {
   entityType: "global" | "agent" | "project" | "team" | "subagent";
@@ -10,6 +12,7 @@ export interface SystemPromptViewerProps {
   teamId?: string;
   subagentId?: string;
   title?: string;
+  embedded?: boolean;
 }
 
 export function SystemPromptViewer({
@@ -19,9 +22,10 @@ export function SystemPromptViewer({
   teamId,
   subagentId,
   title,
+  embedded = false,
 }: SystemPromptViewerProps) {
   const [showPreviewsSetting, setShowPreviewsSetting] = useState<boolean | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(embedded);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [previewData, setPreviewData] = useState<PromptPreviewResponse | null>(null);
@@ -46,7 +50,6 @@ export function SystemPromptViewer({
   }, []);
 
   const fetchPreview = async () => {
-    if (previewData) return;
     setLoading(true);
     setError(null);
     try {
@@ -73,6 +76,12 @@ export function SystemPromptViewer({
     }
   };
 
+  useEffect(() => {
+    if (embedded) {
+      fetchPreview();
+    }
+  }, [embedded, entityType, agentId, projectId, teamId, subagentId]);
+
   const handleToggle = () => {
     const nextOpen = !isOpen;
     setIsOpen(nextOpen);
@@ -88,10 +97,104 @@ export function SystemPromptViewer({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  if (showPreviewsSetting !== true) {
+  if (!embedded && showPreviewsSetting !== true) {
     return null;
   }
 
+  if (embedded) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-foreground uppercase tracking-wider">
+              {title || `System Prompt (${entityType})`}
+            </span>
+            {previewData?.estimatedTokens !== undefined && (
+              <span className="text-[10px] bg-primary/15 text-primary font-mono px-2 py-0.5 rounded-full font-semibold border border-primary/20">
+                ~ {previewData.estimatedTokens} tokens
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={fetchPreview}
+            disabled={loading}
+            className="text-xs px-2.5 py-1 bg-background hover:bg-card-hover border border-input/40 rounded-lg text-muted-foreground hover:text-foreground font-medium transition-colors cursor-pointer"
+          >
+            {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="text-xs text-muted-foreground animate-pulse py-8 text-center border border-dashed border-input rounded-xl bg-card/20">
+            Construyendo previsualización del System Prompt...
+          </div>
+        ) : error ? (
+          <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive text-xs rounded-xl font-mono">
+            Error al cargar prompt: {error}
+          </div>
+        ) : previewData ? (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between border-b border-input/30 pb-2">
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("sections")}
+                  className={`px-3 py-1 text-xs rounded-lg font-semibold transition-all cursor-pointer ${activeTab === "sections"
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "bg-background/80 text-muted-foreground hover:text-foreground border border-input/20"
+                    }`}
+                >
+                  Secciones ({previewData.sections.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("full")}
+                  className={`px-3 py-1 text-xs rounded-lg font-semibold transition-all cursor-pointer ${activeTab === "full"
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "bg-background/80 text-muted-foreground hover:text-foreground border border-input/20"
+                    }`}
+                >
+                  Prompt Completo
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="px-3 py-1 text-xs bg-background hover:bg-card-hover border border-input/30 text-foreground rounded-lg font-medium transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+
+            {activeTab === "sections" ? (
+              <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-1">
+                {previewData.sections.map((sec, i) => (
+                  <div
+                    key={i}
+                    className="bg-bg rounded-xl p-3 border border-input/40 space-y-1.5"
+                  >
+                    <div className="text-[11px] font-bold text-primary uppercase tracking-wider font-mono">
+                      {sec.title}
+                    </div>
+                    <RichMarkdown content={sec.content} />
+                  
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="max-h-[50vh] overflow-y-auto">
+                <div className="bg-bg p-3 rounded-xl border border-input/40">
+                  <RichMarkdown content={previewData.fullPrompt} />
+                </div>
+              </div>
+            )}
+          </div>
+        ) : null}
+      </div>
+    );
+  }
   return (
     <div className="mt-4 border border-primary/20 bg-primary/5 rounded-xl overflow-hidden shadow-sm">
       <div
@@ -131,22 +234,20 @@ export function SystemPromptViewer({
                   <button
                     type="button"
                     onClick={() => setActiveTab("sections")}
-                    className={`px-3 py-1 text-xs rounded-lg font-semibold transition-all cursor-pointer ${
-                      activeTab === "sections"
+                    className={`px-3 py-1 text-xs rounded-lg font-semibold transition-all cursor-pointer ${activeTab === "sections"
                         ? "bg-primary text-primary-foreground shadow-sm"
                         : "bg-background/80 text-muted-foreground hover:text-foreground border border-input/20"
-                    }`}
+                      }`}
                   >
                     Secciones ({previewData.sections.length})
                   </button>
                   <button
                     type="button"
                     onClick={() => setActiveTab("full")}
-                    className={`px-3 py-1 text-xs rounded-lg font-semibold transition-all cursor-pointer ${
-                      activeTab === "full"
+                    className={`px-3 py-1 text-xs rounded-lg font-semibold transition-all cursor-pointer ${activeTab === "full"
                         ? "bg-primary text-primary-foreground shadow-sm"
                         : "bg-background/80 text-muted-foreground hover:text-foreground border border-input/20"
-                    }`}
+                      }`}
                   >
                     Prompt Completo Concatenado
                   </button>
@@ -157,7 +258,7 @@ export function SystemPromptViewer({
                   onClick={handleCopy}
                   className="px-3 py-1 text-xs bg-card hover:bg-card-hover border border-input/30 text-foreground rounded-lg font-medium transition-all flex items-center gap-1.5 cursor-pointer"
                 >
-                  {copied ? "✓ Copiado" : "📋 Copiar Prompt"}
+                  {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 </button>
               </div>
 
@@ -171,17 +272,17 @@ export function SystemPromptViewer({
                       <div className="text-[11px] font-bold text-primary uppercase tracking-wider font-mono">
                         {sec.title}
                       </div>
-                      <pre className="text-xs font-mono text-foreground/90 whitespace-pre-wrap leading-relaxed select-all bg-card/40 p-2.5 rounded-md border border-input/10">
-                        {sec.content}
-                      </pre>
+                      <div className="bg-card/40 p-2.5 rounded-md border border-input/10">
+                        <RichMarkdown content={sec.content} />
+                      </div>
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="max-h-96 overflow-y-auto">
-                  <pre className="text-xs font-mono text-foreground/90 whitespace-pre-wrap leading-relaxed select-all bg-background/90 p-3 rounded-lg border border-input/30">
-                    {previewData.fullPrompt}
-                  </pre>
+                  <div className="bg-background/90 p-3 rounded-lg border border-input/30">
+                    <RichMarkdown content={previewData.fullPrompt} />
+                  </div>
                 </div>
               )}
             </div>

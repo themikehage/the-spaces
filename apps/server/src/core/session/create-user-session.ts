@@ -59,9 +59,7 @@ export interface CreatedSessionDto {
   teamId: string | null;
 }
 
-export async function createUserSession(
-  input: CreateUserSessionInput,
-): Promise<CreatedSessionDto> {
+export async function createUserSession(input: CreateUserSessionInput): Promise<CreatedSessionDto> {
   const { username, name, projectId, agentId, teamId, tools, skills, executionMode } = input;
   const newSessionId = crypto.randomUUID();
 

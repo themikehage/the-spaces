@@ -67,7 +67,7 @@ export function verifyCommandSafety(command: string): { safe: boolean; reason?: 
   const lowerCmd = command.toLowerCase();
 
   const killKeywords = ["kill", "taskkill", "stop-process", "fuser", "pkill", "killall"];
-  const hasKillKeyword = killKeywords.some((kw) => lowerCmd.includes(kw));
+  const hasKillKeyword = killKeywords.some((kw) => new RegExp(`\\b${kw}\\b`, "i").test(command));
 
   if (hasKillKeyword) {
     const pidRegex = new RegExp(`\\b${pid}\\b`);

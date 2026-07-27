@@ -20,9 +20,9 @@ outputFilter: filterSecretsFromOutput(output, Object.values(userEnv))
 // TOKEN / JWT_TOKEN NO están en la lista de secrets a filtrar
 ```
 
-- `createProgrammaticSessionSync` inserta sesión con **TTL 7 días** (`onboarding.ts` L38, L76).  
-- Mismo patrón en `manage-delegations-tool.ts` (~L213).  
-- Cada invocación bash puede crear **otra** sesión en DB sin cleanup obvio → acumulación + superficie de robo.  
+- `createProgrammaticSessionSync` inserta sesión con **TTL 7 días** (`onboarding.ts` L38, L76).
+- Mismo patrón en `manage-delegations-tool.ts` (~L213).
+- Cada invocación bash puede crear **otra** sesión en DB sin cleanup obvio → acumulación + superficie de robo.
 - `verifyCommandSafety` / `restricted-paths` = denylist por substring — defensa en profundidad débil, no isolation.
 
 ### 1.2 Zip Slip en import de backup
@@ -55,19 +55,19 @@ Login/register también devuelven token parseado de cookie. Client lo guarda en 
 
 ### 1.6 Secret de auth: docs ≠ código
 
-| Fuente | Variable |
-|--------|----------|
+| Fuente                                 | Variable             |
+| -------------------------------------- | -------------------- |
 | `.env.example`, `docs/self-hosting.md` | `SPACES_AUTH_SECRET` |
-| `auth/config.ts` (uso real) | `BETTER_AUTH_SECRET` |
-| `env-crypto.ts` mensaje de error | menciona ambas |
+| `auth/config.ts` (uso real)            | `BETTER_AUTH_SECRET` |
+| `env-crypto.ts` mensaje de error       | menciona ambas       |
 
 Operador sigue la doc → secret “configurado” que la app **ignora**.
 
 ### 1.7 Otros (prioridad secundaria dentro del hito)
 
-- Health expone `dataPath` (`index.ts` L83).  
-- Logs de middleware con **prefix de token** (`auth/middleware.ts`).  
-- Upload files sin max size explícito (DoS) — si cabe en tiempo, límites; si no, documentar follow-up.  
+- Health expone `dataPath` (`index.ts` L83).
+- Logs de middleware con **prefix de token** (`auth/middleware.ts`).
+- Upload files sin max size explícito (DoS) — si cabe en tiempo, límites; si no, documentar follow-up.
 - Docker root / `chmod 777` — hito 08 packaging salvo fix trivial.
 
 ---
@@ -76,24 +76,24 @@ Operador sigue la doc → secret “configurado” que la app **ignora**.
 
 Entregar un **piso de seguridad honesto** para open source self-host **single-trust-admin** (un operador controla el host):
 
-| # | Meta | Barra de éxito |
-|---|------|----------------|
-| A | Tokens en bash | No sesión de 7 días en env; TTL corto **o** eliminación del token de sesión completa; siempre redacted en output |
-| B | Zip import | Imposible escribir fuera de `userDir` |
-| C | CORS | Production/fail-closed sin allowlist; dev explícito |
-| D | Auth JSON token | Browser confía en cookie; no exponer session token en `/status` (y preferible login) sin justificación |
-| E | Secrets env | `BETTER_AUTH_SECRET \|\| SPACES_AUTH_SECRET` + docs alineados |
-| F | Preview | Default más seguro **o** documentado + opt-in + IDs menos adivinables si esfuerzo bajo |
-| G | Threat model | `SECURITY.md` / self-host: bash = host privileges del proceso del proceso |
-| H | Tests | zip-slip, CORS boot, token filter, secret name, TTL |
+| #   | Meta            | Barra de éxito                                                                                                   |
+| --- | --------------- | ---------------------------------------------------------------------------------------------------------------- |
+| A   | Tokens en bash  | No sesión de 7 días en env; TTL corto **o** eliminación del token de sesión completa; siempre redacted en output |
+| B   | Zip import      | Imposible escribir fuera de `userDir`                                                                            |
+| C   | CORS            | Production/fail-closed sin allowlist; dev explícito                                                              |
+| D   | Auth JSON token | Browser confía en cookie; no exponer session token en `/status` (y preferible login) sin justificación           |
+| E   | Secrets env     | `BETTER_AUTH_SECRET \|\| SPACES_AUTH_SECRET` + docs alineados                                                    |
+| F   | Preview         | Default más seguro **o** documentado + opt-in + IDs menos adivinables si esfuerzo bajo                           |
+| G   | Threat model    | `SECURITY.md` / self-host: bash = host privileges del proceso del proceso                                        |
+| H   | Tests           | zip-slip, CORS boot, token filter, secret name, TTL                                                              |
 
 **Fuera de alcance (declarar, no implementar aquí):**
 
-- gVisor / Firecracker / bubblewrap multi-tenant.  
-- Seccomp network policy completa.  
-- CSP sin `unsafe-inline` (mejora P2).  
-- Rate-limit Redis multi-instancia (documentar limitación).  
-- E2E pentest automatizado completo.  
+- gVisor / Firecracker / bubblewrap multi-tenant.
+- Seccomp network policy completa.
+- CSP sin `unsafe-inline` (mejora P2).
+- Rate-limit Redis multi-instancia (documentar limitación).
+- E2E pentest automatizado completo.
 - Non-root Docker exhaustivo (hito 08, salvo one-liner si ya hay USER stage).
 
 ---
@@ -113,22 +113,22 @@ Entregar un **piso de seguridad honesto** para open source self-host **single-tr
 
 **Opciones evaluadas:**
 
-| Opción | Pros | Contras |
-|--------|------|---------|
-| A. Quitar TOKEN/JWT del env por completo | Máxima seguridad | Rompe scripts/agent workflows que llaman API local con TOKEN |
-| B. TTL corto (5–15 min) + delete after command + filter output | Mantiene compat | Sigue siendo session token si el schema de better-auth no tiene scopes |
-| C. Token distinto “tool” con ACL solo workspace | Ideal | Requiere auth redesign (fuera de M) |
+| Opción                                                         | Pros             | Contras                                                                |
+| -------------------------------------------------------------- | ---------------- | ---------------------------------------------------------------------- |
+| A. Quitar TOKEN/JWT del env por completo                       | Máxima seguridad | Rompe scripts/agent workflows que llaman API local con TOKEN           |
+| B. TTL corto (5–15 min) + delete after command + filter output | Mantiene compat  | Sigue siendo session token si el schema de better-auth no tiene scopes |
+| C. Token distinto “tool” con ACL solo workspace                | Ideal            | Requiere auth redesign (fuera de M)                                    |
 
 **Decisión (híbrido B + mitigaciones):**
 
 1. **Nueva API** `createEphemeralToolSession(username, opts?: { ttlSeconds?: number })`:
-   - Default **TTL 10 minutos** (600s), no 7 días.  
-   - Inserta sesión igual que ahora **pero** con expiresAt corto.  
+   - Default **TTL 10 minutos** (600s), no 7 días.
+   - Inserta sesión igual que ahora **pero** con expiresAt corto.
    - Nombre de función nuevo; deprecar uso de `createProgrammaticSessionSync` desde tool-factory/delegations.
 
 2. **Reusar un solo token por sesión de agente** (no por cada bash call):
-   - Cache en memoria: `Map<`${username}:${sessionId}`, { token, expiresAt }>` en módulo pequeño `tool-session-tokens.ts`.  
-   - Evita saturar tabla `session` con miles de rows.  
+   - Cache en memoria: `Map<`${username}:${sessionId}`, { token, expiresAt }>` en módulo pequeño `tool-session-tokens.ts`.
+   - Evita saturar tabla `session` con miles de rows.
    - Refresh si queda < 60s.
 
 3. **outputFilter** siempre incluye el token activo (+ JWT_TOKEN same value) además de userEnv secrets.
@@ -143,7 +143,7 @@ Entregar un **piso de seguridad honesto** para open source self-host **single-tr
 
 **Efectos secundarios:**
 
-- Scripts largos >10 min que reutilizan TOKEN sin refresh fallarán → documentar; cache refresh en cada spawnHook si near expiry cubre bash largos **si cada comando re-entra spawnHook** (sí: cada execute llama hook).  
+- Scripts largos >10 min que reutilizan TOKEN sin refresh fallarán → documentar; cache refresh en cada spawnHook si near expiry cubre bash largos **si cada comando re-entra spawnHook** (sí: cada execute llama hook).
 - Sesiones efímeras antiguas: job opcional de cleanup `DELETE FROM session WHERE expiresAt < now` en startup (recomendado, barato).
 
 ### D3 — Zip Slip: validar entries antes de extraer
@@ -160,8 +160,8 @@ for (const entry of zip.getEntries()) {
 }
 ```
 
-- Reject absolute paths, `..`, symlink escape si adm-zip los expone.  
-- Límite de tamaño total descomprimido (p.ej. 500MB) y número de entries (p.ej. 50k) anti-zip-bomb básico.  
+- Reject absolute paths, `..`, symlink escape si adm-zip los expone.
+- Límite de tamaño total descomprimido (p.ej. 500MB) y número de entries (p.ej. 50k) anti-zip-bomb básico.
 - **Tests** con entry `../../etc/passwd` style bajo tmpdir.
 
 **Por qué no** cambiar de librería en este hito: adm-zip ya está; validación es suficiente si es correcta. Evaluar `yauzl`/`unzipper` en follow-up si hay CVEs.
@@ -173,9 +173,7 @@ for (const entry of zip.getEntries()) {
 **Decisión:**
 
 ```ts
-const isProd =
-  process.env.NODE_ENV === "production" ||
-  process.env.SPACES_ENV === "production";
+const isProd = process.env.NODE_ENV === "production" || process.env.SPACES_ENV === "production";
 
 origin: (origin) => {
   if (!origin) return null; // same-origin / non-browser
@@ -188,14 +186,14 @@ origin: (origin) => {
   }
   // Dev only: reflect for DX
   return origin;
-}
+};
 ```
 
 **Además en prod sin ALLOWED_ORIGINS:** log **fatal warning** al startup (o `throw` si `SPACES_STRICT_SECURITY=1`).
 
-**Decisión startup:**  
+**Decisión startup:**
 
-- Default prod: **warn + CORS deny all browser cross-origin** (app same-origin sigue OK sin header Origin).  
+- Default prod: **warn + CORS deny all browser cross-origin** (app same-origin sigue OK sin header Origin).
 - `SPACES_STRICT_SECURITY=1`: **exit(1)** si falta allowlist o secret.
 
 **Por qué no** exit(1) siempre en prod: rompe deploys same-origin puros que no setean allowlist (Coolify same host). Warn es suficiente si no se refleja origin.
@@ -208,19 +206,19 @@ origin: (origin) => {
 
 **Decisión por endpoint:**
 
-| Endpoint | Hoy | Después |
-|----------|-----|---------|
-| `GET /api/auth/status` | `{ token: session.token }` | **Sin** `token` (o `token: null` always). Client usa `credentials: "include"` + cookie. |
-| `POST login/register` | devuelve token copiado de Set-Cookie | **Sin** token en body si Set-Cookie ya se envió. Si algún client no-browser necesita token, header `X-Spaces-Return-Token: 1` opt-in **o** documentar cookie-only. |
+| Endpoint               | Hoy                                  | Después                                                                                                                                                            |
+| ---------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `GET /api/auth/status` | `{ token: session.token }`           | **Sin** `token` (o `token: null` always). Client usa `credentials: "include"` + cookie.                                                                            |
+| `POST login/register`  | devuelve token copiado de Set-Cookie | **Sin** token en body si Set-Cookie ya se envió. Si algún client no-browser necesita token, header `X-Spaces-Return-Token: 1` opt-in **o** documentar cookie-only. |
 
 **Client `AuthContext`:**
 
-- Dejar de persistir token en state para API calls si `apiFetch` ya manda cookies.  
+- Dejar de persistir token en state para API calls si `apiFetch` ya manda cookies.
 - WS auth: hoy puede mandar `{ type: "auth", token }`. Opciones:
-  1. WS confía en cookie del upgrade handshake (si ya lo hace en onOpen).  
+  1. WS confía en cookie del upgrade handshake (si ya lo hace en onOpen).
   2. Si hace falta token en primer mensaje, obtener de cookie no es posible en JS si HttpOnly — **debe** autenticarse en `onOpen` via cookie header (server ya tiene path cookie).
 
-**Verificar al implementar:** `factory.ts` onOpen cookie auth. Si suficiente, client **deja de enviar token** en mensaje auth (solo ` { type: "auth" } ` o nada post-cookie).
+**Verificar al implementar:** `factory.ts` onOpen cookie auth. Si suficiente, client **deja de enviar token** en mensaje auth (solo `{ type: "auth" }` o nada post-cookie).
 
 **Por qué:** reduce robo vía XSS/extensiones del bearer en memoria/JSON.  
 **Efecto secundario:** cualquier integración que leía `data.token` del status se rompe — monorepo client se actualiza; documentar breaking en CHANGELOG hito 08.
@@ -247,17 +245,17 @@ Usar en `auth/config.ts` y `env-crypto.ts`.
 
 **Opciones:**
 
-| Opción | Esfuerzo | Efecto |
-|--------|----------|--------|
-| A. Firmar URLs HMAC TTL | M | Mejor |
-| B. Requerir cookie auth en `/api/preview/files/...` | S–M | Rompe iframe cross-origin |
-| C. Opt-in `SPACES_PUBLIC_PREVIEW=1` + default off en prod | S | Seguro por defecto |
-| D. Solo documentar riesgo | S | Débil |
+| Opción                                                    | Esfuerzo | Efecto                    |
+| --------------------------------------------------------- | -------- | ------------------------- |
+| A. Firmar URLs HMAC TTL                                   | M        | Mejor                     |
+| B. Requerir cookie auth en `/api/preview/files/...`       | S–M      | Rompe iframe cross-origin |
+| C. Opt-in `SPACES_PUBLIC_PREVIEW=1` + default off en prod | S        | Seguro por defecto        |
+| D. Solo documentar riesgo                                 | S        | Débil                     |
 
 **Decisión:** **C + docs** en este hito; diseñar A como follow-up en SECURITY.md roadmap.
 
-- Si prod y no `SPACES_PUBLIC_PREVIEW=1` → preview assets requieren misma auth que API (cookie).  
-- Dev: public OK para DX.  
+- Si prod y no `SPACES_PUBLIC_PREVIEW=1` → preview assets requieren misma auth que API (cookie).
+- Dev: public OK para DX.
 - CORS `*` en preview-server: en prod sin public preview, no aplica; si public, mantener * solo para assets estáticos read-only **consciente**.
 
 **Efecto secundario:** iframes de preview en otro origen dejan de funcionar sin flag — correcto para OSS default.
@@ -272,7 +270,7 @@ Usar en `auth/config.ts` y `env-crypto.ts`.
 
 **Decisión:** Eliminar o gate detrás de `SPACES_DEBUG_AUTH=1`:
 
-- token prefix logs en middleware y WS factory.  
+- token prefix logs en middleware y WS factory.
 - cookie header dumps.
 
 ### D10 — Upload size limit (si tiempo; si no, ticket explícito)
@@ -284,13 +282,13 @@ Si la API de Bun no lo permite limpio en este hito: check `file.size` en `files.
 
 ### D11 — Tests obligatorios de este hito
 
-| Test | Qué demuestra |
-|------|----------------|
-| `zip-slip.test.ts` | entry `../outside` rejected |
-| `bash-output-filter` o tool-factory unit | token aparece como `***hidden***` |
-| `cors-config` pure function | prod + empty allowlist → null; dev → reflect |
-| `getAuthSecret` | lee SPACES_ o BETTER_ |
-| `ephemeral-session` | expiresAt - now ≈ ttl |
+| Test                                     | Qué demuestra                                |
+| ---------------------------------------- | -------------------------------------------- |
+| `zip-slip.test.ts`                       | entry `../outside` rejected                  |
+| `bash-output-filter` o tool-factory unit | token aparece como `***hidden***`            |
+| `cors-config` pure function              | prod + empty allowlist → null; dev → reflect |
+| `getAuthSecret`                          | lee SPACES_ o BETTER_                        |
+| `ephemeral-session`                      | expiresAt - now ≈ ttl                        |
 
 ### D12 — Qué NO hacer en bash “sandbox” este hito
 
@@ -371,83 +369,83 @@ Opcional menor: bloquear `curl file://` / lectura de `SPACES_DATA_PATH` parents 
 
 ### 4.8 Verificación cierre
 
-- [ ] typecheck server + client  
-- [ ] tests nuevos en verde  
+- [ ] typecheck server + client
+- [ ] tests nuevos en verde
 - [ ] Grep candados:
   ```bash
   rg 'extractAllTo' apps/server/src  # no hits o solo dentro safe wrapper test
   rg 'createProgrammaticSessionSync' apps/server/src/core  # no en tool-factory/delegations
   rg 'JWT_TOKEN' apps/server/src/core
   ```
-- [ ] Manual: prod-like `NODE_ENV=production` without ALLOWED_ORIGINS → browser cross-origin fails; app same host works  
-- [ ] Manual: bash `echo $JWT_TOKEN` → output redacted or empty if inject off  
+- [ ] Manual: prod-like `NODE_ENV=production` without ALLOWED_ORIGINS → browser cross-origin fails; app same host works
+- [ ] Manual: bash `echo $JWT_TOKEN` → output redacted or empty if inject off
 
 ---
 
 ## 5. Archivos a tocar (matriz)
 
-| Archivo | Acción | Por qué | Efectos secundarios |
-|---------|--------|---------|---------------------|
-| `auth/ephemeral-tool-session.ts` (nuevo) | Crear | TTL corto + cache | — |
-| `auth/onboarding.ts` | Editar | TTL parametrizado | Callers deben pasar TTL |
-| `core/session/tool-factory.ts` | Editar | inject + filter | Scripts >TTL |
-| `core/tools/manage-delegations-tool.ts` | Editar | paridad subagent | — |
-| `core/bash-output-filter.ts` | Menor | — | — |
-| `core/backup/safe-zip-extract.ts` (nuevo) | Crear | zip-slip | — |
-| `routes/backup.ts` | Editar | usar safe extract | imports fallan si zip malo |
-| `index.ts` / `core/security/cors.ts` | Editar | CORS | dev vs prod DX |
-| `routes/auth.ts` | Editar | no token JSON | breaking client |
-| `client/.../AuthContext.tsx` | Editar | cookie-first | — |
-| `client/.../ws-client.ts` | Menor | auth sin token si cookie | coordinar factory onOpen |
-| `auth/config.ts`, `lib/env-crypto.ts` | Editar | secret alias | — |
-| `routes/preview.ts`, `preview-server.ts` | Editar | gate | preview DX |
-| `auth/middleware.ts`, `ws/factory.ts` | Editar | menos logs secretos | debug más difícil sin flag |
-| `.env.example`, `docs/self-hosting.md`, `SECURITY.md` | Editar | verdad | — |
-| `docker-compose.yml` | Editar | secret names | — |
-| `__tests__/*` seguridad | Crear | candados | — |
-| `ai/bash-tool.ts` denylist | **No** reescribir como sandbox | D12 | — |
-| Dockerfile non-root | **No** (hito 08) salvo trivial | — | — |
+| Archivo                                               | Acción                         | Por qué                  | Efectos secundarios        |
+| ----------------------------------------------------- | ------------------------------ | ------------------------ | -------------------------- |
+| `auth/ephemeral-tool-session.ts` (nuevo)              | Crear                          | TTL corto + cache        | —                          |
+| `auth/onboarding.ts`                                  | Editar                         | TTL parametrizado        | Callers deben pasar TTL    |
+| `core/session/tool-factory.ts`                        | Editar                         | inject + filter          | Scripts >TTL               |
+| `core/tools/manage-delegations-tool.ts`               | Editar                         | paridad subagent         | —                          |
+| `core/bash-output-filter.ts`                          | Menor                          | —                        | —                          |
+| `core/backup/safe-zip-extract.ts` (nuevo)             | Crear                          | zip-slip                 | —                          |
+| `routes/backup.ts`                                    | Editar                         | usar safe extract        | imports fallan si zip malo |
+| `index.ts` / `core/security/cors.ts`                  | Editar                         | CORS                     | dev vs prod DX             |
+| `routes/auth.ts`                                      | Editar                         | no token JSON            | breaking client            |
+| `client/.../AuthContext.tsx`                          | Editar                         | cookie-first             | —                          |
+| `client/.../ws-client.ts`                             | Menor                          | auth sin token si cookie | coordinar factory onOpen   |
+| `auth/config.ts`, `lib/env-crypto.ts`                 | Editar                         | secret alias             | —                          |
+| `routes/preview.ts`, `preview-server.ts`              | Editar                         | gate                     | preview DX                 |
+| `auth/middleware.ts`, `ws/factory.ts`                 | Editar                         | menos logs secretos      | debug más difícil sin flag |
+| `.env.example`, `docs/self-hosting.md`, `SECURITY.md` | Editar                         | verdad                   | —                          |
+| `docker-compose.yml`                                  | Editar                         | secret names             | —                          |
+| `__tests__/*` seguridad                               | Crear                          | candados                 | —                          |
+| `ai/bash-tool.ts` denylist                            | **No** reescribir como sandbox | D12                      | —                          |
+| Dockerfile non-root                                   | **No** (hito 08) salvo trivial | —                        | —                          |
 
 ---
 
 ## 6. Efectos secundarios y riesgos (resumen)
 
-| Riesgo | Severidad | Mitigación |
-|--------|-----------|------------|
-| Romper scripts que dependen de TOKEN 7d | Media | TTL 10m + refresh por comando; docs; flag |
-| Acumulación sesiones DB histórica | Baja | purge on boot |
-| CORS prod niega front en dominio distinto mal documentado | Alta percibida | .env.example + self-host warning claro |
-| Login client roto sin token body | Alta si mal migrado | smoke AuthContext; cookies SameSite |
-| Preview roto en demos | Media | PUBLIC_PREVIEW=1 en dev compose |
-| False confidence “ahora es multi-tenant safe” | Alta reputacional | SECURITY.md honest D1 |
-| Zip bombeo no cubierto del todo | Media | size/entry limits básicos |
-| Quitar token JSON rompe mobile wrappers externos | Baja pre-OSS | CHANGELOG |
+| Riesgo                                                    | Severidad           | Mitigación                                |
+| --------------------------------------------------------- | ------------------- | ----------------------------------------- |
+| Romper scripts que dependen de TOKEN 7d                   | Media               | TTL 10m + refresh por comando; docs; flag |
+| Acumulación sesiones DB histórica                         | Baja                | purge on boot                             |
+| CORS prod niega front en dominio distinto mal documentado | Alta percibida      | .env.example + self-host warning claro    |
+| Login client roto sin token body                          | Alta si mal migrado | smoke AuthContext; cookies SameSite       |
+| Preview roto en demos                                     | Media               | PUBLIC_PREVIEW=1 en dev compose           |
+| False confidence “ahora es multi-tenant safe”             | Alta reputacional   | SECURITY.md honest D1                     |
+| Zip bombeo no cubierto del todo                           | Media               | size/entry limits básicos                 |
+| Quitar token JSON rompe mobile wrappers externos          | Baja pre-OSS        | CHANGELOG                                 |
 
 ---
 
 ## 7. Criterios de hecho (DoD)
 
-1. tool-factory/delegations no crean sesión 7d por bash; output redacts token.  
-2. Zip con `../` no escribe fuera de userDir (test).  
-3. `NODE_ENV=production` + empty ALLOWED_ORIGINS **no** refleja Origin (test pure).  
-4. `/api/auth/status` no devuelve session token usable.  
-5. `SPACES_AUTH_SECRET` o `BETTER_AUTH_SECRET` funcionan.  
-6. Preview no es público en prod por defecto (o flag explícito).  
-7. SECURITY.md describe bash=host y limitations.  
-8. typecheck + tests seguridad verdes.  
+1. tool-factory/delegations no crean sesión 7d por bash; output redacts token.
+2. Zip con `../` no escribe fuera de userDir (test).
+3. `NODE_ENV=production` + empty ALLOWED_ORIGINS **no** refleja Origin (test pure).
+4. `/api/auth/status` no devuelve session token usable.
+5. `SPACES_AUTH_SECRET` o `BETTER_AUTH_SECRET` funcionan.
+6. Preview no es público en prod por defecto (o flag explícito).
+7. SECURITY.md describe bash=host y limitations.
+8. typecheck + tests seguridad verdes.
 9. No se implementó de paso aislamiento container ni hitos 05–08.
 
 ---
 
 ## 8. Secuencia de implementación sugerida
 
-1. Pure helpers: cors decision, getAuthSecret, safe-zip-extract + tests.  
-2. Ephemeral tokens + tool-factory + delegations + redact tests.  
-3. CORS + health + log hygiene en index/middleware.  
-4. Auth JSON + client cookie-first + WS smoke.  
-5. Preview gate.  
-6. Docs fragments (.env.example, self-hosting security section, SECURITY.md).  
-7. Grep candados + typecheck.  
+1. Pure helpers: cors decision, getAuthSecret, safe-zip-extract + tests.
+2. Ephemeral tokens + tool-factory + delegations + redact tests.
+3. CORS + health + log hygiene en index/middleware.
+4. Auth JSON + client cookie-first + WS smoke.
+5. Preview gate.
+6. Docs fragments (.env.example, self-hosting security section, SECURITY.md).
+7. Grep candados + typecheck.
 8. Marcar checkboxes.
 
 **PR separado** de 01–03 preferible (seguridad revisable sola).
@@ -458,13 +456,13 @@ Opcional menor: bloquear `curl file://` / lectura de `SPACES_DATA_PATH` parents 
 
 Defaults recomendados:
 
-1. **¿TTL tool token 10 minutos + cache por sessionId?** → **Sí**  
-2. **¿Flag `SPACES_BASH_INJECT_TOKEN=0` para desactivar inject?** → **Sí**  
-3. **¿CORS prod sin allowlist = deny reflect (no crash) + warn?** → **Sí**  
-4. **¿Quitar token del JSON de auth (breaking monorepo)?** → **Sí**  
-5. **¿Preview público off en prod salvo `SPACES_PUBLIC_PREVIEW=1`?** → **Sí**  
-6. **¿Alias `SPACES_AUTH_SECRET` \|\| `BETTER_AUTH_SECRET`?** → **Sí**  
-7. **¿Implementar bubblewrap/gVisor ahora?** → **No**  
-8. **¿Firmar URLs de preview (HMAC) ahora?** → **No** (roadmap en SECURITY.md)  
+1. **¿TTL tool token 10 minutos + cache por sessionId?** → **Sí**
+2. **¿Flag `SPACES_BASH_INJECT_TOKEN=0` para desactivar inject?** → **Sí**
+3. **¿CORS prod sin allowlist = deny reflect (no crash) + warn?** → **Sí**
+4. **¿Quitar token del JSON de auth (breaking monorepo)?** → **Sí**
+5. **¿Preview público off en prod salvo `SPACES_PUBLIC_PREVIEW=1`?** → **Sí**
+6. **¿Alias `SPACES_AUTH_SECRET` \|\| `BETTER_AUTH_SECRET`?** → **Sí**
+7. **¿Implementar bubblewrap/gVisor ahora?** → **No**
+8. **¿Firmar URLs de preview (HMAC) ahora?** → **No** (roadmap en SECURITY.md)
 
 Al confirmar, el siguiente texto será el **hito 05** (un path de runtime + `TOOL_GROUPS` único), salvo que indiques implementar antes.

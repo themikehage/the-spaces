@@ -3,13 +3,13 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { dirname, join, resolve } from "node:path";
 import {
   getAgentWorkspaceDir,
+  getGlobalAgentsMdPath,
   getProjectsDir,
   getProjectWorkspaceDir,
   getSessionDir,
   getTeamWorkspaceDir,
   getUserDir,
   getWorkspaceDir,
-  getGlobalAgentsMdPath,
   getWorkspaceSkillsDir,
   SessionPrefix,
 } from "shared";
@@ -41,6 +41,7 @@ export function getResolvedSkillPaths(cwd: string, username?: string): string[] 
     current = parent;
   }
   const localCandidates = [
+    resolve(workspaceRoot, ".spaces/skills"),
     resolve(workspaceRoot, ".pi/skills"),
     resolve(workspaceRoot, ".agents/skills"),
     resolve(workspaceRoot, "pi/.pi/skills"),
@@ -56,7 +57,7 @@ export function getResolvedSkillPaths(cwd: string, username?: string): string[] 
 
 export function ensureWorkspaceSubdirs(workspaceDir: string): void {
   const subdirs = [
-    join(workspaceDir, ".agents", "skills"),
+    join(workspaceDir, ".spaces", "skills"),
     join(workspaceDir, "assets", "uploads"),
     join(workspaceDir, "assets", "generated"),
     join(workspaceDir, "memories", "projects"),
@@ -72,7 +73,7 @@ export function ensureWorkspaceSubdirs(workspaceDir: string): void {
 
 export function ensureWorkspaceStructure(username: string): string {
   const workspaceDir = getWorkspaceDir(username);
-  const skillsBaseDir = join(workspaceDir, ".agents", "skills");
+  const skillsBaseDir = getWorkspaceSkillsDir(username);
 
   ensureWorkspaceSubdirs(workspaceDir);
   mkdirSync(getProjectsDir(username), { recursive: true });
@@ -80,8 +81,14 @@ export function ensureWorkspaceStructure(username: string): string {
   const agentsMdPath = getGlobalAgentsMdPath(username);
   if (!existsSync(agentsMdPath)) {
     try {
+      const parentDir = join(workspaceDir, ".spaces");
+      if (!existsSync(parentDir)) {
+        mkdirSync(parentDir, { recursive: true });
+      }
       const legacyPath = join(workspaceDir, "AGENTS.md");
-      const content = existsSync(legacyPath) ? readFileSync(legacyPath, "utf-8") : DEFAULT_AGENTS_MD;
+      const content = existsSync(legacyPath)
+        ? readFileSync(legacyPath, "utf-8")
+        : DEFAULT_AGENTS_MD;
       writeFileSync(agentsMdPath, content, "utf-8");
     } catch (e) {
       console.error("Failed to write .spaces/AGENTS.md:", e);

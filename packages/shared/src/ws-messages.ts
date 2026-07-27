@@ -236,5 +236,6 @@ export const WsServerControlMessageSchema = z.discriminatedUnion("type", [
 
 export type WsServerControlMessage = z.infer<typeof WsServerControlMessageSchema>;
 
-export type WsServerMessage = WsServerControlMessage | ({ type: string; sessionId?: string } & Record<string, unknown>);
+export type WsServerMessage =
+  WsServerControlMessage | ({ type: string; sessionId?: string } & Record<string, unknown>);
 export type WsServerMessageType = WsServerControlMessage["type"] | (string & {});

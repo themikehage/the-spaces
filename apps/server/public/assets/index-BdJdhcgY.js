@@ -52679,21 +52679,19 @@ function Fge({ text: e, args: t }) {
                             }),
                             l.jsx("span", {
                               className: g ? "text-foreground" : "text-muted-foreground",
-                              children: y
-                                .split("|||")
-                                .map((v, S) =>
-                                  S % 2 === 1
-                                    ? l.jsx(
-                                        "mark",
-                                        {
-                                          className:
-                                            "bg-highlight/25 text-highlight rounded-sm px-0.5",
-                                          children: v,
-                                        },
-                                        S,
-                                      )
-                                    : v,
-                                ),
+                              children: y.split("|||").map((v, S) =>
+                                S % 2 === 1
+                                  ? l.jsx(
+                                      "mark",
+                                      {
+                                        className:
+                                          "bg-highlight/25 text-highlight rounded-sm px-0.5",
+                                        children: v,
+                                      },
+                                      S,
+                                    )
+                                  : v,
+                              ),
                             }),
                           ],
                         },

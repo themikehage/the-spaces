@@ -95,7 +95,10 @@ export function Dropdown<T extends string>({
             return (
               <button
                 key={opt.value}
-                onClick={() => handleSelect(opt)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSelect(opt);
+                }}
                 disabled={opt.disabled}
                 className={`w-full text-left px-3 py-1.5 text-xs transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
                   isSelected

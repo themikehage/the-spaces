@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+import { SystemPromptViewer } from "@/components/prompts/SystemPromptViewer";
 import { AvatarUploadField } from "@/components/shared/AvatarUploadField";
 import { Button } from "@/components/ui/Button";
 import { useLiterals } from "@/lib";
@@ -7,37 +8,7 @@ import { DEFAULT_AVATAR_PREFIX, isDefaultAvatar } from "@/lib/defaultAvatars";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import type { AgentDefinition, AgentInfo } from "shared";
-import { SystemPromptViewer } from "@/components/prompts/SystemPromptViewer";
-import { EntitySkillsEditor } from "@/components/shared/EntitySkillsEditor";
 import { literals as u } from "./RegisterModal.literals";
-
-const KNOWN_SERIAL_TOOLS = [
-  {
-    id: "request_approval",
-    label: "request_approval",
-    description: "Suspends execution for explicit user approval",
-  },
-  {
-    id: "ask_question",
-    label: "ask_question",
-    description: "Prompts the user for a single/multi-choice or custom text answer",
-  },
-  {
-    id: "manage_delegations",
-    label: "manage_delegations",
-    description: "Delegates tasks to child subagents or team members and awaits results",
-  },
-  {
-    id: "decompose_tasks",
-    label: "decompose_tasks",
-    description: "Decomposes complex objectives into structured sub-tasks",
-  },
-  {
-    id: "update_task_status",
-    label: "update_task_status",
-    description: "Updates task execution progress and status sequentially",
-  },
-];
 
 const DEFAULT_FORM: AgentDefinition = {
   id: "",
@@ -62,6 +33,7 @@ export function RegisterModal({
   onDeleteAvatar,
 }: RegisterModalProps) {
   const l = useLiterals(u);
+  const [activeTab, setActiveTab] = useState<"general" | "prompts">("general");
   const [form, setForm] = useState<AgentDefinition>(DEFAULT_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -141,16 +113,6 @@ export function RegisterModal({
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       setForm((prev) => ({ ...prev, [key]: e.target.value }));
 
-  const toggleSerialTool = (toolId: string) => {
-    setForm((prev) => {
-      const current = prev.serialTools ?? [];
-      const updated = current.includes(toolId)
-        ? current.filter((t) => t !== toolId)
-        : [...current, toolId];
-      return { ...prev, serialTools: updated };
-    });
-  };
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
@@ -159,9 +121,9 @@ export function RegisterModal({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 8 }}
         transition={{ duration: 0.18 }}
-        className="relative w-full max-w-lg bg-card border border-input rounded-2xl shadow-2xl overflow-hidden"
+        className="relative w-full max-w-lg bg-card border border-input rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]"
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-input">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-input flex-shrink-0">
           <div>
             <h2 className="text-sm font-semibold text-foreground">
               {agent ? l.editAgent : l.registerAgentTitle}
@@ -171,8 +133,9 @@ export function RegisterModal({
             </p>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-card-hover transition-colors"
+            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-card-hover transition-colors cursor-pointer"
           >
             <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
               <path
@@ -184,173 +147,124 @@ export function RegisterModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-5 py-4 space-y-3 max-h-[70vh] overflow-y-auto">
-          <AvatarUploadField
-            preview={avatarPreview}
-            selectedDefault={selectedDefaultAvatar}
-            onFileChange={(file, preview) => {
-              setAvatarFile(file);
-              setSelectedDefaultAvatar(null);
-              setAvatarPreview(preview);
-            }}
-            onSelectDefault={(avatarId) => {
-              setSelectedDefaultAvatar(avatarId);
-              setAvatarFile(null);
-              setAvatarPreview(DEFAULT_AVATAR_PREFIX + avatarId);
-            }}
-            onClear={() => {
-              setSelectedDefaultAvatar(null);
-              setAvatarFile(null);
-              setAvatarPreview(null);
-            }}
-            entityName={form.name}
-            avatarType="agent"
-          />
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-medium text-muted-foreground block mb-1">
-                {l.idField}
-              </label>
-              <input
-                required
-                disabled={!!agent}
-                value={form.id}
-                onChange={set("id")}
-                placeholder={l.idPlaceholder}
-                pattern="[a-z0-9-]+"
-                title={l.idPatternTitle}
-                className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 font-mono disabled:opacity-50"
+        {/* Navigation Tabs */}
+        <div className="flex border-b border-input bg-bg/50 px-5 gap-4 flex-shrink-0">
+          <button
+            type="button"
+            onClick={() => setActiveTab("general")}
+            className={`py-2.5 text-xs font-semibold border-b-2 transition-colors cursor-pointer ${
+              activeTab === "general"
+                ? "border-primary text-primary font-bold"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            General
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("prompts")}
+            className={`py-2.5 text-xs font-semibold border-b-2 transition-colors cursor-pointer ${
+              activeTab === "prompts"
+                ? "border-primary text-primary font-bold"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Prompts
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-5">
+          {activeTab === "general" ? (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <AvatarUploadField
+                preview={avatarPreview}
+                selectedDefault={selectedDefaultAvatar}
+                onFileChange={(file, preview) => {
+                  setAvatarFile(file);
+                  setSelectedDefaultAvatar(null);
+                  setAvatarPreview(preview);
+                }}
+                onSelectDefault={(avatarId) => {
+                  setSelectedDefaultAvatar(avatarId);
+                  setAvatarFile(null);
+                  setAvatarPreview(DEFAULT_AVATAR_PREFIX + avatarId);
+                }}
+                onClear={() => {
+                  setSelectedDefaultAvatar(null);
+                  setAvatarFile(null);
+                  setAvatarPreview(null);
+                }}
+                entityName={form.name}
+                avatarType="agent"
               />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground block mb-1">
-                {l.nameField}
-              </label>
-              <input
-                required
-                value={form.name}
-                onChange={set("name")}
-                placeholder={l.namePlaceholder}
-                className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-xs font-medium text-muted-foreground block mb-1">
-              {l.systemPromptField}
-            </label>
-            <textarea
-              required
-              value={form.systemPrompt || ""}
-              onChange={set("systemPrompt")}
-              rows={6}
-              placeholder={l.systemPromptPlaceholder}
-              className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none font-mono leading-relaxed"
-            />
-          </div>
-
-          <SystemPromptViewer
-            entityType="agent"
-            agentId={form.id || agent?.id}
-            title={`Agent System Prompt Inspector (${form.name || form.id || "New Agent"})`}
-          />
-
-          <details className="group border border-input rounded-lg bg-background/30 overflow-hidden">
-            <summary className="flex items-center justify-between px-3 py-2 cursor-pointer select-none hover:bg-card-hover/40 transition-colors text-xs font-semibold text-foreground">
-              <span>{l.advancedConfig}</span>
-              <svg
-                className="w-3.5 h-3.5 text-muted-foreground transform transition-transform group-open:rotate-180"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
-            </summary>
-            <div className="px-3 py-3 border-t border-input space-y-3 bg-card/10 text-xs">
-              {agent && agent.id && (
-                <EntitySkillsEditor entityType="agent" entityId={agent.id} />
-              )}
-              <div>
-                <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
-                  {l.serialToolsLabel}
-                </label>
-                <p className="text-[10px] text-muted-foreground mb-2">{l.serialToolsDescription}</p>
-                <div className="space-y-1.5">
-                  {KNOWN_SERIAL_TOOLS.map((tool) => {
-                    const isChecked = form.serialTools?.includes(tool.id) ?? false;
-                    return (
-                      <label
-                        key={tool.id}
-                        className="flex items-start gap-2.5 p-2 rounded-lg border border-input/30 bg-background/50 hover:bg-card-hover/30 transition-colors cursor-pointer"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={() => toggleSerialTool(tool.id)}
-                          className="mt-0.5 rounded border-input text-primary focus:ring-primary accent-primary"
-                        />
-                        <div>
-                          <span className="font-mono text-[11px] font-medium text-foreground block">
-                            {tool.label}
-                          </span>
-                          <span className="text-[10px] text-muted-foreground block">
-                            {tool.description}
-                          </span>
-                        </div>
-                      </label>
-                    );
-                  })}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground block mb-1">
+                    {l.idField}
+                  </label>
+                  <input
+                    required
+                    disabled={!!agent}
+                    value={form.id}
+                    onChange={set("id")}
+                    placeholder={l.idPlaceholder}
+                    pattern="[a-z0-9-]+"
+                    title={l.idPatternTitle}
+                    className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 font-mono disabled:opacity-50"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground block mb-1">
+                    {l.nameField}
+                  </label>
+                  <input
+                    required
+                    value={form.name}
+                    onChange={set("name")}
+                    placeholder={l.namePlaceholder}
+                    className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
+                  />
                 </div>
               </div>
 
-              {agent && form.blueprintId && (
-                <div>
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
-                    {l.blueprintIdLabel}
-                  </label>
-                  <input
-                    type="text"
-                    readOnly
-                    value={form.blueprintId}
-                    className="w-full bg-card-hover/25 border border-input/50 rounded-lg px-2.5 py-1.5 text-[11px] text-muted-foreground font-mono focus:outline-none"
-                  />
+              <div>
+                <label className="text-xs font-medium text-muted-foreground block mb-1">
+                  {l.systemPromptField}
+                </label>
+                <textarea
+                  required
+                  value={form.systemPrompt || ""}
+                  onChange={set("systemPrompt")}
+                  rows={6}
+                  placeholder={l.systemPromptPlaceholder}
+                  className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 resize-none font-mono leading-relaxed"
+                />
+              </div>
+
+              {error && (
+                <div className="bg-destructive/10 border border-error/30 text-destructive text-xs px-3 py-2 rounded-lg">
+                  {error}
                 </div>
               )}
 
-              {agent && agent.createdAt && (
-                <div>
-                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
-                    {l.createdAtLabel}
-                  </label>
-                  <input
-                    type="text"
-                    readOnly
-                    value={new Date(agent.createdAt).toLocaleString()}
-                    className="w-full bg-card-hover/25 border border-input/50 rounded-lg px-2.5 py-1.5 text-[11px] text-muted-foreground focus:outline-none"
-                  />
-                </div>
-              )}
-            </div>
-          </details>
-
-          {error && (
-            <div className="bg-destructive/10 border border-error/30 text-destructive text-xs px-3 py-2 rounded-lg">
-              {error}
-            </div>
+              <div className="flex gap-2 pt-2">
+                <Button variant="outline" type="button" onClick={onClose} className="flex-1">
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={submitting} className="flex-1">
+                  {submitting ? l.saving : agent ? l.saveChanges : l.registerAgentTitle}
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <SystemPromptViewer
+              entityType="agent"
+              agentId={form.id || agent?.id}
+              title={`Agent System Prompt Inspector (${form.name || form.id || "New Agent"})`}
+              embedded
+            />
           )}
-
-          <div className="flex gap-2 pt-1">
-            <Button variant="outline" type="button" onClick={onClose} className="flex-1">
-              Cancel
-            </Button>
-            <Button type="submit" disabled={submitting} className="flex-1">
-              {submitting ? l.saving : agent ? l.saveChanges : l.registerAgentTitle}
-            </Button>
-          </div>
-        </form>
+        </div>
       </motion.div>
     </div>
   );

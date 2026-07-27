@@ -219,7 +219,7 @@ class TeamStore {
         filePosition -= readLength;
         readSync(fd, buffer, 0, readLength, filePosition);
 
-        let chunk = buffer.toString("utf-8", 0, readLength) + leftover;
+        const chunk = buffer.toString("utf-8", 0, readLength) + leftover;
         const chunkLines = chunk.split("\n");
 
         leftover = chunkLines[0];

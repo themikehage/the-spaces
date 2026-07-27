@@ -6,4 +6,3 @@ export type WorkspaceConfig = EntityConfig;
 export interface WorkspaceConfigPort {
   load(workspaceDir: string): Promise<EntityConfig | null>;
 }
-

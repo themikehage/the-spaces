@@ -3,6 +3,7 @@ import { useToast } from "@/contexts/ToastContext";
 import { useLiterals, type ContextUsage } from "@/lib";
 import { apiFetch } from "@/lib/api";
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
+import type { EntityType } from "shared";
 import { AutocompletePopover } from "./AutocompletePopover";
 import { literals as u } from "./ChatInput.literals";
 import { InputCard } from "./InputCard";
@@ -243,6 +244,8 @@ interface Props {
   compacting?: boolean;
   textareaRef?: React.RefObject<HTMLTextAreaElement | null>;
   disabled?: boolean;
+  entityType?: EntityType;
+  entityId?: string;
 }
 
 export function ChatInput({
@@ -261,8 +264,15 @@ export function ChatInput({
   compacting = false,
   textareaRef: externalTextareaRef,
   disabled = false,
+  entityType: customEntityType,
+  entityId: customEntityId,
 }: Props) {
   const l = useLiterals(u);
+
+  const resolvedEntityType: EntityType =
+    customEntityType || (activeAgentId ? "agent" : activeProjectName ? "project" : "global");
+  const resolvedEntityId: string =
+    customEntityId || activeAgentId || activeProjectName || "global";
   const { addToast } = useToast();
   const [input, setInput] = useState("");
   const [activeTools, setActiveTools] = useState<string[]>(DEFAULT_TOOLS);
@@ -631,6 +641,8 @@ export function ChatInput({
               onCompact={onCompact}
               compacting={compacting}
               executionMode={executionMode}
+              entityType={resolvedEntityType}
+              entityId={resolvedEntityId}
             />
           }
         />

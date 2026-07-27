@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 export interface EntityConfig {
   defaultModel?: string;
+  autonomyLevel?: "auto" | "propose" | "suggest";
+  executionMode?: string;
   toolOverrides?: {
     add?: string[];
     remove?: string[];

@@ -754,9 +754,7 @@ export class AgentHarness<
     }
   }
 
-  async compact(
-    customInstructions?: string,
-  ): Promise<{
+  async compact(customInstructions?: string): Promise<{
     summary: string;
     firstKeptEntryId: string;
     tokensBefore: number;

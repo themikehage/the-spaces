@@ -111,22 +111,26 @@ export function PortalPopover({
         !triggerRef.current.contains(target)
       ) {
         e.stopPropagation();
+        e.stopImmediatePropagation();
         onClose();
       }
     };
 
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
         onClose();
       }
     };
 
-    document.addEventListener("mousedown", handleOutsideClick);
-    document.addEventListener("keydown", handleEscape);
+    document.addEventListener("mousedown", handleOutsideClick, true);
+    document.addEventListener("keydown", handleEscape, true);
 
     return () => {
-      document.removeEventListener("mousedown", handleOutsideClick);
-      document.removeEventListener("keydown", handleEscape);
+      document.removeEventListener("mousedown", handleOutsideClick, true);
+      document.removeEventListener("keydown", handleEscape, true);
     };
   }, [open, onClose, triggerRef]);
 
@@ -147,6 +151,8 @@ export function PortalPopover({
             zIndex: 9999,
           }}
           className={className}
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
         >
           {children}
         </motion.div>

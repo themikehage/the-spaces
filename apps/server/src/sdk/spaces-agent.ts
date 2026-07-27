@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: MIT
 import {
+  SpacesAgentConfigSchema,
   type AgentDefinition,
   type ResolvedSpacesAgentConfig,
   type SpacesAgentConfig,
-  SpacesAgentConfigSchema,
 } from "shared";
-import {
-  createAgentRuntime,
-  type AgentRuntimeInstance,
-} from "../core/session/agent-runtime";
+import { createAgentRuntime, type AgentRuntimeInstance } from "../core/session/agent-runtime";
 
 export class SpacesAgent {
   readonly config: ResolvedSpacesAgentConfig;
@@ -17,14 +14,14 @@ export class SpacesAgent {
     this.config = SpacesAgentConfigSchema.parse(config);
   }
 
-
   toAgentDefinition(): AgentDefinition {
-    const sanitizedId = this.config.name
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9-]/g, "-")
-      .replace(/-+/g, "-")
-      .replace(/^-|-$/g, "") || "agent";
+    const sanitizedId =
+      this.config.name
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9-]/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "") || "agent";
 
     return {
       id: sanitizedId,
@@ -34,10 +31,7 @@ export class SpacesAgent {
     };
   }
 
-  async createRuntime(
-    username = "default",
-    sessionId?: string,
-  ): Promise<AgentRuntimeInstance> {
+  async createRuntime(username = "default", sessionId?: string): Promise<AgentRuntimeInstance> {
     const sid = sessionId ?? crypto.randomUUID();
 
     const runtime = await createAgentRuntime({

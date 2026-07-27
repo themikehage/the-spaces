@@ -36,7 +36,9 @@ The single source of truth schemas and types are defined in `packages/shared/src
 ## Session Subscriptions
 
 ### 1. `session_subscribe` (Client -> Server)
+
 Subscribe WebSocket client connection to agent session events.
+
 ```json
 {
   "type": "session_subscribe",
@@ -45,6 +47,7 @@ Subscribe WebSocket client connection to agent session events.
 ```
 
 Server response:
+
 ```json
 {
   "type": "session_subscribed",
@@ -53,7 +56,9 @@ Server response:
 ```
 
 ### 2. `session_unsubscribe` (Client -> Server)
+
 Unsubscribe WebSocket client connection from agent session events without destroying the underlying session.
+
 ```json
 {
   "type": "session_unsubscribe",
@@ -62,6 +67,7 @@ Unsubscribe WebSocket client connection from agent session events without destro
 ```
 
 Server response:
+
 ```json
 {
   "type": "session_unsubscribed",
@@ -113,6 +119,7 @@ Server response:
 ## Server to Client Event Stream (`WsServerMessage`)
 
 ### Control Plane Events
+
 - **`approval_request`**: Broadcast when a tool execution requires human approval.
   ```json
   {
@@ -141,7 +148,9 @@ Server response:
   ```
 
 ### Agent Runtime Events (Session Scoped)
+
 All session-scoped agent events emitted via session subscription carry a top-level `sessionId` property:
+
 - `agent_start`, `agent_end`
 - `message_start`, `message_update`, `message_end`
 - `tool_execution_start`, `tool_execution_update`, `tool_execution_end`

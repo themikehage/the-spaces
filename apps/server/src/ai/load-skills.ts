@@ -104,7 +104,7 @@ export function loadSkills(options: LoadSkillsOptions): { skills: Skill[]; diagn
               baseDir: subDir,
               sourceInfo: {
                 path: skillFilePath,
-                scope: skillDir.includes("workspace") ? "project" : "global",
+                scope: "global",
               },
               disableModelInvocation: frontmatter.disableModelInvocation === true,
             });

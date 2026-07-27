@@ -1,31 +1,33 @@
-import { convertToLlm } from "./messages";
-import { formatSkillsForSystemPrompt } from "./vendor/agent/src/harness/system-prompt.ts";
-import { streamSimple } from "./vendor/ai/src/compat.ts";
+import type { BaseTool } from "shared";
 import { TypedEventEmitter } from "../core/event-bus";
 import { NavigationController } from "../core/navigation-controller";
 import { ToolRegistry } from "../core/tool-registry";
 import type { AuthStorage } from "./auth-storage.ts";
 import { CompactionManager } from "./compaction-manager";
 import { estimateContextUsage as estimateContextUsageHelper } from "./context-estimator";
+import { convertToLlm } from "./messages";
 import type { AvailableModel, ModelRegistry } from "./model-registry";
 import { PromptBuilder } from "./prompt-builder";
 import type { DefaultResourceLoader } from "./resource-loader";
 import type { JsonlSessionStore } from "./session-persistence";
 import { Agent } from "./vendor/agent/src/agent.ts";
+import { formatSkillsForSystemPrompt } from "./vendor/agent/src/harness/system-prompt.ts";
 import type {
   AgentMessage,
   AgentTool,
   BeforeToolCallContext,
   BeforeToolCallResult,
 } from "./vendor/agent/src/types.ts";
+import { streamSimple } from "./vendor/ai/src/compat.ts";
 
 export interface CreateAgentSessionOptions {
   cwd: string;
-  sessionManager: JsonlSessionStore;
+  sessionStore?: JsonlSessionStore;
+  sessionManager?: JsonlSessionStore;
   authStorage: AuthStorage;
   modelRegistry: ModelRegistry;
   resourceLoader: DefaultResourceLoader;
-  customTools?: any[];
+  customTools?: BaseTool[] | any[];
   beforeToolCall?: (
     context: BeforeToolCallContext,
     signal?: AbortSignal,
@@ -34,11 +36,41 @@ export interface CreateAgentSessionOptions {
   delegationRegistry?: any;
 }
 
-export type AgentSessionEvent = any;
+export type AgentSessionEvent =
+  | { type: "agent_start" }
+  | { type: "agent_end"; messages: AgentMessage[]; willRetry: boolean }
+  | { type: "message_start"; message: AgentMessage }
+  | { type: "message_end"; message: AgentMessage }
+  | { type: "message_update"; assistantMessageEvent: any; message: AgentMessage }
+  | {
+      type: "tool_execution_start";
+      toolName: string;
+      args: Record<string, unknown>;
+      toolCallId: string;
+      toolCall: { id: string; name: string; arguments: Record<string, unknown> };
+    }
+  | {
+      type: "tool_execution_end";
+      toolName: string;
+      result: unknown;
+      isError: boolean;
+      toolCallId: string;
+      toolCall: { id: string; name: string };
+    }
+  | {
+      type: "tool_execution_update";
+      toolCallId: string;
+      toolName: string;
+      partialResult: unknown;
+    }
+  | { type: "agent_error"; error: string };
 
 export class AgentSession {
   cwd: string;
-  sessionManager: JsonlSessionStore;
+  sessionStore: JsonlSessionStore;
+  get sessionManager(): JsonlSessionStore {
+    return this.sessionStore;
+  }
   authStorage: AuthStorage;
   modelRegistry: ModelRegistry;
   resourceLoader: DefaultResourceLoader;
@@ -110,7 +142,7 @@ export class AgentSession {
 
   constructor(options: CreateAgentSessionOptions) {
     this.cwd = options.cwd;
-    this.sessionManager = options.sessionManager;
+    this.sessionStore = (options.sessionStore ?? options.sessionManager)!;
     this.authStorage = options.authStorage;
     this.modelRegistry = options.modelRegistry;
     this.resourceLoader = options.resourceLoader;
@@ -121,9 +153,9 @@ export class AgentSession {
     this.delegationRegistry = options.delegationRegistry;
 
     this.promptBuilder = new PromptBuilder(this.resourceLoader);
-    this.compactionManager = new CompactionManager(this.sessionManager, this.modelRegistry);
+    this.compactionManager = new CompactionManager(this.sessionStore, this.modelRegistry);
     this.navigationController = new NavigationController(
-      this.sessionManager,
+      this.sessionStore,
       this.delegationRegistry,
     );
 
@@ -557,9 +589,14 @@ export class AgentSession {
         timestamp: Date.now(),
       };
 
-      if (!this.model?.contextWindow) {
+      if (!this.model) {
         throw new Error(
-          `Model ${this.model?.id} missing contextWindow - fetch mandatory, run POST /api/providers/${this.model?.provider}/refresh`,
+          "No AI model assigned to session. Please configure an AI provider or select a model.",
+        );
+      }
+      if (!this.model.contextWindow) {
+        throw new Error(
+          `Model ${this.model.id} missing contextWindow - fetch mandatory, run POST /api/providers/${this.model.provider}/refresh`,
         );
       }
       if (this.model) {

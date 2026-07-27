@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+import { toSafeString } from "@/lib/safe-string";
 
 interface TaskItem {
   id: string;
@@ -16,15 +17,15 @@ interface Props {
 }
 
 export function DecomposeResult({ text, details, l }: Props) {
-  const objective = details?.objective ?? "";
-  const mode = details?.mode ?? "linear";
+  const objective = toSafeString(details?.objective);
+  const mode = toSafeString(details?.mode, "linear");
   const tasks = (details?.tasks as TaskItem[]) ?? [];
   const totalTasks = details?.totalTasks ?? tasks.length;
 
   if (tasks.length === 0) {
     return (
       <div className="text-muted-foreground text-xs italic bg-destructive/5 border border-destructive/20 p-3 rounded-lg text-destructive">
-        {text ? text : l.bodyNoResults}
+        {toSafeString(text, l.bodyNoResults)}
       </div>
     );
   }

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+import { agentRegistry } from "@/agents";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { SessionPrefix } from "shared";
@@ -22,10 +23,9 @@ import { delegationRegistry } from "../delegation-registry";
 import { assemblePromptAppends, wrapDelegationTask } from "../prompts/prompt-assembly";
 import { buildSubagentRules } from "../sandbox";
 import { sessionManager } from "../session-manager";
-import { sessionToolFactory } from "../session/tool-factory";
 import { getSubagentDepth } from "../session/session-depth";
+import { sessionToolFactory } from "../session/tool-factory";
 import { createUiTools } from "./ui-tools";
-import { agentRegistry } from "@/agents";
 
 export interface ManageDelegationsOptions {
   workspaceDir: string;

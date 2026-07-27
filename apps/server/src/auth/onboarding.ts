@@ -61,7 +61,10 @@ function insertSessionRaw(
   ).run(id, token, expValue, nowValue, nowValue, userId);
 }
 
-export async function createProgrammaticSession(username: string, ttlSeconds = 600): Promise<string> {
+export async function createProgrammaticSession(
+  username: string,
+  ttlSeconds = 600,
+): Promise<string> {
   const user = await getUserByUsername(username);
   if (!user) throw new Error(`User not found: ${username}`);
 

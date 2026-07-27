@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: MIT
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { getProjectsDir, getWorkspaceSkillsDir } from "shared";
+import {
+  getAgentWorkspaceDir,
+  getProjectWorkspaceDir,
+  getProjectsDir,
+  getTeamWorkspaceDir,
+  getWorkspaceSkillsDir,
+} from "shared";
 import { agentRegistry } from "../../agents";
 import { loadSkills } from "../../ai";
 import { sessionManager } from "../session-manager";
@@ -25,6 +31,13 @@ export function validateParams(
   id: string | undefined,
   params: any,
 ) {
+  if (action === "contract") {
+    if (entity && !FACTORY_CONTRACTS[entity]) {
+      return `Unknown entity: ${entity}. Available: ${Object.keys(FACTORY_CONTRACTS).join(", ")}`;
+    }
+    return null;
+  }
+
   const contract = FACTORY_CONTRACTS[entity];
   if (!contract) {
     return `Unknown entity: ${entity}`;
@@ -302,7 +315,7 @@ async function handleProjects(
     if (!agentId) return err("agentId is required in params for member action");
 
     const currentAssignment = (proj.assignment as any) || { leaderId: null, members: [] };
-    let members: any[] = Array.isArray(currentAssignment.members)
+    const members: any[] = Array.isArray(currentAssignment.members)
       ? [...currentAssignment.members]
       : [];
 
@@ -493,12 +506,51 @@ async function handleProviders(
   return err(`Unknown action: ${action}`);
 }
 
-async function handleSkills(action: string, id: string | undefined, params: any, username: string) {
-  const skillsDir = getWorkspaceSkillsDir(username);
+function getTargetSkillsDir(username: string, parentSessionId?: string, scopeParam?: string): string {
+  if (scopeParam === "global") {
+    return getWorkspaceSkillsDir(username);
+  }
+
+  if (parentSessionId) {
+    try {
+      const meta = sessionManager.metadataStore.getSessionMetadata(username, parentSessionId);
+      if (meta) {
+        let entityDir: string | null = null;
+        if (meta.teamId) {
+          entityDir = getTeamWorkspaceDir(username, meta.teamId);
+        } else if (meta.projectId) {
+          entityDir = getProjectWorkspaceDir(username, meta.projectId);
+        } else if (meta.agentId) {
+          entityDir = getAgentWorkspaceDir(username, meta.agentId);
+        }
+        if (entityDir) {
+          return join(entityDir, ".spaces", "skills");
+        }
+      }
+    } catch (e) {
+      console.error("[getTargetSkillsDir] Error resolving entity skills dir:", e);
+    }
+  }
+
+  return getWorkspaceSkillsDir(username);
+}
+
+async function handleSkills(
+  action: string,
+  id: string | undefined,
+  params: any,
+  username: string,
+  parentSessionId?: string,
+) {
+  const skillsDir = getTargetSkillsDir(username, parentSessionId, params?.scope);
+  const globalSkillsDir = getWorkspaceSkillsDir(username);
 
   if (action === "get") {
     if (id) {
-      const skillPath = join(skillsDir, id, "SKILL.md");
+      let skillPath = join(skillsDir, id, "SKILL.md");
+      if (!existsSync(skillPath) && skillsDir !== globalSkillsDir) {
+        skillPath = join(globalSkillsDir, id, "SKILL.md");
+      }
       if (!existsSync(skillPath)) return err(`Skill "${id}" not found`);
       const content = readFileSync(skillPath, "utf-8");
       return ok(content, {
@@ -507,10 +559,14 @@ async function handleSkills(action: string, id: string | undefined, params: any,
         data: { name: id, filePath: skillPath, content },
       });
     }
+    const skillPaths = [globalSkillsDir];
+    if (skillsDir !== globalSkillsDir) {
+      skillPaths.unshift(skillsDir);
+    }
     const result = loadSkills({
       cwd: skillsDir,
       agentDir: skillsDir,
-      skillPaths: [skillsDir],
+      skillPaths,
       includeDefaults: false,
     });
     const list = result.skills.map((s: any) => ({
@@ -536,7 +592,10 @@ async function handleSkills(action: string, id: string | undefined, params: any,
 
   if (action === "delete") {
     if (!id) return err("id (skill name) is required for delete");
-    const skillDir = join(skillsDir, id);
+    let skillDir = join(skillsDir, id);
+    if (!existsSync(skillDir) && skillsDir !== globalSkillsDir) {
+      skillDir = join(globalSkillsDir, id);
+    }
     if (!existsSync(skillDir)) return err(`Skill "${id}" not found`);
     rmSync(skillDir, { recursive: true, force: true });
     return ok(`Skill "${id}" deleted`, { entity: "skills", id, status: "deleted" });
@@ -710,7 +769,7 @@ export function createFactoryTool(opts: FactoryToolOptions) {
     description: `Manage Spaces entities directly. Operations on agents, projects, sessions, environment variables, LLM providers, custom skills, teams, and settings.
 
 Available entities: agents, projects, sessions, env, providers, skills, teams, settings.
-Actions: get (list or read), upsert (create or update), delete (permanently remove), assign (set project assignment), send (message dispatch to a team), member (add/update member of a team/project).
+Actions: get (list or read), contract (view parameter schemas and action contracts), upsert (create or update), delete (permanently remove), assign (set project assignment), send (message dispatch to a team), member (add/update member of a team/project).
 
 Entity-specific notes:
 - sessions: only get and delete. Sessions are created implicitly via chat.
@@ -720,7 +779,7 @@ Entity-specific notes:
 - projects: upsert can clone or update metadata. assign sets leaderId and members. member adds/updates assigned team members.
 - teams: upsert creates or updates teams, delete removes them, send sends a message to the team, and member manages team members.
 
-For exact parameter schemas, call GET /api/factory/contract/:entity.
+To inspect exact parameter schemas and action contracts for an entity, call manage_factory with action: "contract" and entity: "<entity>".
 After mutating any entity, call refresh_ui to update the frontend sidebar.`,
 
     parameters: {
@@ -742,9 +801,9 @@ After mutating any entity, call refresh_ui to update the frontend sidebar.`,
         },
         action: {
           type: "string",
-          enum: ["get", "upsert", "delete", "assign", "send", "member"],
+          enum: ["get", "contract", "upsert", "delete", "assign", "send", "member"],
           description:
-            "get: retrieve entity data (list or single). upsert: create or update. delete: permanently remove. assign: set project assignment (leaderId, members). send: dispatch message to a team. member: add/update a team/project member.",
+            "get: retrieve entity data (list or single). contract: view parameter schemas and action contracts. upsert: create or update. delete: permanently remove. assign: set project assignment (leaderId, members). send: dispatch message to a team. member: add/update a team/project member.",
         },
         id: {
           type: "string",
@@ -754,7 +813,7 @@ After mutating any entity, call refresh_ui to update the frontend sidebar.`,
         params: {
           type: "object",
           description:
-            "Entity-specific parameters as a flat JSON object. For upsert, includes required fields. See GET /api/factory/contract/:entity for exact schemas per entity.",
+            "Entity-specific parameters as a flat JSON object. For upsert, includes required fields. Call action: 'contract' with entity: '<entity>' to inspect exact schemas per entity.",
         },
       },
       required: ["entity", "action"],
@@ -766,6 +825,19 @@ After mutating any entity, call refresh_ui to update the frontend sidebar.`,
       const validationError = validateParams(entity, action, id, params);
       if (validationError) {
         return err(validationError);
+      }
+
+      if (action === "contract") {
+        if (entity && FACTORY_CONTRACTS[entity]) {
+          return ok(JSON.stringify(FACTORY_CONTRACTS[entity], null, 2), {
+            entity: "contract",
+            data: FACTORY_CONTRACTS[entity],
+          });
+        }
+        return ok(JSON.stringify(FACTORY_CONTRACTS, null, 2), {
+          entity: "contract",
+          data: FACTORY_CONTRACTS,
+        });
       }
 
       let result: any;
@@ -786,7 +858,7 @@ After mutating any entity, call refresh_ui to update the frontend sidebar.`,
           result = await handleProviders(action, id, params, username);
           break;
         case "skills":
-          result = await handleSkills(action, id, params, username);
+          result = await handleSkills(action, id, params, username, opts.parentSessionId);
           break;
         case "teams":
           result = await handleTeams(action, id, params, username);

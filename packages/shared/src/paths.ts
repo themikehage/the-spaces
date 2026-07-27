@@ -21,12 +21,16 @@ export const MEMORIES_DIR = "memories";
 export const ASSETS_DIR = "assets";
 export const UPLOADS_DIR = "uploads";
 export const GENERATED_DIR = "generated";
-export const SKILLS_SUBDIR = ".agents/skills";
+export const SKILLS_SUBDIR = ".spaces/skills";
 export const EXECUTIONS_DIR = "executions";
 export const PIPELINES_DIR = "pipelines";
 
 export function getAuditDir(): string {
   return join(SPACES_DATA_PATH(), AUDIT_DIR);
+}
+
+export function getSchedulesDbPath(): string {
+  return join(SPACES_DATA_PATH(), "schedules.db");
 }
 
 export function getUserDir(username: string): string {

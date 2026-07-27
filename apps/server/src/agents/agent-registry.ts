@@ -3,10 +3,9 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync
 import { dirname, join } from "node:path";
 import {
   SPACES_DATA_PATH,
-  SessionPrefix,
   USERS_DIR,
-  getUserDir,
   getAgentAgentsMdPath,
+  getUserDir,
   type AgentDefinition,
   type AgentInfo,
   type AgentScopeTarget,

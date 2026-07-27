@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+import { SystemPromptViewer } from "@/components/prompts/SystemPromptViewer";
 import { AvatarUploadField } from "@/components/shared/AvatarUploadField";
 import { Button } from "@/components/ui/Button";
 import { useLiterals } from "@/lib";
@@ -6,8 +7,6 @@ import { DEFAULT_AVATAR_PREFIX, isDefaultAvatar } from "@/lib/defaultAvatars";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import type { Team } from "shared";
-import { SystemPromptViewer } from "@/components/prompts/SystemPromptViewer";
-import { EntitySkillsEditor } from "@/components/shared/EntitySkillsEditor";
 import { literals as u } from "./TeamSettingsModal.literals";
 
 interface Props {
@@ -37,6 +36,7 @@ export function TeamSettingsModal({
   onDeleteTeam,
 }: Props) {
   const l = useLiterals(u);
+  const [activeTab, setActiveTab] = useState<"general" | "prompts">("general");
   const [name, setName] = useState(team.name);
   const [description, setDescription] = useState(team.description || "");
   const [showThinking, setShowThinking] = useState(team.showThinking ?? false);
@@ -152,7 +152,7 @@ export function TeamSettingsModal({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 8 }}
         transition={{ duration: 0.18 }}
-        className="relative w-full max-w-lg bg-card border border-input rounded-2xl shadow-2xl flex flex-col overflow-hidden max-h-[85vh]"
+        className="relative w-full max-w-[540px] bg-card border border-input rounded-2xl shadow-2xl flex flex-col overflow-hidden max-h-[85vh]"
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-input flex-shrink-0">
           <div className="flex items-center gap-2">
@@ -162,6 +162,7 @@ export function TeamSettingsModal({
             </span>
           </div>
           <button
+            type="button"
             onClick={onClose}
             className="text-muted-foreground hover:text-foreground p-1 rounded-lg hover:bg-card-hover transition-colors cursor-pointer"
           >
@@ -175,150 +176,179 @@ export function TeamSettingsModal({
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-5 space-y-5 text-xs">
+        {/* Modal Navigation Tabs */}
+        <div className="flex border-b border-input bg-bg/50 px-5 gap-4 flex-shrink-0">
+          <button
+            type="button"
+            onClick={() => setActiveTab("general")}
+            className={`py-2.5 text-xs font-semibold border-b-2 transition-colors cursor-pointer ${
+              activeTab === "general"
+                ? "border-primary text-primary font-bold"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            General
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("prompts")}
+            className={`py-2.5 text-xs font-semibold border-b-2 transition-colors cursor-pointer ${
+              activeTab === "prompts"
+                ? "border-primary text-primary font-bold"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Prompts
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-5 text-xs">
           {error && (
-            <div className="p-3 bg-destructive/10 border border-error/20 text-destructive rounded-lg">
+            <div className="p-3 bg-destructive/10 border border-error/20 text-destructive rounded-lg mb-4">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <AvatarUploadField
-              preview={avatarPreview}
-              selectedDefault={selectedDefaultAvatar}
-              onFileChange={handleAvatarChange}
-              onSelectDefault={handleSelectDefaultAvatar}
-              onClear={handleClearAvatar}
-              entityName={name}
-              avatarType="entity"
-              entityAvatarEntityType="team"
-            />
-
-            <div>
-              <label className="block text-muted-foreground font-medium mb-1">{l.name}</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="w-full px-3 py-2 bg-background border border-input rounded-lg text-foreground outline-none focus:border-primary"
-              />
-            </div>
-
-            <div>
-              <label className="block text-muted-foreground font-medium mb-1">
-                {l.description}
-              </label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={3}
-                className="w-full px-3 py-2 bg-background border border-input rounded-lg text-foreground outline-none focus:border-primary resize-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-muted-foreground font-medium mb-2">{l.teamType}</label>
-              <div className="p-3 rounded-xl border border-input bg-background">
-                <span className="font-semibold text-xs text-foreground">{teamType}</span>
-                <p className="text-[10px] leading-tight text-muted-foreground mt-1">
-                  {l.orchestrationDesc}
-                </p>
-                <p className="text-[10px] leading-tight text-muted-foreground mt-2">
-                  {l.teamTypeImmutable}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2.5 pt-2 border-t border-input/40">
-              <label className="flex items-center gap-2.5 text-muted-foreground font-medium cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={showThinking}
-                  onChange={(e) => setShowThinking(e.target.checked)}
-                  className="w-4 h-4 accent-accent rounded border-input bg-background cursor-pointer"
+          {activeTab === "general" ? (
+            <div className="space-y-5">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <AvatarUploadField
+                  preview={avatarPreview}
+                  selectedDefault={selectedDefaultAvatar}
+                  onFileChange={handleAvatarChange}
+                  onSelectDefault={handleSelectDefaultAvatar}
+                  onClear={handleClearAvatar}
+                  entityName={name}
+                  avatarType="entity"
+                  entityAvatarEntityType="team"
                 />
-                <span>{l.showThinking}</span>
-              </label>
 
-              <label className="flex items-center gap-2.5 text-muted-foreground font-medium cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={showTools}
-                  onChange={(e) => setShowTools(e.target.checked)}
-                  className="w-4 h-4 accent-accent rounded border-input bg-background cursor-pointer"
-                />
-                <span>{l.showTools}</span>
-              </label>
+                <div>
+                  <label className="block text-muted-foreground font-medium mb-1">{l.name}</label>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    className="w-full px-3 py-2 bg-background border border-input rounded-lg text-foreground outline-none focus:border-primary"
+                  />
+                </div>
 
-              <label className="flex items-center gap-2.5 text-muted-foreground font-medium cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={streamingEnabled}
-                  onChange={(e) => setStreamingEnabled(e.target.checked)}
-                  className="w-4 h-4 accent-accent rounded border-input bg-background cursor-pointer"
-                />
-                <span>{l.streamingEnabled}</span>
-              </label>
+                <div>
+                  <label className="block text-muted-foreground font-medium mb-1">
+                    {l.description}
+                  </label>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={3}
+                    className="w-full px-3 py-2 bg-background border border-input rounded-lg text-foreground outline-none focus:border-primary resize-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-muted-foreground font-medium mb-2">{l.teamType}</label>
+                  <div className="p-3 rounded-xl border border-input bg-background">
+                    <span className="font-semibold text-xs text-foreground">{teamType}</span>
+                    <p className="text-[10px] leading-tight text-muted-foreground mt-1">
+                      {l.orchestrationDesc}
+                    </p>
+                    <p className="text-[10px] leading-tight text-muted-foreground mt-2">
+                      {l.teamTypeImmutable}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2.5 pt-2 border-t border-input/40">
+                  <label className="flex items-center gap-2.5 text-muted-foreground font-medium cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={showThinking}
+                      onChange={(e) => setShowThinking(e.target.checked)}
+                      className="w-4 h-4 accent-accent rounded border-input bg-background cursor-pointer"
+                    />
+                    <span>{l.showThinking}</span>
+                  </label>
+
+                  <label className="flex items-center gap-2.5 text-muted-foreground font-medium cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={showTools}
+                      onChange={(e) => setShowTools(e.target.checked)}
+                      className="w-4 h-4 accent-accent rounded border-input bg-background cursor-pointer"
+                    />
+                    <span>{l.showTools}</span>
+                  </label>
+
+                  <label className="flex items-center gap-2.5 text-muted-foreground font-medium cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={streamingEnabled}
+                      onChange={(e) => setStreamingEnabled(e.target.checked)}
+                      className="w-4 h-4 accent-accent rounded border-input bg-background cursor-pointer"
+                    />
+                    <span>{l.streamingEnabled}</span>
+                  </label>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-4 border-t border-input bg-card flex-shrink-0">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="px-4 py-2 bg-card border border-input text-muted-foreground hover:text-foreground rounded-lg transition-colors cursor-pointer"
+                  >
+                    {l.cancel}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="px-4 py-2 bg-primary text-background font-semibold rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity cursor-pointer"
+                  >
+                    {saving ? l.saving : l.save}
+                  </button>
+                </div>
+              </form>
+
+              {onDeleteTeam && (
+                <div className="pt-4 border-t border-error/20 space-y-3">
+                  <h4 className="text-xs font-bold text-error uppercase tracking-wider">
+                    {l.deleteTeam}
+                  </h4>
+                  <p className="text-[11px] text-text-secondary leading-relaxed font-body">
+                    {l.deleteTeamDescription}
+                  </p>
+                  <form onSubmit={handleDelete} className="space-y-3">
+                    <div>
+                      <label className="block text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1">
+                        {l.deleteConfirmLabel.replace("{name}", team.name)}
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={confirmDeleteName}
+                        onChange={(e) => setConfirmDeleteName(e.target.value)}
+                        className="w-full px-3 py-1.5 bg-bg border border-error/30 rounded-xl text-sm text-foreground focus:outline-none focus:border-error"
+                      />
+                    </div>
+                    <Button
+                      variant="destructive"
+                      type="submit"
+                      className="w-full"
+                      disabled={confirmDeleteName !== team.name || deleting}
+                    >
+                      {deleting ? l.deleting : l.deleteButton}
+                    </Button>
+                  </form>
+                </div>
+              )}
             </div>
-
-            <EntitySkillsEditor entityType="team" entityId={team.id} />
-
+          ) : (
             <SystemPromptViewer
               entityType="team"
               teamId={team.id}
               title={`Team System Prompt Inspector (${name})`}
+              embedded
             />
-
-            <div className="flex justify-end gap-2 pt-4 border-t border-input bg-card flex-shrink-0">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 bg-card border border-input text-muted-foreground hover:text-foreground rounded-lg transition-colors cursor-pointer"
-              >
-                {l.cancel}
-              </button>
-              <button
-                type="submit"
-                disabled={saving}
-                className="px-4 py-2 bg-primary text-background font-semibold rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity cursor-pointer"
-              >
-                {saving ? l.saving : l.save}
-              </button>
-            </div>
-          </form>
-
-          {onDeleteTeam && (
-            <div className="pt-4 border-t border-error/20 space-y-3">
-              <h4 className="text-xs font-bold text-error uppercase tracking-wider">
-                {l.deleteTeam}
-              </h4>
-              <p className="text-[11px] text-text-secondary leading-relaxed font-body">
-                {l.deleteTeamDescription}
-              </p>
-              <form onSubmit={handleDelete} className="space-y-3">
-                <div>
-                  <label className="block text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1">
-                    {l.deleteConfirmLabel.replace("{name}", team.name)}
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={confirmDeleteName}
-                    onChange={(e) => setConfirmDeleteName(e.target.value)}
-                    className="w-full px-3 py-1.5 bg-bg border border-error/30 rounded-xl text-sm text-foreground focus:outline-none focus:border-error"
-                  />
-                </div>
-                <Button
-                  variant="destructive"
-                  type="submit"
-                  className="w-full"
-                  disabled={confirmDeleteName !== team.name || deleting}
-                >
-                  {deleting ? l.deleting : l.deleteButton}
-                </Button>
-              </form>
-            </div>
           )}
         </div>
       </motion.div>

@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
-import { useLiterals } from "@/lib";
+import { toSafeString, useLiterals } from "@/lib";
 import { ArrowRight } from "lucide-react";
 import { HtmlPreview } from "../HtmlPreview";
 import { ImageGrid } from "../ImageGrid";
@@ -23,6 +23,7 @@ import { SubagentLiveView } from "./SubagentLiveView";
 import { literals } from "./ToolCallRow.literals";
 import { WebFetchResult } from "./WebFetchResult";
 import { WriteResult } from "./WriteResult";
+
 import { CustomToolBody } from "./custom";
 
 export interface ToolContentBlock {
@@ -495,44 +496,44 @@ function getArgSummary(
 ): string {
   switch (toolName) {
     case "ls":
-      return (args.path as string) || ".";
+      return toSafeString(args.path, ".");
     case "find":
-      return (args.pattern as string) || "";
+      return toSafeString(args.pattern);
     case "write":
-      return (args.path as string) || "";
+      return toSafeString(args.path);
     case "read":
-      return (args.path as string) || "";
+      return toSafeString(args.path);
     case "edit": {
-      const path = (args.path as string) || "";
+      const path = toSafeString(args.path);
       const edits = Array.isArray(args.edits) ? args.edits.length : 0;
       return edits > 1 ? `${path} · ${edits} edits` : path;
     }
     case "grep": {
-      const pat = (args.pattern as string) || "";
-      const glob = (args.glob as string) || "*";
+      const pat = toSafeString(args.pattern);
+      const glob = toSafeString(args.glob, "*");
       return glob !== "*" ? `/${pat}/ in ${glob}` : `/${pat}/`;
     }
     case "bash": {
-      const cmd = (args.command as string) || "";
+      const cmd = toSafeString(args.command);
       return cmd.length > 55 ? cmd.slice(0, 55) + "…" : cmd;
     }
     case "request_approval":
-      return (args.title as string) || l.argApprovalRequest;
+      return toSafeString(args.title, l.argApprovalRequest);
     case "ask_question":
-      return (args.question as string) || l.argUserQuestion;
+      return toSafeString(args.question, l.argUserQuestion);
     case "render_images":
       return Array.isArray(args.images) ? `${args.images.length} ${l.argImages}` : "Images";
     case "render_html":
-      return (args.title as string) || l.argHtmlDoc;
+      return toSafeString(args.title, l.argHtmlDoc);
     case "render_chart":
-      return (args.title as string) || (args.chartType as string) || l.argChart;
+      return toSafeString(args.title) || toSafeString(args.chartType, l.argChart);
     case "refresh_ui":
-      return `${l.argUiRefresh}: ${String(args.entityType)}`;
+      return `${l.argUiRefresh}: ${toSafeString(args.entityType)}`;
     case "create_experiment":
-      return (args.name as string) || "Experimento";
+      return toSafeString(args.name, "Experimento");
     case "spawn_subagent": {
-      const task = (args.task as string) || "";
-      const role = (args.subagentRole as string) || "";
+      const task = toSafeString(args.task);
+      const role = toSafeString(args.subagentRole);
       const cleanTask = task.length > 40 ? task.slice(0, 40) + "…" : task;
       return role ? `[${role}] ${cleanTask}` : cleanTask;
     }
@@ -540,34 +541,34 @@ function getArgSummary(
       return ``;
     }
     case "manage_delegations": {
-      const task = (args.task as string) || "";
+      const task = toSafeString(args.task);
       return task.length > 55 ? task.slice(0, 55) + "…" : task;
     }
     case "exa_search": {
-      const q = (args.query as string) || "";
+      const q = toSafeString(args.query);
       return q.length > 60 ? q.slice(0, 60) + "…" : q;
     }
     case "web_fetch": {
-      const url = (args.url as string) || "";
+      const url = toSafeString(args.url);
       return url.length > 60 ? url.slice(0, 60) + "…" : url;
     }
     case "memory_recall": {
-      const q = (args.query as string) || "";
+      const q = toSafeString(args.query);
       return q.length > 60 ? q.slice(0, 60) + "…" : q;
     }
     case "memory_store": {
-      const c = (args.content as string) || "";
+      const c = toSafeString(args.content);
       return c.length > 50 ? c.slice(0, 50) + "…" : c;
     }
     case "memory_forget":
-      return (args.id as string) || "";
+      return toSafeString(args.id);
     case "decompose_tasks": {
-      const obj = (args.objective as string) || "";
+      const obj = toSafeString(args.objective);
       return obj.length > 50 ? obj.slice(0, 50) + "…" : obj;
     }
     case "manage_preview": {
-      const action = (args.action as string) || "status";
-      const fw = args.config ? ` (${(args.config as any).framework})` : "";
+      const action = toSafeString(args.action, "status");
+      const fw = args.config ? ` (${toSafeString((args.config as any).framework)})` : "";
       return `${action}${fw}`;
     }
     default: {
@@ -576,12 +577,7 @@ function getArgSummary(
       const entries = Object.entries(args)
         .slice(0, 2)
         .map(([k, v]) => {
-          const val =
-            typeof v === "string"
-              ? v
-              : typeof v === "number" || typeof v === "boolean"
-                ? String(v)
-                : "";
+          const val = toSafeString(v);
           if (!val) return k;
           const short = val.length > 20 ? val.slice(0, 20) + "…" : val;
           return `${k}: ${short}`;

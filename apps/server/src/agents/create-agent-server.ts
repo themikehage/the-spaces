@@ -4,8 +4,6 @@ import { streamSSE } from "hono/streaming";
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { type AgentDefinition, getAgentDir } from "shared";
-import { mcpRegistry } from "../core/mcp-registry";
-import { memoryRegistry } from "../core/memory/registry";
 import type { AgentServer } from "./types";
 
 function ensureAgentWorkspace(username: string, id: string): string {
@@ -23,9 +21,9 @@ export async function createAgentServer(
   username: string,
 ): Promise<AgentServer> {
   const agentDir = ensureAgentWorkspace(username, definition.id);
-  const { bootstrapAgentSession } = await import("../core/session/session-bootstrap");
+  const { createAgentRuntime } = await import("../core/session/agent-runtime");
 
-  const { session, memory } = await bootstrapAgentSession({
+  const { session, memory } = await createAgentRuntime({
     username,
     sessionId: `agent_server_${definition.id}`,
     agentId: definition.id,

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+import { SystemPromptViewer } from "@/components/prompts/SystemPromptViewer";
 import { AvatarUploadField } from "@/components/shared/AvatarUploadField";
 import { Button } from "@/components/ui/Button";
 import { useLiterals } from "@/lib";
@@ -6,8 +7,6 @@ import { apiFetch } from "@/lib/api";
 import { DEFAULT_AVATAR_PREFIX, isDefaultAvatar } from "@/lib/defaultAvatars";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { SystemPromptViewer } from "@/components/prompts/SystemPromptViewer";
-import { EntitySkillsEditor } from "@/components/shared/EntitySkillsEditor";
 import { literals as u } from "./GlobalAgentSettingsModal.literals";
 
 interface Props {
@@ -17,6 +16,7 @@ interface Props {
 
 export function GlobalAgentSettingsModal({ onClose, onSaveSuccess }: Props) {
   const l = useLiterals(u);
+  const [activeTab, setActiveTab] = useState<"general" | "prompts">("general");
   const [factoryName, setFactoryName] = useState("Spaces");
   const [factorySystemPrompt, setFactorySystemPrompt] = useState("");
   const [saving, setSaving] = useState(false);
@@ -133,7 +133,7 @@ export function GlobalAgentSettingsModal({ onClose, onSaveSuccess }: Props) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 8 }}
         transition={{ duration: 0.18 }}
-        className="relative w-full max-w-md bg-card border border-input rounded-2xl shadow-2xl flex flex-col overflow-hidden max-h-[85vh]"
+        className="relative w-full max-w-[540px] bg-card border border-input rounded-2xl shadow-2xl flex flex-col overflow-hidden max-h-[85vh]"
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-input flex-shrink-0">
           <div>
@@ -155,63 +155,91 @@ export function GlobalAgentSettingsModal({ onClose, onSaveSuccess }: Props) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-4">
-          <AvatarUploadField
-            preview={avatarPreview}
-            selectedDefault={selectedDefaultAvatar}
-            onFileChange={handleAvatarChange}
-            onSelectDefault={handleSelectDefaultAvatar}
-            onClear={handleClearAvatar}
-            entityName={factoryName}
-            avatarType="agent"
-          />
+        {/* Modal Navigation Tabs */}
+        <div className="flex border-b border-input bg-bg/50 px-5 gap-4">
+          <button
+            type="button"
+            onClick={() => setActiveTab("general")}
+            className={`py-2.5 text-xs font-semibold border-b-2 transition-colors cursor-pointer ${
+              activeTab === "general"
+                ? "border-primary text-primary font-bold"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            General
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("prompts")}
+            className={`py-2.5 text-xs font-semibold border-b-2 transition-colors cursor-pointer ${
+              activeTab === "prompts"
+                ? "border-primary text-primary font-bold"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Prompts
+          </button>
+        </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1">
-              {l.factoryNameLabel}
-            </label>
-            <input
-              type="text"
-              required
-              value={factoryName}
-              onChange={(e) => setFactoryName(e.target.value)}
-              placeholder={l.factoryNamePlaceholder}
-              className="w-full px-3 py-1.5 bg-bg border border-input rounded-xl text-sm text-foreground focus:outline-none focus:border-accent"
-            />
-          </div>
+        <div className="flex-1 overflow-y-auto p-5">
+          {activeTab === "general" ? (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <AvatarUploadField
+                preview={avatarPreview}
+                selectedDefault={selectedDefaultAvatar}
+                onFileChange={handleAvatarChange}
+                onSelectDefault={handleSelectDefaultAvatar}
+                onClear={handleClearAvatar}
+                entityName={factoryName}
+                avatarType="agent"
+              />
 
-          <div>
-            <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1">
-              {l.factorySystemPromptLabel}
-            </label>
-            <textarea
-              value={factorySystemPrompt}
-              onChange={(e) => setFactorySystemPrompt(e.target.value)}
-              placeholder={l.factorySystemPromptPlaceholder}
-              rows={6}
-              className="w-full px-3 py-2 bg-bg border border-input rounded-xl text-sm text-foreground focus:outline-none focus:border-accent font-mono resize-none"
-            />
-          </div>
+              <div>
+                <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1">
+                  {l.factoryNameLabel}
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={factoryName}
+                  onChange={(e) => setFactoryName(e.target.value)}
+                  placeholder={l.factoryNamePlaceholder}
+                  className="w-full px-3 py-1.5 bg-bg border border-input rounded-xl text-sm text-foreground focus:outline-none focus:border-accent"
+                />
+              </div>
 
-          <EntitySkillsEditor entityType="global" entityId="global" />
+              <div>
+                <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1">
+                  {l.factorySystemPromptLabel}
+                </label>
+                <textarea
+                  value={factorySystemPrompt}
+                  onChange={(e) => setFactorySystemPrompt(e.target.value)}
+                  placeholder={l.factorySystemPromptPlaceholder}
+                  rows={6}
+                  className="w-full px-3 py-2 bg-bg border border-input rounded-xl text-sm text-foreground focus:outline-none focus:border-accent font-mono resize-none"
+                />
+              </div>
 
-          <SystemPromptViewer entityType="global" title="Global System Prompt Inspector" />
+              {error && (
+                <div className="p-3 bg-error/10 border border-error/20 text-error rounded-xl text-xs font-semibold">
+                  {error}
+                </div>
+              )}
 
-          {error && (
-            <div className="p-3 bg-error/10 border border-error/20 text-error rounded-xl text-xs font-semibold">
-              {error}
-            </div>
+              <div className="flex justify-end gap-3 pt-3 border-t border-input">
+                <Button variant="outline" type="button" onClick={onClose}>
+                  {l.cancel}
+                </Button>
+                <Button type="submit" disabled={saving}>
+                  {saving ? l.saving : l.save}
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <SystemPromptViewer entityType="global" title="Global System Prompt Inspector" embedded />
           )}
-
-          <div className="flex justify-end gap-3 pt-3 border-t border-input">
-            <Button variant="outline" type="button" onClick={onClose}>
-              {l.cancel}
-            </Button>
-            <Button type="submit" disabled={saving}>
-              {saving ? l.saving : l.save}
-            </Button>
-          </div>
-        </form>
+        </div>
       </motion.div>
     </div>
   );

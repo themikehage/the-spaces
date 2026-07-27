@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { useToast } from "@/contexts/ToastContext";
+import { toSafeString } from "@/lib/safe-string";
 import { wsClient } from "@/lib/ws-client";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
@@ -28,13 +29,19 @@ export function ApprovalForm({ toolCallId, args, result, sessionId }: Props) {
   const [localAction, setLocalAction] = useState<"confirm" | "cancel" | null>(null);
 
   const {
-    title = "Aprobación",
-    description = "",
+    title: rawTitle = "Aprobación",
+    description: rawDescription = "",
     severity = "warning",
-    confirmLabel = "Confirmar",
-    cancelLabel = "Cancelar",
-    details,
+    confirmLabel: rawConfirmLabel = "Confirmar",
+    cancelLabel: rawCancelLabel = "Cancelar",
+    details: rawDetails,
   } = args || {};
+
+  const title = toSafeString(rawTitle, "Aprobación");
+  const description = toSafeString(rawDescription);
+  const confirmLabel = toSafeString(rawConfirmLabel, "Confirmar");
+  const cancelLabel = toSafeString(rawCancelLabel, "Cancelar");
+  const details = rawDetails ? toSafeString(rawDetails) : undefined;
 
   const resolvedStatus = result?.content?.[0]?.text;
   const isResolved = !!resolvedStatus;

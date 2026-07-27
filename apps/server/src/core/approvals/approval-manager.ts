@@ -96,10 +96,7 @@ class ApprovalManager {
     const resolvedValue: ApprovalDecision =
       typeof decision === "string" ? { action: decision } : decision;
 
-    entry.request.status =
-      resolvedValue.action === "approve"
-        ? "approved"
-        : "denied";
+    entry.request.status = resolvedValue.action === "approve" ? "approved" : "denied";
     entry.resolve(resolvedValue);
     this.pending.delete(approvalId);
 

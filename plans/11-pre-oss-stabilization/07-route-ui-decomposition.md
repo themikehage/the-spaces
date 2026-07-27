@@ -12,21 +12,21 @@
 
 ### 1.1 Archivos muy por encima del límite del proyecto
 
-| Archivo | ~LOC | Rol |
-|---------|-----:|-----|
-| `routes/sessions.ts` | 1431 | Legacy monstruo post-01 (sin create/list si 01 hecho; sigue prompt/SSE/tools/delegations/…) |
-| `ToolCallRow.tsx` | 1416 | Registry + iconos + body switch ×2 |
-| `AgentsPage.tsx` | 1187 | Página monólito |
-| `GeneralTab.tsx` | 1167 | Settings monólito |
-| `routes/files.ts` | 969 | FS + avatars + project meta |
-| `ChatArea.tsx` | 938 | Streaming + create session + WS + pending prompt |
-| `MessageList.tsx` | 876 | Render + grouping |
-| `MainLayout.tsx` | 835 | Shell + demasiados side-effects |
-| `factory-tool.ts` | 827 | CRUD paralelo a HTTP |
-| `manage-delegations-tool.ts` | 745 | spawn/delegate branches copypaste |
-| `routes/teams.ts` | 595 | CRUD + orchestration + dispatch |
+| Archivo                      | ~LOC | Rol                                                                                         |
+| ---------------------------- | ---: | ------------------------------------------------------------------------------------------- |
+| `routes/sessions.ts`         | 1431 | Legacy monstruo post-01 (sin create/list si 01 hecho; sigue prompt/SSE/tools/delegations/…) |
+| `ToolCallRow.tsx`            | 1416 | Registry + iconos + body switch ×2                                                          |
+| `AgentsPage.tsx`             | 1187 | Página monólito                                                                             |
+| `GeneralTab.tsx`             | 1167 | Settings monólito                                                                           |
+| `routes/files.ts`            |  969 | FS + avatars + project meta                                                                 |
+| `ChatArea.tsx`               |  938 | Streaming + create session + WS + pending prompt                                            |
+| `MessageList.tsx`            |  876 | Render + grouping                                                                           |
+| `MainLayout.tsx`             |  835 | Shell + demasiados side-effects                                                             |
+| `factory-tool.ts`            |  827 | CRUD paralelo a HTTP                                                                        |
+| `manage-delegations-tool.ts` |  745 | spawn/delegate branches copypaste                                                           |
+| `routes/teams.ts`            |  595 | CRUD + orchestration + dispatch                                                             |
 
-AGENTS.md: *Avoid God Objects (>300 lines). Extract… Modular Routing…*
+AGENTS.md: _Avoid God Objects (>300 lines). Extract… Modular Routing…_
 
 ### 1.2 Factory-tool = segunda API REST
 
@@ -48,21 +48,21 @@ AGENTS.md: *Avoid God Objects (>300 lines). Extract… Modular Routing…*
 
 ## 2. Objetivo del hito
 
-1. **Ningún archivo de producto tocado en este hito** queda >~400 LOC sin plan de extract (meta ideal ≤300 en módulos nuevos).  
-2. **Sessions routes** terminan el patrón sub-router: zero god `sessions.ts` monólito.  
-3. **Domain services** compartidos entre REST y `manage_factory` para agents/teams/projects/sessions (mínimo 2 dominios hechos end-to-end; el resto esqueleto).  
-4. **manage-delegations** partido por action/target o extractor de pipeline común.  
-5. **ToolCallRow** → registry map + componentes por tool (o por familia).  
-6. **ChatArea** → hooks de mensajes/streaming; pending prompt sin `window.__pendingPrompts`.  
-7. **Message pipeline** compartido lo bastante para que team chat reutilice render de mensajes (adapter de transport).  
+1. **Ningún archivo de producto tocado en este hito** queda >~400 LOC sin plan de extract (meta ideal ≤300 en módulos nuevos).
+2. **Sessions routes** terminan el patrón sub-router: zero god `sessions.ts` monólito.
+3. **Domain services** compartidos entre REST y `manage_factory` para agents/teams/projects/sessions (mínimo 2 dominios hechos end-to-end; el resto esqueleto).
+4. **manage-delegations** partido por action/target o extractor de pipeline común.
+5. **ToolCallRow** → registry map + componentes por tool (o por familia).
+6. **ChatArea** → hooks de mensajes/streaming; pending prompt sin `window.__pendingPrompts`.
+7. **Message pipeline** compartido lo bastante para que team chat reutilice render de mensajes (adapter de transport).
 8. Criterio medible: lista de archivos y LOC after; tests de smoke por módulo extraído.
 
 **Fuera de alcance:**
 
-- Redesign visual / i18n completo (08).  
-- DI restante de todas las routes (06 ya hizo críticas).  
-- Reescribir vendor AI.  
-- 100% parity team chat en un solo PR si el adapter basta con MessageList shared.  
+- Redesign visual / i18n completo (08).
+- DI restante de todas las routes (06 ya hizo críticas).
+- Reescribir vendor AI.
+- 100% parity team chat en un solo PR si el adapter basta con MessageList shared.
 - Eliminar MainLayout por completo — extract hooks de acciones.
 
 ---
@@ -71,16 +71,16 @@ AGENTS.md: *Avoid God Objects (>300 lines). Extract… Modular Routing…*
 
 ### D1 — Orden de ataque por ROI / dependencias
 
-| Orden | Target | Por qué primero |
-|------:|--------|-----------------|
-| 1 | `routes/sessions/*` finish split | Ya empezado (01); residual es el mayor backend file |
-| 2 | Domain services + factory-tool thin | Para el drift API; desbloquea confiar en un solo CRUD |
-| 3 | `manage-delegations` extract pipeline | Product differentiator; bugs multi-agent |
-| 4 | `ToolCallRow` registry | Mayor client file; cambios de tools rozan siempre |
-| 5 | `ChatArea` hooks + pending prompt store | Regresiones streaming; hito 02/03 ya estabilizan WS/attention |
-| 6 | Shared message render (team adapter) | Paridad |
-| 7 | `files.ts` / `teams.ts` sub-routers | Importante pero más mecánico |
-| 8 | `AgentsPage` / `GeneralTab` / `MainLayout` | UI pages; menos riesgo core |
+| Orden | Target                                     | Por qué primero                                               |
+| ----: | ------------------------------------------ | ------------------------------------------------------------- |
+|     1 | `routes/sessions/*` finish split           | Ya empezado (01); residual es el mayor backend file           |
+|     2 | Domain services + factory-tool thin        | Para el drift API; desbloquea confiar en un solo CRUD         |
+|     3 | `manage-delegations` extract pipeline      | Product differentiator; bugs multi-agent                      |
+|     4 | `ToolCallRow` registry                     | Mayor client file; cambios de tools rozan siempre             |
+|     5 | `ChatArea` hooks + pending prompt store    | Regresiones streaming; hito 02/03 ya estabilizan WS/attention |
+|     6 | Shared message render (team adapter)       | Paridad                                                       |
+|     7 | `files.ts` / `teams.ts` sub-routers        | Importante pero más mecánico                                  |
+|     8 | `AgentsPage` / `GeneralTab` / `MainLayout` | UI pages; menos riesgo core                                   |
 
 **Por qué no** empezar por AgentsPage: cosmético frente a sessions/factory drift.
 
@@ -120,13 +120,14 @@ core/services/
   session-query-service.ts  # list/filters already partially in session-lister
 ```
 
-- Routes: validate HTTP → service → json.  
-- `factory-tool.ts`: validate tool args → **same service** → tool result envelope.  
+- Routes: validate HTTP → service → json.
+- `factory-tool.ts`: validate tool args → **same service** → tool result envelope.
 - **No** hacer que factory llame HTTP interno (latencia/auth weird).
 
-**Alcance mínimo del hito:**  
-- **Must:** agents + teams services wired to both factory and routes.  
-- **Should:** projects.  
+**Alcance mínimo del hito:**
+
+- **Must:** agents + teams services wired to both factory and routes.
+- **Should:** projects.
 - **Could:** sessions create already in create-user-session (01) — factory handleSessions create debe llamarlo.
 
 **Por qué no** solo “importar funciones desde routes”: routes tienen Hono `c`; services son pure/async domain.
@@ -149,8 +150,13 @@ Pipeline común:
 
 ```ts
 async function runChildAgentLoop(opts: {
-  session, model, prompt, forwardEvents, abort, envelope
-}): Promise<Result>
+  session;
+  model;
+  prompt;
+  forwardEvents;
+  abort;
+  envelope;
+}): Promise<Result>;
 ```
 
 **Por qué:** elimina copy-paste agent vs project.  
@@ -170,7 +176,7 @@ components/chat/tools/
   meta.ts                    # labels already partial in literals
 ```
 
-- Eliminar **doble** `switch (toolName)` (audit: ~496 y ~604).  
+- Eliminar **doble** `switch (toolName)` (audit: ~496 y ~604).
 - Default body genérico JSON para tools desconocidas (OSS plugins).
 
 **Por qué registry:** añadir tool = 1 body file + 1 line register (alineado guide hito 05).
@@ -179,12 +185,12 @@ components/chat/tools/
 
 **Decisión:**
 
-| Módulo | Responsabilidad |
-|--------|-----------------|
-| `useSessionMessages(sessionId)` | load REST + merge initial |
-| `useSessionStreaming(sessionId)` | WS reducers message_*/agent_*/tool_* (filter ya en useWebSocket hito 02) |
-| `pending-prompt-store.ts` | replace `window.__pendingPrompts` + localStorage helper con API tipada + TTL |
-| `ChatArea.tsx` | layout + compose hooks + input |
+| Módulo                           | Responsabilidad                                                              |
+| -------------------------------- | ---------------------------------------------------------------------------- |
+| `useSessionMessages(sessionId)`  | load REST + merge initial                                                    |
+| `useSessionStreaming(sessionId)` | WS reducers message__/agent__/tool_* (filter ya en useWebSocket hito 02)     |
+| `pending-prompt-store.ts`        | replace `window.__pendingPrompts` + localStorage helper con API tipada + TTL |
+| `ChatArea.tsx`                   | layout + compose hooks + input                                               |
 
 **Por qué hooks y no Context global de chat:** menos rerenders globales; session-scoped.  
 **Pending prompt:** `window` es anti-pattern OSS; store module + sessionStorage.
@@ -195,9 +201,9 @@ components/chat/tools/
 
 **Decisión:**
 
-1. Tipo `ChatMessage` shared o `client/src/lib/chat-types.ts` (si no está en shared aún).  
-2. `MessageList` consume `ChatMessage[]` + callbacks neutrales.  
-3. Team path: adapter `teamEventsToChatMessages` o reusa MessageList con props.  
+1. Tipo `ChatMessage` shared o `client/src/lib/chat-types.ts` (si no está en shared aún).
+2. `MessageList` consume `ChatMessage[]` + callbacks neutrales.
+3. Team path: adapter `teamEventsToChatMessages` o reusa MessageList con props.
 4. **No** fusionar `useTeam` transport con session WS en este hito.
 
 **Por qué no** unificar transport: team_join/send es otro protocolo (02 lo tipó); solo UI.
@@ -225,8 +231,8 @@ Mecánico; puede ir en PRs separados después de sessions.
 
 **Decisión (menor profundidad que core):**
 
-- `AgentsPage` → tabs as child components (`AgentsList`, `BlueprintsTab`, `ExecutionsTab`) en `pages/agents/`.  
-- `GeneralTab` → secciones `providers-section`, `models-section`, etc.  
+- `AgentsPage` → tabs as child components (`AgentsList`, `BlueprintsTab`, `ExecutionsTab`) en `pages/agents/`.
+- `GeneralTab` → secciones `providers-section`, `models-section`, etc.
 - `MainLayout` → `useProjectActions`, `useTeamActions` ya parcialmente; terminar de sacar CRUD/avatar.
 
 **No** introducir router nested obligatorio si no existe convención.
@@ -249,22 +255,22 @@ Usar en componentes **tocados** por este hito; no reescribir las 236 calls de go
 
 **DoD numérico (orientativo):**
 
-| Archivo | LOC target |
-|---------|------------|
-| `sessions.ts` legacy | **0** (deleted) |
-| `factory-tool.ts` | ≤250 |
-| `manage-delegations-tool.ts` entry | ≤200 |
-| `ToolCallRow.tsx` | ≤300 |
-| `ChatArea.tsx` | ≤350 |
-| cada session-*.ts nuevo | ≤300 |
+| Archivo                            | LOC target      |
+| ---------------------------------- | --------------- |
+| `sessions.ts` legacy               | **0** (deleted) |
+| `factory-tool.ts`                  | ≤250            |
+| `manage-delegations-tool.ts` entry | ≤200            |
+| `ToolCallRow.tsx`                  | ≤300            |
+| `ChatArea.tsx`                     | ≤350            |
+| cada session-*.ts nuevo            | ≤300            |
 
 Si un extract se atasca, **documentar defer** en el PR; no dejar half-move (handler en dos sitios).
 
 ### D12 — Tests por extract
 
-- Cada service domain: 1–2 unit tests del happy path mock FS/registry.  
-- Streaming reducer pure test.  
-- factory-tool tests existentes deben seguir verdes apuntando a services.  
+- Cada service domain: 1–2 unit tests del happy path mock FS/registry.
+- Streaming reducer pure test.
+- factory-tool tests existentes deben seguir verdes apuntando a services.
 - No exigir RTL completo de AgentsPage.
 
 ---
@@ -273,90 +279,90 @@ Si un extract se atasca, **documentar defer** en el PR; no dejar half-move (hand
 
 ### Fase 7.1 — Sessions modular finish
 
-- [ ] Inventariar handlers restantes en `sessions.ts` post-01  
-- [ ] Crear sub-routers §D2  
-- [ ] `index.ts` solo `route()` assembler  
-- [ ] Delete `routes/sessions.ts` monólito  
-- [ ] typecheck + smoke prompt/SSE/tools/delegations HTTP  
+- [ ] Inventariar handlers restantes en `sessions.ts` post-01
+- [ ] Crear sub-routers §D2
+- [ ] `index.ts` solo `route()` assembler
+- [ ] Delete `routes/sessions.ts` monólito
+- [ ] typecheck + smoke prompt/SSE/tools/delegations HTTP
 
 **Archivos:** `routes/sessions/**`, delete `routes/sessions.ts`  
 **Efectos:** paths idénticos; cuidado orden mount (`/statuses` vs `/:id`)
 
 ### Fase 7.2 — Domain services + factory thin
 
-- [ ] `core/services/agent-service.ts` + wire `routes/agents.ts` + `handleAgents`  
-- [ ] `core/services/team-service.ts` + wire teams route + factory  
-- [ ] Project service should  
-- [ ] `handleSessions` create → `createUserSession` (01)  
-- [ ] factory-tool.ts queda switch + zod + service calls  
-- [ ] Adapt `factory-tool.test.ts` / contracts  
+- [ ] `core/services/agent-service.ts` + wire `routes/agents.ts` + `handleAgents`
+- [ ] `core/services/team-service.ts` + wire teams route + factory
+- [ ] Project service should
+- [ ] `handleSessions` create → `createUserSession` (01)
+- [ ] factory-tool.ts queda switch + zod + service calls
+- [ ] Adapt `factory-tool.test.ts` / contracts
 
 **Efectos:** behavior parity — comparar responses before/after en tests.
 
 ### Fase 7.3 — Delegations tool split
 
-- [ ] Carpeta `core/tools/delegations/`  
-- [ ] Shared `runChildAgentLoop`  
-- [ ] Entry tool <200 LOC  
-- [ ] Tests depth/cancel existentes verdes  
+- [ ] Carpeta `core/tools/delegations/`
+- [ ] Shared `runChildAgentLoop`
+- [ ] Entry tool <200 LOC
+- [ ] Tests depth/cancel existentes verdes
 
 ### Fase 7.4 — ToolCallRow registry
 
-- [ ] `tool-registry.ts` + bodies  
-- [ ] Single switch/registry lookup  
-- [ ] Default unknown tool body  
-- [ ] literals preservados  
+- [ ] `tool-registry.ts` + bodies
+- [ ] Single switch/registry lookup
+- [ ] Default unknown tool body
+- [ ] literals preservados
 
 ### Fase 7.5 — ChatArea hooks + pending prompt
 
-- [ ] `useSessionMessages`, `useSessionStreaming` (+ pure reducer)  
-- [ ] `pending-prompt-store.ts`  
-- [ ] ChatArea compose  
-- [ ] Remove `window.__pendingPrompts`  
-- [ ] Unit test reducer  
+- [ ] `useSessionMessages`, `useSessionStreaming` (+ pure reducer)
+- [ ] `pending-prompt-store.ts`
+- [ ] ChatArea compose
+- [ ] Remove `window.__pendingPrompts`
+- [ ] Unit test reducer
 
 ### Fase 7.6 — Shared messages + team adapter
 
-- [ ] `ChatMessage` type  
-- [ ] MessageList props neutrales  
-- [ ] Team chat uses MessageList or shared blocks  
-- [ ] No regress team_send  
+- [ ] `ChatMessage` type
+- [ ] MessageList props neutrales
+- [ ] Team chat uses MessageList or shared blocks
+- [ ] No regress team_send
 
 ### Fase 7.7 — files + teams routers
 
-- [ ] Sub-routers files  
-- [ ] Sub-routers teams  
-- [ ] Assembler only index  
+- [ ] Sub-routers files
+- [ ] Sub-routers teams
+- [ ] Assembler only index
 
 ### Fase 7.8 — Pages / layout (time-boxed)
 
-- [ ] AgentsPage split components  
-- [ ] GeneralTab sections  
-- [ ] MainLayout hooks  
-- [ ] sessions-api/agents-api usage in touched files  
+- [ ] AgentsPage split components
+- [ ] GeneralTab sections
+- [ ] MainLayout hooks
+- [ ] sessions-api/agents-api usage in touched files
 
 ### Fase 7.9 — Verificación global hito
 
-- [ ] LOC report before/after en PR description  
-- [ ] typecheck client+server  
-- [ ] tests server factory/delegations/session  
-- [ ] smoke manual: chat, factory tool upsert agent, delegations spawn, team chat message, file upload  
-- [ ] Grep `sessions.ts` monólito gone; `__pendingPrompts` gone  
+- [ ] LOC report before/after en PR description
+- [ ] typecheck client+server
+- [ ] tests server factory/delegations/session
+- [ ] smoke manual: chat, factory tool upsert agent, delegations spawn, team chat message, file upload
+- [ ] Grep `sessions.ts` monólito gone; `__pendingPrompts` gone
 
 ---
 
 ## 5. Archivos a tocar (matriz resumen)
 
-| Área | Crear | Editar | Eliminar |
-|------|-------|--------|----------|
-| Sessions routes | `session-*.ts` | `sessions/index.ts` | `routes/sessions.ts` |
-| Services | `core/services/*` | `routes/agents|teams`, `factory-tool.ts` | — |
-| Delegations | `tools/delegations/*` | entry exports | old monolith path |
-| Tool UI | `tools/bodies/*`, registry | `ToolCallRow.tsx` | dead switches |
-| Chat | hooks, pending store | `ChatArea.tsx`, team chat | window global |
-| Files/teams routes | subfolders | index assemblers | monoliths when empty |
-| Pages | `pages/agents/*` | AgentsPage, GeneralTab, MainLayout | — |
-| API modules | `lib/api/*.ts` | call sites touched | — |
+| Área               | Crear                      | Editar                             | Eliminar                  |
+| ------------------ | -------------------------- | ---------------------------------- | ------------------------- |
+| Sessions routes    | `session-*.ts`             | `sessions/index.ts`                | `routes/sessions.ts`      |
+| Services           | `core/services/*`          | `routes/agents                     | teams`, `factory-tool.ts` | —   |
+| Delegations        | `tools/delegations/*`      | entry exports                      | old monolith path         |
+| Tool UI            | `tools/bodies/*`, registry | `ToolCallRow.tsx`                  | dead switches             |
+| Chat               | hooks, pending store       | `ChatArea.tsx`, team chat          | window global             |
+| Files/teams routes | subfolders                 | index assemblers                   | monoliths when empty      |
+| Pages              | `pages/agents/*`           | AgentsPage, GeneralTab, MainLayout | —                         |
+| API modules        | `lib/api/*.ts`             | call sites touched                 | —                         |
 
 **No tocar:** vendor, landing rewrite, spaces-sdk publish.
 
@@ -364,29 +370,29 @@ Si un extract se atasca, **documentar defer** en el PR; no dejar half-move (hand
 
 ## 6. Efectos secundarios y riesgos
 
-| Riesgo | Severidad | Mitigación |
-|--------|-----------|------------|
-| Half-move sessions (handler duplicate again) | **Crítica** | 01 lesson: un path only; grep mount |
-| Service drift still if route bypasses service | Alta | factory+route both call service; code review |
-| Delegations split breaks abort tree | Alta | keep existing tests; no logic change |
-| ToolCallRow visual regressions | Media | screenshot smoke; default body |
-| Streaming hook stale closure | Alta | mirror current ChatArea deps; test reducer |
-| Team MessageList parity incomplete | Media | ship adapter MVP; list gaps |
-| Huge PR unreviewable | Alta | **phases 7.1–7.8 = PRs separados** |
-| Touch files.ts security paths | Alta | no change validateWorkspacePath semantics |
+| Riesgo                                        | Severidad   | Mitigación                                   |
+| --------------------------------------------- | ----------- | -------------------------------------------- |
+| Half-move sessions (handler duplicate again)  | **Crítica** | 01 lesson: un path only; grep mount          |
+| Service drift still if route bypasses service | Alta        | factory+route both call service; code review |
+| Delegations split breaks abort tree           | Alta        | keep existing tests; no logic change         |
+| ToolCallRow visual regressions                | Media       | screenshot smoke; default body               |
+| Streaming hook stale closure                  | Alta        | mirror current ChatArea deps; test reducer   |
+| Team MessageList parity incomplete            | Media       | ship adapter MVP; list gaps                  |
+| Huge PR unreviewable                          | Alta        | **phases 7.1–7.8 = PRs separados**           |
+| Touch files.ts security paths                 | Alta        | no change validateWorkspacePath semantics    |
 
 ---
 
 ## 7. Criterios de hecho (DoD)
 
-1. `routes/sessions.ts` monólito eliminado; assembler modular completo.  
-2. factory `handleAgents` + `handleTeams` delegan en services usados por HTTP.  
-3. manage-delegations entry ≤200 LOC o justificado; tests delegations verdes.  
-4. ToolCallRow ≤300 LOC + registry.  
-5. ChatArea sin `window.__pendingPrompts`; streaming en hook testable.  
-6. MessageList reutilizable por team path (al menos un call site team).  
-7. LOC targets §D11 cumplidos o defer explícito listado.  
-8. typecheck + tests relevantes OK.  
+1. `routes/sessions.ts` monólito eliminado; assembler modular completo.
+2. factory `handleAgents` + `handleTeams` delegan en services usados por HTTP.
+3. manage-delegations entry ≤200 LOC o justificado; tests delegations verdes.
+4. ToolCallRow ≤300 LOC + registry.
+5. ChatArea sin `window.__pendingPrompts`; streaming en hook testable.
+6. MessageList reutilizable por team path (al menos un call site team).
+7. LOC targets §D11 cumplidos o defer explícito listado.
+8. typecheck + tests relevantes OK.
 9. No se implementó hito 08 de paso (release/docs globales).
 
 ---
@@ -412,14 +418,14 @@ No fusionar 7.1+7.4 en un PR.
 
 Defaults recomendados:
 
-1. **¿Terminar sessions modular hasta borrar monólito?** → **Sí**  
-2. **¿Domain services compartidos factory↔REST (agents+teams must)?** → **Sí**  
-3. **¿Split manage-delegations por pipeline común sin cambiar semántica?** → **Sí**  
-4. **¿ToolCallRow registry + bodies?** → **Sí**  
-5. **¿ChatArea hooks + pending-prompt-store (kill window global)?** → **Sí**  
-6. **¿MessageList compartido con team (adapter)?** → **Sí**  
-7. **¿PRs por fase obligatorios?** → **Sí**  
-8. **¿Migrar los 236 apiFetch de una vez?** → **No** (strangler en archivos tocados)  
-9. **¿Reescribir MainLayout/AgentsPage al 100%?** → **No** (time-box 7.8)  
+1. **¿Terminar sessions modular hasta borrar monólito?** → **Sí**
+2. **¿Domain services compartidos factory↔REST (agents+teams must)?** → **Sí**
+3. **¿Split manage-delegations por pipeline común sin cambiar semántica?** → **Sí**
+4. **¿ToolCallRow registry + bodies?** → **Sí**
+5. **¿ChatArea hooks + pending-prompt-store (kill window global)?** → **Sí**
+6. **¿MessageList compartido con team (adapter)?** → **Sí**
+7. **¿PRs por fase obligatorios?** → **Sí**
+8. **¿Migrar los 236 apiFetch de una vez?** → **No** (strangler en archivos tocados)
+9. **¿Reescribir MainLayout/AgentsPage al 100%?** → **No** (time-box 7.8)
 
 Al confirmar, cierra la serie de planes con el **hito 08** (verdad packaging/docs/CI/SDK/self-host).

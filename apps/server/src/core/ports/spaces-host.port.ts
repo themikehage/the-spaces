@@ -59,9 +59,7 @@ export interface McpPort {
 }
 
 export interface AgentDirectoryPort {
-  getAgentDef(
-    agentId: string,
-  ): Promise<{ name: string; systemPrompt: string } | null>;
+  getAgentDef(agentId: string): Promise<{ name: string; systemPrompt: string } | null>;
 }
 
 export interface TeamDirectoryPort {

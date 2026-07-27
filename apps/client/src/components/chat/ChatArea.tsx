@@ -4,10 +4,10 @@ import { ChatSkeleton } from "@/components/skeletons/ChatSkeleton";
 import { useToast } from "@/contexts/ToastContext";
 import { useChatInputFocus } from "@/hooks/useChatInputFocus";
 import { useChatScroll } from "@/hooks/useChatScroll";
+import { useEntityConfig } from "@/hooks/useEntityConfig";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { useLiterals, type ContextUsage, type MessageUsage } from "@/lib";
 import { apiFetch } from "@/lib/api";
-import { useEntityConfig } from "@/hooks/useEntityConfig";
 import {
   buildCreateSessionBody,
   getSessionMeta,
@@ -82,8 +82,15 @@ export function ChatArea({
   const [settledApprovals, setSettledApprovals] = useState<Record<string, "confirm" | "deny">>({});
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
 
-  const entityType = activeTeam ? "team" : activeAgent ? "agent" : activeProjectId || activeProjectName ? "project" : "global";
-  const entityId = activeTeam?.id || activeAgent?.id || activeProjectId || activeProjectName || "global";
+  const entityType = activeTeam
+    ? "team"
+    : activeAgent
+      ? "agent"
+      : activeProjectId || activeProjectName
+        ? "project"
+        : "global";
+  const entityId =
+    activeTeam?.id || activeAgent?.id || activeProjectId || activeProjectName || "global";
   const { resolvedConfig } = useEntityConfig(entityType, entityId);
 
   const [welcomeTools, setWelcomeTools] = useState<string[]>([]);
@@ -959,6 +966,24 @@ export function ChatArea({
                 }
                 activeProjectName={activeProjectName}
                 activeAgentId={activeAgent?.id}
+                entityType={
+                  activeTeam
+                    ? "team"
+                    : activeAgent
+                      ? "agent"
+                      : activeProjectName
+                        ? "project"
+                        : "global"
+                }
+                entityId={
+                  activeTeam
+                    ? activeTeam.id
+                    : activeAgent
+                      ? activeAgent.id
+                      : activeProjectName
+                        ? activeProjectName
+                        : "global"
+                }
                 contextUsage={contextUsage}
                 onCompact={handleCompact}
                 compacting={compacting}

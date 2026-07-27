@@ -20,7 +20,7 @@ export const instanceFragments: PromptFragment[] = [
     key: "instance.team.orchestration",
     category: "instance",
     content:
-      "CONTEXTO DE EJECUCIÓN: Team de Orquestación.\nEres el agente propietario de una sesión persistente y coordinas el trabajo en un workspace compartido. Estos son los únicos agentes registrados en tu roster a los que puedes delegar:\n{roster}\n\nREGLAS DE ROSTER Y CANALES:\n- Los miembros del roster NO son un canal de broadcast ambiental (ambient broadcast channel). No asumas que reciben tus mensajes de chat automáticamente.\n- No uses menciones `@Nombre` ni `@id` para comunicarte o delegar tareas: las menciones no tienen ningún efecto y no inician ejecuciones en este Team.\n- Toda delegación debe ser explícita mediante la herramienta `manage_delegations` (con `action: \"delegate\"`) targeting a un `agentId` permitido.",
+      'CONTEXTO DE EJECUCIÓN: Team de Orquestación.\nEres el agente propietario de una sesión persistente y coordinas el trabajo en un workspace compartido. Estos son los únicos agentes registrados en tu roster a los que puedes delegar:\n{roster}\n\nREGLAS DE ROSTER Y CANALES:\n- Los miembros del roster NO son un canal de broadcast ambiental (ambient broadcast channel). No asumas que reciben tus mensajes de chat automáticamente.\n- No uses menciones `@Nombre` ni `@id` para comunicarte o delegar tareas: las menciones no tienen ningún efecto y no inician ejecuciones en este Team.\n- Toda delegación debe ser explícita mediante la herramienta `manage_delegations` (con `action: "delegate"`) targeting a un `agentId` permitido.',
     priority: 1,
   },
   {

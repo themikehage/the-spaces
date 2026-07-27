@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 import { EntityAvatar } from "@/components/shared/EntityAvatar";
 import { Button } from "@/components/ui/Button";
-import { apiFetch } from "@/lib/api";
-import { wsClient } from "@/lib/ws-client";
 import { useAttention } from "@/hooks/useAttention";
+import { apiFetch } from "@/lib/api";
 import { attentionStore } from "@/lib/attention/attention-store";
+import { wsClient } from "@/lib/ws-client";
 import { AlertTriangle, Check, HelpCircle, Play, Send, Shield, Users, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { ProjectAssignmentModal } from "./ProjectAssignmentModal";
@@ -91,7 +91,6 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
           }
         }
       }
-
     } catch (err: any) {
       setError(err.message || "Failed to load floor data");
     } finally {
@@ -421,7 +420,9 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
                                 size="sm"
                                 variant="outline"
                                 className="flex-1 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/10 text-[10px] font-bold py-1 h-7 cursor-pointer"
-                                onClick={() => handleResolveApproval(pendingApproval.approvalId, "approve")}
+                                onClick={() =>
+                                  handleResolveApproval(pendingApproval.approvalId, "approve")
+                                }
                               >
                                 <Check size={12} className="mr-1" />
                                 Aprobar
@@ -430,7 +431,9 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
                                 size="sm"
                                 variant="outline"
                                 className="flex-1 border-rose-500/20 text-rose-400 hover:bg-rose-500/10 text-[10px] font-bold py-1 h-7 cursor-pointer"
-                                onClick={() => handleResolveApproval(pendingApproval.approvalId, "deny")}
+                                onClick={() =>
+                                  handleResolveApproval(pendingApproval.approvalId, "deny")
+                                }
                               >
                                 <X size={12} className="mr-1" />
                                 Rechazar

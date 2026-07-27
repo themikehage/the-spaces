@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+import { SystemPromptViewer } from "@/components/prompts/SystemPromptViewer";
 import { AvatarUploadField } from "@/components/shared/AvatarUploadField";
 import { Button } from "@/components/ui/Button";
 import { useLiterals } from "@/lib";
@@ -6,8 +7,6 @@ import { DEFAULT_AVATAR_PREFIX, isDefaultAvatar } from "@/lib/defaultAvatars";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { ProjectAssignmentPanel } from "./ProjectAssignmentPanel";
-import { SystemPromptViewer } from "@/components/prompts/SystemPromptViewer";
-import { EntitySkillsEditor } from "@/components/shared/EntitySkillsEditor";
 import { literals as u } from "./ProjectSettingsModal.literals";
 
 interface Project {
@@ -41,6 +40,7 @@ export function ProjectSettingsModal({
   onDeleteProject,
 }: Props) {
   const l = useLiterals(u);
+  const [activeTab, setActiveTab] = useState<"general" | "prompts">("general");
   const [name, setName] = useState(project.name);
   const [cloneUrl, setCloneUrl] = useState(project.cloneUrl || "");
   const [saving, setSaving] = useState(false);
@@ -154,7 +154,7 @@ export function ProjectSettingsModal({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 8 }}
         transition={{ duration: 0.18 }}
-        className="relative w-full max-w-md bg-card border border-input rounded-2xl shadow-2xl flex flex-col overflow-hidden max-h-[85vh]"
+        className="relative w-full max-w-[540px] bg-card border border-input rounded-2xl shadow-2xl flex flex-col overflow-hidden max-h-[85vh]"
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-input flex-shrink-0">
           <h3 className="font-bold text-foreground text-sm">{l.title}</h3>
@@ -173,153 +173,182 @@ export function ProjectSettingsModal({
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-5 space-y-5">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <AvatarUploadField
-              preview={avatarPreview}
-              selectedDefault={selectedDefaultAvatar}
-              onFileChange={handleAvatarChange}
-              onSelectDefault={handleSelectDefaultAvatar}
-              onClear={handleClearAvatar}
-              entityName={name}
-              avatarType="entity"
-              entityAvatarEntityType="project"
-            />
+        {/* Modal Navigation Tabs */}
+        <div className="flex border-b border-input bg-bg/50 px-5 gap-4 flex-shrink-0">
+          <button
+            type="button"
+            onClick={() => setActiveTab("general")}
+            className={`py-2.5 text-xs font-semibold border-b-2 transition-colors cursor-pointer ${
+              activeTab === "general"
+                ? "border-primary text-primary font-bold"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            General
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("prompts")}
+            className={`py-2.5 text-xs font-semibold border-b-2 transition-colors cursor-pointer ${
+              activeTab === "prompts"
+                ? "border-primary text-primary font-bold"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Prompts
+          </button>
+        </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1">
-                {l.projectNameLabel}
-              </label>
-              <input
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full px-3 py-1.5 bg-bg border border-input rounded-xl text-sm text-foreground focus:outline-none focus:border-accent"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1">
-                {l.cloneUrlLabel}
-              </label>
-              <input
-                type="text"
-                placeholder={l.cloneUrlPlaceholder}
-                value={cloneUrl}
-                onChange={(e) => setCloneUrl(e.target.value)}
-                className="w-full px-3 py-2 bg-bg border border-input rounded-xl text-sm text-foreground focus:outline-none focus:border-accent"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1">
-                ID
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  readOnly
-                  value={project.id}
-                  className="flex-1 px-3 py-1.5 bg-bg/50 border border-input rounded-xl text-xs text-text-secondary font-mono focus:outline-none select-all"
+        <div className="flex-1 overflow-y-auto p-5">
+          {activeTab === "general" ? (
+            <div className="space-y-5">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <AvatarUploadField
+                  preview={avatarPreview}
+                  selectedDefault={selectedDefaultAvatar}
+                  onFileChange={handleAvatarChange}
+                  onSelectDefault={handleSelectDefaultAvatar}
+                  onClear={handleClearAvatar}
+                  entityName={name}
+                  avatarType="entity"
+                  entityAvatarEntityType="project"
                 />
-                <button
-                  type="button"
-                  onClick={handleCopyId}
-                  className="px-3 py-1.5 bg-bg hover:bg-surface-hover text-xs rounded-xl font-semibold transition-colors border border-input/30 cursor-pointer"
-                >
-                  {copiedId ? l.copied : l.copyId}
-                </button>
-              </div>
-            </div>
 
-            {project.createdAt && (
-              <div>
-                <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1">
-                  {l.createdAtLabel}
-                </label>
-                <input
-                  type="text"
-                  readOnly
-                  value={new Date(project.createdAt).toLocaleString()}
-                  className="w-full px-3 py-1.5 bg-bg/50 border border-input rounded-xl text-xs text-text-secondary focus:outline-none"
-                />
-              </div>
-            )}
-
-            {project.diskPath && (
-              <div>
-                <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1">
-                  {l.diskPathLabel}
-                </label>
-                <input
-                  type="text"
-                  readOnly
-                  value={project.diskPath}
-                  className="w-full px-3 py-1.5 bg-bg/50 border border-input rounded-xl text-[10px] text-text-secondary font-mono focus:outline-none overflow-x-auto"
-                />
-              </div>
-            )}
-
-            <div className="pt-2">
-              <ProjectAssignmentPanel projectId={project.id} />
-            </div>
-
-            <EntitySkillsEditor entityType="project" entityId={project.id} />
-
-            <SystemPromptViewer
-              entityType="project"
-              projectId={project.id}
-              title={`Project System Prompt Inspector (${name})`}
-            />
-
-            {error && (
-              <div className="p-3 bg-error/10 border border-error/20 text-error rounded-xl text-xs font-semibold">
-                {error}
-              </div>
-            )}
-
-            <div className="flex justify-end gap-3 pt-3 border-t border-input">
-              <Button variant="outline" type="button" onClick={onClose}>
-                {l.cancel}
-              </Button>
-              <Button type="submit" disabled={saving}>
-                {saving ? l.saving : l.saveChanges}
-              </Button>
-            </div>
-          </form>
-
-          {onDeleteProject && (
-            <div className="pt-4 mt-4 border-t border-error/20 space-y-3">
-              <h4 className="text-xs font-bold text-error uppercase tracking-wider">
-                {l.deleteProject}
-              </h4>
-              <p className="text-[11px] text-text-secondary leading-relaxed font-body">
-                {l.deleteProjectDescription}
-              </p>
-              <form onSubmit={handleDelete} className="space-y-3">
                 <div>
-                  <label className="block text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1">
-                    {l.deleteConfirmLabel.replace("{name}", project.name)}
+                  <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1">
+                    {l.projectNameLabel}
                   </label>
                   <input
                     type="text"
                     required
-                    value={confirmDeleteName}
-                    onChange={(e) => setConfirmDeleteName(e.target.value)}
-                    className="w-full px-3 py-1.5 bg-bg border border-error/30 rounded-xl text-sm text-foreground focus:outline-none focus:border-error"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full px-3 py-1.5 bg-bg border border-input rounded-xl text-sm text-foreground focus:outline-none focus:border-accent"
                   />
                 </div>
-                <Button
-                  variant="destructive"
-                  type="submit"
-                  className="w-full"
-                  disabled={confirmDeleteName !== project.name || deleting}
-                >
-                  {deleting ? l.deleting : l.deleteButton}
-                </Button>
+
+                <div>
+                  <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1">
+                    {l.cloneUrlLabel}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder={l.cloneUrlPlaceholder}
+                    value={cloneUrl}
+                    onChange={(e) => setCloneUrl(e.target.value)}
+                    className="w-full px-3 py-2 bg-bg border border-input rounded-xl text-sm text-foreground focus:outline-none focus:border-accent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1">
+                    ID
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={project.id}
+                      className="flex-1 px-3 py-1.5 bg-bg/50 border border-input rounded-xl text-xs text-text-secondary font-mono focus:outline-none select-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleCopyId}
+                      className="px-3 py-1.5 bg-bg hover:bg-surface-hover text-xs rounded-xl font-semibold transition-colors border border-input/30 cursor-pointer"
+                    >
+                      {copiedId ? l.copied : l.copyId}
+                    </button>
+                  </div>
+                </div>
+
+                {project.createdAt && (
+                  <div>
+                    <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1">
+                      {l.createdAtLabel}
+                    </label>
+                    <input
+                      type="text"
+                      readOnly
+                      value={new Date(project.createdAt).toLocaleString()}
+                      className="w-full px-3 py-1.5 bg-bg/50 border border-input rounded-xl text-xs text-text-secondary focus:outline-none"
+                    />
+                  </div>
+                )}
+
+                {project.diskPath && (
+                  <div>
+                    <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1">
+                      {l.diskPathLabel}
+                    </label>
+                    <input
+                      type="text"
+                      readOnly
+                      value={project.diskPath}
+                      className="w-full px-3 py-1.5 bg-bg/50 border border-input rounded-xl text-[10px] text-text-secondary font-mono focus:outline-none overflow-x-auto"
+                    />
+                  </div>
+                )}
+
+                <div className="pt-2">
+                  <ProjectAssignmentPanel projectId={project.id} />
+                </div>
+
+                {error && (
+                  <div className="p-3 bg-error/10 border border-error/20 text-error rounded-xl text-xs font-semibold">
+                    {error}
+                  </div>
+                )}
+
+                <div className="flex justify-end gap-3 pt-3 border-t border-input">
+                  <Button variant="outline" type="button" onClick={onClose}>
+                    {l.cancel}
+                  </Button>
+                  <Button type="submit" disabled={saving}>
+                    {saving ? l.saving : l.saveChanges}
+                  </Button>
+                </div>
               </form>
+
+              {onDeleteProject && (
+                <div className="pt-4 mt-4 border-t border-error/20 space-y-3">
+                  <h4 className="text-xs font-bold text-error uppercase tracking-wider">
+                    {l.deleteProject}
+                  </h4>
+                  <p className="text-[11px] text-text-secondary leading-relaxed font-body">
+                    {l.deleteProjectDescription}
+                  </p>
+                  <form onSubmit={handleDelete} className="space-y-3">
+                    <div>
+                      <label className="block text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1">
+                        {l.deleteConfirmLabel.replace("{name}", project.name)}
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={confirmDeleteName}
+                        onChange={(e) => setConfirmDeleteName(e.target.value)}
+                        className="w-full px-3 py-1.5 bg-bg border border-error/30 rounded-xl text-sm text-foreground focus:outline-none focus:border-error"
+                      />
+                    </div>
+                    <Button
+                      variant="destructive"
+                      type="submit"
+                      className="w-full"
+                      disabled={confirmDeleteName !== project.name || deleting}
+                    >
+                      {deleting ? l.deleting : l.deleteButton}
+                    </Button>
+                  </form>
+                </div>
+              )}
             </div>
+          ) : (
+            <SystemPromptViewer
+              entityType="project"
+              projectId={project.id}
+              title={`Project System Prompt Inspector (${name})`}
+              embedded
+            />
           )}
         </div>
       </motion.div>

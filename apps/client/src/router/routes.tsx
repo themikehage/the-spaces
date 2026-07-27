@@ -7,6 +7,7 @@ import {
   LogsRoute,
   PluginsRoute,
   ProjectsRoute,
+  SchedulesRoute,
   SessionsRoute,
   SettingsRoute,
   SkillsRoute,
@@ -70,6 +71,7 @@ export function AppRoutes() {
         <Route path="mcps" element={<McpRedirectRoute />} />
         <Route path="plugins" element={<PluginsRoute />} />
         <Route path="sessions" element={<SessionsRoute />} />
+        <Route path="schedules" element={<SchedulesRoute />} />
         <Route path="*" element={<NotFoundRoute />} />
       </Route>
     </Routes>

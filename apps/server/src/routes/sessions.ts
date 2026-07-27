@@ -5,7 +5,6 @@ import { streamSSE } from "hono/streaming";
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
-  CreateSessionSchema,
   DEFAULT_ALWAYS_ON_TOOLS,
   ModelSettingsSchema,
   PromptSchema,
@@ -17,13 +16,9 @@ import { z } from "zod";
 import { sessionManager } from "../core/session-manager";
 import { authMiddleware, getAuthPayload } from "../middleware/auth";
 
-import { existsSync as _existsSync, readFileSync as _readFileSync } from "node:fs";
-import { join as _join } from "node:path";
 import { getAgentWorkspaceDir, getProjectWorkspaceDir, getTeamWorkspaceDir } from "shared";
 import { agentRegistry } from "../agents";
 import { delegationRegistry } from "../core/delegation-registry";
-import { resolveProjectDir } from "../core/session/workspace-resolver";
-import { teamStore } from "../teams/team-store";
 import { broadcastToSession } from "../ws/handler";
 
 const STORAGE_KEY = "spaces-sessions";
@@ -31,8 +26,6 @@ const STORAGE_KEY = "spaces-sessions";
 export const sessionsRouter = new Hono();
 
 sessionsRouter.use("/*", authMiddleware);
-
-
 
 sessionsRouter.get("/analytics", async (c) => {
   const { username } = getAuthPayload(c);
@@ -59,7 +52,7 @@ sessionsRouter.get("/analytics", async (c) => {
 
   const allFiltered = [...sessions, ...archivedSessions];
 
-  let totalSessions = allFiltered.length;
+  const totalSessions = allFiltered.length;
   let totalTokens = 0;
   let totalToolCalls = 0;
   let totalErrors = 0;
@@ -231,8 +224,6 @@ sessionsRouter.post("/:id/unarchive", async (c) => {
   return c.json({ success: true, archived: false });
 });
 
-
-
 sessionsRouter.post("/:id/prompt", zValidator("json", PromptSchema), async (c) => {
   const sessionId = c.req.param("id");
   const { message } = c.req.valid("json");
@@ -244,7 +235,7 @@ sessionsRouter.post("/:id/prompt", zValidator("json", PromptSchema), async (c) =
 
   const execId = crypto.randomUUID();
   let execDir: string | null = null;
-  let toolCalls: any[] = [];
+  const toolCalls: any[] = [];
   const errors: string[] = [];
   const startTime = Date.now();
 
@@ -337,7 +328,7 @@ sessionsRouter.post("/:id/prompt/stream", zValidator("json", PromptSchema), asyn
 
   const execId = crypto.randomUUID();
   let execDir: string | null = null;
-  let toolCalls: any[] = [];
+  const toolCalls: any[] = [];
   const errors: string[] = [];
   const startTime = Date.now();
 

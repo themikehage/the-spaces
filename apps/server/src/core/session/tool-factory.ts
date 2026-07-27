@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { getTeamWorkspaceDir, legacyToolToBaseTool, type BaseTool } from "shared";
+import type { DefaultResourceLoader } from "../../ai";
 import {
   createBashToolDefinition,
   createEditToolDefinition,
@@ -9,6 +10,8 @@ import {
   createReadToolDefinition,
   createWriteToolDefinition,
 } from "../../ai";
+import type { AuthStorage } from "../../ai/auth-storage";
+import type { ModelRegistry } from "../../ai/model-registry";
 import { getOrCreateToolSessionToken } from "../../auth/ephemeral-tool-session";
 import { teamStore } from "../../teams/team-store";
 import { filterSecretsFromOutput } from "../bash-output-filter";
@@ -18,6 +21,7 @@ import {
   customToolStorage,
 } from "../custom-tools";
 import { createMemoryTools } from "../memory/memory-tools";
+import type { MemoryProvider } from "../memory/types";
 import { scopeConfigManager } from "../scope";
 import { createExaSearchTool } from "../tools/exa-search-tool";
 import { createFactoryTool } from "../tools/factory-tool";
@@ -31,10 +35,10 @@ export interface CreateSessionToolsParams {
   sessionId: string;
   workspaceDir: string;
   memoryEnabled: boolean;
-  memory: any;
-  modelRegistry: any;
-  authStorage: any;
-  resourceLoader: any;
+  memory: MemoryProvider | null;
+  modelRegistry: ModelRegistry;
+  authStorage: AuthStorage;
+  resourceLoader: DefaultResourceLoader;
   contextAgentId?: string;
   teamId?: string;
   projectId?: string;
@@ -61,9 +65,7 @@ export class SessionToolFactory {
       spawnHook: (context) => {
         const userEnv = userConfigManager.getUserEnv(username);
         const injectToken = process.env.SPACES_BASH_INJECT_TOKEN !== "0";
-        const token = injectToken
-          ? getOrCreateToolSessionToken(username, sessionId)
-          : undefined;
+        const token = injectToken ? getOrCreateToolSessionToken(username, sessionId) : undefined;
         return {
           ...context,
           env: {
@@ -89,7 +91,7 @@ export class SessionToolFactory {
 
     const exaSearchTool = createExaSearchTool({ username });
     const webFetchTool = createWebFetchTool({ username });
-    const memoryTools = memoryEnabled ? createMemoryTools(memory) : [];
+    const memoryTools = memoryEnabled && memory ? createMemoryTools(memory) : [];
 
     const { teamId, projectId } = params;
     let previewTools: any[] = [];
