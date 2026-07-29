@@ -5,6 +5,7 @@ import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useToast } from "@/contexts/ToastContext";
 import { useLiterals } from "@/lib";
 import { apiFetch } from "@/lib/api";
+import { Code, Plus } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
 import type { McpCatalogItem, McpServerConfig } from "shared";
@@ -399,20 +400,7 @@ export function MCPMarketplacePage() {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="inline mr-1.5 -mt-0.5"
-            >
-              <polyline points="16 18 22 12 16 6" />
-              <polyline points="8 6 2 12 8 18" />
-            </svg>
+            <Code size={12} className="inline mr-1.5 -mt-0.5" />
             {l.rawEditor}
           </button>
         </div>
@@ -575,19 +563,7 @@ export function MCPMarketplacePage() {
                       onClick={() => setIsAddingCustom(true)}
                       className="px-4 py-2 text-xs font-semibold rounded-lg bg-primary text-white hover:bg-primary/90 transition-all cursor-pointer flex items-center gap-1.5"
                     >
-                      <svg
-                        width="12"
-                        height="12"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <line x1="12" y1="5" x2="12" y2="19" />
-                        <line x1="5" y1="12" x2="19" y2="12" />
-                      </svg>
+                      <Plus size={12} />
                       {l.addCustomServer}
                     </button>
                   </div>

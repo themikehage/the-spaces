@@ -1,5 +1,6 @@
-// SPDX-License-Identifier: MIT
+import { EntityCustomToolsEditor } from "@/components/settings/EntityCustomToolsEditor";
 import { EntityAvatar } from "@/components/shared/EntityAvatar";
+import { EntitySkillsEditor } from "@/components/shared/EntitySkillsEditor";
 import { TeamInput } from "@/components/teams/TeamInput";
 import { AddTeamMemberModal } from "@/components/teams/TeamMembersModal";
 import { TeamMembersPanel } from "@/components/teams/TeamMembersPanel";
@@ -8,7 +9,7 @@ import { useAgents } from "@/hooks/useAgents";
 import { useTeam } from "@/hooks/useTeam";
 import { useLiterals } from "@/lib";
 import { apiFetch } from "@/lib/api";
-import { BarChart, MessageSquare, RefreshCw } from "lucide-react";
+import { BarChart, ChevronLeft, MessageSquare, RefreshCw, Users, Wrench } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Cell,
@@ -53,7 +54,7 @@ export function TeamDetailPage({ teamId, onNavigate }: Props) {
 
   const { agents: registeredAgents } = useAgents();
 
-  const [activeSubTab, setActiveSubTab] = useState<"chat" | "analytics">("chat");
+  const [activeSubTab, setActiveSubTab] = useState<"chat" | "analytics" | "tools">("chat");
 
   const [showMembersSidebar, setShowMembersSidebar] = useState(true);
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
@@ -131,13 +132,7 @@ export function TeamDetailPage({ teamId, onNavigate }: Props) {
               className="p-1 text-muted-foreground hover:text-foreground rounded transition-colors cursor-pointer"
               title={l.backToTeams}
             >
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
-                <path
-                  fillRule="evenodd"
-                  d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
+              <ChevronLeft size={16} />
             </button>
             <div className="flex items-center gap-1.5 min-w-0">
               <EntityAvatar name={team.name} avatarUrl={team.avatarUrl} size="xs" type="team" />
@@ -163,6 +158,10 @@ export function TeamDetailPage({ teamId, onNavigate }: Props) {
               <BarChart className="w-3.5 h-3.5" />
               <span>{l.tabAnalytics}</span>
             </button>
+            <button onClick={() => setActiveSubTab("tools")} className={tabClass("tools")}>
+              <Wrench className="w-3.5 h-3.5" />
+              <span>Tools & Config</span>
+            </button>
           </div>
         </div>
 
@@ -176,9 +175,7 @@ export function TeamDetailPage({ teamId, onNavigate }: Props) {
                   : "bg-card border-input text-muted-foreground hover:text-foreground"
               }`}
             >
-              <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
-              </svg>
+              <Users size={14} />
               <span>Agents ({team.members?.length || 0})</span>
             </button>
           )}
@@ -321,6 +318,13 @@ export function TeamDetailPage({ teamId, onNavigate }: Props) {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {activeSubTab === "tools" && (
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 max-w-4xl">
+            <EntitySkillsEditor entityType="team" entityId={teamId} title="Team Skills" />
+            <EntityCustomToolsEditor entityType="team" entityId={teamId} title="Team Custom Tools" />
           </div>
         )}
       </div>

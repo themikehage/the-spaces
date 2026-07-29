@@ -1,13 +1,16 @@
-// SPDX-License-Identifier: MIT
 import { RegisterModal } from "@/components/agents/RegisterModal";
 import { AuthenticatedImage } from "@/components/chat/ImageGrid";
+import { EntityCustomToolsEditor } from "@/components/settings/EntityCustomToolsEditor";
 import { AgentAvatar } from "@/components/shared/AgentAvatar";
+import { EntitySkillsEditor } from "@/components/shared/EntitySkillsEditor";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/contexts/ToastContext";
 import { useAgents } from "@/hooks/useAgents";
 import { useLiterals } from "@/lib";
 import { apiFetch } from "@/lib/api";
+import { AlertCircle, ChevronDown, Info, Plus, RefreshCw, Search, Settings2, Users, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { AgentDefinition, AgentInfo } from "shared";
@@ -34,11 +37,13 @@ function AgentCard({
   onDelete,
   onChat,
   onExecutions,
+  onConfig,
 }: {
   agent: AgentInfo;
   onDelete: (id: string) => void;
   onChat: (agent: { id: string; name: string; avatarUrl?: string }) => void;
   onExecutions: (agent: { id: string; name: string }) => void;
+  onConfig: (agent: { id: string; name: string }) => void;
 }) {
   const l = useLiterals(u);
   const [deleting, setDeleting] = useState(false);
@@ -99,21 +104,28 @@ function AgentCard({
         <button
           onClick={() => onChat({ id: agent.id, name: agent.name, avatarUrl: agent.avatarUrl })}
           disabled={agent.status === "stopped" || agent.status === "error"}
-          className="flex-1 py-1.5 px-2 text-[11px] font-medium bg-primary/10 text-primary border border-primary/20 rounded-lg hover:bg-primary/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex-1 py-1.5 px-2 text-[11px] font-medium bg-primary/10 text-primary border border-primary/20 rounded-lg hover:bg-primary/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
         >
           Chat
         </button>
         <button
           onClick={() => onExecutions({ id: agent.id, name: agent.name })}
-          className="flex-1 py-1.5 px-2 text-[11px] font-medium bg-card-hover text-foreground border border-input rounded-lg hover:bg-card-hover/80 transition-colors"
+          className="flex-1 py-1.5 px-2 text-[11px] font-medium bg-card-hover text-foreground border border-input rounded-lg hover:bg-card-hover/80 transition-colors cursor-pointer"
         >
           Historial
+        </button>
+        <button
+          onClick={() => onConfig({ id: agent.id, name: agent.name })}
+          className="p-1.5 text-muted-foreground hover:text-foreground border border-input rounded-lg hover:bg-card-hover/80 transition-colors cursor-pointer"
+          title="Configure Skills & Custom Tools"
+        >
+          <Settings2 size={14} />
         </button>
 
         <button
           onClick={handleDelete}
           disabled={deleting}
-          className="py-1.5 px-2 text-[11px] font-medium text-destructive border border-error/20 rounded-lg hover:bg-destructive/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          className="py-1.5 px-2 text-[11px] font-medium text-destructive border border-error/20 rounded-lg hover:bg-destructive/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
         >
           {deleting ? l.deleting : l.delete}
         </button>
@@ -131,6 +143,24 @@ function AgentCard({
     </motion.div>
   );
 }
+
+function AgentConfigModal({
+  agent,
+  onClose,
+}: {
+  agent: { id: string; name: string };
+  onClose: () => void;
+}) {
+  return (
+    <Modal open onClose={onClose} title={`Agent Configuration: ${agent.name}`}>
+      <div className="p-4 space-y-4 max-h-[75vh] overflow-y-auto">
+        <EntitySkillsEditor entityType="agent" entityId={agent.id} title="Agent Skills" />
+        <EntityCustomToolsEditor entityType="agent" entityId={agent.id} title="Agent Custom Tools" />
+      </div>
+    </Modal>
+  );
+}
+
 
 function BlueprintDetailModal({
   blueprint,
@@ -185,13 +215,7 @@ function BlueprintDetailModal({
             onClick={onClose}
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-card-hover transition-colors"
           >
-            <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-              <path
-                fillRule="evenodd"
-                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 11-1.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                clipRule="evenodd"
-              />
-            </svg>
+            <X size={14} />
           </button>
         </div>
 
@@ -262,15 +286,10 @@ function BlueprintDetailModal({
                   className="w-full flex items-center justify-between px-4 py-3 hover:bg-card-hover/40 transition-colors text-left"
                 >
                   <span className="font-semibold text-foreground">{l.systemPromptPreview}</span>
-                  <svg
-                    className={`w-4 h-4 text-muted-foreground transform transition-transform ${showPrompt ? "rotate-180" : ""}`}
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <polyline points="6 9 12 15 18 9" />
-                  </svg>
+                  <ChevronDown
+                    size={16}
+                    className={`text-muted-foreground transform transition-transform ${showPrompt ? "rotate-180" : ""}`}
+                  />
                 </button>
                 <AnimatePresence initial={false}>
                   {showPrompt && (
@@ -406,6 +425,10 @@ export function AgentsPage({ onSelectAgent }: AgentsPageProps) {
     id: string;
     name: string;
   } | null>(null);
+  const [selectedAgentForConfig, setSelectedAgentForConfig] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   // Gallery-specific state
   const [activeTab, setActiveTab] = useState<"my-agents" | "gallery">("my-agents");
@@ -517,13 +540,7 @@ export function AgentsPage({ onSelectAgent }: AgentsPageProps) {
                 className="p-2 text-muted-foreground hover:text-foreground hover:bg-card-hover rounded-lg transition-colors"
                 title={l.refresh}
               >
-                <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-                  <path
-                    fillRule="evenodd"
-                    d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <RefreshCw size={14} />
               </button>
               <button
                 onClick={() => {
@@ -531,13 +548,7 @@ export function AgentsPage({ onSelectAgent }: AgentsPageProps) {
                 }}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-primary text-background rounded-lg hover:bg-primary/90 transition-colors"
               >
-                <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
-                  <path
-                    fillRule="evenodd"
-                    d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <Plus size={12} />
                 Register Agent
               </button>
             </>
@@ -547,13 +558,7 @@ export function AgentsPage({ onSelectAgent }: AgentsPageProps) {
               className="p-2 text-muted-foreground hover:text-foreground hover:bg-card-hover rounded-lg transition-colors"
               title={l.refresh}
             >
-              <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-                <path
-                  fillRule="evenodd"
-                  d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
-                  clipRule="evenodd"
-                />
-              </svg>
+                <RefreshCw size={14} />
             </button>
           )}
         </div>
@@ -593,19 +598,7 @@ export function AgentsPage({ onSelectAgent }: AgentsPageProps) {
 
             {!loading && error && (
               <div className="flex flex-col items-center justify-center h-32 text-destructive text-sm gap-2">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="opacity-60"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <AlertCircle size={20} className="opacity-60" />
                 {error}
               </div>
             )}
@@ -613,15 +606,7 @@ export function AgentsPage({ onSelectAgent }: AgentsPageProps) {
             {!loading && !error && agents.length === 0 && (
               <div className="flex flex-col items-center justify-center h-48 text-muted-foreground gap-3">
                 <div className="w-12 h-12 rounded-2xl bg-card border border-input flex items-center justify-center">
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    className="text-muted-foreground"
-                  >
-                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
-                  </svg>
+                  <Users size={20} className="text-muted-foreground" />
                 </div>
                 <div className="text-center">
                   <p className="text-sm font-medium text-foreground">{l.emptyTitle}</p>
@@ -648,6 +633,7 @@ export function AgentsPage({ onSelectAgent }: AgentsPageProps) {
                       onDelete={stopAgent}
                       onChat={(agentObj) => onSelectAgent?.(agentObj)}
                       onExecutions={(agentObj) => setSelectedAgentForExecutions(agentObj)}
+                      onConfig={(agentObj) => setSelectedAgentForConfig(agentObj)}
                     />
                   ))}
                 </AnimatePresence>
@@ -667,16 +653,7 @@ export function AgentsPage({ onSelectAgent }: AgentsPageProps) {
                   onChange={(e) => setGallerySearch(e.target.value)}
                   className="w-full bg-card border border-input rounded-xl pl-9 pr-4 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
                 />
-                <svg
-                  className="absolute left-3 top-2.5 text-muted-foreground w-3.5 h-3.5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                >
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
+                <Search size={14} className="absolute left-3 top-2.5 text-muted-foreground" />
               </div>
               <div className="flex gap-1.5 border border-input rounded-xl p-1 bg-card/40 flex-shrink-0 self-start">
                 <button
@@ -846,6 +823,15 @@ export function AgentsPage({ onSelectAgent }: AgentsPageProps) {
       </AnimatePresence>
 
       <AnimatePresence>
+        {selectedAgentForConfig && (
+          <AgentConfigModal
+            agent={selectedAgentForConfig}
+            onClose={() => setSelectedAgentForConfig(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
         {selectedBlueprint && (
           <BlueprintDetailModal
             blueprint={selectedBlueprint}
@@ -942,13 +928,7 @@ function ExecutionsModal({
             onClick={onClose}
             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-card-hover transition-colors"
           >
-            <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-              <path
-                fillRule="evenodd"
-                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 11-1.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                clipRule="evenodd"
-              />
-            </svg>
+            <X size={14} />
           </button>
         </div>
 
@@ -1003,19 +983,7 @@ function ExecutionsModal({
           <div className="flex-1 overflow-y-auto p-5 bg-card flex flex-col gap-4">
             {!selectedExec && (
               <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="mb-2"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M12 16v-4" />
-                  <path d="M12 8h.01" />
-                </svg>
+                <Info size={24} className="mb-2" />
                 <p className="text-xs">{l.selectExecHint}</p>
               </div>
             )}

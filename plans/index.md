@@ -14,6 +14,7 @@
 | 10  | [10-technical-debt.md](./10-technical-debt.md)                         | 📋 Planificado | Deuda técnica: singletons, AgentSession god object, route splitting, WS contract                     |
 | 12  | [12-entity-config-cascade.md](./12-entity-config-cascade.md)           | 📋 Planificado | Config por entidad: CascadeConfigLoader genérico, `.spaces/config.json`, herencia global→entidad     |
 | 13  | [13-agent-sdk-abstraction.md](./13-agent-sdk-abstraction.md)           | 📋 Planificado | Abstracción ADK-level: `new SpacesAgent({...})` declarativo, `SpacesRunner` standalone, SDK portable |
+| 16  | [16-custom-tools-entity-scoping.md](./16-custom-tools-entity-scoping.md) | 📋 Planificado | Custom Tools con scoping por entidad: add, activate, deactivate global/project/agent con UI |
 
 ## Referencia
 

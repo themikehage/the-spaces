@@ -3,6 +3,7 @@ import { Modal } from "@/components/ui/Modal";
 import { useLiterals } from "@/lib";
 import { useState } from "react";
 import { literals as u } from "./ToolsSelector.literals";
+import { ChevronDown, Shield } from "lucide-react";
 
 export interface ToolDefinition {
   id: string;
@@ -155,27 +156,9 @@ export function ToolsSelector({
           disabled ? "opacity-50 cursor-not-allowed" : ""
         }`}
       >
-        <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
-          <path
-            fillRule="evenodd"
-            d="M2.166 4.9L10 1.154l7.834 3.746A2 2 0 0119 6.707V13a6 6 0 01-9 5.2v-2.067a4 4 0 003-3.833V7.907l-3-1.434v8.86a2.001 2.001 0 01-2 0v-8.86L5 7.907v4.993a4 4 0 003 3.833V18.2A6 6 0 011 13V6.707a2 2 0 011.166-1.808z"
-            clipRule="evenodd"
-          />
-        </svg>
+        <Shield size={12} />
         <span>Sandbox: {statusLabel}</span>
-        <svg
-          width="10"
-          height="10"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          className={`transition-transform ${open ? "rotate-180" : ""}`}
-        >
-          <path
-            fillRule="evenodd"
-            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-            clipRule="evenodd"
-          />
-        </svg>
+        <ChevronDown size={10} className={`transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
       <Modal open={open} onClose={() => setOpen(false)} title="Allowed Tools">

@@ -23,7 +23,20 @@ export interface ScopeConfig {
       tools: string[];
     }
   >;
-  agentTools: Record<string, string[]>;
+  teams: Record<
+    string,
+    {
+      agents: string[];
+      tools: string[];
+    }
+  >;
+  agentTools: Record<
+    string,
+    {
+      add: string[];
+      remove: string[];
+    }
+  >;
 }
 
 export type AgentMembership = { type: "global" } | { type: "project"; id: string };
@@ -97,6 +110,7 @@ export class ScopeConfigManager {
           tools: diskToolNames,
         },
         projects: {},
+        teams: {},
         agentTools: {},
       };
 
@@ -129,6 +143,7 @@ export class ScopeConfigManager {
           tools: diskToolNames,
         },
         projects: {},
+        teams: {},
         agentTools: {},
       };
       this.cache.set(username, config);
@@ -165,6 +180,19 @@ export class ScopeConfigManager {
       }
     } else {
       config.projects = {};
+      dirty = true;
+    }
+
+    if (config.teams) {
+      for (const [teamId, team] of Object.entries<any>(config.teams)) {
+        if (!team.agents) team.agents = [];
+        if (!team.tools) team.tools = [];
+        const oldLen = team.tools.length;
+        team.tools = team.tools.filter((t: string) => diskToolNames.has(t));
+        if (team.tools.length !== oldLen) dirty = true;
+      }
+    } else {
+      config.teams = {};
       dirty = true;
     }
 
@@ -208,15 +236,26 @@ export class ScopeConfigManager {
       config.agentTools = {};
       dirty = true;
     } else {
-      for (const [agentId, tools] of Object.entries<string[]>(config.agentTools)) {
+      for (const [agentId, entry] of Object.entries<any>(config.agentTools)) {
+        if (Array.isArray(entry)) {
+          config.agentTools[agentId] = {
+            add: entry.filter((t: string) => diskToolNames.has(t)),
+            remove: [],
+          };
+          dirty = true;
+          continue;
+        }
         if (!diskAgentIds.has(agentId)) {
           delete config.agentTools[agentId];
           dirty = true;
         } else {
-          const oldLen = tools.length;
-          const cleaned = tools.filter((t) => diskToolNames.has(t));
-          if (cleaned.length !== oldLen) {
-            config.agentTools[agentId] = cleaned;
+          const cleanAdd = (entry.add || []).filter((t: string) => diskToolNames.has(t));
+          const cleanRemove = (entry.remove || []).filter((t: string) => diskToolNames.has(t));
+          const changed =
+            cleanAdd.length !== (entry.add || []).length ||
+            cleanRemove.length !== (entry.remove || []).length;
+          if (changed) {
+            config.agentTools[agentId] = { add: cleanAdd, remove: cleanRemove };
             dirty = true;
           }
         }
@@ -287,6 +326,16 @@ export class ScopeConfigManager {
     return null;
   }
 
+  getAgentTeamMembership(username: string, agentId: string): string | null {
+    this.ensureLoaded(username);
+    const config = this.cache.get(username);
+    if (!config?.teams) return null;
+    for (const [teamId, team] of Object.entries(config.teams)) {
+      if (team.agents?.includes(agentId)) return teamId;
+    }
+    return null;
+  }
+
   resolveToolsForAgent(username: string, agentId: string): string[] {
     this.ensureLoaded(username);
     const config = this.cache.get(username);
@@ -294,19 +343,21 @@ export class ScopeConfigManager {
 
     const tools = new Set<string>(config.global.tools);
 
-    const membership = this.getAgentMembership(username, agentId);
-    if (membership) {
-      if (membership.type === "project") {
-        const proj = config.projects[membership.id];
-        if (proj && proj.tools) {
-          proj.tools.forEach((t) => tools.add(t));
-        }
-      }
+    const teamId = this.getAgentTeamMembership(username, agentId);
+    if (teamId) {
+      config.teams?.[teamId]?.tools?.forEach((t) => tools.add(t));
     }
 
-    const agentSpecific = config.agentTools[agentId];
-    if (agentSpecific) {
-      agentSpecific.forEach((t) => tools.add(t));
+    const membership = this.getAgentMembership(username, agentId);
+    if (membership?.type === "project") {
+      const proj = config.projects[membership.id];
+      proj?.tools?.forEach((t) => tools.add(t));
+    }
+
+    const agentConfig = config.agentTools[agentId];
+    if (agentConfig) {
+      agentConfig.add?.forEach((t) => tools.add(t));
+      agentConfig.remove?.forEach((t) => tools.delete(t));
     }
 
     return Array.from(tools);
@@ -349,24 +400,38 @@ export class ScopeConfigManager {
     await this.registerAgent(username, agentId, scope);
   }
 
-  async setScopeTools(username: string, target: ToolScopeTarget, tools: string[]): Promise<void> {
+  async setScopeTools(
+    username: string,
+    target: ToolScopeTarget,
+    payload: { add: string[]; remove: string[] },
+  ): Promise<void> {
     await this.withLock(username, async () => {
       const config = await this.load(username);
 
       if (target.type === "global") {
-        config.global.tools = tools;
+        config.global.tools = payload.add;
       } else if (target.type === "project") {
         if (!config.projects[target.id]) {
           config.projects[target.id] = { agents: [], tools: [] };
         }
-        config.projects[target.id].tools = tools;
+        config.projects[target.id].tools = payload.add;
+      } else if (target.type === "team") {
+        if (!config.teams) config.teams = {};
+        if (!config.teams[target.id]) {
+          config.teams[target.id] = { agents: [], tools: [] };
+        }
+        config.teams[target.id].tools = payload.add;
       } else if (target.type === "agent") {
-        config.agentTools[target.id] = tools;
+        config.agentTools[target.id] = {
+          add: payload.add,
+          remove: payload.remove,
+        };
       }
 
       this.persist(username, config);
     });
   }
+
 
   async removeProjectScope(username: string, projectId: string): Promise<void> {
     await this.withLock(username, async () => {

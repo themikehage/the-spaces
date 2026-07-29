@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { useState } from "react";
+import { ChevronRight } from "lucide-react";
 import type { ToolResultData } from "./ToolCallRow";
 
 interface Props {
@@ -106,19 +107,10 @@ export function ExaSearchResult({ text, details, l }: Props) {
             onClick={() => setSynthOpen(!synthOpen)}
             className="flex items-center gap-2 w-full px-3 py-1.5 bg-card hover:bg-card-hover/40 transition-colors text-left cursor-pointer"
           >
-            <svg
-              width="10"
-              height="10"
-              viewBox="0 0 20 20"
-              fill="currentColor"
+            <ChevronRight
+              size={10}
               className={`text-muted-foreground transition-transform ${synthOpen ? "rotate-90" : ""}`}
-            >
-              <path
-                fillRule="evenodd"
-                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
+            />
             <span className="text-xs text-text-primary font-semibold">
               {l.bodySynthesizedOutput}
             </span>

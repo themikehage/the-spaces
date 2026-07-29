@@ -82,9 +82,28 @@ export function createManageCustomToolsTool(options: ManageCustomToolsOptions) {
               parsedTool = CustomToolDefinitionSchema.parse(tool);
             } catch (err) {
               if (err instanceof ZodError) {
+                const VALID_UI_TYPES = [
+                  "badge", "card", "card-list", "table", "metric", "code", "html",
+                  "section", "video", "audio", "pdf", "tabs", "markdown", "progress",
+                  "accordion", "diff", "steps", "stats", "timeline",
+                ].join(", ");
+
                 const issues = err.issues
-                  .map((issue) => `- Path [${issue.path.join(".")}]: ${issue.message}`)
+                  .map((issue) => {
+                    let msg = `- Path [${issue.path.join(".")}]: ${issue.message}`;
+                    if ((issue as any).received !== undefined) {
+                      msg += ` (received: ${JSON.stringify((issue as any).received)})`;
+                    }
+                    const isRootUiTypeIssue =
+                      issue.code === "invalid_union_discriminator" ||
+                      (issue.path.length === 1 && issue.path[0] === "ui" && issue.code === "invalid_union");
+                    if (isRootUiTypeIssue) {
+                      msg += ` — Valid UI types are: ${VALID_UI_TYPES}`;
+                    }
+                    return msg;
+                  })
                   .join("\n");
+
                 return {
                   content: [
                     { type: "text", text: `Schema validation failed for custom tool:\n${issues}` },

@@ -43,21 +43,29 @@ export class FunctionTool<T = Record<string, unknown>> implements BaseTool {
       if (typeof rawRes === "string") {
         return { content: rawRes, metadata: { durationMs } };
       }
-      if (
-        rawRes &&
-        typeof rawRes === "object" &&
-        "content" in rawRes &&
-        typeof rawRes.content === "string"
-      ) {
+      if (rawRes && typeof rawRes === "object") {
+        const resAny = rawRes as any;
+        const isError = Boolean(
+          resAny.isError ||
+            (resAny.exitCode !== undefined && resAny.exitCode !== 0) ||
+            (resAny.details?.exitCode !== undefined && resAny.details?.exitCode !== 0),
+        );
+        const content =
+          resAny.content !== undefined
+            ? resAny.content
+            : resAny.output ?? resAny.text ?? resAny.result ?? JSON.stringify(rawRes);
+        const details = resAny.details !== undefined ? resAny.details : rawRes;
+
         return {
-          content: rawRes.content,
-          isError: Boolean((rawRes as ToolResult).isError),
-          errorCode: (rawRes as ToolResult).errorCode,
-          metadata: { durationMs, ...(rawRes as ToolResult).metadata },
+          content,
+          details,
+          isError,
+          errorCode: resAny.errorCode,
+          metadata: { durationMs, ...resAny.metadata },
         };
       }
       return {
-        content: JSON.stringify(rawRes),
+        content: String(rawRes ?? ""),
         metadata: { durationMs },
       };
     } catch (err: any) {

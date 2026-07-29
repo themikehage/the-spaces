@@ -8,7 +8,7 @@ import {
   getSessionMeta,
   getSessionName,
 } from "@/lib/session-utils";
-import { Archive, RotateCcw, Trash2 } from "lucide-react";
+import { Archive, Plus, RotateCcw, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { literals as u } from "./SessionPopover.literals";
 
@@ -235,13 +235,7 @@ export function SessionPopover({
             className="p-1 hover:bg-card-hover rounded text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             title={l.close}
           >
-            <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-              <path
-                fillRule="evenodd"
-                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                clipRule="evenodd"
-              />
-            </svg>
+            <X size={14} />
           </button>
         </div>
 
@@ -256,13 +250,7 @@ export function SessionPopover({
               l.creating
             ) : (
               <>
-                <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
-                  <path
-                    fillRule="evenodd"
-                    d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <Plus size={12} />
                 Nueva Sesión
               </>
             )}

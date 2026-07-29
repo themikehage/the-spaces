@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { useLiterals } from "@/lib";
+import { Send } from "lucide-react";
 import { useState } from "react";
 import { literals as u } from "./TeamInput.literals";
 
@@ -40,9 +41,7 @@ export function TeamInput({ onSend }: Props) {
         className="px-4 py-2.5 text-sm font-medium bg-primary text-background rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-40 flex items-center gap-1.5 flex-shrink-0"
       >
         <span>{l.send}</span>
-        <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-          <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
-        </svg>
+        <Send size={14} />
       </button>
     </div>
   );

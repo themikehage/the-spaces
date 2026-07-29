@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/Button";
 import { apiFetch } from "@/lib/api";
 import { useState } from "react";
+import { Download, LoaderCircle } from "lucide-react";
 import { resolveImageUrl } from "../ImageGrid";
 
 interface Props {
@@ -137,26 +138,9 @@ export function ShareFileCard({
       </div>
       <Button variant="solid" size="sm" onClick={handleDownload} disabled={downloading}>
         {downloading ? (
-          <svg
-            className="animate-spin"
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
-            <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
-          </svg>
+          <LoaderCircle className="animate-spin" size={12} />
         ) : (
-          <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
-            <path
-              fillRule="evenodd"
-              d="M10 3a1 1 0 011 1v10.586l3.293-3.293a1 1 0 111.414 1.414l-5 5a1 1 0 01-1.414 0l-5-5a1 1 0 111.414-1.414L9 14.586V4a1 1 0 011-1z"
-              clipRule="evenodd"
-            />
-          </svg>
+          <Download size={12} />
         )}
         {downloading ? "..." : "Download"}
       </Button>

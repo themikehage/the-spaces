@@ -2,7 +2,7 @@
 import { AttentionHubPopover } from "@/components/approvals/AttentionHubPopover";
 import { Logo } from "@/components/ui/Logo";
 import type { ConnectionState } from "@/lib/ws-client";
-import { Menu, Plus } from "lucide-react";
+import { Grid3X3, Menu, Plus } from "lucide-react";
 
 interface MobileTopbarProps {
   isMobile: boolean;
@@ -72,21 +72,7 @@ export function MobileTopbar({
           className="w-11 h-11 flex items-center justify-center text-muted-foreground hover:text-foreground rounded-lg active:bg-surface-hover transition-colors cursor-pointer"
           aria-label="Session Board"
         >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <rect x="3" y="3" width="7" height="7" />
-            <rect x="14" y="3" width="7" height="7" />
-            <rect x="3" y="14" width="7" height="7" />
-            <rect x="14" y="14" width="7" height="7" />
-          </svg>
+          <Grid3X3 size={20} />
         </button>
         {showNewSessionButton && (
           <button

@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { literals as u } from "./DelegationsPanel.literals";
 import type { PendingDelegation } from "./FloatingDelegations";
+import { ArrowRight, CheckCircle, Users, X } from "lucide-react";
 
 interface Props {
   sessionId: string | null;
@@ -136,19 +137,7 @@ export function DelegationsPanel({
     return (
       <div className="h-full flex flex-col items-center justify-center bg-bg px-4 select-none">
         <div className="w-16 h-16 rounded-full bg-surface border border-border flex items-center justify-center mb-4 text-text-secondary opacity-75">
-          <svg
-            className="w-8 h-8"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"
-            />
-          </svg>
+          <Users size={32} />
         </div>
         <h2 className="text-base font-semibold text-text-primary mb-1 font-display">
           {l.noActiveSession}
@@ -173,19 +162,7 @@ export function DelegationsPanel({
     return (
       <div className="h-full flex flex-col items-center justify-center bg-bg px-4 select-none">
         <div className="w-16 h-16 rounded-full bg-surface border border-border flex items-center justify-center mb-4 text-text-secondary opacity-75">
-          <svg
-            className="w-8 h-8"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0110 21a3.745 3.745 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.745 3.745 0 013.296-1.043A3.745 3.745 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z"
-            />
-          </svg>
+          <CheckCircle size={32} />
         </div>
         <h2 className="text-base font-semibold text-text-primary mb-1 font-display">
           {l.noDelegations}
@@ -285,19 +262,7 @@ export function DelegationsPanel({
                         className="text-accent hover:underline flex items-center gap-1 font-medium transition-all"
                       >
                         {l.actionNavigate}
-                        <svg
-                          className="w-3 h-3"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2.5"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
-                          />
-                        </svg>
+                        <ArrowRight size={12} />
                       </button>
                     </div>
                   </div>
@@ -332,15 +297,7 @@ export function DelegationsPanel({
                 className="p-1 rounded bg-surface hover:bg-surface-hover border border-border text-text-secondary hover:text-text-primary transition-all text-xs flex items-center gap-1 cursor-pointer"
               >
                 <span className="md:hidden">{l.closeDetails}</span>
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <X size={16} />
               </button>
             </div>
 
@@ -446,19 +403,7 @@ export function DelegationsPanel({
                 className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded bg-accent text-bg hover:bg-accent-hover active:scale-[0.98] transition-all text-xs font-semibold cursor-pointer"
               >
                 {l.actionNavigate}
-                <svg
-                  className="w-3.5 h-3.5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
-                  />
-                </svg>
+                <ArrowRight size={14} />
               </button>
             </div>
           </motion.div>

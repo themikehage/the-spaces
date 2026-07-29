@@ -101,6 +101,7 @@
 - [x] Implementar Plan 15 — Entity Skills Configuration & Management: Extensión de `GET /api/skills` con parámetros `entityType` y `entityId`, hook de React `useEntitySkills`, componente `EntitySkillsEditor` reutilizable con inspección de `SKILL.md` y switches de toggle, e integración completa en paneles de configuración de Agente Global, Agentes, Equipos y Proyectos.
 - [x] Implementar Feature de Schedules (Tareas Programadas MVP): Esquemas Zod en `packages/shared`, persistencia SQLite en `schedules.db`, `ScheduleService` y `ScheduleRunner` in-process (`croner`), sub-router REST `/api/schedules`, hook React `useSchedules`, diálogo modal `ScheduleJobDialog`, panel de historial `ScheduleRunHistory`, vista `SchedulesPage` y suite de pruebas unitarias (`schedules.test.ts`).
 - [x] Eliminar barra superior de título de chats en `ChatArea` y trasladar el título activo de la sesión y la navegación de sub-sesiones a los `Breadcrumbs` de `MainLayout`.
+- [x] Implementar Plan 16 — Custom Tools Entity-Scoped (Add, Activate, Deactivate): Tipos compartidos (`ToolScopeTarget`, `PatchScopeToolsSchema`, etc.), `ScopeConfig` extendido con `teams` y migración a `agentTools` sustractivo `{add, remove}`, cadena de resolución `global -> team -> project -> agent(add/remove)`, `GET /api/custom-tools`, `GET /api/agents/scope/tools`, broadcast WS en mutaciones, hook `useEntityCustomTools`, componente `EntityCustomToolsEditor` e integración completa en paneles de Ajustes Globales, Agentes, Proyectos y Equipos.
 
 ## Criterio de cierre del sprint
 

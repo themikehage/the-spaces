@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: MIT
+import { Check, X } from "lucide-react";
+
 interface StepItem {
   label: string;
   status: "done" | "active" | "pending" | "error";
@@ -18,17 +20,7 @@ export function StepsComponent({ steps, direction = "vertical" }: StepsProps) {
       bg: "bg-success",
       border: "border-success",
       text: "text-success",
-      icon: (
-        <svg
-          className="w-3 h-3 text-success-foreground"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth="3"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-        </svg>
-      ),
+      icon: <Check className="w-3 h-3 text-success-foreground" strokeWidth={3} />,
     },
     active: {
       bg: "bg-primary animate-pulse",
@@ -40,17 +32,7 @@ export function StepsComponent({ steps, direction = "vertical" }: StepsProps) {
       bg: "bg-error",
       border: "border-error",
       text: "text-error",
-      icon: (
-        <svg
-          className="w-3 h-3 text-error-foreground"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth="3"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      ),
+      icon: <X className="w-3 h-3 text-error-foreground" strokeWidth={3} />,
     },
     pending: {
       bg: "bg-muted",

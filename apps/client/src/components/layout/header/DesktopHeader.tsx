@@ -2,6 +2,7 @@
 import { AttentionHubPopover } from "@/components/approvals/AttentionHubPopover";
 import { Logo } from "@/components/ui/Logo";
 import type { ConnectionState } from "@/lib/ws-client";
+import { Grid3X3, Menu } from "lucide-react";
 import type { ReactNode } from "react";
 
 interface DesktopHeaderProps {
@@ -34,13 +35,7 @@ export function DesktopHeader({
           className="sm:hidden p-1 text-muted-foreground hover:text-foreground rounded flex-shrink-0"
           title="Toggle sidebar"
         >
-          <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor">
-            <path
-              fillRule="evenodd"
-              d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
-              clipRule="evenodd"
-            />
-          </svg>
+          <Menu size={18} />
         </button>
         {breadcrumbs}
       </div>
@@ -51,21 +46,7 @@ export function DesktopHeader({
           className="p-1 text-muted-foreground hover:text-foreground rounded cursor-pointer"
           title="Session Board"
         >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <rect x="3" y="3" width="7" height="7" />
-            <rect x="14" y="3" width="7" height="7" />
-            <rect x="3" y="14" width="7" height="7" />
-            <rect x="14" y="14" width="7" height="7" />
-          </svg>
+          <Grid3X3 size={16} />
         </button>
         <span
           className={`w-2 h-2 rounded-full flex-shrink-0 ${

@@ -5,6 +5,7 @@ import { apiFetch } from "@/lib/api";
 import { useCallback, useEffect, useState } from "react";
 import { SessionTimeline } from "./SessionTimeline";
 import { literals as u } from "./TimelineTabPanel.literals";
+import { Clock } from "lucide-react";
 
 interface Props {
   sessionId: string | null;
@@ -73,18 +74,7 @@ export function TimelineTabPanel({ sessionId }: Props) {
     return (
       <div className="h-full flex flex-col items-center justify-center bg-bg px-4 select-none">
         <div className="w-16 h-16 rounded-full bg-surface border border-border flex items-center justify-center mb-4 text-text-secondary opacity-75">
-          <svg
-            className="w-8 h-8"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            viewBox="0 0 24 24"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <polyline points="12 6 12 12 16 14" />
-            <circle cx="12" cy="12" r="10" />
-          </svg>
+          <Clock size={32} />
         </div>
         <h2 className="text-base font-semibold text-text-primary mb-1 font-display">
           {l.noSession}

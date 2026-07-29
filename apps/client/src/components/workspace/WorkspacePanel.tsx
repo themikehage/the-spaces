@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { apiFetch } from "@/lib/api";
+import { Folder, RefreshCw, UserPlus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FileInfo } from "shared";
 import { WorkspaceFileEditor } from "./WorkspaceFileEditor";
@@ -354,36 +355,21 @@ export function WorkspacePanel({
                 className="p-1 text-muted-foreground hover:text-foreground hover:bg-surfaceHover/50 rounded transition-colors cursor-pointer"
                 title="Refresh Root"
               >
-                <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-                  <path
-                    fillRule="evenodd"
-                    d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.259.627 5.002 5.002 0 009.23 1.316H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <RefreshCw size={14} />
               </button>
               <button
                 onClick={() => setAddingRootType("file")}
                 className="p-1 text-muted-foreground hover:text-primary rounded transition-colors cursor-pointer"
                 title="New File in Root"
               >
-                <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6z" />
-                  <path
-                    fillRule="evenodd"
-                    d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <UserPlus size={14} />
               </button>
               <button
                 onClick={() => setAddingRootType("folder")}
                 className="p-1 text-muted-foreground hover:text-warning rounded transition-colors cursor-pointer"
                 title="New Folder in Root"
               >
-                <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
-                </svg>
+                <Folder size={14} />
               </button>
             </div>
           </div>

@@ -4,6 +4,7 @@ import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import remarkGfm from "remark-gfm";
+import { Folder } from "lucide-react";
 
 interface Props {
   content: string;
@@ -71,17 +72,7 @@ export function RichMarkdown({ content }: Props) {
               return (
                 <div className="my-3 rounded-lg overflow-x-auto border border-input shadow-md font-mono text-xs">
                   <div className="bg-card px-3 py-1.5 border-b border-input text-xs text-muted-foreground flex items-center gap-1.5">
-                    <svg
-                      width="12"
-                      height="12"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className="shrink-0"
-                    >
-                      <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
-                    </svg>
+                    <Folder size={12} className="shrink-0" />
                     <span>File Tree</span>
                   </div>
                   <pre className="m-0 p-3 bg-muted whitespace-pre-wrap break-words">

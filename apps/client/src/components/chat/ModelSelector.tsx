@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { literals as u } from "./ChatInput.literals";
 import { PortalPopover } from "./PortalPopover";
+import { ChevronDown, ChevronLeft, ChevronRight, Plus, Table } from "lucide-react";
 
 interface ProviderInfo {
   id: string;
@@ -232,19 +233,7 @@ export function ModelSelector({
               }`
         }
       >
-        <svg
-          width="12"
-          height="12"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          className="text-primary flex-shrink-0"
-        >
-          <path
-            fillRule="evenodd"
-            d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v2H4V6zm0 4h3v4H4v-4zm5 0h7v4H9v-4z"
-            clipRule="evenodd"
-          />
-        </svg>
+        <Table size={12} className="text-primary flex-shrink-0" />
         <span className={compact ? "truncate max-w-[120px]" : "truncate max-w-[200px]"}>
           {selected ? selected.modelName : "Select model"}
         </span>
@@ -253,19 +242,7 @@ export function ModelSelector({
             !
           </span>
         )}
-        <svg
-          width="10"
-          height="10"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          className={`transition-transform flex-shrink-0 ${open ? "rotate-180" : ""}`}
-        >
-          <path
-            fillRule="evenodd"
-            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-            clipRule="evenodd"
-          />
-        </svg>
+        <ChevronDown size={10} className={`transition-transform flex-shrink-0 ${open ? "rotate-180" : ""}`} />
       </button>
 
       <PortalPopover
@@ -283,13 +260,7 @@ export function ModelSelector({
                 onClick={() => setActiveProvider(null)}
                 className="w-full flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-card-hover transition-colors border-b border-input shrink-0"
               >
-                <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
-                  <path
-                    fillRule="evenodd"
-                    d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <ChevronLeft size={12} />
                 {currentProvider.name}
               </button>
               <div className="overflow-y-auto">
@@ -372,19 +343,7 @@ export function ModelSelector({
                       />
                       <span className="truncate">{p.name}</span>
                     </div>
-                    <svg
-                      width="10"
-                      height="10"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      className="text-muted-foreground flex-shrink-0 ml-2"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
+                    <ChevronRight size={10} className="text-muted-foreground flex-shrink-0 ml-2" />
                   </button>
                 ))}
               </div>
@@ -395,13 +354,7 @@ export function ModelSelector({
                 }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-xs text-primary hover:bg-card-hover transition-colors border-t border-input shrink-0"
               >
-                <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
-                  <path
-                    fillRule="evenodd"
-                    d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <Plus size={12} />
                 {l.connectProviders}
               </button>
             </>

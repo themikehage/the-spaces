@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { useLiterals } from "@/lib";
+import { ChevronRight, File, Folder, FolderOpen, Pencil, Trash2, UserPlus } from "lucide-react";
 import { useCallback, useState } from "react";
 import type { FileInfo } from "shared";
 import { literals as u } from "./WorkspaceFileTree.literals";
@@ -86,20 +87,10 @@ function TreeNode({
 
   const getFileIcon = () => {
     if (file.isDirectory) {
-      return (
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          className="text-warning flex-shrink-0"
-        >
-          {isExpanded ? (
-            <path d="M2 6a2 2 0 012-2h4l2 2h4a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
-          ) : (
-            <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
-          )}
-        </svg>
+      return isExpanded ? (
+        <FolderOpen size={16} className="text-warning flex-shrink-0" />
+      ) : (
+        <Folder size={16} className="text-warning flex-shrink-0" />
       );
     }
 
@@ -112,21 +103,7 @@ function TreeNode({
     else if (ext === "json") color = "text-primary";
     else if (ext === "md") color = "text-highlight";
 
-    return (
-      <svg
-        width="16"
-        height="16"
-        viewBox="0 0 20 20"
-        fill="currentColor"
-        className={`${color} flex-shrink-0`}
-      >
-        <path
-          fillRule="evenodd"
-          d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6h8v2H6v-2zm0 4h8v2H6v-2zm0-8h4v2H6V6z"
-          clipRule="evenodd"
-        />
-      </svg>
-    );
+    return <File size={16} className={`${color} flex-shrink-0`} />;
   };
 
   return (
@@ -146,19 +123,7 @@ function TreeNode({
               onClick={handleToggle}
               className="p-0.5 hover:bg-surfaceHover rounded transition-colors text-muted-foreground hover:text-foreground flex-shrink-0 cursor-pointer"
             >
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                className={`transition-transform duration-150 ${isExpanded ? "rotate-90" : ""}`}
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
+              <ChevronRight size={12} className={`transition-transform duration-150 ${isExpanded ? "rotate-90" : ""}`} />
             </button>
           ) : (
             <span className="w-[17px] flex-shrink-0" />
@@ -198,14 +163,7 @@ function TreeNode({
                 className="p-1 text-muted-foreground hover:text-primary rounded transition-colors cursor-pointer"
                 title={l.newFile}
               >
-                <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6z" />
-                  <path
-                    fillRule="evenodd"
-                    d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <UserPlus size={12} />
               </button>
               <button
                 onClick={(e) => {
@@ -216,9 +174,7 @@ function TreeNode({
                 className="p-1 text-muted-foreground hover:text-warning rounded transition-colors cursor-pointer"
                 title={l.newFolder}
               >
-                <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
-                </svg>
+                <Folder size={12} />
               </button>
             </>
           )}
@@ -230,9 +186,7 @@ function TreeNode({
             className="p-1 text-muted-foreground hover:text-primary rounded transition-colors cursor-pointer"
             title={l.rename}
           >
-            <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.829z" />
-            </svg>
+            <Pencil size={12} />
           </button>
           <button
             onClick={(e) => {
@@ -242,13 +196,7 @@ function TreeNode({
             className="p-1 text-muted-foreground hover:text-destructive rounded transition-colors cursor-pointer"
             title={l.delete}
           >
-            <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
-              <path
-                fillRule="evenodd"
-                d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                clipRule="evenodd"
-              />
-            </svg>
+            <Trash2 size={12} />
           </button>
         </div>
       </div>
@@ -260,29 +208,9 @@ function TreeNode({
           style={{ paddingLeft: `${(level + 1) * 12 + 18}px` }}
         >
           {addingType === "folder" ? (
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              className="text-warning flex-shrink-0"
-            >
-              <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
-            </svg>
+            <Folder size={14} className="text-warning flex-shrink-0" />
           ) : (
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              className="text-muted-foreground flex-shrink-0"
-            >
-              <path
-                fillRule="evenodd"
-                d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6h8v2H6v-2zm0 4h8v2H6v-2zm0-8h4v2H6V6z"
-                clipRule="evenodd"
-              />
-            </svg>
+            <File size={14} className="text-muted-foreground flex-shrink-0" />
           )}
           <input
             type="text"
@@ -364,29 +292,9 @@ export function WorkspaceFileTree({
       {addingRootType && (
         <div className="flex items-center gap-1.5 px-2 py-1 pl-6">
           {addingRootType === "folder" ? (
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              className="text-warning flex-shrink-0"
-            >
-              <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
-            </svg>
+            <Folder size={14} className="text-warning flex-shrink-0" />
           ) : (
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              className="text-muted-foreground flex-shrink-0"
-            >
-              <path
-                fillRule="evenodd"
-                d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6h8v2H6v-2zm0 4h8v2H6v-2zm0-8h4v2H6V6z"
-                clipRule="evenodd"
-              />
-            </svg>
+            <File size={14} className="text-muted-foreground flex-shrink-0" />
           )}
           <input
             type="text"

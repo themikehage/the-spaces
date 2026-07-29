@@ -1,9 +1,12 @@
-// SPDX-License-Identifier: MIT
 import { ProjectCreateModal } from "@/components/projects/ProjectCreateModal";
+import { EntityCustomToolsEditor } from "@/components/settings/EntityCustomToolsEditor";
 import { EntityAvatar } from "@/components/shared/EntityAvatar";
+import { EntitySkillsEditor } from "@/components/shared/EntitySkillsEditor";
 import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
 import { useLiterals } from "@/lib";
 import { apiFetch } from "@/lib/api";
+import { Settings2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { literals as l } from "./DashboardPage.literals";
 
@@ -30,6 +33,10 @@ export function ProjectsPage({ onNavigate: _onNavigate, onSelectProject }: Props
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [selectedProjectForConfig, setSelectedProjectForConfig] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   const fetchRepos = useCallback(async () => {
     try {
@@ -182,6 +189,15 @@ export function ProjectsPage({ onNavigate: _onNavigate, onSelectProject }: Props
                   >
                     {literals.open}
                   </button>
+                  <button
+                    onClick={() =>
+                      setSelectedProjectForConfig({ id: repo.id || repo.name, name: repo.name })
+                    }
+                    className="p-1.5 bg-bg hover:bg-card-hover text-muted-foreground hover:text-foreground border border-input rounded-lg transition-all cursor-pointer"
+                    title="Configure Skills & Custom Tools"
+                  >
+                    <Settings2 size={13} />
+                  </button>
                 </div>
               </div>
             ))}
@@ -195,6 +211,27 @@ export function ProjectsPage({ onNavigate: _onNavigate, onSelectProject }: Props
           onSubmit={handleCreateRepo}
           onUploadAvatar={handleUploadAvatar}
         />
+      )}
+
+      {selectedProjectForConfig && (
+        <Modal
+          open
+          onClose={() => setSelectedProjectForConfig(null)}
+          title={`Project Configuration: ${selectedProjectForConfig.name}`}
+        >
+          <div className="p-4 space-y-4 max-h-[75vh] overflow-y-auto">
+            <EntitySkillsEditor
+              entityType="project"
+              entityId={selectedProjectForConfig.id}
+              title="Project Skills"
+            />
+            <EntityCustomToolsEditor
+              entityType="project"
+              entityId={selectedProjectForConfig.id}
+              title="Project Custom Tools"
+            />
+          </div>
+        </Modal>
       )}
     </div>
   );

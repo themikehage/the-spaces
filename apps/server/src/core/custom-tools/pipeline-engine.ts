@@ -27,12 +27,47 @@ function getNestedValue(obj: Record<string, any>, path: string): any {
   return current;
 }
 
+export function buildScopeWithDefaults(
+  params: Record<string, any>,
+  schema?: Record<string, any>,
+): Record<string, any> {
+  const scope: Record<string, any> = { ...params };
+  if (schema?.properties && typeof schema.properties === "object") {
+    for (const [key, prop] of Object.entries<any>(schema.properties)) {
+      if (scope[key] === undefined && prop && prop.default !== undefined) {
+        scope[key] = prop.default;
+      }
+    }
+  }
+  return scope;
+}
+
 export function resolveVariables(template: any, scope: Record<string, any>): any {
   if (typeof template === "string") {
+    const fullMatch = template.match(/^\{([\w.]+)\}$/);
+    if (fullMatch) {
+      const value = getNestedValue(scope, fullMatch[1]);
+      if (value !== undefined) {
+        return value;
+      }
+    }
     return template.replace(/\{([\w.]+)\}/g, (match, key) => {
       const value = getNestedValue(scope, key);
       if (value !== undefined) {
-        return typeof value === "object" ? JSON.stringify(value) : String(value);
+        if (typeof value === "object" && value !== null) {
+          const jsonStr = JSON.stringify(value);
+          if (
+            template.includes(`'{${key}}'`) ||
+            template.includes(`"{${key}}"`) ||
+            template.includes("python") ||
+            template.includes("bash") ||
+            template.includes("-c")
+          ) {
+            return jsonStr.replace(/"/g, '\\"');
+          }
+          return jsonStr;
+        }
+        return String(value);
       }
       return match;
     });
@@ -57,8 +92,9 @@ export async function executePipeline(
   onError: "stop" | "continue" = "stop",
   signal?: AbortSignal,
   onProgress?: (step: number, total: number, description: string) => void,
+  parametersSchema?: Record<string, any>,
 ): Promise<any> {
-  const scope: Record<string, any> = { ...toolParams };
+  const scope = buildScopeWithDefaults(toolParams, parametersSchema);
   const stepLogs: Array<{
     step: number;
     tool: string;
@@ -114,8 +150,28 @@ export async function executePipeline(
       const toolCallId = `step_${stepNum}_${Date.now()}`;
       const result = await tool.execute(toolCallId, resolvedParams, signal);
 
-      const isError = result.isError || false;
-      const textResult = result.content?.[0]?.text || "";
+      const rawText =
+        result?.content?.[0]?.text ??
+        result?.output ??
+        result?.text ??
+        result?.result ??
+        (typeof result === "string"
+          ? result
+          : typeof result === "object" && result !== null
+            ? JSON.stringify(result)
+            : String(result ?? ""));
+      const textResult = typeof rawText === "string" ? rawText : JSON.stringify(rawText);
+
+      const detailsError =
+        result.details?.isError === true ||
+        (result.details?.exitCode !== undefined && result.details?.exitCode !== 0) ||
+        (result.exitCode !== undefined && result.exitCode !== 0);
+      const textErrorPattern =
+        typeof textResult === "string" &&
+        (textResult.includes("ENOENT:") ||
+          textResult.includes("Error:") ||
+          textResult.startsWith("Error "));
+      const isError = result.isError || detailsError || textErrorPattern;
 
       if (isError) {
         stepLogs.push({
@@ -136,7 +192,25 @@ export async function executePipeline(
           };
         }
       } else {
+        const exitCode = result.details?.exitCode ?? result.exitCode ?? (isError ? 1 : 0);
+        const stepObj = {
+          output: textResult,
+          exitCode,
+          status: isError ? "error" : "success",
+          isError,
+        };
         lastOutput = textResult;
+        scope[`_step_${i}`] = textResult;
+        scope[`step${i}`] = textResult;
+        scope[String(i)] = textResult;
+        scope[`_last`] = textResult;
+        scope[`prev`] = textResult;
+        scope[`last`] = textResult;
+        scope[`result`] = textResult;
+        scope[`output`] = textResult;
+        if (step.id) {
+          scope[step.id] = stepObj;
+        }
         if (step.output) {
           scope[step.output] = textResult;
         }

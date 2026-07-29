@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { PortalPopover } from "@/components/chat/PortalPopover";
+import { ChevronDown } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 
 export interface DropdownOption<T extends string> {
@@ -53,8 +54,10 @@ export function Dropdown<T extends string>({
   return (
     <>
       <button
+        type="button"
         ref={triggerRef}
         onClick={(e) => {
+          e.preventDefault();
           e.stopPropagation();
           if (disabled) return;
           setOpen(!open);
@@ -65,19 +68,10 @@ export function Dropdown<T extends string>({
         <span className={`truncate ${selected ? "text-foreground" : "text-muted-foreground"}`}>
           {selected ? selected.label : placeholder}
         </span>
-        <svg
-          width="10"
-          height="10"
-          viewBox="0 0 20 20"
-          fill="currentColor"
+        <ChevronDown
+          size={10}
           className={`text-muted-foreground flex-shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
-        >
-          <path
-            fillRule="evenodd"
-            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-            clipRule="evenodd"
-          />
-        </svg>
+        />
       </button>
 
       <PortalPopover
@@ -94,8 +88,10 @@ export function Dropdown<T extends string>({
             const isSelected = opt.value === value;
             return (
               <button
+                type="button"
                 key={opt.value}
                 onClick={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
                   handleSelect(opt);
                 }}

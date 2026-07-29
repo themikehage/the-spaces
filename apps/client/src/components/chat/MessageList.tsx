@@ -12,6 +12,7 @@ import { AssistantTextBlock, ThinkingBlock } from "./MessageBlocks";
 import { literals as u } from "./MessageList.literals";
 import { RichMarkdown } from "./RichMarkdown";
 import { getFileType, type MediaType } from "./ToolResultInspector";
+import { AlertCircle, MessageSquare } from "lucide-react";
 import { ToolCallRow, type ToolResultData } from "./tools/ToolCallRow";
 
 function formatTimestamp(ts: number): string {
@@ -289,19 +290,7 @@ function AgentTurn({
                 className="px-4 py-3 rounded-xl bg-error/10 border border-error/20 text-error text-xs font-sans mb-3 flex flex-col gap-1.5 shadow-sm"
               >
                 <div className="flex items-center gap-2 text-error font-semibold">
-                  <svg
-                    className="w-3.5 h-3.5 shrink-0"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
-                    />
-                  </svg>
+                  <AlertCircle size={14} className="shrink-0" />
                   <span className="uppercase tracking-wider">Provider API Error</span>
                 </div>
                 <p className="leading-relaxed opacity-90">{errorText}</p>
@@ -775,20 +764,7 @@ export const MessageList: FC<Props> = ({
   if (messages.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3 text-muted-foreground">
-        <svg
-          width="32"
-          height="32"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="opacity-30"
-        >
-          <path d="M4 17L10 11L4 5" />
-          <path d="M12 19H20" />
-        </svg>
+        <MessageSquare size={32} className="opacity-30" />
         <p className="text-sm font-sans">Send a message to start</p>
       </div>
     );

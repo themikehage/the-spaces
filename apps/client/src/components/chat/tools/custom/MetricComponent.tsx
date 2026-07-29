@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: MIT
+import { ArrowDownRight, ArrowUpRight, Minus } from "lucide-react";
+
 interface MetricProps {
   label: string;
   value: string;
@@ -10,53 +12,15 @@ export function MetricComponent({ label, value, trend, subtitle }: MetricProps) 
   const trendConfig = {
     up: {
       color: "text-success",
-      icon: (
-        <svg
-          className="w-3.5 h-3.5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth="2.5"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25"
-          />
-        </svg>
-      ),
+      icon: <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={2.5} />,
     },
     down: {
       color: "text-error",
-      icon: (
-        <svg
-          className="w-3.5 h-3.5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth="2.5"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M19.5 4.5l-15 15m0 0h11.25m-11.25 0V8.25"
-          />
-        </svg>
-      ),
+      icon: <ArrowDownRight className="w-3.5 h-3.5" strokeWidth={2.5} />,
     },
     neutral: {
       color: "text-muted-foreground",
-      icon: (
-        <svg
-          className="w-3.5 h-3.5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth="2.5"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M18 12H6" />
-        </svg>
-      ),
+      icon: <Minus className="w-3.5 h-3.5" strokeWidth={2.5} />,
     },
   };
 

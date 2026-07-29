@@ -892,4 +892,47 @@ export const SpacesAgentConfigSchema = z.object({
 export type SpacesAgentConfig = z.input<typeof SpacesAgentConfigSchema>;
 export type ResolvedSpacesAgentConfig = z.output<typeof SpacesAgentConfigSchema>;
 
+export const ToolScopeTargetSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("global") }),
+  z.object({ type: z.literal("project"), id: z.string() }),
+  z.object({ type: z.literal("team"), id: z.string() }),
+  z.object({ type: z.literal("agent"), id: z.string() }),
+]);
+export type ToolScopeTarget = z.infer<typeof ToolScopeTargetSchema>;
+
+export const PatchScopeToolsSchema = z.object({
+  target: ToolScopeTargetSchema,
+  add: z.array(z.string()),
+  remove: z.array(z.string()).optional().default([]),
+});
+export type PatchScopeToolsPayload = z.infer<typeof PatchScopeToolsSchema>;
+
+export const AgentToolsConfigSchema = z.object({
+  add: z.array(z.string()),
+  remove: z.array(z.string()),
+});
+export type AgentToolsConfig = z.infer<typeof AgentToolsConfigSchema>;
+
+export const EntityToolsScopeResponseSchema = z.object({
+  global: z.array(z.string()),
+  team: z.array(z.string()).optional(),
+  project: z.array(z.string()).optional(),
+  agent: AgentToolsConfigSchema.optional(),
+  resolved: z.array(z.string()),
+});
+export type EntityToolsScopeResponse = z.infer<typeof EntityToolsScopeResponseSchema>;
+
+export const CustomToolSummarySchema = z.object({
+  name: z.string(),
+  label: z.string().optional(),
+  description: z.string(),
+  enabled: z.boolean(),
+  executeType: z.enum(["pipeline", "ui"]),
+  dependencies: z.array(z.string()).optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+});
+export type CustomToolSummary = z.infer<typeof CustomToolSummarySchema>;
+
 export * from "./schemas/schedules";
+

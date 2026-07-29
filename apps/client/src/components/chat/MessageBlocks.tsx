@@ -8,40 +8,18 @@ import { ImageGrid } from "./ImageGrid";
 import { literals as ml } from "./MessageBlocks.literals";
 import { RichMarkdown } from "./RichMarkdown";
 import { extractFileMarkers, HtmlFileFetcher, isHtml } from "./ToolResultInspector";
+import { Check, ChevronDown, Copy, Zap } from "lucide-react";
 
 function LightningIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      width="11"
-      height="11"
-      viewBox="0 0 20 20"
-      fill="currentColor"
-      className={`flex-shrink-0 ${className ?? ""}`}
-    >
-      <path
-        fillRule="evenodd"
-        d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"
-        clipRule="evenodd"
-      />
-    </svg>
-  );
+  return <Zap size={11} className={`flex-shrink-0 ${className ?? ""}`} />;
 }
 
 function ChevronIcon({ open }: { open: boolean }) {
   return (
-    <svg
-      width="9"
-      height="9"
-      viewBox="0 0 20 20"
-      fill="currentColor"
+    <ChevronDown
+      size={9}
       className={`transition-transform flex-shrink-0 ${open ? "rotate-180" : ""}`}
-    >
-      <path
-        fillRule="evenodd"
-        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-        clipRule="evenodd"
-      />
-    </svg>
+    />
   );
 }
 
@@ -125,23 +103,9 @@ export function AssistantTextBlock({
       title={copied ? "Copiado!" : "Copiar mensaje"}
     >
       {copied ? (
-        <svg
-          className="w-3.5 h-3.5 text-success"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-        </svg>
+        <Check size={14} className="text-success" />
       ) : (
-        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-          />
-        </svg>
+        <Copy size={14} />
       )}
     </button>
   );

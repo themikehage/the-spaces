@@ -17,7 +17,7 @@ import { getSessionPath } from "@/lib/session-utils";
 import { wsClient, type ConnectionState } from "@/lib/ws-client";
 import type { RoutePage } from "@/router/useRoutePage";
 import { AnimatePresence } from "framer-motion";
-import { Plus, Settings, Users } from "lucide-react";
+import { Clock, Download, Folder, Globe, List, MessageSquare, Plus, Settings, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
@@ -447,13 +447,7 @@ export function MainLayout({
         label: l.tabChat,
         path: sessionId ? `${basePath}/session/${sessionId}` : basePath ? `${basePath}/chat` : "/",
         icon: (
-          <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-            <path
-              fillRule="evenodd"
-              d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"
-              clipRule="evenodd"
-            />
-          </svg>
+            <MessageSquare size={14} />
         ),
       },
     ];
@@ -469,21 +463,7 @@ export function MainLayout({
               ? `${basePath}/delegations`
               : "/delegations",
           icon: (
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
+            <Users size={14} />
           ),
         },
         {
@@ -491,9 +471,7 @@ export function MainLayout({
           label: l.tabFiles,
           path: basePath ? `${basePath}/workspace` : "/workspace",
           icon: (
-            <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
-            </svg>
+            <Folder size={14} />
           ),
         },
         {
@@ -505,19 +483,7 @@ export function MainLayout({
               ? `${basePath}/timeline`
               : "/timeline",
           icon: (
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
+            <Clock size={14} />
           ),
         },
       );
@@ -529,13 +495,7 @@ export function MainLayout({
         label: l.tabPreview,
         path: basePath ? `${basePath}/preview` : "/preview",
         icon: (
-          <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-            <path
-              fillRule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zM4.332 8.027a6.012 6.012 0 011.912-2.706C6.512 5.73 6.974 6 7.5 6A1.5 1.5 0 019 7.5V8a2 2 0 004 0 2 2 0 01-1.523-1.943A5.977 5.977 0 0116 10c0 .34-.028.675-.083 1H15a2 2 0 00-2 2v2.197A5.973 5.973 0 0110 16v-2a2 2 0 00-2-2 2 2 0 01-2-2 2 2 0 00-1.668-1.973z"
-              clipRule="evenodd"
-            />
-          </svg>
+            <Globe size={14} />
         ),
       });
     }
@@ -546,13 +506,7 @@ export function MainLayout({
         label: l.tabOrgChart,
         path: `${basePath}/org`,
         icon: (
-          <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-            <path
-              fillRule="evenodd"
-              d="M3 3a1 1 0 000 2h11a1 1 0 100-2H3zm0 4a1 1 0 000 2h7a1 1 0 100-2H3zm0 4a1 1 0 100 2h7a1 1 0 100-2H3zm0 4a1 1 0 100 2h11a1 1 0 100-2H3z"
-              clipRule="evenodd"
-            />
-          </svg>
+            <List size={14} />
         ),
       });
     }
@@ -610,19 +564,7 @@ export function MainLayout({
               className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-semibold border border-border hover:bg-card text-muted-foreground hover:text-foreground transition-all cursor-pointer bg-card/10"
               title="Exportar conversación"
             >
-              <svg
-                className="w-3 h-3 text-muted-foreground"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
-                />
-              </svg>
+              <Download size={12} className="text-muted-foreground" />
             </button>
             {exportDropdownOpen && (
               <>
@@ -659,13 +601,7 @@ export function MainLayout({
           className="flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-semibold border border-border hover:bg-card text-muted-foreground hover:text-foreground transition-all cursor-pointer bg-card/10"
           title={l.titleSessions}
         >
-          <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
-            <path
-              fillRule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.8 2.8a1 1 0 101.414-1.414L11 10.586V6z"
-              clipRule="evenodd"
-            />
-          </svg>
+          <Clock size={12} />
         </button>
         <SessionPopover
           isOpen={sessionPopoverOpen}

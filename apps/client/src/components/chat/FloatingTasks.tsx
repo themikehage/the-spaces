@@ -2,6 +2,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 import type { TaskRunnerState } from "shared";
+import { CheckCircle, ChevronDown, Pause, Play, XCircle } from "lucide-react";
 
 interface Props {
   tasksState: TaskRunnerState;
@@ -63,21 +64,9 @@ export function FloatingTasks({ tasksState, onToggleStatus }: Props) {
               title={isRunning ? "Pausar" : "Reanudar"}
             >
               {isRunning ? (
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
-                  <path
-                    fillRule="evenodd"
-                    d="M6.75 5.25a.75.75 0 0 1 .75-.75H9a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H7.5a.75.75 0 0 1-.75-.75V5.25Zm7.5 0A.75.75 0 0 1 15 4.5h1.5a.75.75 0 0 1 .75.75v13.5a.75.75 0 0 1-.75.75H15a.75.75 0 0 1-.75-.75V5.25Z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <Pause size={11} />
               ) : (
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
-                  <path
-                    fillRule="evenodd"
-                    d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <Play size={11} />
               )}
             </button>
 
@@ -85,19 +74,10 @@ export function FloatingTasks({ tasksState, onToggleStatus }: Props) {
               onClick={() => setExpanded(!expanded)}
               className="p-1 rounded-md border border-border/70 hover:bg-card-hover text-text-secondary hover:text-text-primary transition-all cursor-pointer flex-shrink-0"
             >
-              <svg
-                width="11"
-                height="11"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+              <ChevronDown
+                size={11}
                 className={`transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}
-              >
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
+              />
             </button>
           </div>
         </div>
@@ -133,33 +113,9 @@ export function FloatingTasks({ tasksState, onToggleStatus }: Props) {
                     >
                       <div className="mt-0.5 flex-shrink-0">
                         {isDone ? (
-                          <svg
-                            width="10"
-                            height="10"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                            className="text-accent"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
+                          <CheckCircle size={10} className="text-accent" />
                         ) : isFailed ? (
-                          <svg
-                            width="10"
-                            height="10"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                            className="text-destructive"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
+                          <XCircle size={10} className="text-destructive" />
                         ) : isActive && isRunning ? (
                           <span className="relative flex h-2 w-2 mt-0.5">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />

@@ -5,6 +5,7 @@ import { useSessions } from "@/contexts/SessionsContext";
 import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
 import { useLiterals } from "@/lib";
 import { apiFetch } from "@/lib/api";
+import { ArrowRight, ArrowUpDown, BookOpen, Calendar, ChevronRight, FolderPlus, Settings } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { literals as u } from "./SessionSidebar.literals";
 
@@ -248,69 +249,25 @@ export function SessionSidebar({
         id: "skills",
         label: l.navSkills,
         path: "/skills",
-        icon: (
-          <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
-          </svg>
-        ),
+        icon: <BookOpen size={14} />,
       },
       {
         id: "schedules",
         label: "Schedules",
         path: "/schedules",
-        icon: (
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-            <line x1="16" y1="2" x2="16" y2="6" />
-            <line x1="8" y1="2" x2="8" y2="6" />
-            <line x1="3" y1="10" x2="21" y2="10" />
-          </svg>
-        ),
+        icon: <Calendar size={14} />,
       },
       {
         id: "settings",
         label: l.navSettings,
         path: "/settings",
-        icon: (
-          <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-            <path
-              fillRule="evenodd"
-              d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z"
-              clipRule="evenodd"
-            />
-          </svg>
-        ),
+        icon: <Settings size={14} />,
       },
       {
         id: "plugins",
         label: l.navPlugins || "Plugins",
         path: "/plugins",
-        icon: (
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="m21 16-4 4-4-4" />
-            <path d="M17 20V4" />
-            <path d="m3 8 4-4 4 4" />
-            <path d="M7 4v16" />
-          </svg>
-        ),
+        icon: <ArrowUpDown size={14} />,
       },
     ],
     [l.navSkills, l.navSettings, l.navPlugins],
@@ -335,19 +292,7 @@ export function SessionSidebar({
               className="flex-shrink-0 rounded-full"
             />
           ) : (
-            <svg
-              width={isMobile ? 20 : 14}
-              height={isMobile ? 20 : 14}
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              className="flex-shrink-0"
-            >
-              <path
-                fillRule="evenodd"
-                d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-5L9 4H4zm7 5a1 1 0 10-2 0v1H8a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V9z"
-                clipRule="evenodd"
-              />
-            </svg>
+            <FolderPlus size={isMobile ? 20 : 14} className="flex-shrink-0" />
           )}
           <span>{globalSettings?.factoryName || "Spaces"}</span>
         </button>
@@ -364,19 +309,10 @@ export function SessionSidebar({
         {/* Repos Accordion */}
         <div className="flex flex-col">
           <div className={accordionHeaderClass} onClick={() => setIsOpenRepos((prev) => !prev)}>
-            <svg
-              width={chevronSize}
-              height={chevronSize}
-              viewBox="0 0 20 20"
-              fill="currentColor"
+            <ChevronRight
+              size={chevronSize}
               className={`transform transition-transform ${isOpenRepos ? "rotate-90" : ""}`}
-            >
-              <path
-                fillRule="evenodd"
-                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
+            />
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -388,19 +324,10 @@ export function SessionSidebar({
               <span className="ml-2">
                 {l.sectionProjects} ({repos.length})
               </span>
-              <svg
-                width={isMobile ? 20 : 12}
-                height={isMobile ? 20 : 12}
-                viewBox="0 0 20 20"
-                fill="currentColor"
+              <ArrowRight
+                size={isMobile ? 20 : 12}
                 className="text-muted-foreground flex-shrink-0"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
+              />
             </button>
           </div>
 
@@ -440,19 +367,10 @@ export function SessionSidebar({
         {/* Agents Accordion */}
         <div className="flex flex-col">
           <div className={accordionHeaderClass} onClick={() => setIsOpenAgents((prev) => !prev)}>
-            <svg
-              width={chevronSize}
-              height={chevronSize}
-              viewBox="0 0 20 20"
-              fill="currentColor"
+            <ChevronRight
+              size={chevronSize}
               className={`transform transition-transform ${isOpenAgents ? "rotate-90" : ""}`}
-            >
-              <path
-                fillRule="evenodd"
-                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
+            />
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -464,19 +382,10 @@ export function SessionSidebar({
               <span className="ml-2">
                 {l.sectionAgents} ({agents.length})
               </span>
-              <svg
-                width={isMobile ? 20 : 12}
-                height={isMobile ? 20 : 12}
-                viewBox="0 0 20 20"
-                fill="currentColor"
+              <ArrowRight
+                size={isMobile ? 20 : 12}
                 className="text-muted-foreground flex-shrink-0"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
+              />
             </button>
           </div>
 
@@ -532,19 +441,10 @@ export function SessionSidebar({
         {/* Teams Accordion */}
         <div className="flex flex-col">
           <div className={accordionHeaderClass} onClick={() => setIsOpenTeams((prev) => !prev)}>
-            <svg
-              width={chevronSize}
-              height={chevronSize}
-              viewBox="0 0 20 20"
-              fill="currentColor"
+            <ChevronRight
+              size={chevronSize}
               className={`transform transition-transform ${isOpenTeams ? "rotate-90" : ""}`}
-            >
-              <path
-                fillRule="evenodd"
-                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
+            />
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -556,19 +456,10 @@ export function SessionSidebar({
               <span className="ml-2">
                 {l.sectionTeams} ({teams.length})
               </span>
-              <svg
-                width={isMobile ? 20 : 12}
-                height={isMobile ? 20 : 12}
-                viewBox="0 0 20 20"
-                fill="currentColor"
+              <ArrowRight
+                size={isMobile ? 20 : 12}
                 className="text-muted-foreground flex-shrink-0"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
+              />
             </button>
           </div>
 

@@ -3,7 +3,33 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { toSafeString, useLiterals } from "@/lib";
-import { ArrowRight } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowRight,
+  Check,
+  ChevronRight,
+  Database,
+  Eye,
+  ExternalLink,
+  FileText,
+  Folder,
+  Globe,
+  Image,
+  Layers,
+  List,
+  Monitor,
+  Package,
+  PanelLeft,
+  Pencil,
+  PieChart,
+  RefreshCw,
+  Search,
+  SearchX,
+  UserCheck,
+  Terminal,
+  Trash2,
+  Users,
+} from "lucide-react";
 import { HtmlPreview } from "../HtmlPreview";
 import { ImageGrid } from "../ImageGrid";
 import { ApprovalForm } from "./ApprovalForm";
@@ -89,403 +115,122 @@ const TOOL_META: Record<string, { label: string; colorClass: string; icon: React
   ls: {
     label: "ls",
     colorClass: "text-primary",
-    icon: (
-      <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor">
-        <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
-      </svg>
-    ),
+    icon: <Folder size={13} />,
   },
   find: {
     label: "find",
     colorClass: "text-primary",
-    icon: (
-      <svg
-        width="13"
-        height="13"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <circle cx="11" cy="11" r="8" />
-        <line x1="21" y1="21" x2="16.65" y2="16.65" />
-      </svg>
-    ),
+    icon: <Search size={13} strokeWidth={2.5} />,
   },
   write: {
     label: "write",
     colorClass: "text-primary",
-    icon: (
-      <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor">
-        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-      </svg>
-    ),
+    icon: <Pencil size={13} />,
   },
   read: {
     label: "read",
     colorClass: "text-muted-foreground",
-    icon: (
-      <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor">
-        <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-        <path
-          fillRule="evenodd"
-          d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
-          clipRule="evenodd"
-        />
-      </svg>
-    ),
+    icon: <Eye size={13} />,
   },
   edit: {
     label: "edit",
     colorClass: "text-warning",
-    icon: (
-      <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor">
-        <path
-          fillRule="evenodd"
-          d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
-          clipRule="evenodd"
-        />
-      </svg>
-    ),
+    icon: <FileText size={13} />,
   },
   grep: {
     label: "grep",
     colorClass: "text-highlight",
-    icon: (
-      <svg
-        width="13"
-        height="13"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <circle cx="11" cy="11" r="8" />
-        <line x1="21" y1="21" x2="16.65" y2="16.65" />
-        <line x1="8" y1="11" x2="14" y2="11" />
-        <line x1="11" y1="8" x2="11" y2="14" />
-      </svg>
-    ),
+    icon: <SearchX size={13} strokeWidth={2.5} />,
   },
   bash: {
     label: "bash",
     colorClass: "text-primary",
-    icon: (
-      <svg
-        width="13"
-        height="13"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <polyline points="4 17 10 11 4 5" />
-        <line x1="12" y1="19" x2="20" y2="19" />
-      </svg>
-    ),
+    icon: <Terminal size={13} />,
   },
   request_approval: {
     label: "request_approval",
     colorClass: "text-warning",
-    icon: (
-      <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor">
-        <path
-          fillRule="evenodd"
-          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zm-1 9a1 1 0 100-2 1 1 0 000 2z"
-          clipRule="evenodd"
-        />
-      </svg>
-    ),
+    icon: <AlertCircle size={13} />,
   },
   ask_question: {
     label: "ask_question",
     colorClass: "text-warning",
-    icon: (
-      <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor">
-        <path
-          fillRule="evenodd"
-          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zm-1 9a1 1 0 100-2 1 1 0 000 2z"
-          clipRule="evenodd"
-        />
-      </svg>
-    ),
+    icon: <AlertCircle size={13} />,
   },
   render_images: {
     label: "render_images",
     colorClass: "text-primary",
-    icon: (
-      <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor">
-        <path
-          fillRule="evenodd"
-          d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
-          clipRule="evenodd"
-        />
-      </svg>
-    ),
+    icon: <Image size={13} />,
   },
   render_html: {
     label: "render_html",
     colorClass: "text-primary",
-    icon: (
-      <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor">
-        <path
-          fillRule="evenodd"
-          d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h8a1 1 0 110 2H4a1 1 0 01-1-1z"
-          clipRule="evenodd"
-        />
-      </svg>
-    ),
+    icon: <List size={13} />,
   },
   render_chart: {
     label: "render_chart",
     colorClass: "text-primary",
-    icon: (
-      <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor">
-        <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
-        <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
-      </svg>
-    ),
+    icon: <PieChart size={13} />,
   },
   refresh_ui: {
     label: "refresh_ui",
     colorClass: "text-primary",
-    icon: (
-      <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor">
-        <path
-          fillRule="evenodd"
-          d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
-          clipRule="evenodd"
-        />
-      </svg>
-    ),
+    icon: <RefreshCw size={13} />,
   },
   spawn_subagent: {
     label: "spawn_subagent",
     colorClass: "text-primary",
-    icon: (
-      <svg
-        width="13"
-        height="13"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-        <line x1="9" y1="3" x2="9" y2="21" />
-      </svg>
-    ),
+    icon: <PanelLeft size={13} strokeWidth={2.5} />,
   },
   delegate_task: {
     label: "delegate_task",
     colorClass: "text-primary",
-    icon: (
-      <svg
-        width="13"
-        height="13"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-      </svg>
-    ),
+    icon: <Users size={13} strokeWidth={2.5} />,
   },
   manage_delegations: {
     label: "manage_delegations",
     colorClass: "text-primary",
-    icon: (
-      <svg
-        width="13"
-        height="13"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-      </svg>
-    ),
+    icon: <UserCheck size={13} strokeWidth={2.5} />,
   },
   exa_search: {
     label: "exa_search",
     colorClass: "text-highlight",
-    icon: (
-      <svg
-        width="13"
-        height="13"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <circle cx="11" cy="11" r="7" />
-        <line x1="21" y1="21" x2="16.65" y2="16.65" />
-        <path d="M8 11h6" />
-        <path d="M11 8v6" />
-      </svg>
-    ),
+    icon: <Search size={13} strokeWidth={2.5} />,
   },
   web_fetch: {
     label: "web_fetch",
     colorClass: "text-highlight",
-    icon: (
-      <svg
-        width="13"
-        height="13"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <circle cx="12" cy="12" r="10" />
-        <line x1="2" y1="12" x2="22" y2="12" />
-        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-      </svg>
-    ),
+    icon: <Globe size={13} strokeWidth={2.5} />,
   },
   memory_store: {
     label: "memory_store",
     colorClass: "text-accent",
-    icon: (
-      <svg
-        width="13"
-        height="13"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M12 2a4 4 0 0 1 4 4v1a3 3 0 0 1 3 3v2a3 3 0 0 1-1.5 2.6A4 4 0 0 1 14 18h-4a4 4 0 0 1-3.5-3.4A3 3 0 0 1 5 12v-2a3 3 0 0 1 3-3V6a4 4 0 0 1 4-4z" />
-        <line x1="12" y1="18" x2="12" y2="22" />
-        <line x1="9" y1="22" x2="15" y2="22" />
-      </svg>
-    ),
+    icon: <Database size={13} strokeWidth={2.5} />,
   },
   memory_recall: {
     label: "memory_recall",
     colorClass: "text-accent",
-    icon: (
-      <svg
-        width="13"
-        height="13"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M12 2a4 4 0 0 1 4 4v1a3 3 0 0 1 3 3v2a3 3 0 0 1-1.5 2.6A4 4 0 0 1 14 18h-4a4 4 0 0 1-3.5-3.4A3 3 0 0 1 5 12v-2a3 3 0 0 1 3-3V6a4 4 0 0 1 4-4z" />
-        <circle cx="18" cy="18" r="3" />
-        <line x1="20.5" y1="20.5" x2="22" y2="22" />
-      </svg>
-    ),
+    icon: <Search size={13} strokeWidth={2.5} />,
   },
   memory_forget: {
     label: "memory_forget",
     colorClass: "text-error",
-    icon: (
-      <svg
-        width="13"
-        height="13"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M12 2a4 4 0 0 1 4 4v1a3 3 0 0 1 3 3v2a3 3 0 0 1-1.5 2.6A4 4 0 0 1 14 18h-4a4 4 0 0 1-3.5-3.4A3 3 0 0 1 5 12v-2a3 3 0 0 1 3-3V6a4 4 0 0 1 4-4z" />
-        <line x1="15" y1="15" x2="21" y2="21" />
-        <line x1="21" y1="15" x2="15" y2="21" />
-      </svg>
-    ),
+    icon: <Trash2 size={13} strokeWidth={2.5} />,
   },
   decompose_tasks: {
     label: "decompose_tasks",
     colorClass: "text-primary",
-    icon: (
-      <svg
-        width="13"
-        height="13"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <line x1="8" y1="6" x2="21" y2="6" />
-        <line x1="8" y1="12" x2="21" y2="12" />
-        <line x1="8" y1="18" x2="21" y2="18" />
-        <line x1="3" y1="6" x2="3.01" y2="6" />
-        <line x1="3" y1="12" x2="3.01" y2="12" />
-        <line x1="3" y1="18" x2="3.01" y2="18" />
-      </svg>
-    ),
+    icon: <List size={13} strokeWidth={2.5} />,
   },
   manage_custom_tools: {
     label: "manage_custom_tools",
     colorClass: "text-primary",
-    icon: (
-      <svg
-        width="13"
-        height="13"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-      </svg>
-    ),
+    icon: <Layers size={13} strokeWidth={2.5} />,
   },
   manage_preview: {
     label: "preview",
     colorClass: "text-emerald-500",
-    icon: (
-      <svg
-        width="13"
-        height="13"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-        <line x1="8" y1="21" x2="16" y2="21" />
-        <line x1="12" y1="17" x2="12" y2="21" />
-      </svg>
-    ),
+    icon: <Monitor size={13} strokeWidth={2.5} />,
   },
 };
 
@@ -981,21 +726,7 @@ function ToolBody({
                   to={previewPagePath}
                   className="px-2.5 py-1 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 hover:text-emerald-400 text-[11px] font-bold flex items-center gap-1 transition-all"
                 >
-                  <svg
-                    width="11"
-                    height="11"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="shrink-0"
-                  >
-                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                    <polyline points="15 3 21 3 21 9" />
-                    <line x1="10" y1="14" x2="21" y2="3" />
-                  </svg>
+                  <ExternalLink size={11} strokeWidth={2.5} className="shrink-0" />
                   Open Preview
                 </Link>
               )}
@@ -1066,11 +797,25 @@ function ToolBody({
       );
     }
     default: {
-      const uiDef = (result?.details as any)?.ui || (args as any)?.ui;
+      const details = result?.details as any;
+      const uiDef = details?.ui || (args as any)?.ui;
+      const presentation = details?.presentation || (args as any)?.presentation;
+
       if (uiDef) {
-        const presentation = (result?.details as any)?.presentation || (args as any)?.presentation;
         return (
-          <CustomToolBody ui={uiDef} presentation={presentation} sessionId={sessionId || null} />
+          <div className="flex flex-col gap-2 w-full">
+            <CustomToolBody ui={uiDef} presentation={presentation} sessionId={sessionId || null} />
+            {text && (
+              <details className="mt-1 text-xs">
+                <summary className="cursor-pointer text-muted-foreground hover:text-foreground font-mono text-[11px] select-none">
+                  Pipeline Raw Output
+                </summary>
+                <pre className="mt-1 text-[11px] font-mono text-muted-foreground whitespace-pre-wrap break-words bg-muted/60 p-2.5 rounded-md max-h-48 overflow-y-auto">
+                  {text}
+                </pre>
+              </details>
+            )}
+          </div>
         );
       }
       return (
@@ -1187,22 +932,7 @@ export function ToolCallRow({
   const meta = TOOL_META[toolName] ?? {
     label: toolName,
     colorClass: "text-primary",
-    icon: hasUiDetails ? (
-      <svg
-        width="13"
-        height="13"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-        <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-        <line x1="12" y1="22.08" x2="12" y2="12" />
-      </svg>
-    ) : (
+    icon: hasUiDetails ? <Package size={13} strokeWidth={2.5} /> : (
       <span className="w-3 h-3 rounded-full bg-text-secondary/30" />
     ),
   };
@@ -1344,48 +1074,21 @@ export function ToolCallRow({
             )
           ) : hasError ? (
             <span className="flex items-center gap-1.5 text-xs text-destructive">
-              <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
-                <path
-                  fillRule="evenodd"
-                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                  clipRule="evenodd"
-                />
-              </svg>
+              <AlertCircle size={12} />
               error
             </span>
           ) : (
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <svg
-                width="11"
-                height="11"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                className="text-primary/70"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
+              <Check size={11} className="text-primary/70" />
               {resultSummary}
             </span>
           )}
 
           {!running && !disabled && (
-            <svg
-              width="11"
-              height="11"
-              viewBox="0 0 20 20"
-              fill="currentColor"
+            <ChevronRight
+              size={11}
               className={`text-muted-foreground transition-transform ${expanded ? "rotate-90" : ""}`}
-            >
-              <path
-                fillRule="evenodd"
-                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
+            />
           )}
         </div>
       </button>

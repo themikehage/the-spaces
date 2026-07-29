@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { AnimatePresence, motion } from "framer-motion";
+import { X } from "lucide-react";
 import { type FC, type ReactNode, useCallback, useEffect } from "react";
 
 interface Props {
@@ -51,16 +52,11 @@ export const Modal: FC<Props> = ({ open, onClose, title, children, footer }) => 
               <header className="px-4 py-3 border-b border-input flex items-center justify-between flex-shrink-0 bg-card">
                 <span className="font-semibold text-foreground text-sm">{title}</span>
                 <button
+                  type="button"
                   onClick={onClose}
                   className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer p-1"
                 >
-                  <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
-                    <path
-                      fillRule="evenodd"
-                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                  <X size={16} />
                 </button>
               </header>
             )}

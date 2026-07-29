@@ -15,7 +15,8 @@ export interface ToolResultMetadata {
 }
 
 export interface ToolResult {
-  content: string;
+  content: string | any[];
+  details?: Record<string, unknown>;
   isError?: boolean;
   errorCode?: string;
   metadata?: ToolResultMetadata;

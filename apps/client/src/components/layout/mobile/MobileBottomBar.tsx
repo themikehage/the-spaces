@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
-import { Cpu, Home, Library, Settings, Terminal } from "lucide-react";
+import { ArrowUpDown, BookOpen, Calendar, Home, Settings } from "lucide-react";
 
 interface MobileBottomBarProps {
   currentPage: string;
@@ -18,10 +18,10 @@ export function MobileBottomBar({
   const { selectProject, selectAgent, selectTeam } = useWorkspaceContext();
   const tabs = [
     { id: "home", label: "Home", icon: <Home size={20} /> },
-    { id: "skills", label: "Skills", icon: <Library size={20} /> },
+    { id: "skills", label: "Skills", icon: <BookOpen size={20} /> },
+    { id: "schedules", label: "Schedules", icon: <Calendar size={20} /> },
     { id: "settings", label: "Settings", icon: <Settings size={20} /> },
-    { id: "console", label: "Consola", icon: <Terminal size={20} /> },
-    { id: "plugins", label: "Plugins", icon: <Cpu size={20} /> },
+    { id: "plugins", label: "Plugins", icon: <ArrowUpDown size={20} /> },
   ];
 
   const handleTabClick = (tabId: string) => {
@@ -33,11 +33,11 @@ export function MobileBottomBar({
       onNavigate("/");
     } else if (tabId === "skills") {
       onNavigate("/skills");
+    } else if (tabId === "schedules") {
+      onNavigate("/schedules");
     } else if (tabId === "settings") {
       localStorage.setItem("settings-active-tab", "providers");
       onNavigate("/settings");
-    } else if (tabId === "console") {
-      onNavigate("/sessions?tab=console");
     } else if (tabId === "plugins") {
       onNavigate("/plugins");
     }

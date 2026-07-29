@@ -5,6 +5,7 @@ import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useToast } from "@/contexts/ToastContext";
 import { useLiterals } from "@/lib";
 import { apiFetch } from "@/lib/api";
+import { BookOpen, ChevronLeft, RefreshCw, Search } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { literals as u } from "./SkillsPage.literals";
 
@@ -117,19 +118,7 @@ export function SkillsPage() {
             <div className="p-3 border-b border-border flex flex-col gap-2">
               <div className="flex gap-2">
                 <div className="relative flex-1">
-                  <svg
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"
-                    />
-                  </svg>
+                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                   <input
                     type="text"
                     value={search}
@@ -149,19 +138,7 @@ export function SkillsPage() {
                   {resetting ? (
                     <div className="w-3.5 h-3.5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                   ) : (
-                    <svg
-                      className="w-3.5 h-3.5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89H18v3"
-                      />
-                    </svg>
+                    <RefreshCw size={14} />
                   )}
                 </button>
               </div>
@@ -218,9 +195,7 @@ export function SkillsPage() {
                   onClick={() => setMobileShowDetails(false)}
                   className="md:hidden flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground mb-3 cursor-pointer"
                 >
-                  <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" />
-                  </svg>
+                  <ChevronLeft size={14} />
                   {l.backToList}
                 </button>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border pb-4">
@@ -272,19 +247,7 @@ export function SkillsPage() {
               </div>
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center p-6">
-                <svg
-                  className="w-12 h-12 text-muted-foreground mb-3"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"
-                  />
-                </svg>
+                <BookOpen size={48} className="text-muted-foreground mb-3" />
                 <p className="text-muted-foreground text-sm">{l.selectSkillHint}</p>
               </div>
             )}

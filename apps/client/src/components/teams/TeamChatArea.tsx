@@ -6,6 +6,7 @@ import { EntityAvatar } from "@/components/shared/EntityAvatar";
 import { useTeam } from "@/hooks/useTeam";
 import { apiFetch } from "@/lib/api";
 import { getSessionPath } from "@/lib/session-utils";
+import { List, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { AgentInfo, TeamContextItem, TeamMember } from "shared";
@@ -186,13 +187,7 @@ export function TeamChatArea({ activeTeam, sessionId, variantMode = false }: Pro
                 className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-card-hover transition-colors relative"
                 title={`Contexto (${team?.context?.length ?? 0} variables)`}
               >
-                <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-                  <path
-                    fillRule="evenodd"
-                    d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <List size={14} />
                 {(team?.context?.length ?? 0) > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-primary text-background font-bold text-xs rounded-full flex items-center justify-center">
                     {team?.context?.length}
@@ -205,9 +200,7 @@ export function TeamChatArea({ activeTeam, sessionId, variantMode = false }: Pro
                 className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-card-hover transition-colors relative"
                 title={`Miembros (${team?.members?.length ?? 0} agentes)`}
               >
-                <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
-                </svg>
+                <Users size={14} />
                 {(team?.members?.length ?? 0) > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-card-hover text-foreground border border-input font-bold text-xs rounded-full flex items-center justify-center">
                     {team?.members?.length}
@@ -293,13 +286,7 @@ export function TeamChatArea({ activeTeam, sessionId, variantMode = false }: Pro
               className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-card-hover transition-colors relative"
               title={`Contexto (${team?.context?.length ?? 0} variables)`}
             >
-              <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-                <path
-                  fillRule="evenodd"
-                  d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
-                  clipRule="evenodd"
-                />
-              </svg>
+              <List size={14} />
               {(team?.context?.length ?? 0) > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-primary text-background font-bold text-xs rounded-full flex items-center justify-center">
                   {team?.context?.length}
@@ -312,9 +299,7 @@ export function TeamChatArea({ activeTeam, sessionId, variantMode = false }: Pro
               className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-card-hover transition-colors relative"
               title={`Miembros (${team?.members?.length ?? 0} agentes)`}
             >
-              <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
-              </svg>
+              <Users size={14} />
               {(team?.members?.length ?? 0) > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-card-hover text-foreground border border-input font-bold text-xs rounded-full flex items-center justify-center">
                   {team?.members?.length}

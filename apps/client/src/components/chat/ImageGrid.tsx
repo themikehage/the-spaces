@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/api";
 import { resolveFileUrl } from "@/lib/file-urls";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Download, ExternalLink, Image, Minus, X } from "lucide-react";
 
 interface ImageItem {
   url: string;
@@ -70,21 +71,7 @@ export function AuthenticatedImage({ src, alt, className, ...props }: Authentica
     <div ref={containerRef} className="w-full h-full">
       {!inView ? (
         <div className="w-full h-full flex items-center justify-center bg-card animate-pulse">
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="text-muted-foreground"
-          >
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-            <circle cx="8.5" cy="8.5" r="1.5" />
-            <polyline points="21 15 16 10 5 21" />
-          </svg>
+          <Image size={24} className="text-muted-foreground" />
         </div>
       ) : (
         <img src={imgSrc} alt={alt} className={className} loading="lazy" {...props} />
@@ -206,13 +193,7 @@ export function ImageGrid({
                        text-muted-foreground hover:text-foreground hover:bg-card-hover/50
                        transition-colors disabled:opacity-50 cursor-pointer"
           >
-            <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor">
-              <path
-                fillRule="evenodd"
-                d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
-                clipRule="evenodd"
-              />
-            </svg>
+            <Download size={10} />
             Download All
           </button>
         </div>
@@ -257,33 +238,9 @@ export function ImageGrid({
                   title="Download image"
                 >
                   {isDownloading ? (
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      className="animate-spin text-white"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M4 10a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
+                    <Minus size={14} className="animate-spin text-white" />
                   ) : (
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      className="text-white"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
+                    <Download size={14} className="text-white" />
                   )}
                 </button>
                 <button
@@ -294,16 +251,7 @@ export function ImageGrid({
                   className="p-1.5 bg-white/20 rounded-full hover:bg-white/40 transition-colors cursor-pointer"
                   title="Open in new tab"
                 >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    className="text-white"
-                  >
-                    <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
-                    <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
-                  </svg>
+                  <ExternalLink size={14} className="text-white" />
                 </button>
               </div>
 
@@ -356,33 +304,9 @@ export function ImageGrid({
                     title="Download image"
                   >
                     {isDownloading ? (
-                      <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        className="animate-spin text-white"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M4 10a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
+                      <Minus size={14} className="animate-spin text-white" />
                     ) : (
-                      <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        className="text-white"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
+                      <Download size={14} className="text-white" />
                     )}
                   </button>
                   <button
@@ -393,16 +317,7 @@ export function ImageGrid({
                     className="p-1.5 bg-white/20 rounded-full hover:bg-white/40 transition-colors cursor-pointer"
                     title="Open in new tab"
                   >
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      className="text-white"
-                    >
-                      <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
-                      <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
-                    </svg>
+                    <ExternalLink size={14} className="text-white" />
                   </button>
                 </div>
 
@@ -426,19 +341,7 @@ export function ImageGrid({
             onClick={() => setPreviewUrl(null)}
             className="fixed top-4 right-4 z-[60] p-2 bg-black/50 hover:bg-black/70 rounded-full transition-colors cursor-pointer"
           >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              className="text-white"
-            >
-              <path
-                fillRule="evenodd"
-                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                clipRule="evenodd"
-              />
-            </svg>
+            <X size={20} className="text-white" />
           </button>
           <div className="relative max-w-[90vw] max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
             <AuthenticatedImage

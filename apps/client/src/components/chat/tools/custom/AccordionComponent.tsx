@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import type { ReactNode } from "react";
 import { useState } from "react";
+import { ChevronDown } from "lucide-react";
 
 interface AccordionItem {
   title: string;
@@ -53,21 +54,12 @@ export function AccordionComponent({ items, renderChild, defaultOpen }: Accordio
               className="flex justify-between items-center w-full px-4 py-3 bg-muted/20 text-xs font-semibold text-foreground hover:bg-muted/40 transition-colors text-left cursor-pointer"
             >
               <span>{item.title}</span>
-              <svg
-                className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${
+              <ChevronDown
+                size={16}
+                className={`text-muted-foreground transition-transform duration-200 ${
                   isOpen ? "transform rotate-180" : ""
                 }`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
+              />
             </button>
 
             {/* Collapsible Content */}

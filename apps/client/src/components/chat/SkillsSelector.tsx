@@ -2,6 +2,7 @@
 import { Modal } from "@/components/ui/Modal";
 import { useState } from "react";
 import { RichMarkdown } from "./RichMarkdown";
+import { BookOpen, ChevronDown } from "lucide-react";
 
 export interface SkillInfo {
   name: string;
@@ -33,23 +34,9 @@ export function SkillsSelector({ skills, loading, onSelectSkill, disabled = fals
         }`}
         title="Session skills list"
       >
-        <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
-          <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
-        </svg>
+        <BookOpen size={12} />
         <span>Skills: {loading ? "loading..." : `${skills.length} active`}</span>
-        <svg
-          width="10"
-          height="10"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          className={`transition-transform ${open ? "rotate-180" : ""}`}
-        >
-          <path
-            fillRule="evenodd"
-            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 11-1.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-            clipRule="evenodd"
-          />
-        </svg>
+        <ChevronDown size={10} className={`transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
       <Modal

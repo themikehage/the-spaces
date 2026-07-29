@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { Download, ShieldCheck } from "lucide-react";
 
 interface Props {
   html: string;
@@ -67,30 +68,7 @@ export function HtmlPreview({ html, title, fullBleed = false }: Props) {
           <div className="w-3 h-3 rounded-full bg-[#28c840]" />
         </div>
         <div className="flex-1 flex items-center bg-muted rounded-md border border-border h-7 px-3 mx-2 min-w-0">
-          <svg
-            width="10"
-            height="10"
-            viewBox="0 0 16 16"
-            fill="none"
-            className="flex-shrink-0 opacity-40 mr-2"
-          >
-            <rect
-              x="1.5"
-              y="1.5"
-              width="13"
-              height="13"
-              rx="3"
-              stroke="currentColor"
-              strokeWidth="1.5"
-            />
-            <path
-              d="M5 8.5l-1 1L6.5 12l5-6.5"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <ShieldCheck size={10} className="flex-shrink-0 opacity-40 mr-2" />
           <span className="text-[12px] text-muted-foreground truncate select-none">
             {displayUrl}
           </span>
@@ -121,13 +99,7 @@ export function HtmlPreview({ html, title, fullBleed = false }: Props) {
             className="px-2.5 py-1 rounded-md text-[11px] transition-all cursor-pointer font-medium text-muted-foreground hover:text-foreground hover:bg-card-hover/50 flex items-center gap-1"
             title="Download as .html"
           >
-            <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
-              <path
-                fillRule="evenodd"
-                d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
-                clipRule="evenodd"
-              />
-            </svg>
+            <Download size={12} />
             Download
           </button>
         </div>

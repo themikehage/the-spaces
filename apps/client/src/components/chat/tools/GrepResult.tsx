@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+import { File } from "lucide-react";
 import { useLiterals } from "@/lib";
 import { literals as u } from "./GrepResult.literals";
 import { openInWorkspace } from "./workspace";
@@ -80,19 +81,7 @@ export function GrepResult({ text, args }: Props) {
               onClick={() => openInWorkspace(file)}
               className="flex items-center gap-2 px-3 py-1 bg-card border-b border-input/40 w-full text-left hover:bg-card-hover/40 transition-colors cursor-pointer"
             >
-              <svg
-                width="10"
-                height="10"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                className="text-primary/60 flex-shrink-0"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"
-                  clipRule="evenodd"
-                />
-              </svg>
+              <File size={10} className="text-primary/60 flex-shrink-0" />
               <span className="text-primary/80 text-xs">{file}</span>
               <span className="ml-auto text-muted-foreground text-xs">{`${fileMatches} ${fileMatches !== 1 ? l.matches : l.match}`}</span>
             </button>

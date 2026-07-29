@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: MIT
+import { EntityCustomToolsEditor } from "@/components/settings/EntityCustomToolsEditor";
+import { EntitySkillsEditor } from "@/components/shared/EntitySkillsEditor";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLiterals } from "@/lib";
 import { apiFetch } from "@/lib/api";
+import { AlertTriangle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { literals as u } from "./GeneralTab.literals";
 import { LocaleSelector } from "./LocaleSelector";
@@ -1010,6 +1013,9 @@ export function GeneralTab() {
         </div>
       </div>
 
+      <EntitySkillsEditor entityType="global" entityId="global" title="Global Skills" />
+      <EntityCustomToolsEditor entityType="global" entityId="global" title="Global Custom Tools" />
+
       <div className="bg-card rounded-lg p-4 border border-input/30 space-y-4">
         <div>
           <h3 className="text-foreground font-semibold text-sm">{l.backupPortability}</h3>
@@ -1124,19 +1130,7 @@ export function GeneralTab() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
           <div className="bg-card border border-input/80 rounded-xl p-5 max-w-md w-full space-y-4 shadow-xl">
             <h3 className="text-destructive font-bold text-base flex items-center gap-2">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                />
-              </svg>
+              <AlertTriangle size={20} />
               {l.destructiveOverwrite}
             </h3>
             <p className="text-muted-foreground text-xs leading-relaxed">

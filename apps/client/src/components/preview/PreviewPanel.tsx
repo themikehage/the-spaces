@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLiterals } from "@/lib";
 import { apiFetch } from "@/lib/api";
 import { wsClient } from "@/lib/ws-client";
+import { ExternalLink, Folder, Play, RefreshCw, Settings, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PreviewState } from "shared";
 import { literals as u } from "./PreviewPanel.literals";
@@ -227,9 +228,7 @@ export function PreviewPanel({ activeProjectName }: Props) {
           {projectName && (
             <>
               <Button size="xs" onClick={handleBuildNow} disabled={isBuilding}>
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
-                  <polygon points="2,0 10,5 2,10" />
-                </svg>
+                <Play size={10} />
                 Build Now
               </Button>
               <button
@@ -237,13 +236,7 @@ export function PreviewPanel({ activeProjectName }: Props) {
                 className="p-1 text-muted-foreground hover:text-foreground hover:bg-card-hover/50 rounded transition-colors cursor-pointer"
                 title={l.configure}
               >
-                <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-                  <path
-                    fillRule="evenodd"
-                    d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <Settings size={14} />
               </button>
             </>
           )}
@@ -255,13 +248,7 @@ export function PreviewPanel({ activeProjectName }: Props) {
             className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-card-hover/50 rounded transition-colors cursor-pointer"
             title={l.reload}
           >
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
-              <path
-                fillRule="evenodd"
-                d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.259.627 5.002 5.002 0 009.23 1.316H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
-                clipRule="evenodd"
-              />
-            </svg>
+            <RefreshCw size={16} />
           </button>
 
           <button
@@ -269,10 +256,7 @@ export function PreviewPanel({ activeProjectName }: Props) {
             className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-card-hover/50 rounded transition-colors cursor-pointer"
             title={l.openTab}
           >
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
-              <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 100-2H5z" />
-            </svg>
+            <ExternalLink size={16} />
           </button>
         </div>
       </div>
@@ -288,13 +272,7 @@ export function PreviewPanel({ activeProjectName }: Props) {
               onClick={() => setLogOpen(false)}
               className="text-muted-foreground hover:text-foreground cursor-pointer"
             >
-              <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
-                <path
-                  fillRule="evenodd"
-                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
+              <X size={12} />
             </button>
           </div>
           <pre className="max-h-40 overflow-y-auto bg-muted/40 p-3 text-[11px] font-mono text-muted-foreground leading-relaxed">
@@ -329,17 +307,7 @@ export function PreviewPanel({ activeProjectName }: Props) {
         {!projectName ||
         (previewState?.status === "idle" && !previewState?.distExists && buildLogs.length === 0) ? (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-3">
-            <svg
-              width="48"
-              height="48"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1"
-              className="opacity-30"
-            >
-              <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
-            </svg>
+            <Folder size={48} className="opacity-30" />
             <p className="text-sm font-medium">
               {!projectName ? "Select a project to preview" : "No build output yet"}
             </p>
@@ -354,9 +322,7 @@ export function PreviewPanel({ activeProjectName }: Props) {
                   Configure
                 </Button>
                 <Button size="xs" onClick={handleBuildNow}>
-                  <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
-                    <polygon points="2,0 10,5 2,10" />
-                  </svg>
+                  <Play size={10} />
                   Build Now
                 </Button>
               </div>
@@ -386,13 +352,7 @@ export function PreviewPanel({ activeProjectName }: Props) {
                 onClick={() => setConfigOpen(false)}
                 className="text-muted-foreground hover:text-foreground cursor-pointer"
               >
-                <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
-                  <path
-                    fillRule="evenodd"
-                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <X size={16} />
               </button>
             </div>
 

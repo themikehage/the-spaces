@@ -1,33 +1,7 @@
 // SPDX-License-Identifier: MIT
+import { ArrowUpRight, Sparkles } from "lucide-react";
+
 const appUrl = import.meta.env.VITE_APP_URL ?? "http://localhost:5173";
-
-function ArrowUpRight() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 16 16" fill="none">
-      <path
-        d="M3 13 13 3M5 3h8v8"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function Spark() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
-      <path
-        d="m12 2 1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8L12 2Z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      <path d="m19 16 .7 2.3L22 19l-2.3.7L19 22l-.7-2.3L16 19l2.3-.7L19 16Z" fill="currentColor" />
-    </svg>
-  );
-}
 
 const capabilities = [
   [
@@ -58,7 +32,7 @@ export default function App() {
           <a href="#capabilities">Capacidades</a>
         </nav>
         <a className="header-cta" href={appUrl}>
-          Abrir Spaces <ArrowUpRight />
+          Abrir Spaces <ArrowUpRight size={16} aria-hidden="true" />
         </a>
       </header>
 
@@ -79,7 +53,7 @@ export default function App() {
             </p>
             <div className="hero-actions">
               <a className="button button-primary" href={appUrl}>
-                Entrar al workspace <ArrowUpRight />
+                Entrar al workspace <ArrowUpRight size={16} aria-hidden="true" />
               </a>
               <a className="button button-quiet" href="#how-it-works">
                 Ver el flujo <span aria-hidden="true">↓</span>
@@ -147,7 +121,7 @@ export default function App() {
                   </div>
                   <article className="flow-card flow-approval">
                     <div className="agent-avatar agent-light">
-                      <Spark />
+                      <Sparkles size={24} />
                     </div>
                     <div>
                       <small>DECISIÓN HUMANA</small>
@@ -196,7 +170,7 @@ export default function App() {
                   <h3>{title}</h3>
                   <p>{description}</p>
                 </div>
-                <ArrowUpRight />
+                <ArrowUpRight size={16} aria-hidden="true" />
               </article>
             ))}
           </div>
@@ -206,7 +180,7 @@ export default function App() {
           <p className="eyebrow">Tu próximo proyecto empieza aquí</p>
           <h2>Da a tu equipo de IA un lugar para trabajar.</h2>
           <a className="button button-primary" href={appUrl}>
-            Abrir Spaces <ArrowUpRight />
+            Abrir Spaces <ArrowUpRight size={16} aria-hidden="true" />
           </a>
         </section>
       </main>

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+import { ToolScopeTargetSchema, type ToolScopeTarget } from "shared";
 import { z } from "zod";
 
 // --- Tier 1 Base Schemas ---
@@ -9,10 +9,12 @@ export const BadgeSchema = z.object({
 });
 
 export const CardSchema = z.object({
-  type: z.literal("card"),
+  type: z.literal("card").optional().default("card"),
   title: z.string(),
   description: z.string().optional(),
-  status: z.enum(["success", "warning", "error", "info"]).optional(),
+  status: z
+    .enum(["success", "warning", "error", "info", "neutral", "done", "active", "pending", "failed"])
+    .optional(),
   action: z.string().optional(),
   metadata: z.record(z.string()).optional(),
 });
@@ -102,7 +104,18 @@ export const StepsSchema = z.object({
   steps: z.array(
     z.object({
       label: z.string(),
-      status: z.enum(["done", "active", "pending", "error"]),
+      status: z.enum([
+        "done",
+        "active",
+        "pending",
+        "error",
+        "in_progress",
+        "running",
+        "completed",
+        "success",
+        "failed",
+        "todo",
+      ]),
       description: z.string().optional(),
     }),
   ),
@@ -130,7 +143,18 @@ export const TimelineSchema = z.object({
       date: z.string().optional(),
       title: z.string(),
       description: z.string().optional(),
-      status: z.enum(["success", "warning", "error", "info"]).optional(),
+      status: z.enum([
+        "success",
+        "warning",
+        "error",
+        "info",
+        "neutral",
+        "done",
+        "active",
+        "pending",
+        "in_progress",
+        "failed",
+      ]).optional(),
     }),
   ),
   title: z.string().optional(),
@@ -173,34 +197,33 @@ export const CardListSchema = z.object({
 });
 
 // --- Unified UI Component Schema ---
-export const UiComponentSchema: z.ZodType<any> = z.lazy(() =>
-  z.discriminatedUnion("type", [
-    BadgeSchema,
-    CardSchema,
-    CardListSchema,
-    TableSchema,
-    MetricSchema,
-    CodeSchema,
-    SectionSchema,
-    HtmlSchema,
-    VideoSchema,
-    AudioSchema,
-    PdfSchema,
-    TabsSchema,
-    MarkdownSchema,
-    ProgressSchema,
-    AccordionSchema,
-    DiffSchema,
-    StepsSchema,
-    StatsSchema,
-    TimelineSchema,
-  ]),
-);
+export const UiComponentSchema: z.ZodType<any> = z.discriminatedUnion("type", [
+  BadgeSchema,
+  CardSchema,
+  CardListSchema,
+  TableSchema,
+  MetricSchema,
+  CodeSchema,
+  SectionSchema,
+  HtmlSchema,
+  VideoSchema,
+  AudioSchema,
+  PdfSchema,
+  TabsSchema,
+  MarkdownSchema,
+  ProgressSchema,
+  AccordionSchema,
+  DiffSchema,
+  StepsSchema,
+  StatsSchema,
+  TimelineSchema,
+]);
 
 // --- Execution Mode Schemas ---
 export const PipelineStepSchema = z.object({
+  id: z.string().optional().describe("Optional step identifier"),
   tool: z.string().min(1).max(64),
-  params: z.record(z.any()),
+  params: z.record(z.any()).optional().default({}),
   output: z.string().optional().describe("Variable name to capture the result text"),
   description: z.string().optional().describe("Human-readable label shown during execution"),
 });
@@ -241,12 +264,8 @@ export const JSONSchemaLiteral = z.object({
   required: z.array(z.string()).optional(),
 });
 
-export const ToolScopeTargetSchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("global") }),
-  z.object({ type: z.literal("project"), id: z.string() }),
-  z.object({ type: z.literal("agent"), id: z.string() }),
-]);
-export type ToolScopeTarget = z.infer<typeof ToolScopeTargetSchema>;
+export { ToolScopeTargetSchema, type ToolScopeTarget };
+
 
 export const CustomToolDefinitionSchema = z.object({
   name: z
@@ -256,12 +275,13 @@ export const CustomToolDefinitionSchema = z.object({
   label: z.string().max(64).optional(),
   description: z.string().min(10).max(500),
   parameters: JSONSchemaLiteral,
-  execute: ExecutionModeSchema,
-  ui: z.union([UiComponentSchema, z.array(UiComponentSchema)]).optional(),
+  execute: ExecutionModeSchema.optional().default({ type: "ui" }),
+  ui: z.lazy(() => z.union([UiComponentSchema, z.array(UiComponentSchema)])).optional(),
   presentation: PresentationSchema.optional().describe(
     "UI presentation preferences for how the tool appears in chat",
   ),
   enabled: z.boolean().default(true),
+  dependencies: z.array(z.string()).optional().describe("External packages or binary dependencies required by this tool"),
   scope: ToolScopeTargetSchema.optional(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),

@@ -2,6 +2,7 @@
 import { AgentAvatar } from "@/components/shared/AgentAvatar";
 import type { StreamingAgentState } from "@/hooks/useTeam";
 import type { AgentInfo, TeamMember } from "shared";
+import { ChevronRight } from "lucide-react";
 
 interface Props {
   members: TeamMember[];
@@ -124,19 +125,7 @@ export function OrgFlowMobile({
 
                 <div className="flex-shrink-0 flex items-center gap-2">
                   {isStreaming && <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />}
-                  <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    className="text-muted-foreground"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                  <ChevronRight size={12} className="text-muted-foreground" />
                 </div>
               </div>
             );

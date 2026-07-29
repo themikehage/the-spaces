@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { useLiterals } from "@/lib";
 import { apiFetch } from "@/lib/api";
-import { BookOpen, Sliders } from "lucide-react";
+import { ArrowRight, BookOpen, Plus, Sliders, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ModelSelector } from "./ModelSelector";
 import { SkillsPopover } from "./SkillsPopover";
@@ -170,19 +170,7 @@ export function WelcomeChatInput({
                   onClick={() => removeAttachment(idx)}
                   className="text-text-secondary/60 hover:text-error transition-colors cursor-pointer"
                 >
-                  <svg
-                    className="w-3.5 h-3.5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2.5"
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
+                  <X size={14} />
                 </button>
               </div>
             ))}
@@ -213,14 +201,7 @@ export function WelcomeChatInput({
                   disabled={disabled || loading}
                   className="p-2 hover:bg-surface-hover text-text-secondary hover:text-text-primary rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                 >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 4v16m8-8H4"
-                    />
-                  </svg>
+                  <Plus size={20} />
                 </button>
                 <input
                   ref={fileInputRef}
@@ -321,14 +302,7 @@ export function WelcomeChatInput({
               {loading ? (
                 <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
               ) : (
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M14 5l7 7m0 0l-7 7m7-7H3"
-                  />
-                </svg>
+                <ArrowRight size={20} />
               )}
             </button>
           </div>

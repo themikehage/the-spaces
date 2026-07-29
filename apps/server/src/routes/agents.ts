@@ -6,14 +6,16 @@ import { join } from "node:path";
 import {
   AgentDefinitionSchema,
   AgentScopeTargetSchema,
+  EntityType,
+  PatchScopeToolsSchema,
   UpdateAgentDefinitionSchema,
   getAgentDir,
 } from "shared";
 import { z } from "zod";
 import { agentRegistry } from "../agents";
 import { applyCacheHeaders } from "../core/cache-headers";
-import { ToolScopeTargetSchema } from "../core/custom-tools/schemas";
 import { scopeConfigManager } from "../core/scope";
+
 import { sessionManager } from "../core/session-manager";
 import { getUsername } from "../lib/auth-helpers";
 import { authMiddleware } from "../middleware/auth";
@@ -150,22 +152,80 @@ agentsRouter.patch("/:id", zValidator("json", UpdateAgentDefinitionSchema), asyn
   }
 });
 
+agentsRouter.get("/scope/tools", async (c) => {
+  const username = getUsername(c);
+  if (!username) return c.json({ error: "Unauthorized" }, 401);
+
+  const entityType = c.req.query("entityType") as EntityType | undefined;
+  const entityId = c.req.query("entityId");
+
+  const config = await scopeConfigManager.load(username);
+
+  if (!entityType || entityType === "global") {
+    return c.json({ global: config.global.tools, resolved: config.global.tools });
+  }
+
+  if (entityType === "project" && entityId) {
+    const projectTools = config.projects[entityId]?.tools ?? [];
+    return c.json({
+      global: config.global.tools,
+      project: projectTools,
+      resolved: [...new Set([...config.global.tools, ...projectTools])],
+    });
+  }
+
+  if (entityType === "team" && entityId) {
+    const teamTools = config.teams?.[entityId]?.tools ?? [];
+    return c.json({
+      global: config.global.tools,
+      team: teamTools,
+      resolved: [...new Set([...config.global.tools, ...teamTools])],
+    });
+  }
+
+  if (entityType === "agent" && entityId) {
+    const resolved = scopeConfigManager.resolveToolsForAgent(username, entityId);
+    const membership = scopeConfigManager.getAgentMembership(username, entityId);
+    const teamId = scopeConfigManager.getAgentTeamMembership(username, entityId);
+    const projectTools =
+      membership?.type === "project" ? config.projects[membership.id]?.tools ?? [] : undefined;
+    const teamTools = teamId ? config.teams?.[teamId]?.tools : undefined;
+
+    return c.json({
+      global: config.global.tools,
+      ...(teamTools !== undefined ? { team: teamTools } : {}),
+      ...(projectTools !== undefined ? { project: projectTools } : {}),
+      agent: config.agentTools[entityId] ?? { add: [], remove: [] },
+      resolved,
+    });
+  }
+
+  return c.json({ error: "Invalid entityType" }, 400);
+});
+
 agentsRouter.patch(
   "/scope/tools",
-  zValidator("json", z.object({ target: ToolScopeTargetSchema, tools: z.array(z.string()) })),
+  zValidator("json", PatchScopeToolsSchema),
   async (c) => {
     const username = getUsername(c);
     if (!username) return c.json({ error: "Unauthorized" }, 401);
-    const { target, tools } = c.req.valid("json");
+    const { target, add, remove } = c.req.valid("json");
 
     try {
-      await scopeConfigManager.setScopeTools(username, target, tools);
+      await scopeConfigManager.setScopeTools(username, target, { add, remove: remove ?? [] });
+      const { broadcastToUser } = await import("../ws/handler");
+      broadcastToUser(username, {
+        type: "entity-updated",
+        entityType: "custom_tool_scope",
+        payload: { target },
+      });
       return c.json({ ok: true });
     } catch (err) {
       return c.json({ error: String(err) }, 500);
     }
   },
 );
+
 
 agentsRouter.patch(
   "/:id/scope",

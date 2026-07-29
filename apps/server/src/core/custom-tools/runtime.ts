@@ -68,9 +68,19 @@ export function createCustomToolRuntime(
                   details: { step, total },
                 });
               },
+              definition.parameters,
             );
             const scope = result.scope || {};
             const resolvedUi = definition.ui ? resolveVariables(definition.ui, scope) : undefined;
+            const lastOutput = result.details?.lastOutput ?? "";
+            result.content = [
+              {
+                type: "text",
+                text: resolvedUi
+                  ? lastOutput || `Pipeline completed — UI rendered for ${definition.name}`
+                  : lastOutput || "Pipeline completed successfully",
+              },
+            ];
             result.details = {
               ...result.details,
               ...(resolvedUi ? { ui: resolvedUi } : {}),
