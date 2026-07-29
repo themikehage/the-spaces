@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
 import { GlobalAgentSettingsModal } from "@/components/agents/GlobalAgentSettingsModal";
 import { RegisterModal } from "@/components/agents/RegisterModal";
+import { ProjectAssignmentModal } from "@/components/projects/ProjectAssignmentModal";
 import { ProjectSettingsModal } from "@/components/projects/ProjectSettingsModal";
 import { SessionPopover } from "@/components/sidebar/SessionPopover";
 import { SessionSidebar } from "@/components/sidebar/SessionSidebar";
 import { TeamSettingsModal } from "@/components/teams/TeamSettingsModal";
+import { useSessions } from "@/contexts/SessionsContext";
 import { useAgents } from "@/hooks/useAgents";
 import { useSessionResolver } from "@/hooks/useSessionResolver";
 import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
@@ -15,7 +17,7 @@ import { getSessionPath } from "@/lib/session-utils";
 import { wsClient, type ConnectionState } from "@/lib/ws-client";
 import type { RoutePage } from "@/router/useRoutePage";
 import { AnimatePresence } from "framer-motion";
-import { Plus, Settings } from "lucide-react";
+import { Plus, Settings, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
@@ -66,6 +68,8 @@ export function MainLayout({
 
   const l = useLiterals(u);
   const { pathname } = useLocation();
+  const { sessions } = useSessions();
+  const [showAssignmentModal, setShowAssignmentModal] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sessionPopoverOpen, setSessionPopoverOpen] = useState(false);
   const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
@@ -91,6 +95,12 @@ export function MainLayout({
 
   const sessionMatch = pathname.match(/\/session\/(.+?)(?:\/(?:delegations|timeline))?$/);
   const sessionId = sessionMatch?.[1] ?? null;
+
+  const activeSessionTitle = useMemo(() => {
+    if (!sessionId) return null;
+    const found = sessions.find((s) => s.id === sessionId);
+    return found?.name || null;
+  }, [sessionId, sessions]);
 
   const handleExport = useCallback(
     (format: "json" | "jsonl" | "markdown") => {
@@ -560,6 +570,7 @@ export function MainLayout({
       onNavigate={onNavigate}
       l={l}
       factoryName={globalSettings?.factoryName}
+      sessionTitle={activeSessionTitle}
     />
   );
 
@@ -578,6 +589,17 @@ export function MainLayout({
             ) : (
               <Plus size={14} />
             )}
+          </button>
+        )}
+
+        {activeProjectId && (
+          <button
+            type="button"
+            onClick={() => setShowAssignmentModal(true)}
+            className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-semibold border border-border hover:bg-card text-muted-foreground hover:text-foreground transition-all cursor-pointer bg-card/10"
+            title="Manage project team"
+          >
+            <Users size={13} className="text-primary" />
           </button>
         )}
 
@@ -644,7 +666,6 @@ export function MainLayout({
               clipRule="evenodd"
             />
           </svg>
-          <span>{l.btnSessions}</span>
         </button>
         <SessionPopover
           isOpen={sessionPopoverOpen}
@@ -834,6 +855,13 @@ export function MainLayout({
           />
         )}
         {showGlobalEdit && <GlobalAgentSettingsModal onClose={() => setShowGlobalEdit(false)} />}
+        {showAssignmentModal && activeProjectId && (
+          <ProjectAssignmentModal
+            projectId={activeProjectId}
+            projectName={activeProjectName || undefined}
+            onClose={() => setShowAssignmentModal(false)}
+          />
+        )}
       </AnimatePresence>
     </>
   );

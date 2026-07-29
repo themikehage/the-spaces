@@ -100,6 +100,7 @@
 - [x] Implementar Plan 14 — Session Creation Entity Config & Welcome Input Selectors: Extensión de `CreateSessionSchema` para aceptar tools, skills y executionMode iniciales; resolución e inyección de skills, rules y workflows de `entityConfig` en `agent-context-resolver.ts` y `SessionPromptBuilder`; persistencia inmediata en `createUserSession`; y selectores de tools y skills pre-poblados dinámicamente en `WelcomeChatInput` con propagación end-to-end.
 - [x] Implementar Plan 15 — Entity Skills Configuration & Management: Extensión de `GET /api/skills` con parámetros `entityType` y `entityId`, hook de React `useEntitySkills`, componente `EntitySkillsEditor` reutilizable con inspección de `SKILL.md` y switches de toggle, e integración completa en paneles de configuración de Agente Global, Agentes, Equipos y Proyectos.
 - [x] Implementar Feature de Schedules (Tareas Programadas MVP): Esquemas Zod en `packages/shared`, persistencia SQLite en `schedules.db`, `ScheduleService` y `ScheduleRunner` in-process (`croner`), sub-router REST `/api/schedules`, hook React `useSchedules`, diálogo modal `ScheduleJobDialog`, panel de historial `ScheduleRunHistory`, vista `SchedulesPage` y suite de pruebas unitarias (`schedules.test.ts`).
+- [x] Eliminar barra superior de título de chats en `ChatArea` y trasladar el título activo de la sesión y la navegación de sub-sesiones a los `Breadcrumbs` de `MainLayout`.
 
 ## Criterio de cierre del sprint
 
