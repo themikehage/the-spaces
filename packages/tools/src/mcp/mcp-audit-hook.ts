@@ -6,7 +6,9 @@ export class McpAuditHook implements Hook {
 
   async afterToolCall(ctx: ToolCallContext, result: ToolResult): Promise<ToolResult> {
     if (ctx.toolCall.name.startsWith("mcp_")) {
-      console.log(`[MCP Audit] Tool ${ctx.toolCall.name} executed. Error: ${Boolean(result.isError)}`);
+      console.log(
+        `[MCP Audit] Tool ${ctx.toolCall.name} executed. Error: ${Boolean(result.isError)}`,
+      );
     }
     return result;
   }

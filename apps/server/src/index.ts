@@ -1,32 +1,26 @@
 // SPDX-License-Identifier: MIT
+import { SPACES_DATA_PATH } from "@spaces/core";
 import { Hono } from "hono";
 import { createBunWebSocket, serveStatic } from "hono/bun";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import { existsSync, readdirSync } from "node:fs";
-import { join } from "node:path";
-import { SPACES_DATA_PATH } from "shared";
+import { existsSync } from "node:fs";
 import { auth } from "./auth/index";
 import { ensureAuthTables } from "./auth/migrate";
+import { createAppContext, type AppContext } from "./context";
 import { globalErrorHandler } from "./core/middleware/error-handler";
 import { requestIdMiddleware } from "./core/middleware/request-id";
-import { scheduleRunner } from "./core/schedules/index";
-import { sessionMetadataStore } from "./core/session/metadata-store";
-import { handleRequest as previewRequest, startPreviewServer } from "./preview-server";
 import { agentsRouter } from "./routes/agents";
 import { approvalsRouter } from "./routes/approvals";
 import { authRouter } from "./routes/auth";
-import { backupRouter } from "./routes/backup";
 import { configRouter } from "./routes/config";
 import { customToolsRouter } from "./routes/custom-tools";
 import { envRouter } from "./routes/env";
 import { factoryRouter } from "./routes/factory";
 import { filesRouter } from "./routes/files";
-import { galleryRouter } from "./routes/gallery";
 import { logsRouter } from "./routes/logs";
 import { mcpRouter } from "./routes/mcp";
 import { modelsRouter } from "./routes/models";
-import { previewRouter } from "./routes/preview";
 import { promptsRouter } from "./routes/prompts";
 import { providersRouter } from "./routes/providers";
 import { schedulesRouter } from "./routes/schedules/index";
@@ -35,22 +29,12 @@ import { registerEngineWsRoute } from "./routes/sessions/session-ws";
 import { settingsRouter } from "./routes/settings";
 import { skillsRouter } from "./routes/skills";
 import { teamsRouter } from "./routes/teams";
-import { teamStore } from "./teams/team-store";
-import { createAppContext } from "./context";
 
 import { purgeExpiredSessions } from "./auth/ephemeral-tool-session";
 import { authRateLimiter, generalRateLimiter } from "./core/middleware/rate-limiter";
 import { securityHeadersMiddleware } from "./core/middleware/security-headers";
 import { resolveCorsOrigin } from "./core/security/cors";
 
-sessionMetadataStore.setTeamReader({
-  getTeamType(username: string, teamId: string): string | null {
-    const team = teamStore.getTeam(username, teamId);
-    return team?.teamType ?? null;
-  },
-});
-
-const PREVIEW_HOST = (process.env.PREVIEW_HOST ?? "").toLowerCase();
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? "").split(",");
 const isProduction =
   process.env.NODE_ENV === "production" || process.env.SPACES_ENV === "production";
@@ -72,7 +56,20 @@ purgeExpiredSessions();
 const { upgradeWebSocket, websocket } = createBunWebSocket();
 
 const appContext = await createAppContext();
-const app = new Hono();
+
+appContext.sessionMetadataStore.setTeamReader({
+  getTeamType(username: string, teamId: string): string | null {
+    const team = appContext.teamStore.getTeam(username, teamId);
+    return team?.teamType ?? null;
+  },
+});
+
+const app = new Hono<{ Variables: { appContext: AppContext } }>();
+
+app.use("*", async (c, next) => {
+  c.set("appContext", appContext);
+  await next();
+});
 
 registerEngineWsRoute(app, appContext, upgradeWebSocket);
 
@@ -112,7 +109,6 @@ app.get("/api/health", async (c) => {
   });
 });
 
-app.route("/api/preview", previewRouter);
 app.route("/api/prompts", promptsRouter);
 app.route("/api/config", configRouter);
 app.route("/api/auth", authRouter);
@@ -125,11 +121,9 @@ app.route("/api/custom-tools", customToolsRouter);
 app.route("/api/env", envRouter);
 app.route("/api/agents", agentsRouter);
 app.route("/api/teams", teamsRouter);
-app.route("/api/backup", backupRouter);
 app.route("/api/logs", logsRouter);
 app.route("/api/mcp", mcpRouter);
 app.route("/api/settings", settingsRouter);
-app.route("/api/gallery", galleryRouter);
 app.route("/api/factory", factoryRouter);
 app.route("/api/approvals", approvalsRouter);
 app.route("/api/schedules", schedulesRouter);
@@ -152,10 +146,6 @@ const port = parseInt(process.env.PORT ?? "3000");
 
 const server = Bun.serve({
   fetch(req, server) {
-    const host = (req.headers.get("host") ?? "").toLowerCase().split(":")[0];
-    if (PREVIEW_HOST && host === PREVIEW_HOST) {
-      return previewRequest(req);
-    }
     return app.fetch(req, { server });
   },
   port,
@@ -164,22 +154,20 @@ const server = Bun.serve({
 
 console.log(`Server running at http://0.0.0.0:${server.port}`);
 
-if (!PREVIEW_HOST) startPreviewServer();
-
-scheduleRunner.start().catch((err) => {
+appContext.scheduleRunner.start().catch((err) => {
   console.error("Failed to start schedule runner:", err);
 });
 
 process.on("SIGTERM", async () => {
   console.log("SIGTERM received, shutting down app context and schedule runner...");
-  scheduleRunner.stop();
+  appContext.scheduleRunner.stop();
   await appContext.dispose();
   process.exit(0);
 });
 
 process.on("SIGINT", async () => {
   console.log("SIGINT received, shutting down app context and schedule runner...");
-  scheduleRunner.stop();
+  appContext.scheduleRunner.stop();
   await appContext.dispose();
   process.exit(0);
 });

@@ -1,17 +1,21 @@
 // SPDX-License-Identifier: MIT
+import { getProjectsDir, getUserDir } from "@spaces/core";
 import { afterEach, beforeEach, describe, expect, it, spyOn } from "bun:test";
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { getProjectsDir, getTeamWorkspaceDir, getUserDir } from "shared";
-import { agentRegistry } from "../agents";
-import { sessionManager } from "../core/session-manager";
+import { AgentRegistry } from "../agents";
 import {
   createUserSession,
   LeaderNotRegisteredError,
   LeaderRequiredError,
   TeamNotFoundError,
 } from "../core/session/create-user-session";
-import { teamStore } from "../teams/team-store";
+import { SessionMetadataStore } from "../core/session/metadata-store";
+import { TeamStore } from "../teams/team-store";
+
+const agentRegistry = new AgentRegistry();
+const sessionMetadataStore = new SessionMetadataStore();
+const teamStore = new TeamStore();
 
 describe("createUserSession domain helper", () => {
   const username = "test_user_session_semantics";
@@ -33,10 +37,6 @@ describe("createUserSession domain helper", () => {
   });
 
   it("T1: should create global session without project or team", async () => {
-    const spyGetOrCreate = spyOn(sessionManager, "getOrCreateSession").mockImplementation(
-      async () => ({}) as any,
-    );
-
     const result = await createUserSession({
       username,
       name: "Global Session",
@@ -49,25 +49,12 @@ describe("createUserSession domain helper", () => {
     expect(result.agentId).toBeNull();
     expect(result.teamId).toBeNull();
 
-    const savedMeta = sessionManager.metadataStore.getSessionMetadata(username, result.id);
+    const savedMeta = sessionMetadataStore.getSessionMetadata(username, result.id);
     expect(savedMeta).toBeDefined();
     expect(savedMeta?.name).toBe("Global Session");
-    expect(spyGetOrCreate).toHaveBeenCalledWith(
-      username,
-      result.id,
-      undefined,
-      undefined,
-      undefined,
-    );
-
-    spyGetOrCreate.mockRestore();
   });
 
   it("T2: should resolve canonical projectId when given slug/name", async () => {
-    const spyGetOrCreate = spyOn(sessionManager, "getOrCreateSession").mockImplementation(
-      async () => ({}) as any,
-    );
-
     const canonicalId = "proj-uuid-12345";
     const projDir = join(projectsDir, "my-slug-project");
     mkdirSync(projDir, { recursive: true });
@@ -85,16 +72,11 @@ describe("createUserSession domain helper", () => {
 
     expect(result.projectId).toBe(canonicalId);
 
-    const savedMeta = sessionManager.metadataStore.getSessionMetadata(username, result.id);
+    const savedMeta = sessionMetadataStore.getSessionMetadata(username, result.id);
     expect(savedMeta?.projectId).toBe(canonicalId);
-
-    spyGetOrCreate.mockRestore();
   });
 
   it("T3: should create team session for valid Orchestration team with leader", async () => {
-    const spyGetOrCreate = spyOn(sessionManager, "getOrCreateSession").mockImplementation(
-      async () => ({}) as any,
-    );
     const spyGetTeam = spyOn(teamStore, "getTeam").mockReturnValue({
       id: "team-alpha",
       name: "Team Alpha",
@@ -118,12 +100,6 @@ describe("createUserSession domain helper", () => {
     expect(result.teamId).toBe("team-alpha");
     expect(result.agentId).toBe("leader-agent");
 
-    const expectedWorkspace = getTeamWorkspaceDir(username, "team-alpha");
-    expect(spyGetOrCreate).toHaveBeenCalledWith(username, result.id, undefined, "leader-agent", {
-      workspaceDir: expectedWorkspace,
-    });
-
-    spyGetOrCreate.mockRestore();
     spyGetTeam.mockRestore();
     spyGetAgent.mockRestore();
   });

@@ -5,9 +5,9 @@ import { useAgents } from "@/hooks/useAgents";
 import { useSchedules } from "@/hooks/useSchedules";
 import { useTeams } from "@/hooks/useTeams";
 import { apiFetch } from "@/lib/api";
+import type { CreateScheduleJob, ScheduleJob } from "@spaces/core";
 import { Calendar, Clock, Loader2, Play, Plus, Power, Trash2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import type { CreateScheduleJob, ScheduleJob } from "shared";
 
 interface Props {
   projectId?: string;
@@ -39,7 +39,9 @@ export const SchedulesPage: React.FC<Props> = ({ projectId }) => {
           }));
           setProjects(items);
         }
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
     }
     fetchProjects();
   }, []);

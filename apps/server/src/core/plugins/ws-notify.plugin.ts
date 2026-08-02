@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { BasePlugin, type ToolCallContext } from "shared";
+import { BasePlugin, type PluginToolCallContext } from "@spaces/core";
 
 export interface WsNotifyPluginConfig {
   sessionId: string;
@@ -14,7 +14,7 @@ export class WsNotifyPlugin extends BasePlugin {
     super();
   }
 
-  async afterToolCall(ctx: ToolCallContext): Promise<void> {
+  async afterToolCall(ctx: PluginToolCallContext): Promise<void> {
     const toolName = typeof ctx.tool === "string" ? ctx.tool : ctx.tool.name;
     if (this.config.onToolExecuted) {
       this.config.onToolExecuted(toolName, ctx.args);

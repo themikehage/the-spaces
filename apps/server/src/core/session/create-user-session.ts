@@ -1,9 +1,12 @@
-// SPDX-License-Identifier: MIT
-import { getTeamWorkspaceDir } from "shared";
-import { agentRegistry } from "../../agents";
-import { teamStore } from "../../teams/team-store";
-import { sessionManager } from "../session-manager";
+import { getTeamWorkspaceDir } from "@spaces/core";
+import { AgentRegistry } from "../../agents";
+import { TeamStore } from "../../teams/team-store";
+import { SessionMetadataStore } from "./metadata-store";
 import { resolveCanonicalProjectId } from "./workspace-resolver";
+
+const agentRegistry = new AgentRegistry();
+const teamStore = new TeamStore();
+const sessionMetadataStore = new SessionMetadataStore();
 
 export class SessionDomainError extends Error {
   constructor(
@@ -72,7 +75,7 @@ export async function createUserSession(input: CreateUserSessionInput): Promise<
       throw new TeamNotFoundError(teamId);
     }
 
-    const leader = team.members.find((member) => member.role === "lead");
+    const leader = team.members.find((member: any) => member.role === "lead");
     if (!leader) {
       throw new LeaderRequiredError();
     }
@@ -94,7 +97,7 @@ export async function createUserSession(input: CreateUserSessionInput): Promise<
   const now = new Date().toISOString();
   const sessionName = name || newSessionId;
 
-  sessionManager.metadataStore.saveSessionMetadata(username, newSessionId, {
+  sessionMetadataStore.saveSessionMetadata(username, newSessionId, {
     name: sessionName,
     createdAt: now,
     updatedAt: now,
@@ -106,16 +109,8 @@ export async function createUserSession(input: CreateUserSessionInput): Promise<
   });
 
   if (tools && tools.length > 0) {
-    sessionManager.metadataStore.persistSessionTools(username, newSessionId, tools);
+    sessionMetadataStore.persistSessionTools(username, newSessionId, tools);
   }
-
-  await sessionManager.getOrCreateSession(
-    username,
-    newSessionId,
-    resolvedProjectId,
-    ownerAgentId,
-    workspaceDirOverride ? { workspaceDir: workspaceDirOverride } : undefined,
-  );
 
   const createdSessionItem: CreatedSessionDto = {
     id: newSessionId,

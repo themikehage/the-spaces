@@ -3,10 +3,10 @@ import { AgentAvatar } from "@/components/shared/AgentAvatar";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { useLiterals } from "@/lib";
-import { Trash2 } from "lucide-react";
+import type { AgentInfo, TeamMember, TeamRole } from "@spaces/core";
 import { AnimatePresence, motion } from "framer-motion";
+import { Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { AgentInfo, TeamMember, TeamRole } from "shared";
 import { literals as u } from "./AgentDetailPanel.literals";
 
 export type UpdateMember = Partial<Omit<TeamMember, "agentId">>;

@@ -5,7 +5,7 @@ import { LocalMemoryProvider } from "./local-provider";
 import { NullMemoryProvider } from "./null-provider";
 import type { MemoryProvider } from "./types";
 
-class MemoryRegistry {
+export class MemoryRegistry {
   private providers = new Map<string, MemoryProvider>();
 
   async get(namespace: string, dbPath: string, enabled: boolean): Promise<MemoryProvider> {
@@ -43,5 +43,3 @@ class MemoryRegistry {
     this.providers.clear();
   }
 }
-
-export const memoryRegistry = new MemoryRegistry();

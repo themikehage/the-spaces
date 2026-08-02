@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { ChevronLeft } from "lucide-react";
 import type { RoutePage } from "@/router/useRoutePage";
+import { ChevronLeft } from "lucide-react";
 
 interface BreadcrumbsProps {
   page: RoutePage;

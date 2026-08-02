@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 import type { StreamingAgentState } from "@/hooks/useTeam";
+import type { AgentInfo, TeamMember } from "@spaces/core";
 import {
   Background,
   BackgroundVariant,
@@ -13,7 +14,6 @@ import {
   type ReactFlowInstance,
 } from "@xyflow/react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { AgentInfo, TeamMember } from "shared";
 import { AgentFlowNode, type AgentNode } from "./AgentFlowNode";
 
 interface Props {

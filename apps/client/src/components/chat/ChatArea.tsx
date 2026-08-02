@@ -1,61 +1,19 @@
 // SPDX-License-Identifier: MIT
-import { ChatSkeleton } from "@/components/skeletons/ChatSkeleton";
 import { useToast } from "@/contexts/ToastContext";
-import { useChatInputFocus } from "@/hooks/useChatInputFocus";
-import { useChatScroll } from "@/hooks/useChatScroll";
+import { useChat } from "@/hooks/useChat";
 import { useEntityConfig } from "@/hooks/useEntityConfig";
 import { useWebSocket } from "@/hooks/useWebSocket";
-import { useLiterals, type ContextUsage, type MessageUsage } from "@/lib";
 import { apiFetch } from "@/lib/api";
-import {
-  buildCreateSessionBody,
-  getSessionMeta,
-  getSessionName,
-  getSessionPath,
-} from "@/lib/session-utils";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { buildCreateSessionBody, getSessionName, getSessionPath } from "@/lib/session-utils";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import type { TaskRunnerState } from "shared";
-import { literals as u } from "./ChatArea.literals";
 import { ChatInput, processAttachments } from "./ChatInput";
-import { FloatingTasks } from "./FloatingTasks";
 import { MessageList } from "./MessageList";
 import { WelcomeChatInput } from "./WelcomeChatInput";
-import { ChevronDown, Lock } from "lucide-react";
-
-const ALL_TOOL_NAMES = ["read", "write", "edit", "bash", "grep", "find", "ls"];
-
-interface Message {
-  role: "user" | "assistant" | "tool_result" | "toolResult" | "system" | "tool_approval_request";
-  content:
-    | string
-    | Array<{
-        type: string;
-        text?: string;
-        thinking?: string;
-        name?: string;
-        arguments?: Record<string, unknown>;
-      }>;
-  toolName?: string;
-  toolCallId?: string;
-  args?: Record<string, any>;
-  isError?: boolean;
-  isStreaming?: boolean;
-  api?: string;
-  provider?: string;
-  model?: string;
-  usage?: MessageUsage;
-  stopReason?: string;
-  timestamp?: number;
-  responseId?: string;
-  id?: string;
-  parentId?: string | null;
-  siblings?: string[];
-}
 
 interface Props {
   sessionId: string | null;
-  activeProjectName: string | null;
+  activeProjectName?: string | null;
   activeProjectId?: string | null;
   activeAgent?: { id: string; name: string; avatarUrl?: string } | null;
   activeTeam?: { id: string; name: string } | null;
@@ -64,23 +22,15 @@ interface Props {
 
 export function ChatArea({
   sessionId,
-  activeProjectName,
+  activeProjectName = null,
   activeProjectId = null,
   activeAgent = null,
   activeTeam = null,
-  onSessionMetadataChange,
 }: Props) {
-  const l = useLiterals(u);
   const navigate = useNavigate();
   const { addToast } = useToast();
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [loadingMessages, setLoadingMessages] = useState(true);
-  const [streaming, setStreaming] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [, setSandboxTools] = useState<string[]>(ALL_TOOL_NAMES);
-  const [serialTools, setSerialTools] = useState<string[]>(["request_approval", "ask_question"]);
-  const [contextUsage, setContextUsage] = useState<ContextUsage | null>(null);
-  const [settledApprovals, setSettledApprovals] = useState<Record<string, "confirm" | "deny">>({});
+  const { connected } = useWebSocket(sessionId);
+  const { messages, streaming, error, send, abort } = useChat(sessionId);
 
   const entityType = activeTeam
     ? "team"
@@ -104,823 +54,93 @@ export function ChatArea({
     if (resolvedConfig && !hasUserModifiedWelcome) {
       if (resolvedConfig.toolOverrides?.add && resolvedConfig.toolOverrides.add.length > 0) {
         setWelcomeTools(resolvedConfig.toolOverrides.add);
-      } else {
-        setWelcomeTools([
-          "read",
-          "write",
-          "edit",
-          "bash",
-          "grep",
-          "find",
-          "ls",
-          "request_approval",
-          "ask_question",
-          "render_html",
-        ]);
       }
-      if (resolvedConfig.skills) {
-        setWelcomeSkills(resolvedConfig.skills);
-      }
-      if (resolvedConfig.executionMode) {
+      if (resolvedConfig.skills) setWelcomeSkills(resolvedConfig.skills);
+      if (resolvedConfig.executionMode)
         setWelcomeExecutionMode(resolvedConfig.executionMode as any);
-      }
     }
   }, [resolvedConfig, hasUserModifiedWelcome]);
 
   const createSessionAndSend = async (messageText: string, attachments?: File[]) => {
     const sessionName = getSessionName({ activeTeam, activeAgent, activeProjectName });
-
     try {
       let finalText = messageText;
-      let imagesToSave: Array<{ type: "image"; data: string; mimeType: string }> = [];
-
       if (attachments && attachments.length > 0) {
-        try {
-          const result = await processAttachments(attachments, {
-            activeProjectName,
-            activeAgentId: activeAgent?.id,
-          });
-          finalText = messageText + result.extraText;
-          imagesToSave = result.images;
-        } catch (attachErr) {
-          addToast("error", attachErr instanceof Error ? attachErr.message : String(attachErr));
-          return;
-        }
-      }
-
-      const createRes = await apiFetch("/api/sessions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(
-          buildCreateSessionBody(
-            sessionName,
-            {
-              activeTeam,
-              activeAgent,
-              activeProjectName,
-            },
-            {
-              tools: welcomeTools,
-              skills: welcomeSkills,
-              executionMode: welcomeExecutionMode,
-            },
-          ),
-        ),
-      });
-
-      if (createRes.ok) {
-        const session = await createRes.json();
-        const path = getSessionPath(session.id, { activeTeam, activeAgent, activeProjectName });
-
-        const pendingData = {
-          text: finalText,
-          images: imagesToSave.length > 0 ? imagesToSave : undefined,
-          timestamp: Date.now(),
-        };
-
-        (window as any).__pendingPrompts = (window as any).__pendingPrompts || {};
-        (window as any).__pendingPrompts[session.id] = pendingData;
-
-        try {
-          localStorage.setItem(`pending-prompt-${session.id}`, JSON.stringify(pendingData));
-        } catch (err) {
-          console.error("Failed to store pending prompt in localStorage:", err);
-        }
-
-        navigate(path);
-      } else {
-        addToast("error", "Error al crear la sesión");
-      }
-    } catch (e) {
-      console.error("Failed to auto-create session for prompt:", e);
-      addToast("error", "Error inesperado al crear la sesión");
-    }
-  };
-
-  const getSuggestions = () => {
-    if (activeTeam) {
-      return [
-        {
-          label: l.pillListAgents || "List Agents",
-          promptText:
-            l.pillListAgentsPrompt || "List all active programmatic agents and their roles.",
-        },
-        {
-          label: l.pillStartLab || "Start Experiment",
-          promptText:
-            l.pillStartLabPrompt ||
-            "Explain how to configure and run a debate experiment in the Laboratory.",
-        },
-      ];
-    }
-    if (activeAgent) {
-      return [
-        {
-          label: l.pillAgentRole || "Describe Role",
-          promptText:
-            l.pillAgentRolePrompt || "Explain your system prompt, context, and capabilities.",
-        },
-      ];
-    }
-    if (activeProjectName) {
-      return [
-        {
-          label: l.pillAnalyzeCode || "Analyze Workspace",
-          promptText:
-            l.pillAnalyzeCodePrompt ||
-            "Analyze the current repository structure and describe its architecture.",
-        },
-        {
-          label: l.pillRunTests || "Run Tests",
-          promptText:
-            l.pillRunTestsPrompt || "Run the project's test suite and report if any checks fail.",
-        },
-      ];
-    }
-    return [
-      {
-        label: l.pillCreateRepo || "Create Repo",
-        promptText: l.pillCreateRepoPrompt || "Help me create a new code repository.",
-      },
-      {
-        label: l.pillListAgents || "List Agents",
-        promptText:
-          l.pillListAgentsPrompt || "List all active programmatic agents and their roles.",
-      },
-    ];
-  };
-  const [tasksState, setTasksState] = useState<TaskRunnerState>({
-    tasks: [],
-    currentTaskId: null,
-    status: "idle",
-  });
-  const [compacting, setCompacting] = useState(false);
-  const { connected, send, subscribe } = useWebSocket(sessionId);
-  const [wasConnected, setWasConnected] = useState(connected);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const firstMessageSentRef = useRef(false);
-  const receivedMessageIds = useRef<Set<string>>(new Set());
-
-  const handleCompact = useCallback(() => {
-    if (!sessionId || compacting) return;
-    setCompacting(true);
-    send({ type: "compact", sessionId });
-  }, [sessionId, send, compacting]);
-
-  const { isReadOnly: isReadOnlyExecution, isChannelExecution } = getSessionMeta(sessionId);
-
-  const { showScrollButton, scrollToBottom, handleScroll } = useChatScroll(scrollContainerRef, {
-    messages,
-    isStreaming: streaming,
-  });
-
-  const chatInputRef = useChatInputFocus({
-    sessionId,
-    loadingMessages,
-    streaming,
-  });
-
-  const handleResolveApproval = useCallback(
-    (toolCallId: string, action: "confirm" | "deny") => {
-      send({
-        type: "ui_action",
-        componentId: toolCallId,
-        action,
-      });
-      setSettledApprovals((prev) => ({ ...prev, [toolCallId]: action }));
-    },
-    [send],
-  );
-
-  const handleToggleTasksStatus = useCallback(
-    async (newStatus: "running" | "paused") => {
-      if (!sessionId) return;
-      try {
-        const res = await apiFetch(`/api/sessions/${sessionId}/tasks/status`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ status: newStatus }),
+        const result = await processAttachments(attachments, {
+          activeProjectName,
+          activeAgentId: activeAgent?.id,
         });
-        if (res.ok) {
-          const data = await res.json();
-          setTasksState(data);
-        }
-      } catch (e) {
-        console.error("Failed to toggle task runner status:", e);
+        finalText = messageText + result.extraText;
       }
-    },
-    [sessionId],
-  );
-
-  const loadMessages = useCallback(
-    async (silent = false) => {
-      if (!sessionId) {
-        setMessages([]);
-        setLoadingMessages(false);
-        onSessionMetadataChange?.(null);
-        return;
-      }
-      if (!silent) {
-        setLoadingMessages(true);
-      }
-      try {
-        const res = await apiFetch(`/api/sessions/${sessionId}/messages`);
-        if (res.ok) {
-          const data = await res.json();
-          const msgs = data.messages ?? [];
-          setMessages(msgs);
-          msgs.forEach((m: any) => {
-            const id = m.responseId || m.id;
-            if (id) {
-              receivedMessageIds.current.add(id);
-            }
-          });
-          onSessionMetadataChange?.(data.metadata ?? null);
-          if (msgs.length > 0) {
-            firstMessageSentRef.current = true;
-          }
-          scrollToBottom("instant");
-        }
-      } catch (e) {
-        console.error(e);
-      } finally {
-        if (!silent) {
-          setLoadingMessages(false);
-        }
-      }
-    },
-    [sessionId, scrollToBottom],
-  );
-
-  useEffect(() => {
-    if (!sessionId) {
-      setMessages([]);
-      setLoadingMessages(false);
-      setContextUsage(null);
-      onSessionMetadataChange?.(null);
-      return;
-    }
-
-    receivedMessageIds.current.clear();
-    loadMessages();
-    firstMessageSentRef.current = false;
-
-    const fetchTools = async () => {
-      try {
-        const res = await apiFetch(`/api/sessions/${sessionId}/tools`);
-        if (res.ok) {
-          const data = await res.json();
-          setSandboxTools(data.tools ?? ALL_TOOL_NAMES);
-          setSerialTools(data.serialTools ?? ["request_approval", "ask_question"]);
-        }
-      } catch {
-        /* noop */
-      }
-    };
-    fetchTools();
-
-    const fetchTasks = async () => {
-      try {
-        const res = await apiFetch(`/api/sessions/${sessionId}/tasks`);
-        if (res.ok) {
-          const data = await res.json();
-          setTasksState(data);
-        }
-      } catch {
-        /* noop */
-      }
-    };
-    fetchTasks();
-
-    const findMsgIndex = (prev: Message[], msg: Message) => {
-      return prev.findIndex(
-        (m) =>
-          (m.id && msg.id && m.id === msg.id) ||
-          (m.responseId && msg.responseId && m.responseId === msg.responseId),
+      const body = buildCreateSessionBody(
+        sessionName,
+        { activeTeam, activeAgent, activeProjectName },
+        { tools: welcomeTools, skills: welcomeSkills, executionMode: welcomeExecutionMode },
       );
-    };
-
-    const hasContent = (c: any) => {
-      if (!c) return false;
-      if (typeof c === "string") return c.length > 0;
-      if (Array.isArray(c)) return c.length > 0;
-      return true;
-    };
-
-    const unsubStart = subscribe("agent_start", () => {
-      setStreaming(true);
-      setError(null);
-    });
-
-    const unsubEnd = subscribe("agent_end", () => {
-      setStreaming(false);
-      window.dispatchEvent(new CustomEvent("workspaceUpdated"));
-    });
-
-    const unsubMsgStart = subscribe("message_start", (data: unknown) => {
-      const evt = data as Record<string, unknown>;
-      const msg = evt.message as Message | undefined;
-      if (!msg) return;
-      if (msg.role === "user" && !(msg as any).details?.type) return;
-
-      const msgId = msg.responseId || msg.id;
-      if (msgId && receivedMessageIds.current.has(msgId)) {
-        return;
-      }
-      if (msgId) {
-        receivedMessageIds.current.add(msgId);
-      }
-
-      setMessages((prev) => {
-        const index = findMsgIndex(prev, msg);
-        if (index !== -1) {
-          const existing = prev[index];
-          const newContent = hasContent(msg.content) ? msg.content : existing.content;
-          const updated = { ...existing, ...msg, content: newContent, isStreaming: true };
-          const copy = [...prev];
-          copy[index] = updated;
-          return copy;
-        }
-        const last = prev[prev.length - 1];
-        if (last?.isStreaming) {
-          return [...prev.slice(0, -1), { ...msg, isStreaming: true }];
-        }
-        return [...prev, { ...msg, isStreaming: true }];
+      const data = await apiFetch<{ id: string }>("/api/sessions", {
+        method: "POST",
+        body: JSON.stringify(body),
       });
-    });
-
-    const unsubMsg = subscribe("message_update", (data: unknown) => {
-      const evt = data as Record<string, unknown>;
-      const msg = evt.message as Message | undefined;
-      if (!msg) return;
-
-      setMessages((prev) => {
-        const index = findMsgIndex(prev, msg);
-        if (index !== -1) {
-          const existing = prev[index];
-          const updated = { ...existing, ...msg, isStreaming: true };
-          const copy = [...prev];
-          copy[index] = updated;
-          return copy;
-        }
-        const last = prev[prev.length - 1];
-        if (last?.isStreaming) {
-          return [...prev.slice(0, -1), { ...msg, isStreaming: true }];
-        }
-        return [...prev, { ...msg, isStreaming: true }];
+      const newSessionId = data.id;
+      const targetPath = getSessionPath(newSessionId, {
+        activeTeam,
+        activeAgent,
+        activeProjectName,
       });
-    });
-
-    const unsubMsgEnd = subscribe("message_end", (data: unknown) => {
-      const evt = data as Record<string, unknown>;
-      const msg = evt.message as Message | undefined;
-      if (!msg) return;
-      if (msg.role === "user" && !(msg as any).details?.type) return;
-
-      setMessages((prev) => {
-        const index = findMsgIndex(prev, msg);
-        if (index !== -1) {
-          const existing = prev[index];
-          const updated = { ...existing, ...msg, isStreaming: false };
-          const copy = [...prev];
-          copy[index] = updated;
-          return copy;
-        }
-        const last = prev[prev.length - 1];
-        if (last?.isStreaming) {
-          return [...prev.slice(0, -1), msg];
-        }
-        return [...prev, msg];
-      });
-      window.dispatchEvent(new CustomEvent("workspaceUpdated"));
-    });
-
-    const unsubToolEnd = subscribe("tool_execution_end", (data: unknown) => {
-      const evt = data as Record<string, unknown>;
-      const toolCallId = evt.toolCallId as string | undefined;
-      if (!toolCallId) return;
-      const result = evt.result as any;
-      const isError = evt.isError as boolean | undefined;
-      setMessages((prev) => {
-        const alreadyExists = prev.some(
-          (m) =>
-            (m.role === "tool_result" || m.role === "toolResult") &&
-            (m as any).toolCallId === toolCallId,
-        );
-        if (alreadyExists) return prev;
-        const toolResultMsg: any = {
-          role: "toolResult",
-          toolCallId,
-          content:
-            result && typeof result === "object" && result.content
-              ? result.content
-              : [
-                  {
-                    type: "text",
-                    text: typeof result === "string" ? result : JSON.stringify(result || ""),
-                  },
-                ],
-          isError: !!isError,
-          details: result?.details,
-        };
-        return [...prev, toolResultMsg];
-      });
-    });
-
-    const unsubError = subscribe("agent_error", (data: unknown) => {
-      const evt = data as Record<string, unknown>;
-      setError(String(evt.error ?? l.unknownError));
-      setStreaming(false);
-      setCompacting(false);
-    });
-
-    const unsubTasks = subscribe("tasks_update", (data: any) => {
-      if (data.state) {
-        setTasksState(data.state);
-      }
-    });
-
-    const unsubSubagent = subscribe("subagent_event", (data: any) => {
-      if (data && data.toolCallId && data.event) {
-        window.dispatchEvent(
-          new CustomEvent(`subagent-event-${data.toolCallId}`, { detail: data.event }),
-        );
-      }
-    });
-
-    const unsubContext = subscribe("context_usage", (data: unknown) => {
-      const evt = data as Record<string, unknown>;
-      if (evt.contextUsage) {
-        setContextUsage(evt.contextUsage as ContextUsage);
-        setCompacting(false);
-      }
-    });
-
-    const unsubToolUpdate = subscribe("tool_execution_update", (data: unknown) => {
-      const evt = data as Record<string, unknown>;
-      const toolCallId = evt.toolCallId as string | undefined;
-      if (!toolCallId) return;
-      window.dispatchEvent(new CustomEvent(`tool-update-${toolCallId}`, { detail: evt }));
-    });
-
-    return () => {
-      unsubStart();
-      unsubEnd();
-      unsubMsgStart();
-      unsubMsg();
-      unsubMsgEnd();
-      unsubToolEnd();
-      unsubError();
-      unsubTasks();
-      unsubSubagent();
-      unsubContext();
-      unsubToolUpdate();
-    };
-  }, [sessionId, subscribe, loadMessages]);
-
-  useEffect(() => {
-    if (connected && !wasConnected && sessionId) {
-      const timer = setTimeout(() => {
-        loadMessages(true);
-      }, 500);
-      return () => clearTimeout(timer);
+      navigate(targetPath, { state: { initialMessage: finalText } });
+    } catch (err: any) {
+      addToast("error", err.message || "Failed to create session");
     }
-    setWasConnected(connected);
-  }, [connected, wasConnected, sessionId, loadMessages]);
-  const handleSend = useCallback(
-    (
-      message: string,
-      option?: "steer" | "follow_up",
-      tools?: string[],
-      images?: Array<{ type: "image"; data: string; mimeType: string }>,
-    ) => {
-      if (!message.trim() || !sessionId) return;
+  };
 
-      scrollToBottom("instant");
-
-      if (!firstMessageSentRef.current && option !== "steer" && option !== "follow_up") {
-        firstMessageSentRef.current = true;
-        const cleanName = message.trim();
-        const name = cleanName.slice(0, 50) + (cleanName.length > 50 ? "..." : "");
-        window.dispatchEvent(new CustomEvent("renameSession", { detail: { sessionId, name } }));
-        apiFetch(`/api/sessions/${sessionId}`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ name }),
-        }).catch(() => {});
-      }
-
-      if (option === "steer") {
-        const userMsg: Message = { role: "user", content: `[Steer] ${message}` };
-        setMessages((prev) => [...prev, userMsg]);
-        send({ type: "steer", message, sessionId });
-      } else if (option === "follow_up") {
-        const userMsg: Message = { role: "user", content: `[Follow-up] ${message}` };
-        setMessages((prev) => [...prev, userMsg]);
-        send({ type: "follow_up", message, sessionId });
-      } else {
-        const userMsg: Message = { role: "user", content: message };
-        setMessages((prev) => [...prev, userMsg]);
-        send({ type: "prompt", message, sessionId, tools, images });
-      }
-    },
-    [sessionId, send, activeTeam, scrollToBottom],
-  );
-
-  useEffect(() => {
-    if (!sessionId) return;
-    const pendingKey = `pending-prompt-${sessionId}`;
-    const pendingImagesKey = `pending-images-${sessionId}`;
-
-    // 1. Try memory
-    let pending = (window as any).__pendingPrompts?.[sessionId];
-
-    // 2. Try localStorage if memory was empty (e.g. F5)
-    if (!pending) {
-      const pendingStr = localStorage.getItem(pendingKey);
-      if (pendingStr) {
-        try {
-          const parsed = JSON.parse(pendingStr);
-          if (
-            parsed &&
-            typeof parsed.timestamp === "number" &&
-            Date.now() - parsed.timestamp < 30000
-          ) {
-            pending = parsed;
-          }
-        } catch (e) {
-          // Fallback for legacy plain text prompt
-          pending = {
-            text: pendingStr,
-            timestamp: Date.now(),
-          };
-        }
-      }
+  const handleSend = (text: string) => {
+    if (!sessionId) {
+      createSessionAndSend(text);
+    } else {
+      send(text);
     }
-
-    // Clean up memory
-    if ((window as any).__pendingPrompts?.[sessionId]) {
-      delete (window as any).__pendingPrompts[sessionId];
-    }
-    // Clean up localStorage keys (including legacy one)
-    localStorage.removeItem(pendingKey);
-    localStorage.removeItem(pendingImagesKey);
-
-    if (pending && pending.text) {
-      setTimeout(() => {
-        handleSend(pending.text, undefined, undefined, pending.images);
-      }, 500);
-    }
-  }, [sessionId, handleSend]);
-
-  const handleAbort = useCallback(() => {
-    if (!sessionId) return;
-    send({ type: "abort", sessionId });
-  }, [sessionId, send]);
-
-  const handleNavigate = useCallback(
-    async (targetId: string) => {
-      if (!sessionId) return;
-      try {
-        const res = await apiFetch(`/api/sessions/${sessionId}/navigate`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ targetId }),
-        });
-        if (res.ok) {
-          await loadMessages();
-        } else {
-          const data = await res.json();
-          setError(data.error || l.branchError);
-        }
-      } catch (err) {
-        setError(String(err));
-      }
-    },
-    [sessionId, loadMessages],
-  );
+  };
 
   if (!sessionId) {
     return (
-      <div className="h-full flex flex-col items-center justify-center bg-bg relative">
+      <div className="flex-1 flex flex-col justify-center items-center p-6 bg-surface-50 dark:bg-surface-900">
         <WelcomeChatInput
-          title={
-            activeTeam
-              ? `#${activeTeam.name}`
-              : activeAgent
-                ? `${activeAgent.name}`
-                : activeProjectName
-                  ? `${activeProjectName}`
-                  : undefined
-          }
           sessionId={null}
-          onSend={(msg, attachments) => createSessionAndSend(msg, attachments)}
-          suggestions={getSuggestions()}
-          showModelSelector={true}
+          onSend={(text, attachments) => createSessionAndSend(text, attachments)}
           activeTools={welcomeTools}
-          onToolsChange={(t, mode) => {
-            setHasUserModifiedWelcome(true);
-            setWelcomeTools(t);
-            if (mode) setWelcomeExecutionMode(mode);
-          }}
-          executionMode={welcomeExecutionMode}
           activeSkills={welcomeSkills}
-          onSkillsChange={(s) => {
+          executionMode={welcomeExecutionMode}
+          onToolsChange={(tools, mode) => {
+            setWelcomeTools(tools);
+            if (mode) setWelcomeExecutionMode(mode);
             setHasUserModifiedWelcome(true);
-            setWelcomeSkills(s);
           }}
-          allowAttachments={!activeTeam}
-          disabled={streaming || !connected}
-          loading={streaming}
-          textareaRef={chatInputRef}
+          onSkillsChange={(skills) => {
+            setWelcomeSkills(skills);
+            setHasUserModifiedWelcome(true);
+          }}
         />
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-row min-w-0 overflow-hidden">
-      <div className="flex-1 flex flex-col min-w-0 h-full relative">
-        {error && (
-          <div className="px-3 sm:px-4 py-2 bg-destructive/10 border-b border-error/20 text-destructive text-xs flex-shrink-0">
-            {error}
-            <button onClick={() => setError(null)} className="ml-2 underline">
-              Dismiss
-            </button>
-          </div>
-        )}
-        {!connected && (
-          <div className="px-3 sm:px-4 py-1.5 bg-warning/10 border-b border-warning/20 text-warning text-xs flex-shrink-0 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-warning animate-pulse" />
-            Reconnecting... messages will be queued
-          </div>
-        )}
-        <div
-          ref={scrollContainerRef}
-          onScroll={handleScroll}
-          className={`flex-1 overflow-y-auto min-h-0 ${loadingMessages || messages.length === 0 ? "flex flex-col justify-center animate-fade-in" : ""}`}
-        >
-          {loadingMessages ? (
-            <ChatSkeleton />
-          ) : (
-            <div className={`max-w-3xl mx-auto px-3 sm:px-4 py-3 sm:py-4 w-full`}>
-              {messages.length === 0 ? (
-                <WelcomeChatInput
-                  title={
-                    activeTeam
-                      ? `#${activeTeam.name}`
-                      : activeAgent
-                        ? `${activeAgent.name}`
-                        : activeProjectName
-                          ? `${activeProjectName}`
-                          : undefined
-                  }
-                  sessionId={sessionId}
-                  onSend={async (msg, attachments) => {
-                    if (attachments && attachments.length > 0) {
-                      const result = await processAttachments(attachments, {
-                        activeProjectName,
-                        activeAgentId: activeAgent?.id,
-                      });
-                      handleSend(
-                        msg + result.extraText,
-                        undefined,
-                        undefined,
-                        result.images.length > 0 ? result.images : undefined,
-                      );
-                    } else {
-                      handleSend(msg);
-                    }
-                  }}
-                  suggestions={getSuggestions()}
-                  showModelSelector={true}
-                  allowAttachments={!activeTeam}
-                  disabled={streaming || !connected}
-                  loading={streaming}
-                  textareaRef={chatInputRef}
-                />
-              ) : (
-                <>
-                  <FloatingTasks tasksState={tasksState} onToggleStatus={handleToggleTasksStatus} />
-                  <MessageList
-                    messages={messages}
-                    onNavigate={handleNavigate}
-                    sessionId={sessionId}
-                    activeProjectName={activeProjectName}
-                    activeAgentId={activeAgent?.id}
-                    activeAgentName={activeAgent?.name}
-                    activeAgentAvatarUrl={activeAgent?.avatarUrl}
-                    activeTeamId={activeTeam?.id}
-                    serialTools={serialTools}
-                    onOpenSubagentConsole={(
-                      toolCallId: string,
-                      targetType?: string,
-                      targetId?: string,
-                    ) => {
-                      const prefix =
-                        targetType === "delegate" ||
-                        targetType === "agent" ||
-                        targetType === "project" ||
-                        targetType === "session"
-                          ? "del"
-                          : "sub";
-                      const subSessionId = `${prefix}_${toolCallId}`;
-
-                      let context: any = { activeAgent, activeProjectName, activeTeam };
-
-                      if (targetType && targetId) {
-                        if (activeTeam) {
-                          context = { activeTeam };
-                        } else {
-                          context = {
-                            activeAgent: targetType === "agent" ? { id: targetId, name: "" } : null,
-                            activeProjectName: targetType === "project" ? targetId : null,
-                          };
-                        }
-                      }
-
-                      navigate(getSessionPath(subSessionId, context));
-                    }}
-                    settledApprovals={settledApprovals}
-                    onResolveApproval={handleResolveApproval}
-                  />
-                  {!isReadOnlyExecution && <div className="h-[176px] flex-shrink-0" />}
-                </>
-              )}
-            </div>
-          )}
+    <div className="flex-1 flex flex-col h-full overflow-hidden bg-surface-50 dark:bg-surface-900 relative">
+      {error && (
+        <div className="bg-red-500/10 text-red-500 p-3 text-sm border-b border-red-500/20 flex justify-between items-center">
+          <span>{error}</span>
         </div>
-        {showScrollButton && messages.length > 0 && (
-          <button
-            onClick={() => scrollToBottom("smooth")}
-            className={`absolute ${isReadOnlyExecution ? "bottom-20" : "bottom-44"} left-1/2 -translate-x-1/2 z-20 flex items-center justify-center w-9 h-9 rounded-full bg-surface border border-border text-accent shadow-xl hover:bg-surface-hover active:scale-95 transition-all duration-200`}
-          >
-            <ChevronDown size={16} className="animate-bounce" />
-          </button>
-        )}
-        {messages.length > 0 && (
-          <div className="absolute bottom-0 left-0 right-0 z-10">
-            <div className="absolute inset-x-0 top-0 h-12 bg-gradient-to-t from-bg to-transparent pointer-events-none" />
-            {isReadOnlyExecution ? (
-              <div className="p-4 bg-card border-t border-input flex flex-col items-center justify-center gap-2 text-muted-foreground">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/25 text-purple-400 font-medium text-xs uppercase tracking-wider font-mono">
-                  <Lock size={14} />
-                  {isChannelExecution
-                    ? "Ejecución CLI (Solo Lectura)"
-                    : "Ejecución de API (Solo Lectura)"}
-                </div>
-                <p className="text-[11px] text-center max-w-md font-sans">
-                  Esta conversación corresponde a una ejecución automática externa. Podés navegar el
-                  historial de mensajes y tool calls, pero no es interactiva.
-                </p>
-              </div>
-            ) : (
-              <ChatInput
-                onSend={handleSend}
-                onAbort={handleAbort}
-                streaming={streaming}
-                sessionId={sessionId}
-                onToolsChange={setSandboxTools}
-                runnerActive={
-                  tasksState.status === "running" || tasksState.status === "decomposing"
-                }
-                activeProjectName={activeProjectName}
-                activeAgentId={activeAgent?.id}
-                entityType={
-                  activeTeam
-                    ? "team"
-                    : activeAgent
-                      ? "agent"
-                      : activeProjectName
-                        ? "project"
-                        : "global"
-                }
-                entityId={
-                  activeTeam
-                    ? activeTeam.id
-                    : activeAgent
-                      ? activeAgent.id
-                      : activeProjectName
-                        ? activeProjectName
-                        : "global"
-                }
-                contextUsage={contextUsage}
-                onCompact={handleCompact}
-                compacting={compacting}
-                textareaRef={chatInputRef}
-                disabled={!connected}
-              />
-            )}
-          </div>
-        )}
+      )}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <MessageList messages={messages as any} streaming={streaming} />
+      </div>
+      <div className="p-4 border-t border-surface-200 dark:border-surface-800 bg-surface-0 dark:bg-surface-950">
+        <ChatInput
+          onSend={handleSend}
+          onAbort={abort}
+          streaming={streaming}
+          disabled={!connected}
+        />
       </div>
     </div>
   );

@@ -31,7 +31,7 @@ Before any work, read: `about.md`, `steps.md`, `AGENTS.md` (this file). These ar
 
 ## Architecture & Principles (de `out/auto-browser/PLAN.md`)
 
-1. **Composición > Herencia:** Cero god objects, cero singletons. `AgentRuntime` se compone inyectando dependencias via constructor.
+1. **Arquitectura Hexagonal & Clean Architecture:** Cero god objects, cero singletons. `AgentRuntime` se compone inyectando dependencias de puertos (`@spaces/core`) vía constructor.
 2. **Tipos de Agente como Factories:** Misma clase `AgentRuntime`, distintas dependencias inyectadas por fábrica (`createAgent()`).
 3. **Prompt Pipeline por Secciones:** Ensamblado determinista por prioridades (`PromptSection`), sin lógica spaghetti.
 4. **Hooks como Middleware Chain:** Cadena `beforePrompt`, `afterPrompt`, `beforeToolCall` (con capability de short-circuit con `null`), `afterToolCall`, `onError`.
@@ -44,7 +44,7 @@ Before any work, read: `about.md`, `steps.md`, `AGENTS.md` (this file). These ar
 - **Single Responsibility & Sub-modules:** Evitar clases o archivos > 300 líneas, clases > 200 líneas.
 - **Modular Routing (Sub-router Pattern):** Controladores Hono descompuestos en submódulos (`routes/<domain>/index.ts`).
 - **Dependency Injection:** Acceso a servicios centrales vía `AppContext` (`createAppContext()`) y contratos de puertos (`@spaces/core`).
-- **Typed Contracts First:** Definir modelos compartidos, cargas útiles de API y eventos de WebSocket en `@spaces/core` y `packages/shared`.
+- **Typed Contracts First:** Fuente única de verdad para contratos, puertos y esquemas Zod en `@spaces/core`.
 - **Strict Verification:** Ejecutar siempre `pnpm typecheck` y `pnpm build` antes de dar por terminada cualquier tarea.
 
 ## Code Conventions
@@ -60,10 +60,11 @@ Before any work, read: `about.md`, `steps.md`, `AGENTS.md` (this file). These ar
 - **Backend:** Bun + Hono + Zod + `@spaces/engine`
 - **Frontend:** React 19 + Vite + TypeScript + Tailwind CSS v4
 - **Packages:**
-  - `@spaces/core`: Contratos puramente tipados, interfaces (ports) y Zod schemas.
+  - `@spaces/core`: Contratos puramente tipados, interfaces (ports) y Zod schemas. Fuente única de verdad.
   - `@spaces/engine`: Runtime del agente, PromptBuilder, HookRunner, EventBus y PermissionEngine.
   - `@spaces/tools`: Herramientas nativas (`ITool`) con validación Zod y conectores MCP/custom.
   - `@spaces/providers`: Clientes de modelos LLM compatibles con OpenAI SSE streaming.
   - `@spaces/storage`: Adaptadores de almacenamiento (`FilesystemSessionStore`, `MemorySessionStore`).
   - `@spaces/sandbox`: Aislamiento de ejecución en entorno local/restringido (`LocalSandbox`).
-  - `shared`: Tipos compartidos y esquemas auxiliares.
+  - `@spaces/spaces-sdk`: SDK público de espacio de trabajo re-exportando la superficie de extensibilidad.
+  - `packages/shared`: Deprecado a favor de `@spaces/core`.

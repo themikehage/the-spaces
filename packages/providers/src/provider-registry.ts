@@ -1,6 +1,6 @@
-import type { IModelProvider } from "@spaces/core";
+import type { IModelProvider, IProviderRegistry } from "@spaces/core";
 
-export class ProviderRegistry {
+export class ProviderRegistry implements IProviderRegistry {
   private readonly providers = new Map<string, IModelProvider>();
 
   register(provider: IModelProvider): void {

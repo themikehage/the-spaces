@@ -28,7 +28,10 @@ export class McpServerConnector implements IMcpClientLike {
     return this.connected;
   }
 
-  async callTool(_name: string, _args: unknown): Promise<{
+  async callTool(
+    _name: string,
+    _args: unknown,
+  ): Promise<{
     content?: Array<{ type: string; text?: string; data?: string; mimeType?: string }>;
     isError?: boolean;
   }> {

@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: MIT
-import { type Team, type TeamMember, type TeamMessage } from "shared";
-import { agentRegistry } from "../agents";
+import type { IModelProvider } from "@spaces/core";
+import { type Team, type TeamMember, type TeamMessage } from "@spaces/core";
+import { OpenAICompatibleProvider } from "@spaces/providers";
 import { resolveModelWithFallback } from "../core/agent-utils";
-import { sessionManager } from "../core/session-manager";
-import { teamStore } from "./team-store";
 
-import { streamSimple } from "../ai/vendor/ai/src/compat.ts";
 import { buildAgentPrompt } from "../core/multi-agent/agent-prompt-runner";
 import { parseMentions } from "../core/multi-agent/mention-parser";
 import { enforceDiffFormat, parseAgentResponse } from "../core/multi-agent/response-parser";
@@ -89,6 +87,13 @@ export class TeamPromptRunner {
   ): Promise<{ agentMsg: TeamMessage | null }> {
     if (signal.aborted) return { agentMsg: null };
 
+    const { TeamStore } = await import("./team-store");
+    const { AgentRegistry } = await import("../agents");
+    const { UserConfigManager } = await import("../core/session/user-config");
+    const teamStore = new TeamStore();
+    const agentRegistry = new AgentRegistry();
+    const userConfigManager = new UserConfigManager();
+
     const team = teamStore.getTeam(username, teamId);
     if (!team) return { agentMsg: null };
 
@@ -116,14 +121,14 @@ export class TeamPromptRunner {
     // Resolve model settings (reusing logic from channel runner)
     let model = agentEntry.server.session.model;
     if (!model) {
-      const { modelRegistry } = sessionManager.userConfig.getUserContext(username);
+      const { modelRegistry } = userConfigManager.getUserContext(username);
       modelRegistry.refresh();
       const resolved = resolveModelWithFallback(undefined, modelRegistry);
       if (resolved) {
         model =
           modelRegistry
             .getAvailable()
-            .find((m) => m.id === resolved || `${m.provider}/${m.id}` === resolved) || null;
+            .find((m: any) => m.id === resolved || `${m.provider}/${m.id}` === resolved) || null;
         if (model) {
           try {
             await agentEntry.server.session.setModel(model);
@@ -204,70 +209,44 @@ export class TeamPromptRunner {
     };
 
     let fullResponse = "";
+    const streamingEnabled = team.streamingEnabled !== false;
 
-    const apiKey = model.apiKey;
-    const options = {
-      apiKey,
-      signal,
-      reasoning: agentEntry.server.session.thinkingLevel as any,
-    };
+    const provider: IModelProvider = new OpenAICompatibleProvider({
+      baseUrl: (model as any).baseUrl || "https://api.openai.com/v1",
+      apiKey: model.apiKey,
+      model: model.id,
+    });
 
-    let stream;
     try {
-      stream = streamSimple(model as any, context as any, options);
-
-      // Consume the stream asynchronously to broadcast token updates
-      const streamingEnabled = team.streamingEnabled !== false;
-      (async () => {
-        try {
-          for await (const evt of stream) {
-            if (evt.type === "text_delta" && evt.delta) {
-              fullResponse += evt.delta;
-              const activeStreamsMap = this.activeStreams.get(streamKey);
-              const activeStream = activeStreamsMap?.get(member.agentId);
-              if (activeStream) {
-                activeStream.text += evt.delta;
-              }
-              if (streamingEnabled) {
-                this.broadcastFn(teamId, {
-                  type: "team_agent_token",
-                  teamId,
-                  sessionId: incomingMsg.sessionId,
-                  agentId: member.agentId,
-                  token: evt.delta,
-                  fullText: activeStream ? activeStream.text : undefined,
-                });
-              }
-            } else if (evt.type === "thinking_delta" && evt.delta && team.showThinking) {
-              const activeStreamsMap = this.activeStreams.get(streamKey);
-              const activeStream = activeStreamsMap?.get(member.agentId);
-              if (activeStream) {
-                activeStream.thinking += evt.delta;
-              }
-              if (streamingEnabled) {
-                this.broadcastFn(teamId, {
-                  type: "team_agent_thinking",
-                  teamId,
-                  sessionId: incomingMsg.sessionId,
-                  agentId: member.agentId,
-                  token: evt.delta,
-                  fullThinking: activeStream ? activeStream.thinking : undefined,
-                });
-              }
+      await provider.streamComplete({
+        messages: [{ role: "user", content: promptText }],
+        tools: [],
+        system: fullSystemPrompt,
+        signal,
+        onDelta: (delta) => {
+          if (delta.type === "text" && delta.text) {
+            fullResponse += delta.text;
+            const activeStreamsMap = this.activeStreams.get(streamKey);
+            const activeStream = activeStreamsMap?.get(member.agentId);
+            if (activeStream) {
+              activeStream.text += delta.text;
+            }
+            if (streamingEnabled) {
+              this.broadcastFn(teamId, {
+                type: "team_agent_token",
+                teamId,
+                sessionId: incomingMsg.sessionId,
+                agentId: member.agentId,
+                token: delta.text,
+                fullText: activeStream ? activeStream.text : undefined,
+              });
             }
           }
-        } catch (streamErr) {
-          console.error(
-            `[TeamPromptRunner] Stream reading error for ${member.agentId}:`,
-            streamErr,
-          );
-        }
-      })();
-
-      const finalMsg = await stream.result();
+        },
+      });
 
       const parseResult = parseAgentResponse(
-        [finalMsg],
+        [{ role: "assistant", content: fullResponse }],
         { showThinking: team.showThinking, showTools: true },
         fullResponse,
       );

@@ -118,7 +118,10 @@ export function SkillsPage() {
             <div className="p-3 border-b border-border flex flex-col gap-2">
               <div className="flex gap-2">
                 <div className="relative flex-1">
-                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                  <Search
+                    size={16}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
+                  />
                   <input
                     type="text"
                     value={search}

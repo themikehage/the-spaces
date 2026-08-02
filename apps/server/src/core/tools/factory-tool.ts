@@ -1,17 +1,25 @@
 // SPDX-License-Identifier: MIT
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
 import {
   getAgentWorkspaceDir,
   getProjectWorkspaceDir,
   getProjectsDir,
   getTeamWorkspaceDir,
   getWorkspaceSkillsDir,
-} from "shared";
-import { agentRegistry } from "../../agents";
+} from "@spaces/core";
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { AgentRegistry } from "../../agents";
 import { loadSkills } from "../../ai";
-import { sessionManager } from "../session-manager";
+import { SessionMetadataStore } from "../session/metadata-store";
+import { SessionLister } from "../session/session-lister";
+import { UserConfigManager } from "../session/user-config";
 import { FACTORY_CONTRACTS } from "./factory-contracts";
+
+const agentRegistry = new AgentRegistry();
+const sessionMetadataStore = new SessionMetadataStore();
+const userConfigManager = new UserConfigManager();
+
+const sessionLister = new SessionLister();
 
 export interface FactoryToolOptions {
   username: string;
@@ -292,9 +300,11 @@ async function handleProjects(
     writeFileSync(join(projPath, "project.json"), JSON.stringify(proj, null, 2), "utf-8");
 
     try {
-      const { broadcastToUser } = await import("../../ws/handler");
+      const { broadcastToUser } = await import("../ws-bridge");
       broadcastToUser(username, { type: "project_updated", project: { id: proj.id, ...proj } });
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
 
     return ok(`Assignment updated for project "${id}"`, {
       entity: "projects",
@@ -347,9 +357,11 @@ async function handleProjects(
     writeFileSync(join(projPath, "project.json"), JSON.stringify(proj, null, 2), "utf-8");
 
     try {
-      const { broadcastToUser } = await import("../../ws/handler");
+      const { broadcastToUser } = await import("../ws-bridge");
       broadcastToUser(username, { type: "project_updated", project: { id: proj.id, ...proj } });
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
 
     return ok(`Member "${memberName}" updated on project "${id}"`, {
       entity: "projects",
@@ -380,16 +392,16 @@ async function handleSessions(
 ) {
   if (action === "get") {
     if (id) {
-      const meta = sessionManager.metadataStore.getSessionMetadata(username, id);
+      const meta = sessionMetadataStore.getSessionMetadata(username, id);
       if (!meta) {
-        const session = sessionManager.getSession(username, id);
-        if (!session) return err(`Session "${id}" not found`);
-        const stats = session.getSessionStats();
-        return ok(JSON.stringify(stats, null, 2), { entity: "sessions", id, data: stats });
+        return err(`Session "${id}" not found`);
       }
       return ok(JSON.stringify(meta, null, 2), { entity: "sessions", id, data: meta });
     }
-    const list = await sessionManager.listSessions(username);
+    const list = await sessionLister.listSessions(username, {
+      ensureUserDir: (u: string) => userConfigManager.ensureUserDir(u),
+      isSessionActive: () => "sleeping",
+    });
     return ok(JSON.stringify(list, null, 2), { entity: "sessions", data: list });
   }
 
@@ -401,7 +413,7 @@ async function handleSessions(
 
   if (action === "delete") {
     if (!id) return err("id is required for delete");
-    await sessionManager.destroySession(username, id);
+    sessionMetadataStore.deleteSessionMetadata(username, id);
     return ok(`Session "${id}" deleted`, { entity: "sessions", id, status: "deleted" });
   }
 
@@ -411,11 +423,11 @@ async function handleSessions(
 async function handleEnv(action: string, key: string | undefined, params: any, username: string) {
   if (action === "get") {
     if (key) {
-      const userEnv = sessionManager.userConfig.getUserEnv(username);
+      const userEnv = userConfigManager.getUserEnv(username);
       if (!(key in userEnv)) return err(`Env var "${key}" not found`);
       return ok(`Env var ${key} exists (value hidden)`, { entity: "env", key, exists: true });
     }
-    const userEnv = sessionManager.userConfig.getUserEnv(username);
+    const userEnv = userConfigManager.getUserEnv(username);
     const list = Object.entries(userEnv).map(([k]) => ({ key: k, value: "••••••••" }));
     return ok(JSON.stringify(list, null, 2), { entity: "env", data: list });
   }
@@ -423,14 +435,14 @@ async function handleEnv(action: string, key: string | undefined, params: any, u
   if (action === "upsert") {
     if (!params.key) return err("key is required in params for env upsert");
     if (params.value === undefined) return err("value is required in params for env upsert");
-    sessionManager.userConfig.setUserEnv(username, params.key.trim(), params.value);
+    userConfigManager.setUserEnv(username, params.key.trim(), params.value);
     return ok(`Env var "${params.key}" set`, { entity: "env", key: params.key, status: "set" });
   }
 
   if (action === "delete") {
     const targetKey = key || params?.key;
     if (!targetKey) return err("key is required (as id or in params) for env delete");
-    sessionManager.userConfig.deleteUserEnv(username, targetKey);
+    userConfigManager.deleteUserEnv(username, targetKey);
     return ok(`Env var "${targetKey}" deleted`, {
       entity: "env",
       key: targetKey,
@@ -447,7 +459,7 @@ async function handleProviders(
   params: any,
   username: string,
 ) {
-  const { modelRegistry, authStorage } = sessionManager.userConfig.getUserContext(username);
+  const { modelRegistry, authStorage } = userConfigManager.getUserContext(username);
 
   if (action === "get") {
     if (id) {
@@ -506,14 +518,18 @@ async function handleProviders(
   return err(`Unknown action: ${action}`);
 }
 
-function getTargetSkillsDir(username: string, parentSessionId?: string, scopeParam?: string): string {
+function getTargetSkillsDir(
+  username: string,
+  parentSessionId?: string,
+  scopeParam?: string,
+): string {
   if (scopeParam === "global") {
     return getWorkspaceSkillsDir(username);
   }
 
   if (parentSessionId) {
     try {
-      const meta = sessionManager.metadataStore.getSessionMetadata(username, parentSessionId);
+      const meta = sessionMetadataStore.getSessionMetadata(username, parentSessionId);
       if (meta) {
         let entityDir: string | null = null;
         if (meta.teamId) {
@@ -605,7 +621,9 @@ async function handleSkills(
 }
 
 async function handleTeams(action: string, id: string | undefined, params: any, username: string) {
-  const { teamStore, teamOrchestrator } = await import("../../teams");
+  const { TeamStore, TeamOrchestrator } = await import("../../teams");
+  const teamStore = new TeamStore();
+  const teamOrchestrator = new TeamOrchestrator(teamStore);
 
   if (action === "get") {
     if (id) {
@@ -656,11 +674,18 @@ async function handleTeams(action: string, id: string | undefined, params: any, 
     if (!existing) return err(`Team "${id}" not found`);
 
     try {
-      const sessions = await sessionManager.listSessions(username).catch(() => []);
-      for (const session of sessions.filter((item) => item.teamId === id)) {
-        await sessionManager.destroySession(username, session.id).catch(() => {});
+      const sessions = await sessionLister
+        .listSessions(username, {
+          ensureUserDir: (u: string) => userConfigManager.ensureUserDir(u),
+          isSessionActive: () => "sleeping",
+        })
+        .catch(() => []);
+      for (const session of sessions.filter((item: any) => item.teamId === id)) {
+        sessionMetadataStore.deleteSessionMetadata(username, session.id);
       }
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
 
     const deleted = teamStore.deleteTeam(username, id);
     if (!deleted) return err(`Failed to delete team "${id}"`);
@@ -680,19 +705,10 @@ async function handleTeams(action: string, id: string | undefined, params: any, 
       if (!leader) {
         return err("The orchestration leader is not available");
       }
-      const { SessionPrefix, getTeamWorkspaceDir } = await import("shared");
+      const { SessionPrefix, getTeamWorkspaceDir } = await import("@spaces/core");
       const ownerSessionId = params.sessionId || `${SessionPrefix.TEAM}${team.id}`;
-      const session = await sessionManager.getOrCreateSession(
-        username,
-        ownerSessionId,
-        undefined,
-        leader.agentId,
-        {
-          workspaceDir: getTeamWorkspaceDir(username, team.id),
-        },
-      );
-      session.prompt(message).catch((err) => {
-        console.error(`[manage_factory] Persistent session prompt error:`, err);
+      teamOrchestrator.dispatchUserMessage(username, id, message, params.sessionId).catch((err) => {
+        console.error(`[manage_factory] Error dispatching message for team ${id}:`, err);
       });
     } else {
       teamOrchestrator.dispatchUserMessage(username, id, message, params.sessionId).catch((err) => {
@@ -743,7 +759,7 @@ async function handleSettings(
   username: string,
 ) {
   if (action === "get") {
-    const settings = sessionManager.userConfig.getUserSettings(username);
+    const settings = userConfigManager.getUserSettings(username);
     return ok(JSON.stringify(settings, null, 2), { entity: "settings", data: settings });
   }
 
@@ -754,7 +770,7 @@ async function handleSettings(
       updates.factoryAvatarUrl = params.factoryAvatarUrl ? String(params.factoryAvatarUrl) : null;
     if (params.factorySystemPrompt !== undefined)
       updates.factorySystemPrompt = String(params.factorySystemPrompt);
-    sessionManager.userConfig.saveUserSettings(username, updates);
+    userConfigManager.saveUserSettings(username, updates);
     return ok("Settings updated", { entity: "settings", status: "updated" });
   }
 
@@ -876,7 +892,7 @@ After mutating any entity, call refresh_ui to update the frontend sidebar.`,
         const refreshType = ENTITY_REFRESH_MAP[entity];
         if (refreshType) {
           try {
-            const { broadcastToUser } = await import("../../ws/handler");
+            const { broadcastToUser } = await import("../ws-bridge");
             broadcastToUser(username, {
               type: "entity-updated",
               entityType: refreshType,

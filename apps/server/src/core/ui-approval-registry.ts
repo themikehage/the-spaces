@@ -1,4 +1,4 @@
-import { broadcastToUser } from "../ws/handler";
+import { broadcastToUser } from "./ws-bridge";
 
 type PendingApprovalValue = {
   action: string;
@@ -140,5 +140,3 @@ export class UiApprovalRegistry {
     return items;
   }
 }
-
-export const uiApprovalRegistry = new UiApprovalRegistry();

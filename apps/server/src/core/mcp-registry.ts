@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
+import type { McpCatalogItem, McpConfig, McpServerConfig } from "@spaces/core";
+import { getMcpConfigOldPath, getMcpServersPath, getUserDir, getWorkspaceDir } from "@spaces/core";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import type { McpCatalogItem, McpConfig, McpServerConfig } from "shared";
-import { getMcpConfigOldPath, getMcpServersPath, getUserDir, getWorkspaceDir } from "shared";
 import { McpClient } from "./mcp-client.js";
 
 export const MCP_CATALOG: McpCatalogItem[] = [
@@ -193,7 +193,9 @@ export class McpRegistry {
     if (existsSync(path)) {
       try {
         config = JSON.parse(readFileSync(path, "utf-8")) as McpConfig;
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
     } else if (existsSync(oldPath)) {
       try {
         const oldConfig = JSON.parse(readFileSync(oldPath, "utf-8"));
@@ -201,7 +203,9 @@ export class McpRegistry {
           config = oldConfig as McpConfig;
           this.saveConfig(username, config);
         }
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
     }
 
     if (!config) {
@@ -478,15 +482,11 @@ export class McpRegistry {
   }
 }
 
-export const mcpRegistry = new McpRegistry();
-
 // Process exit handlers to prevent zombie subprocesses
 process.on("SIGINT", () => {
-  mcpRegistry.stopAll();
   process.exit(0);
 });
 
 process.on("SIGTERM", () => {
-  mcpRegistry.stopAll();
   process.exit(0);
 });

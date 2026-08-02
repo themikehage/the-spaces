@@ -21,5 +21,3 @@ export class FileWorkspaceConfigLoader implements WorkspaceConfigPort {
     }
   }
 }
-
-export const workspaceConfigLoader = new FileWorkspaceConfigLoader();

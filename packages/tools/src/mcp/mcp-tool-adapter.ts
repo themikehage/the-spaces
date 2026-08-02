@@ -2,7 +2,10 @@ import type { ITool, ToolContext, ToolResult } from "@spaces/core";
 import { z, type ZodSchema } from "zod";
 
 export interface IMcpClientLike {
-  callTool(name: string, args: unknown): Promise<{
+  callTool(
+    name: string,
+    args: unknown,
+  ): Promise<{
     content?: Array<{ type: string; text?: string; data?: string; mimeType?: string }>;
     isError?: boolean;
   }>;
@@ -32,7 +35,8 @@ export class McpToolAdapter implements ITool {
         const errText = res.content?.[0]?.text || JSON.stringify(res);
         return { toolCallId: "", output: "", isError: true };
       }
-      const outputText = res.content?.map((c) => c.text || JSON.stringify(c)).join("\n") || "Success";
+      const outputText =
+        res.content?.map((c) => c.text || JSON.stringify(c)).join("\n") || "Success";
       return { toolCallId: "", output: outputText, isError: false };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);

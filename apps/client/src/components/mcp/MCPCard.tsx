@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 import { Button } from "@/components/ui/Button";
 import { useLiterals } from "@/lib";
+import type { McpServerConfig } from "@spaces/core";
 import { ChevronDown, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
-import type { McpServerConfig } from "shared";
 import { literals } from "./MCPCard.literals";
 
 interface MCPCardProps {

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
+import type { McpServerConfig } from "@spaces/core";
 import { spawn, type Subprocess } from "bun";
-import type { McpServerConfig } from "shared";
 
 export class McpClient {
   public name: string;
@@ -167,7 +167,9 @@ export class McpClient {
           console.warn(`[MCP Server ${this.name} stderr] ${errText}`);
         }
       }
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
   }
 
   private async readSseStream(body: ReadableStream<Uint8Array> | null): Promise<void> {
@@ -321,7 +323,9 @@ export class McpClient {
       try {
         stdin.write(payload + "\n");
         stdin.flush();
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
     }
   }
 

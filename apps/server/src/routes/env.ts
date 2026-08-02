@@ -1,19 +1,20 @@
 // SPDX-License-Identifier: MIT
 import { zValidator } from "@hono/zod-validator";
+import { SetEnvVarSchema } from "@spaces/core";
 import { Hono } from "hono";
-import { SetEnvVarSchema } from "shared";
 import { z } from "zod";
+import type { AppContext } from "../context";
 import { auditLog } from "../core/audit-log";
-import { sessionManager } from "../core/session-manager";
 import { authMiddleware, getAuthPayload } from "../middleware/auth";
 
-export const envRouter = new Hono();
+export const envRouter = new Hono<{ Variables: { appContext: AppContext } }>();
 
 envRouter.use("/*", authMiddleware);
 
 envRouter.get("/", (c) => {
   const { username } = getAuthPayload(c);
-  const userEnv = sessionManager.userConfig.getUserEnv(username);
+  const { userConfigManager } = c.get("appContext");
+  const userEnv = userConfigManager.getUserEnv(username);
 
   const envList = Object.entries(userEnv).map(([key]) => ({
     key,
@@ -26,7 +27,8 @@ envRouter.get("/", (c) => {
 envRouter.get("/reveal/:key", (c) => {
   const key = c.req.param("key").trim().toUpperCase();
   const { username } = getAuthPayload(c);
-  const userEnv = sessionManager.userConfig.getUserEnv(username);
+  const { userConfigManager } = c.get("appContext");
+  const userEnv = userConfigManager.getUserEnv(username);
 
   if (!(key in userEnv)) {
     return c.json({ error: "Variable not found" }, 404);
@@ -40,8 +42,9 @@ envRouter.get("/reveal/:key", (c) => {
 envRouter.post("/", zValidator("json", SetEnvVarSchema), (c) => {
   const { key, value } = c.req.valid("json");
   const { username } = getAuthPayload(c);
+  const { userConfigManager } = c.get("appContext");
 
-  sessionManager.userConfig.setUserEnv(username, key.trim(), value);
+  userConfigManager.setUserEnv(username, key.trim(), value);
 
   return c.json({ success: true, key, value: "••••••••" });
 });
@@ -57,7 +60,8 @@ envRouter.put(
   (c) => {
     const { variables } = c.req.valid("json");
     const { username } = getAuthPayload(c);
-    const current = sessionManager.userConfig.getUserEnv(username);
+    const { userConfigManager } = c.get("appContext");
+    const current = userConfigManager.getUserEnv(username);
     const updated: Record<string, string> = {};
 
     for (const [key, value] of Object.entries(variables)) {
@@ -71,7 +75,7 @@ envRouter.put(
       }
     }
 
-    sessionManager.userConfig.setUserEnvMap(username, updated);
+    userConfigManager.setUserEnvMap(username, updated);
 
     const envList = Object.entries(updated).map(([k]) => ({
       key: k,
@@ -85,8 +89,9 @@ envRouter.put(
 envRouter.delete("/:key", (c) => {
   const key = c.req.param("key");
   const { username } = getAuthPayload(c);
+  const { userConfigManager } = c.get("appContext");
 
-  sessionManager.userConfig.deleteUserEnv(username, key);
+  userConfigManager.deleteUserEnv(username, key);
 
   return c.json({ success: true });
 });

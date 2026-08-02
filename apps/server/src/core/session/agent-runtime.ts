@@ -1,29 +1,48 @@
-// SPDX-License-Identifier: MIT
+import type { IAgentRuntime } from "@spaces/core";
+import { SessionPrefix, type AgentDefinition, type BaseTool } from "@spaces/core";
+import { createAgent } from "@spaces/engine";
+import { OpenAICompatibleProvider } from "@spaces/providers";
+import { FilesystemSessionStore } from "@spaces/storage";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { SessionPrefix, type AgentDefinition, type BaseTool } from "shared";
-import { agentRegistry } from "../../agents";
-import { createAgentSession, DefaultResourceLoader, type AgentSession } from "../../ai";
+import { AgentRegistry } from "../../agents";
+import { DefaultResourceLoader } from "../../ai";
 import type { AvailableModel } from "../../ai/model-registry";
-import { cascadeConfigLoader } from "../config";
-import { mcpRegistry } from "../mcp-registry";
-import { memoryRegistry } from "../memory/registry";
+import { CascadeConfigLoader } from "../config";
+import { McpRegistry } from "../mcp-registry";
+import { MemoryRegistry } from "../memory/registry";
+
 import { buildSubagentRules, evaluateSubagentRules } from "../sandbox";
+import { ScopeConfigManager } from "../scope";
 import { createAfterToolCallHook } from "./after-tool-call-hook";
 import { createBeforeToolCallHook } from "./before-tool-call-hook";
 import { attachSessionMcpTools } from "./mcp-attach";
-import { sessionMetadataStore } from "./metadata-store";
+import { SessionMetadataStore } from "./metadata-store";
 import { DefaultModelResolver } from "./model-resolver";
-import { sessionPromptBuilder } from "./prompt-builder";
+import { SessionPromptBuilder } from "./prompt-builder";
 import { enrichSessionWithMemory } from "./session-memory-enricher";
 import { resolveActiveTools } from "./tool-activation-engine";
-import { sessionToolFactory } from "./tool-factory";
-import { userConfigManager } from "./user-config";
+import { SessionToolFactory } from "./tool-factory";
+import { UserConfigManager } from "./user-config";
+import { FileWorkspaceConfigLoader } from "./workspace-config-loader";
 import {
   getResolvedSkillPaths,
   resolveProjectDir,
   resolveSessionWorkspace,
 } from "./workspace-resolver";
+
+const agentRegistry = new AgentRegistry();
+const cascadeConfigLoader = new CascadeConfigLoader(
+  new FileWorkspaceConfigLoader(),
+  new ScopeConfigManager(),
+);
+const mcpRegistry = new McpRegistry();
+const memoryRegistry = new MemoryRegistry();
+
+const sessionMetadataStore = new SessionMetadataStore();
+const sessionPromptBuilder = new SessionPromptBuilder();
+const sessionToolFactory = new SessionToolFactory();
+const userConfigManager = new UserConfigManager();
 
 export type SessionBootstrapProfile = "user-session" | "agent-server" | "subagent" | "delegate";
 
@@ -50,11 +69,11 @@ export interface AgentRuntimeConfig {
 }
 
 export interface AgentRuntimeInstance {
-  session: AgentSession;
+  session: IAgentRuntime;
   workspaceDir: string;
   sessionDir: string;
   model: AvailableModel | null;
-  memory: any;
+  memory: unknown;
   runtime: AgentRuntimeInstance;
   context: {
     workspaceDir: string;
@@ -96,13 +115,14 @@ export async function createAgentRuntime(
     agentDef = agentEntry?.server.definition;
   }
 
-  let { sessionDir, workspaceDir } = resolveSessionWorkspace(
+  const { sessionDir, workspaceDir: resolvedWorkspaceDir } = resolveSessionWorkspace(
     username,
     sessionId,
     projectId,
     agentId,
     teamId,
   );
+  let workspaceDir = resolvedWorkspaceDir;
 
   if (customWorkspaceDir) {
     workspaceDir = customWorkspaceDir;
@@ -145,11 +165,7 @@ export async function createAgentRuntime(
     sessionMetadataStore.setAutonomyLevel(username, sessionId, entityConfig.autonomyLevel);
   }
   if (entityConfig.executionMode && (!metadata || !metadata.executionMode)) {
-    sessionMetadataStore.setExecutionMode(
-      username,
-      sessionId,
-      entityConfig.executionMode as any,
-    );
+    sessionMetadataStore.setExecutionMode(username, sessionId, entityConfig.executionMode as any);
   }
   const skillPaths = getResolvedSkillPaths(workspaceDir, username);
   const metadataSkills: string[] =
@@ -173,9 +189,11 @@ export async function createAgentRuntime(
     }
   }
 
+  const { McpRegistry } = await import("../mcp-registry");
+  const mcpRegistry = new McpRegistry();
   const mcpConfig = mcpRegistry.loadConfig(username);
   const cachedMcpToolNames: string[] = [];
-  for (const srv of Object.values(mcpConfig.mcpServers)) {
+  for (const srv of Object.values(mcpConfig.mcpServers) as any[]) {
     if (srv.enabled && Array.isArray(srv.tools)) {
       for (const tName of srv.tools) {
         cachedMcpToolNames.push(`mcp_${srv.id}_${tName}`);
@@ -226,7 +244,7 @@ export async function createAgentRuntime(
     await resourceLoader.reload();
   }
 
-  const { customTools: factoryCustomTools, hasExaKey } = sessionToolFactory.createSessionTools({
+  const { customTools: factoryCustomTools, hasExaKey } = sessionToolFactory.createTools({
     username,
     sessionId,
     workspaceDir,
@@ -261,33 +279,23 @@ export async function createAgentRuntime(
     username,
   });
 
-  const { PluginManager } = await import("shared");
+  const { PluginManager } = await import("@spaces/core");
   const { AuditLogPlugin, MemoryEnricherPlugin } = await import("../plugins");
   const pluginManager = new PluginManager();
   pluginManager.register(new AuditLogPlugin({ sessionId, username }));
   pluginManager.register(new MemoryEnricherPlugin({ memory }));
 
-  const { JsonlSessionStore } = await import("../../ai");
-  const sessionStore = JsonlSessionStore.create(sessionDir, sessionDir);
-
-  const { session } = await createAgentSession({
-    cwd: workspaceDir,
-    sessionStore,
-    authStorage,
-    modelRegistry,
-    resourceLoader,
-    customTools: finalCustomTools.map((t) => (t.toVendorFormat ? t.toVendorFormat() : t)),
-    beforeToolCall,
-    afterToolCall,
+  const modelProvider = new OpenAICompatibleProvider({
+    baseUrl: resolvedModel?.baseUrl || "https://api.openai.com/v1",
+    apiKey: resolvedModel?.apiKey,
+    model: resolvedModel?.id || "gpt-4o",
   });
+  const sessionStore = new FilesystemSessionStore(sessionDir);
 
-  if (resolvedModel) {
-    try {
-      await session.setModel(resolvedModel);
-    } catch (e) {
-      console.error(`[AgentRuntime] Failed to set resolved model for session ${sessionId}:`, e);
-    }
-  }
+  const session = createAgent(sessionId, {
+    modelProvider,
+    sessionStore,
+  });
 
   const isSubagent =
     profile === "subagent" ||
@@ -305,7 +313,9 @@ export async function createAgentRuntime(
         const meta = JSON.parse(readFileSync(metadataPath, "utf-8"));
         if (!existingParentId) existingParentId = meta.parentSessionId;
         if (!existingSubagentType) existingSubagentType = meta.subagentType;
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
     }
   }
 
@@ -337,8 +347,6 @@ export async function createAgentRuntime(
     });
   }
 
-  session.setActiveToolsByName(activeToolsList);
-
   if (!skipMemory) {
     enrichSessionWithMemory(session, memory);
   }
@@ -368,5 +376,3 @@ export async function createAgentRuntime(
   };
   return instance;
 }
-
-export const bootstrapAgentSession = createAgentRuntime;

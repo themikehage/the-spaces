@@ -2,36 +2,31 @@
 import { GlobalApprovalOverlay } from "@/components/approvals/GlobalApprovalOverlay";
 import { useAuth } from "@/contexts/AuthContext";
 import { SessionsProvider } from "@/contexts/SessionsContext";
-import { useIsMobile } from "@/hooks/useIsMobile";
 import { useNavigationStack, type NavigationStackItem } from "@/hooks/useNavigationStack";
 import { WorkspaceContextProvider } from "@/hooks/useWorkspaceContext";
 import { LoginPage } from "@/pages/LoginPage";
 import { OnboardingPage } from "@/pages/OnboardingPage";
 import { useRoutePage } from "@/router/useRoutePage";
-import { useCallback, useEffect, useRef } from "react";
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { MainLayout } from "./MainLayout";
+import { useEffect, useRef } from "react";
+import { Outlet, useLocation } from "react-router-dom";
+import { AppShell } from "./AppShell";
 
 export function AppRouter() {
   const location = useLocation();
-  const routerNavigate = useNavigate();
-  const navigate = useCallback((path: string) => routerNavigate(path), [routerNavigate]);
   return (
     <WorkspaceContextProvider>
-      <AppRouterContent locationPath={location.pathname} navigate={navigate} />
+      <AppRouterContent locationPath={location.pathname} />
     </WorkspaceContextProvider>
   );
 }
 
 interface AppRouterContentProps {
   locationPath: string;
-  navigate: (path: string) => void;
 }
 
-function AppRouterContent({ locationPath, navigate }: AppRouterContentProps) {
+function AppRouterContent({ locationPath }: AppRouterContentProps) {
   const page = useRoutePage();
   const { user, loading, needsSetup } = useAuth();
-  const isMobileState = useIsMobile();
   const navigationStack = useNavigationStack();
   const recordedPathRef = useRef<string | null>(null);
 
@@ -46,16 +41,6 @@ function AppRouterContent({ locationPath, navigate }: AppRouterContentProps) {
     navigationStack.push(item);
   }, [locationPath, navigationStack.push, page]);
 
-  const handleBack = useCallback(() => {
-    const previous = navigationStack.stack[navigationStack.stack.length - 2];
-    if (navigationStack.canGoBack && previous?.path) {
-      navigationStack.pop();
-      navigate(previous.path);
-      return;
-    }
-    navigate("/");
-  }, [navigate, navigationStack.canGoBack, navigationStack.stack]);
-
   if (loading)
     return (
       <div className="h-dvh flex items-center justify-center bg-background">
@@ -68,15 +53,9 @@ function AppRouterContent({ locationPath, navigate }: AppRouterContentProps) {
   return (
     <SessionsProvider>
       <GlobalApprovalOverlay />
-      <MainLayout
-        page={page}
-        onNavigate={navigate}
-        isMobile={isMobileState.isMobile}
-        canGoBack={navigationStack.canGoBack}
-        onBack={handleBack}
-      >
+      <AppShell activePage={page}>
         <Outlet />
-      </MainLayout>
+      </AppShell>
     </SessionsProvider>
   );
 }

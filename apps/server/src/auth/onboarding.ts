@@ -80,7 +80,9 @@ export async function createProgrammaticSession(
       });
       if (result?.token) return result.token;
     }
-  } catch { /* noop */ }
+  } catch {
+    /* noop */
+  }
 
   const { id, token, expiresAt, now } = buildProgrammaticSessionPayload(ttlSeconds);
   insertSessionRaw(id, token, expiresAt, now, user.id);
@@ -105,5 +107,7 @@ export function deleteProgrammaticSession(token: string): void {
   try {
     const db = getDb();
     db.query("DELETE FROM session WHERE token = ?").run(token);
-  } catch { /* noop */ }
+  } catch {
+    /* noop */
+  }
 }

@@ -28,5 +28,3 @@ export class ModelEnrichmentService {
     return 128000; // sensible default
   }
 }
-
-export const modelEnrichmentService = new ModelEnrichmentService();

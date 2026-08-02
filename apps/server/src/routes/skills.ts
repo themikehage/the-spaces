@@ -1,7 +1,4 @@
 // SPDX-License-Identifier: MIT
-import { Hono } from "hono";
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
 import {
   getAgentWorkspaceDir,
   getProjectWorkspaceDir,
@@ -9,9 +6,12 @@ import {
   getUserDir,
   getWorkspaceDir,
   getWorkspaceSkillsDir,
-} from "shared";
+} from "@spaces/core";
+import { Hono } from "hono";
+import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { loadSkills } from "../ai/load-skills";
-import { getResolvedSkillPaths } from "../core/session-manager";
+import { getResolvedSkillPaths } from "../core/session/workspace-resolver";
 import { authMiddleware, getAuthPayload } from "../middleware/auth";
 
 export const skillsRouter = new Hono();
@@ -45,7 +45,8 @@ skillsRouter.get("/", async (c) => {
     const skillsWithContent = result.skills.map((skill) => {
       const isEntityLocal =
         entityType && entityType !== "global" && entityId && skill.filePath
-          ? skill.filePath.startsWith(workspaceDir) && !skill.filePath.startsWith(userGlobalWorkspaceDir)
+          ? skill.filePath.startsWith(workspaceDir) &&
+            !skill.filePath.startsWith(userGlobalWorkspaceDir)
           : false;
 
       return {

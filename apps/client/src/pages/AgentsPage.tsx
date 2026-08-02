@@ -10,10 +10,20 @@ import { useToast } from "@/contexts/ToastContext";
 import { useAgents } from "@/hooks/useAgents";
 import { useLiterals } from "@/lib";
 import { apiFetch } from "@/lib/api";
-import { AlertCircle, ChevronDown, Info, Plus, RefreshCw, Search, Settings2, Users, X } from "lucide-react";
+import type { AgentDefinition, AgentInfo } from "@spaces/core";
 import { AnimatePresence, motion } from "framer-motion";
+import {
+  AlertCircle,
+  ChevronDown,
+  Info,
+  Plus,
+  RefreshCw,
+  Search,
+  Settings2,
+  Users,
+  X,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { AgentDefinition, AgentInfo } from "shared";
 import { literals as u } from "./AgentsPage.literals";
 
 const STATUS_COLORS: Record<string, string> = {
@@ -155,12 +165,15 @@ function AgentConfigModal({
     <Modal open onClose={onClose} title={`Agent Configuration: ${agent.name}`}>
       <div className="p-4 space-y-4 max-h-[75vh] overflow-y-auto">
         <EntitySkillsEditor entityType="agent" entityId={agent.id} title="Agent Skills" />
-        <EntityCustomToolsEditor entityType="agent" entityId={agent.id} title="Agent Custom Tools" />
+        <EntityCustomToolsEditor
+          entityType="agent"
+          entityId={agent.id}
+          title="Agent Custom Tools"
+        />
       </div>
     </Modal>
   );
 }
-
 
 function BlueprintDetailModal({
   blueprint,
@@ -558,7 +571,7 @@ export function AgentsPage({ onSelectAgent }: AgentsPageProps) {
               className="p-2 text-muted-foreground hover:text-foreground hover:bg-card-hover rounded-lg transition-colors"
               title={l.refresh}
             >
-                <RefreshCw size={14} />
+              <RefreshCw size={14} />
             </button>
           )}
         </div>

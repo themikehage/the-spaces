@@ -4,7 +4,7 @@ import {
   getProjectWorkspaceDir,
   getTeamWorkspaceDir,
   getWorkspaceDir,
-} from "shared";
+} from "@spaces/core";
 import type { WorkspaceConfigPort } from "../ports/workspace-config.port";
 import type { ScopeConfigManager } from "../scope/scope-config-manager";
 import { deepMerge } from "./config-merger";

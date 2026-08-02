@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { zValidator } from "@hono/zod-validator";
+import { CreateSessionSchema } from "@spaces/core";
 import { Hono } from "hono";
-import { CreateSessionSchema } from "shared";
 import type { AppContext } from "../../context";
 import { authMiddleware } from "../../middleware/auth";
 

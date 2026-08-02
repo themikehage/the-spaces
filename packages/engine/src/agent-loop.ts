@@ -73,7 +73,7 @@ export async function runAgentLoop(config: AgentLoopConfig): Promise<void> {
 
     if (config.onToolCall) {
       const results = await Promise.all(
-        pendingToolCalls.map((toolCall) => config.onToolCall!(toolCall))
+        pendingToolCalls.map((toolCall) => config.onToolCall!(toolCall)),
       );
 
       for (const res of results) {

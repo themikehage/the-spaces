@@ -1,8 +1,6 @@
-// SPDX-License-Identifier: MIT
-import { uiApprovalRegistry } from "../ui-approval-registry";
-import { createImageGenTool } from "./image-gen-tool";
-import { createVideoGenTool } from "./video-gen-tool";
-import { createVisionTool } from "./vision-tool";
+import { UiApprovalRegistry } from "../ui-approval-registry";
+
+const uiApprovalRegistry = new UiApprovalRegistry();
 
 import { createDecomposeTasksTool } from "./decompose-tool";
 import { createManageDelegationsTool } from "./manage-delegations-tool";
@@ -306,7 +304,7 @@ export function createUiTools(
       required: ["entityType"],
     },
     execute: async (toolCallId: string, args: any) => {
-      const { broadcastToUser } = await import("../../ws/handler");
+      const { broadcastToUser } = await import("../ws-bridge");
       broadcastToUser(username, {
         type: "entity-updated",
         entityType: args.entityType || "all",
@@ -318,9 +316,6 @@ export function createUiTools(
     },
   };
 
-  const visionTool = createVisionTool(workspaceDir, username);
-  const imageGenTool = createImageGenTool(workspaceDir, username);
-
   const tools: any[] = [
     requestApprovalTool,
     askQuestionTool,
@@ -329,9 +324,6 @@ export function createUiTools(
     renderChartTool,
     shareFileTool,
     refreshUiTool,
-    visionTool,
-    imageGenTool,
-    createVideoGenTool(workspaceDir, username),
   ];
 
   if (subagentOptions) {

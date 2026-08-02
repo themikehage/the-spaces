@@ -1,6 +1,18 @@
 // SPDX-License-Identifier: MIT
 import { convertToLlm } from "./messages";
-import { estimateContextTokens } from "./vendor/ai/src/utils/estimate.ts";
+
+function estimateContextTokens(llmContext: any): {
+  tokens: number;
+  usageTokens: number;
+  trailingTokens: number;
+} {
+  let charCount = 0;
+  for (const m of llmContext.messages || []) {
+    if (typeof m.content === "string") charCount += m.content.length;
+  }
+  const tokens = Math.ceil(charCount / 4);
+  return { tokens, usageTokens: tokens, trailingTokens: 0 };
+}
 
 export interface ContextUsageResult {
   totalTokens: number;

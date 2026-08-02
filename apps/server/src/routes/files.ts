@@ -1,4 +1,13 @@
 // SPDX-License-Identifier: MIT
+import {
+  getAgentWorkspaceDir,
+  getProjectsDir,
+  getProjectWorkspaceDir,
+  getSessionDir,
+  getTeamWorkspaceDir,
+  getWorkspaceDir,
+  UpdateProjectAssignmentSchema,
+} from "@spaces/core";
 import { Hono } from "hono";
 import {
   existsSync,
@@ -12,23 +21,13 @@ import {
   writeFileSync,
 } from "node:fs";
 import { basename, dirname, join, normalize, resolve, sep } from "node:path";
-import {
-  getAgentWorkspaceDir,
-  getProjectsDir,
-  getProjectWorkspaceDir,
-  getSessionDir,
-  getTeamWorkspaceDir,
-  getWorkspaceDir,
-  UpdateProjectAssignmentSchema,
-} from "shared";
 import { sessionMiddleware } from "../auth/middleware";
+import type { AppContext } from "../context";
 import { applyCacheHeaders } from "../core/cache-headers";
-import { scopeConfigManager } from "../core/scope";
-import { sessionManager } from "../core/session-manager";
 import { resolveProjectDir } from "../core/session/workspace-resolver";
 import { getUsername } from "../lib/auth-helpers";
 
-export const filesRouter = new Hono();
+export const filesRouter = new Hono<{ Variables: { appContext: AppContext } }>();
 
 filesRouter.get("/workspace-projects/:id/avatar", async (c) => {
   const username = getUsername(c);
@@ -330,7 +329,9 @@ filesRouter.get("/workspace-projects", async (c) => {
             createdAt = proj.createdAt || null;
             avatarUrl = proj.avatarUrl || null;
             status = proj.status || "planning";
-          } catch { /* noop */ }
+          } catch {
+            /* noop */
+          }
         } else {
           try {
             createdAt = new Date().toISOString();
@@ -350,7 +351,9 @@ filesRouter.get("/workspace-projects", async (c) => {
               ),
               "utf-8",
             );
-          } catch { /* noop */ }
+          } catch {
+            /* noop */
+          }
         }
         const stat = statSync(entryPath);
         projects.push({
@@ -458,10 +461,13 @@ filesRouter.delete("/workspace-projects/:id", async (c) => {
       return c.json({ error: "Project not found" }, 404);
     }
 
-    const sessions = await sessionManager.listSessions(username);
+    const { sessionStore, sessionMetadataStore, scopeConfigManager, agentRegistry } =
+      c.get("appContext");
+    const sessions = await sessionStore.listSessions().catch(() => []);
     for (const s of sessions) {
-      if (s.projectId === id) {
-        await sessionManager.destroySession(username, s.id);
+      const meta = sessionMetadataStore.getSessionMetadata(username, s.id);
+      if (meta?.projectId === id) {
+        await sessionStore.delete(s.id).catch(() => {});
       }
     }
 
@@ -477,7 +483,7 @@ filesRouter.get("/workspace-projects/:id/agents", async (c) => {
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
   const id = c.req.param("id");
-  const { agentRegistry } = await import("../agents/agent-registry");
+  const { agentRegistry } = c.get("appContext");
   return c.json({ agents: agentRegistry.listScoped(username, "projects", id) });
 });
 
@@ -561,7 +567,7 @@ filesRouter.patch("/workspace-projects/:id", async (c) => {
     };
 
     try {
-      const { broadcastToUser } = await import("../ws/handler");
+      const { broadcastToUser } = await import("../core/ws-bridge");
       broadcastToUser(username, { type: "project_updated", project: updatedProject });
     } catch (wsErr) {
       console.error("[WS] Failed to broadcast project update:", wsErr);
@@ -596,7 +602,9 @@ filesRouter.post("/workspace-projects/:id/avatar", async (c) => {
         unlinkSync(join(projectPath, f));
       }
     }
-  } catch { /* noop */ }
+  } catch {
+    /* noop */
+  }
 
   const ext = file.name.split(".").pop() || "png";
   const avatarPath = join(projectPath, `avatar.${ext}`);
@@ -632,7 +640,9 @@ filesRouter.delete("/workspace-projects/:id/avatar", async (c) => {
         unlinkSync(join(projectPath, f));
       }
     }
-  } catch { /* noop */ }
+  } catch {
+    /* noop */
+  }
 
   // Update project.json
   const projectJson = JSON.parse(readFileSync(jsonPath, "utf-8"));
@@ -703,9 +713,11 @@ filesRouter.put("/workspace-projects/:id/assignment", async (c) => {
     writeFileSync(jsonPath, JSON.stringify(projectJson, null, 2), "utf-8");
 
     try {
-      const { broadcastToUser } = await import("../ws/handler");
+      const { broadcastToUser } = await import("../core/ws-bridge");
       broadcastToUser(username, { type: "project_updated", project: { id, ...projectJson } });
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
 
     return c.json({ assignment: updatedAssignment });
   } catch (err: any) {
@@ -731,9 +743,11 @@ filesRouter.delete("/workspace-projects/:id/assignment", async (c) => {
     writeFileSync(jsonPath, JSON.stringify(projectJson, null, 2), "utf-8");
 
     try {
-      const { broadcastToUser } = await import("../ws/handler");
+      const { broadcastToUser } = await import("../core/ws-bridge");
       broadcastToUser(username, { type: "project_updated", project: { id, ...projectJson } });
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
 
     return c.json({ ok: true });
   } catch (err: any) {
@@ -749,7 +763,7 @@ filesRouter.post("/workspace/refresh", async (c) => {
     const body = await c.req.json().catch(() => ({}));
     const { type } = body;
 
-    const { broadcastToUser } = await import("../ws/handler");
+    const { broadcastToUser } = await import("../core/ws-bridge");
     broadcastToUser(username, {
       type: "entity-updated",
       entityType: type || "all",

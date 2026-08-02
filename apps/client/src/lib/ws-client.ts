@@ -1,40 +1,44 @@
 // SPDX-License-Identifier: MIT
-import type { WsClientMessage, WsServerMessage, WsServerMessageType } from "shared";
+import type { AgentEvent } from "@spaces/core";
 
-type EventHandler = (data: unknown) => void;
+export type WsOutMessage =
+  | { type: "prompt"; sessionId: string; message: string }
+  | { type: "abort"; sessionId: string }
+  | { type: "ping" }
+  | Record<string, unknown>;
+
+export type WsInMessage = AgentEvent | { type: string; [key: string]: unknown };
+
 export type ConnectionState =
   "disconnected" | "connecting" | "connected" | "permanently_disconnected";
-type StateHandler = (state: ConnectionState) => void;
 
-class WsClient {
+export type EventHandler = (data: any) => void;
+export type StateHandler = (state: ConnectionState) => void;
+
+export class WsClient {
   private static readonly MAX_QUEUE_SIZE = 50;
   private static readonly MAX_RETRIES = 20;
   private ws: WebSocket | null = null;
-  private messageHandlers = new Map<string, Set<EventHandler>>();
+  private eventHandlers = new Set<EventHandler>();
   private stateHandlers = new Set<StateHandler>();
   private state: ConnectionState = "disconnected";
   private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
   private reconnectAttempts = 0;
   private intentionalClose = false;
-  private offlineQueue: Array<Record<string, unknown>> = [];
+  private offlineQueue: WsOutMessage[] = [];
   private pingInterval: ReturnType<typeof setInterval> | null = null;
   private lastPong = Date.now();
+  private activeSessionId: string | null = null;
 
-  private startPingTimer(): void {
-    this.stopPingTimer();
-    this.lastPong = Date.now();
-    this.pingInterval = setInterval(() => {
-      if (Date.now() - this.lastPong > 45000) {
-        console.warn("[wsClient] No ping received from server in 45s, reconnecting...");
-        this.ws?.close();
-      }
-    }, 15000);
+  constructor(sessionId: string | null = null) {
+    this.activeSessionId = sessionId;
   }
 
-  private stopPingTimer(): void {
-    if (this.pingInterval) {
-      clearInterval(this.pingInterval);
-      this.pingInterval = null;
+  setSessionId(sessionId: string | null): void {
+    if (this.activeSessionId === sessionId) return;
+    this.activeSessionId = sessionId;
+    if (this.state === "connected" || this.state === "connecting") {
+      this.reconnect();
     }
   }
 
@@ -44,10 +48,6 @@ class WsClient {
 
   isConnected(): boolean {
     return this.state === "connected" && this.ws?.readyState === WebSocket.OPEN;
-  }
-
-  getQueueSize(): number {
-    return this.offlineQueue.length;
   }
 
   connect(): void {
@@ -69,20 +69,63 @@ class WsClient {
     this.setState("disconnected");
   }
 
-  send(data: WsClientMessage): boolean {
+  reconnect(): void {
+    this.disconnect();
+    this.connect();
+  }
+
+  send(data: WsOutMessage): boolean {
     if (this.ws?.readyState === WebSocket.OPEN && this.state === "connected") {
       this.ws.send(JSON.stringify(data));
       return true;
     }
     if (this.offlineQueue.length >= WsClient.MAX_QUEUE_SIZE) {
-      const dropped = this.offlineQueue.shift();
-      console.warn(
-        `[wsClient] Offline queue full (${WsClient.MAX_QUEUE_SIZE}), dropping oldest message:`,
-        dropped?.type ?? "unknown",
-      );
+      this.offlineQueue.shift();
     }
-    this.offlineQueue.push(data as Record<string, unknown>);
+    this.offlineQueue.push(data);
+    if (this.state === "disconnected") {
+      this.connect();
+    }
     return false;
+  }
+
+  subscribe(typeOrHandler: string | EventHandler, handler?: EventHandler): () => void {
+    let fn: EventHandler;
+    if (typeof typeOrHandler === "string") {
+      const targetType = typeOrHandler;
+      const realHandler = handler!;
+      fn = (data: WsInMessage) => {
+        if (targetType === "*" || (data && (data as any).type === targetType)) {
+          realHandler(data);
+        }
+      };
+    } else {
+      fn = typeOrHandler;
+    }
+
+    this.eventHandlers.add(fn);
+    if (this.state === "disconnected") {
+      this.connect();
+    }
+    return () => {
+      this.eventHandlers.delete(fn);
+    };
+  }
+
+  subscribeAll(handler: EventHandler): () => void {
+    return this.subscribe("*", handler);
+  }
+
+  onStateChange(handler: StateHandler): () => void {
+    this.stateHandlers.add(handler);
+    return () => {
+      this.stateHandlers.delete(handler);
+    };
+  }
+
+  private setState(state: ConnectionState): void {
+    this.state = state;
+    this.stateHandlers.forEach((h) => h(state));
   }
 
   private flushOfflineQueue(): void {
@@ -96,7 +139,7 @@ class WsClient {
         try {
           this.ws.send(JSON.stringify(data));
         } catch (err) {
-          console.error("[wsClient] Failed to flush queued message:", err);
+          console.error("[WsClient] Failed to flush queued message:", err);
           this.offlineQueue.unshift(data);
           break;
         }
@@ -104,146 +147,90 @@ class WsClient {
     }
   }
 
-  subscribe<T extends WsServerMessageType>(
-    type: T,
-    handler: (data: Extract<WsServerMessage, { type: T }> | any) => void,
-  ): () => void {
-    if (!this.messageHandlers.has(type as string)) {
-      this.messageHandlers.set(type as string, new Set());
+  private startPingTimer(): void {
+    this.stopPingTimer();
+    this.lastPong = Date.now();
+    this.pingInterval = setInterval(() => {
+      if (Date.now() - this.lastPong > 45000) {
+        console.warn("[WsClient] No response from server in 45s, reconnecting...");
+        this.ws?.close();
+      }
+    }, 15000);
+  }
+
+  private stopPingTimer(): void {
+    if (this.pingInterval) {
+      clearInterval(this.pingInterval);
+      this.pingInterval = null;
     }
-    const handlers = this.messageHandlers.get(type as string)!;
-    handlers.add(handler as EventHandler);
-    if (this.state === "disconnected") this.connect();
-    return () => {
-      handlers.delete(handler as EventHandler);
-    };
-  }
-
-  subscribeAll(handler: (data: unknown) => void): () => void {
-    return this.subscribe("*" as any, handler);
-  }
-
-  onStateChange(handler: StateHandler): () => void {
-    this.stateHandlers.add(handler);
-    return () => this.stateHandlers.delete(handler);
-  }
-
-  private setState(state: ConnectionState) {
-    this.state = state;
-    this.stateHandlers.forEach((h) => h(state));
   }
 
   private doConnect(): void {
     if (this.state !== "disconnected") return;
-    this.doConnectAsync().catch((err) => {
-      console.error("[wsClient] Connection error:", err);
-      this.setState("disconnected");
-      this.ws = null;
-      if (!this.intentionalClose) {
+    this.setState("connecting");
+
+    const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+    const host = location.host;
+    const sessionParam = this.activeSessionId
+      ? `?sessionId=${encodeURIComponent(this.activeSessionId)}`
+      : "";
+    const url = `${protocol}//${host}/ws${sessionParam}`;
+
+    try {
+      const ws = new WebSocket(url);
+      this.ws = ws;
+
+      ws.onopen = () => {
+        this.reconnectAttempts = 0;
+        this.setState("connected");
+        this.startPingTimer();
+        this.flushOfflineQueue();
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data as string) as WsInMessage;
+          if (data.type === "ping") {
+            this.lastPong = Date.now();
+            this.send({ type: "pong" as any });
+            return;
+          }
+          if (data.type === "entity-updated") {
+            window.dispatchEvent(
+              new CustomEvent("entity-updated", { detail: { type: (data as any).entityType } }),
+            );
+          }
+          this.eventHandlers.forEach((h) => h(data));
+        } catch {
+          /* noop */
+        }
+      };
+
+      ws.onclose = () => {
+        this.ws = null;
+        this.stopPingTimer();
+        if (this.intentionalClose) return;
+        this.setState("disconnected");
         if (this.reconnectAttempts >= WsClient.MAX_RETRIES) {
-          console.error(
-            `[wsClient] Max reconnection attempts (${WsClient.MAX_RETRIES}) reached. Giving up.`,
-          );
           this.setState("permanently_disconnected");
           return;
         }
-        const baseDelay = Math.min(1000 * 2 ** this.reconnectAttempts, 30000);
-        const jitter = Math.random() * 1000;
-        const delay = baseDelay + jitter;
+        const delay = Math.min(1000 * 2 ** this.reconnectAttempts, 30000) + Math.random() * 1000;
         this.reconnectAttempts++;
         this.reconnectTimeout = setTimeout(() => {
           this.reconnectTimeout = null;
           this.doConnect();
         }, delay);
-      }
-    });
-  }
+      };
 
-  private async doConnectAsync(): Promise<void> {
-    console.log("[wsClient] Initializing connection...");
-    this.setState("connecting");
-
-    const protocol = location.protocol === "https:" ? "wss:" : "ws:";
-    const url = `${protocol}//${location.host}/ws`;
-    console.log(`[wsClient] Connecting to: ${url}`);
-    const ws = new WebSocket(url);
-    this.ws = ws;
-
-    ws.onopen = () => {
-      console.log("[wsClient] WebSocket opened. Cookie auth will be attempted server-side.");
-      this.reconnectAttempts = 0;
-      this.startPingTimer();
-    };
-
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data as string);
-
-        if (data.type === "ping") {
-          this.lastPong = Date.now();
-          this.send({ type: "pong" });
-          return;
-        }
-
-        if (data.type === "auth_success") {
-          console.log("[wsClient] Authentication successful!");
-          this.setState("connected");
-          this.flushOfflineQueue();
-          return;
-        }
-
-        if (data.type === "auth_error") {
-          console.error("[wsClient] Authentication failed! Error:", data.error);
-          this.intentionalClose = true;
-          this.setState("permanently_disconnected");
-          ws.close();
-          return;
-        }
-
-        if (data.type === "entity-updated") {
-          window.dispatchEvent(
-            new CustomEvent("entity-updated", { detail: { type: data.entityType } }),
-          );
-          return;
-        }
-
-        this.messageHandlers.get(data.type)?.forEach((h) => h(data));
-        this.messageHandlers.get("*")?.forEach((h) => h(data));
-      } catch { /* noop */ }
-    };
-
-    ws.onclose = (event) => {
-      console.warn(
-        `[wsClient] WebSocket closed. intentionalClose: ${this.intentionalClose}, code: ${event.code}, reason: ${event.reason}`,
-      );
-      this.ws = null;
-      this.stopPingTimer();
-      if (this.intentionalClose) return;
+      ws.onerror = (err) => {
+        console.error("[WsClient] WebSocket error:", err);
+        ws.close();
+      };
+    } catch (err) {
+      console.error("[WsClient] Failed to create WebSocket:", err);
       this.setState("disconnected");
-      if (this.reconnectAttempts >= WsClient.MAX_RETRIES) {
-        console.error(
-          `[wsClient] Max reconnection attempts (${WsClient.MAX_RETRIES}) reached. Giving up.`,
-        );
-        this.setState("permanently_disconnected");
-        return;
-      }
-      const baseDelay = Math.min(1000 * 2 ** this.reconnectAttempts, 30000);
-      const jitter = Math.random() * 1000;
-      const delay = baseDelay + jitter;
-      console.log(
-        `[wsClient] Scheduling reconnect in ${delay}ms (attempt: ${this.reconnectAttempts})`,
-      );
-      this.reconnectAttempts++;
-      this.reconnectTimeout = setTimeout(() => {
-        this.reconnectTimeout = null;
-        this.doConnect();
-      }, delay);
-    };
-
-    ws.onerror = (err) => {
-      console.error("[wsClient] WebSocket error occurred:", err);
-      ws.close();
-    };
+    }
   }
 }
 

@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
-import { type TeamMessage, SessionPrefix, getTeamWorkspaceDir } from "shared";
-import { agentRegistry } from "../../agents";
-import { sessionManager } from "../../core/session-manager";
-import { teamStore } from "../team-store";
+import { SessionPrefix } from "@spaces/core";
+import { AgentRegistry } from "../../agents";
+import { DelegationRegistry } from "../../core/delegation-registry";
+import type { ISessionResolver } from "../../core/ports/core-services.port";
+import { SessionMetadataStore } from "../../core/session/metadata-store";
+import { TeamStore } from "../team-store";
 
 type BroadcastFn = (teamId: string, data: any) => void;
 
@@ -15,9 +17,26 @@ interface ActiveBridge {
 export class OrchestrationRunner {
   private activeBridges = new Map<string, ActiveBridge>();
   private broadcastFn: BroadcastFn;
+  private sessionResolver?: ISessionResolver;
+  private teamStore: TeamStore;
+  private agentRegistry: AgentRegistry;
+  private sessionMetadataStore: SessionMetadataStore;
+  private delegationRegistry: DelegationRegistry;
 
-  constructor(broadcastFn: BroadcastFn) {
+  constructor(
+    broadcastFn: BroadcastFn,
+    teamStore?: TeamStore,
+    agentRegistry?: AgentRegistry,
+    sessionMetadataStore?: SessionMetadataStore,
+    delegationRegistry?: DelegationRegistry,
+    resolver?: ISessionResolver,
+  ) {
     this.broadcastFn = broadcastFn;
+    this.teamStore = teamStore ?? new TeamStore();
+    this.agentRegistry = agentRegistry ?? new AgentRegistry();
+    this.sessionMetadataStore = sessionMetadataStore ?? new SessionMetadataStore();
+    this.delegationRegistry = delegationRegistry ?? new DelegationRegistry();
+    this.sessionResolver = resolver;
   }
 
   async dispatch(
@@ -26,183 +45,162 @@ export class OrchestrationRunner {
     userContent: string,
     conversationSessionId?: string,
   ): Promise<void> {
-    const team = teamStore.getTeam(username, teamId);
+    const team = this.teamStore.getTeam(username, teamId);
     if (!team) throw new Error("Team not found");
 
-    const leader = team.members.find((m) => m.role === "lead");
+    const leader = team.members.find((m: any) => m.role === "lead");
     if (!leader) throw new Error("Orchestration leader not found");
 
-    const leaderEntry = agentRegistry.get(leader.agentId);
+    const leaderEntry = this.agentRegistry.get(leader.agentId);
     const leaderName = leaderEntry?.server.definition.name ?? leader.agentId;
 
     const ownerSessionId = `${SessionPrefix.TEAM}${teamId}`;
 
     const now = new Date().toISOString();
-    const metaStore = sessionManager.metadataStore;
+    const metaStore = this.sessionMetadataStore;
     if (!metaStore.getSessionMetadata(username, ownerSessionId)) {
       metaStore.saveSessionMetadata(username, ownerSessionId, {
         name: `${team.name} — Orchestration`,
         createdAt: now,
         updatedAt: now,
         agentId: leader.agentId,
-        teamId,
+        teamId: team.id,
+        teamType: team.teamType,
+        isOrchestration: true,
       });
     }
 
-    const userMsg: TeamMessage = {
-      id: crypto.randomUUID(),
-      teamId,
-      sessionId: conversationSessionId,
-      role: "user",
-      content: userContent,
-      createdAt: now,
-    };
-    teamStore.appendMessage(username, teamId, userMsg);
-    this.broadcastFn(teamId, {
-      type: "team_message",
-      teamId,
-      sessionId: conversationSessionId,
-      message: userMsg,
-      eventType: "user_message",
-    });
+    const bridgeKey = teamId;
 
-    const session = await sessionManager.getOrCreateSession(
-      username,
-      ownerSessionId,
-      undefined,
-      leader.agentId,
-      { workspaceDir: getTeamWorkspaceDir(username, teamId) },
-    );
-
-    const existingBridge = this.activeBridges.get(teamId);
-    if (existingBridge?.unsub) {
-      existingBridge.unsub();
+    if (this.activeBridges.has(bridgeKey)) {
+      const existing = this.activeBridges.get(bridgeKey);
+      if (existing?.unsub) {
+        existing.unsub();
+      }
     }
 
-    const bridge: ActiveBridge = {
-      sessionId: conversationSessionId,
-      accumulatedText: "",
-      unsub: null,
-    };
-    this.activeBridges.set(teamId, bridge);
+    const session = this.sessionResolver?.getSession?.(username, ownerSessionId);
+    if (session) {
+      let accumulatedText = "";
 
-    const unsub = session.subscribe((evt: any) => {
-      const currentBridge = this.activeBridges.get(teamId);
-      if (!currentBridge) return;
-      const sid = currentBridge.sessionId;
+      const unsub = (session as any).on
+        ? (session as any).on((event: any) => {
+            if (event.type === "token") {
+              accumulatedText += event.content;
 
-      // Raw event types emitted by AgentSession
-      if (evt.type === "agent_start") {
-        this.broadcastFn(teamId, {
-          type: "team_agent_start",
-          teamId,
-          sessionId: sid,
-          agentId: leader.agentId,
-          agentName: leaderName,
-        });
-        currentBridge.accumulatedText = "";
-        return;
-      }
+              this.broadcastFn(teamId, {
+                type: "team_stream_chunk",
+                teamId,
+                agentId: leader.agentId,
+                agentName: leaderName,
+                chunk: event.content,
+                fullText: accumulatedText,
+                sessionId: ownerSessionId,
+                conversationSessionId,
+              });
+            } else if (event.type === "tool_start") {
+              this.broadcastFn(teamId, {
+                type: "team_tool_start",
+                teamId,
+                agentId: leader.agentId,
+                agentName: leaderName,
+                toolCallId: event.toolCallId,
+                toolName: event.toolName,
+                args: event.args,
+                sessionId: ownerSessionId,
+                conversationSessionId,
+              });
+            } else if (event.type === "tool_end") {
+              this.broadcastFn(teamId, {
+                type: "team_tool_end",
+                teamId,
+                agentId: leader.agentId,
+                agentName: leaderName,
+                toolCallId: event.toolCallId,
+                result: event.result,
+                error: event.error,
+                sessionId: ownerSessionId,
+                conversationSessionId,
+              });
+            } else if (event.type === "done") {
+              this.broadcastFn(teamId, {
+                type: "team_agent_finished",
+                teamId,
+                agentId: leader.agentId,
+                agentName: leaderName,
+                fullText: accumulatedText,
+                sessionId: ownerSessionId,
+                conversationSessionId,
+              });
 
-      // Tokens are nested inside message_update events
-      if (evt.type === "message_update") {
-        const inner = evt.assistantMessageEvent;
-        if (!inner) return;
+              this.broadcastFn(teamId, {
+                type: "team_dispatch_completed",
+                teamId,
+                fullText: accumulatedText,
+                sessionId: ownerSessionId,
+                conversationSessionId,
+              });
 
-        if (inner.type === "text_delta" && inner.delta) {
-          currentBridge.accumulatedText += inner.delta;
-          this.broadcastFn(teamId, {
-            type: "team_agent_token",
-            teamId,
-            sessionId: sid,
-            agentId: leader.agentId,
-            token: inner.delta,
-            fullText: currentBridge.accumulatedText,
+              const br = this.activeBridges.get(bridgeKey);
+              if (br?.unsub) br.unsub();
+              this.activeBridges.delete(bridgeKey);
+            } else if (event.type === "error") {
+              this.broadcastFn(teamId, {
+                type: "team_agent_finished",
+                teamId,
+                agentId: leader.agentId,
+                agentName: leaderName,
+                error: event.error?.message ?? "Execution error",
+                sessionId: ownerSessionId,
+                conversationSessionId,
+              });
+
+              this.broadcastFn(teamId, {
+                type: "team_dispatch_completed",
+                teamId,
+                error: event.error?.message ?? "Execution error",
+                sessionId: ownerSessionId,
+                conversationSessionId,
+              });
+
+              const br = this.activeBridges.get(bridgeKey);
+              if (br?.unsub) br.unsub();
+              this.activeBridges.delete(bridgeKey);
+            }
+          })
+        : (session as any).subscribe((event: any) => {
+            if (event.type === "token") {
+              accumulatedText += event.content;
+
+              this.broadcastFn(teamId, {
+                type: "team_stream_chunk",
+                teamId,
+                agentId: leader.agentId,
+                agentName: leaderName,
+                chunk: event.content,
+                fullText: accumulatedText,
+                sessionId: ownerSessionId,
+                conversationSessionId,
+              });
+            }
           });
-        } else if (inner.type === "thinking_delta" && inner.delta) {
-          this.broadcastFn(teamId, {
-            type: "team_agent_thinking",
-            teamId,
-            sessionId: sid,
-            agentId: leader.agentId,
-            token: inner.delta,
-          });
-        }
-        return;
-      }
 
-      if (evt.type === "tool_execution_start") {
-        this.broadcastFn(teamId, {
-          type: "team_agent_tool_start",
-          teamId,
-          sessionId: sid,
-          agentId: leader.agentId,
-          toolName: evt.toolName,
-          toolCallId: evt.toolCallId,
-          args: evt.args,
-        });
-        return;
-      }
+      this.activeBridges.set(bridgeKey, {
+        sessionId: ownerSessionId,
+        accumulatedText: "",
+        unsub,
+      });
 
-      if (evt.type === "tool_execution_end") {
-        this.broadcastFn(teamId, {
-          type: "team_agent_tool_end",
-          teamId,
-          sessionId: sid,
-          agentId: leader.agentId,
-          toolName: evt.toolName,
-          toolCallId: evt.toolCallId,
-          result: evt.result,
-          isError: evt.isError,
-        });
-        return;
-      }
+      this.broadcastFn(teamId, {
+        type: "team_agent_started",
+        teamId,
+        agentId: leader.agentId,
+        agentName: leaderName,
+        sessionId: ownerSessionId,
+        conversationSessionId,
+      });
 
-      if (evt.type === "message_end") {
-        if (currentBridge.accumulatedText.trim()) {
-          const agentMsg: TeamMessage = {
-            id: crypto.randomUUID(),
-            teamId,
-            sessionId: sid,
-            role: "agent",
-            agentId: leader.agentId,
-            agentName: leaderName,
-            content: currentBridge.accumulatedText,
-            createdAt: new Date().toISOString(),
-          };
-          teamStore.appendMessage(username, teamId, agentMsg);
-          this.broadcastFn(teamId, {
-            type: "team_message",
-            teamId,
-            sessionId: sid,
-            message: agentMsg,
-            eventType: "agent_message",
-          });
-          currentBridge.accumulatedText = "";
-        }
-        return;
-      }
-
-      if (evt.type === "agent_end") {
-        this.broadcastFn(teamId, {
-          type: "team_agent_end",
-          teamId,
-          sessionId: sid,
-          agentId: leader.agentId,
-        });
-      }
-    });
-
-    bridge.unsub = unsub;
-
-    if (session.isStreaming) {
-      try {
-        session.followUp(userContent);
-      } catch (err) {
-        console.error("[OrchestrationRunner] followUp error:", err);
-      }
-    } else {
-      session.prompt(userContent).catch((err) => {
+      session.prompt(userContent).catch((err: any) => {
         console.error("[OrchestrationRunner] prompt error:", err);
       });
     }
@@ -217,15 +215,11 @@ export class OrchestrationRunner {
     this.activeBridges.delete(teamId);
 
     const ownerSessionId = `${SessionPrefix.TEAM}${teamId}`;
-    const session = sessionManager.getSession(username, ownerSessionId);
+    const session = this.sessionResolver?.getSession?.(username, ownerSessionId);
     if (session) {
       session.abort().catch(() => {});
     }
 
-    import("../../core/delegation-registry")
-      .then(({ delegationRegistry }) => {
-        delegationRegistry.abortAllRecursive(ownerSessionId);
-      })
-      .catch(console.error);
+    this.delegationRegistry.abortAllRecursive(ownerSessionId);
   }
 }

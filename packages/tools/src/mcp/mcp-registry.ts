@@ -15,7 +15,11 @@ export class McpRegistry {
     return this.connectors.get(id);
   }
 
-  async registerTools(serverId: string, tools: Array<{ name: string; description?: string; inputSchema?: unknown }>, targetRegistry: IToolRegistry): Promise<void> {
+  async registerTools(
+    serverId: string,
+    tools: Array<{ name: string; description?: string; inputSchema?: unknown }>,
+    targetRegistry: IToolRegistry,
+  ): Promise<void> {
     const connector = this.connectors.get(serverId);
     if (!connector) return;
     for (const toolDef of tools) {

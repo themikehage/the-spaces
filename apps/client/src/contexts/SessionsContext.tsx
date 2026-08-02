@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { apiFetch } from "@/lib/api";
+import { useSessions as useSessionsHook } from "@/hooks/useSessions";
 import { wsClient } from "@/lib/ws-client";
 import {
   createContext,
@@ -12,6 +12,7 @@ import {
 } from "react";
 
 export type SessionStatus = "active" | "streaming" | "task-running" | "sleeping";
+export type KanbanColumn = "idle" | "working" | "done";
 
 export interface SessionItem {
   id: string;
@@ -27,8 +28,6 @@ export interface SessionItem {
   isExecution?: boolean;
   archived?: boolean;
 }
-
-export type KanbanColumn = "idle" | "working" | "done";
 
 export interface SessionsContextType {
   sessions: SessionItem[];
@@ -52,94 +51,34 @@ export interface SessionsContextType {
 const SessionsContext = createContext<SessionsContextType | null>(null);
 
 export function SessionsProvider({ children }: { children: ReactNode }) {
-  const [sessions, setSessions] = useState<SessionItem[]>([]);
+  const base = useSessionsHook();
   const [statuses, setStatuses] = useState<Record<string, SessionStatus>>({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchSessions = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await apiFetch("/api/sessions");
-      if (!res.ok) {
-        setError("Failed to fetch sessions");
-        return;
-      }
-      const data = await res.json();
-      setSessions(data.sessions ?? []);
-    } catch {
-      setError("Failed to fetch sessions");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const fetchStatuses = useCallback(async () => {
-    try {
-      const res = await apiFetch("/api/sessions/statuses");
-      if (!res.ok) return;
-      const data = await res.json();
-      setStatuses((prev) => ({ ...data.statuses, ...prev }));
-    } catch { /* noop */ }
-  }, []);
 
   useEffect(() => {
-    fetchSessions().then(() => fetchStatuses());
-  }, [fetchSessions, fetchStatuses]);
-
-  useEffect(() => {
-    const unsub = wsClient.subscribe("session_status", (data: unknown) => {
+    return wsClient.subscribe("session_status", (data: unknown) => {
       const d = data as { sessionId: string; status: SessionStatus };
-      setStatuses((prev) => ({ ...prev, [d.sessionId]: d.status }));
-      setSessions((prev) =>
-        prev.map((s) => (s.id === d.sessionId ? { ...s, status: d.status } : s)),
-      );
-    });
-    return unsub;
-  }, []);
-
-  useEffect(() => {
-    const handleUpdate = () => {
-      fetchSessions();
-      fetchStatuses();
-    };
-    window.addEventListener("entity-updated", handleUpdate);
-    return () => window.removeEventListener("entity-updated", handleUpdate);
-  }, [fetchSessions, fetchStatuses]);
-
-  useEffect(() => {
-    if (sessions.length === 0) return;
-    setStatuses((prev) => {
-      const next = { ...prev };
-      for (const s of sessions) {
-        if (s.status && !(s.id in next)) {
-          next[s.id] = s.status;
-        }
+      if (d?.sessionId && d?.status) {
+        setStatuses((prev) => ({ ...prev, [d.sessionId]: d.status }));
       }
-      return next;
     });
-  }, [sessions]);
+  }, []);
 
   const mergedSessions = useMemo(() => {
-    return sessions.map((s) => ({
+    return (base.sessions as unknown as SessionItem[]).map((s) => ({
       ...s,
       status: statuses[s.id] || s.status || "sleeping",
     }));
-  }, [sessions, statuses]);
+  }, [base.sessions, statuses]);
 
   const derived = useMemo(() => {
     const working: SessionItem[] = [];
     const idle: SessionItem[] = [];
     const done: SessionItem[] = [];
     for (const s of mergedSessions) {
-      if (s.isExecution) {
-        done.push(s);
-      } else if (s.status === "streaming" || s.status === "active" || s.status === "task-running") {
+      if (s.isExecution) done.push(s);
+      else if (s.status === "streaming" || s.status === "active" || s.status === "task-running")
         working.push(s);
-      } else {
-        idle.push(s);
-      }
+      else idle.push(s);
     }
     return {
       workingSessions: working,
@@ -168,50 +107,33 @@ export function SessionsProvider({ children }: { children: ReactNode }) {
   const getAgentKanbanStatus = useCallback(
     (agentId: string): KanbanColumn | "unknown" => {
       const status = getAgentStatus(agentId);
-      if (!status || status === "sleeping") return "idle";
-      return "working";
+      return !status || status === "sleeping" ? "idle" : "working";
     },
     [getAgentStatus],
-  );
-
-  const getChannelMemberStatus = useCallback(
-    (memberId: string): SessionStatus | null => {
-      return getAgentStatus(memberId);
-    },
-    [getAgentStatus],
-  );
-
-  const getChannelMemberKanbanStatus = useCallback(
-    (memberId: string): KanbanColumn | "unknown" => {
-      return getAgentKanbanStatus(memberId);
-    },
-    [getAgentKanbanStatus],
   );
 
   const value: SessionsContextType = useMemo(
     () => ({
       sessions: mergedSessions,
       statuses,
-      loading,
-      error,
-      refetch: fetchSessions,
+      loading: base.loading,
+      error: base.error,
+      refetch: base.refresh,
       ...derived,
       getAgentStatus,
       getAgentKanbanStatus,
-      getChannelMemberStatus,
-      getChannelMemberKanbanStatus,
+      getChannelMemberStatus: getAgentStatus,
+      getChannelMemberKanbanStatus: getAgentKanbanStatus,
     }),
     [
       mergedSessions,
       statuses,
-      loading,
-      error,
-      fetchSessions,
+      base.loading,
+      base.error,
+      base.refresh,
       derived,
       getAgentStatus,
       getAgentKanbanStatus,
-      getChannelMemberStatus,
-      getChannelMemberKanbanStatus,
     ],
   );
 

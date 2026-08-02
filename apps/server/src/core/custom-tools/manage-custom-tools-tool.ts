@@ -1,9 +1,8 @@
-// SPDX-License-Identifier: MIT
 import { ZodError } from "zod";
-import { sessionManager } from "../session-manager";
-import { createCustomToolRuntime } from "./runtime";
 import { type CustomToolDefinition, CustomToolDefinitionSchema } from "./schemas";
-import { customToolStorage } from "./storage";
+import { CustomToolStorage } from "./storage";
+
+const customToolStorage = new CustomToolStorage();
 
 export interface ManageCustomToolsOptions {
   username: string;
@@ -83,20 +82,38 @@ export function createManageCustomToolsTool(options: ManageCustomToolsOptions) {
             } catch (err) {
               if (err instanceof ZodError) {
                 const VALID_UI_TYPES = [
-                  "badge", "card", "card-list", "table", "metric", "code", "html",
-                  "section", "video", "audio", "pdf", "tabs", "markdown", "progress",
-                  "accordion", "diff", "steps", "stats", "timeline",
+                  "badge",
+                  "card",
+                  "card-list",
+                  "table",
+                  "metric",
+                  "code",
+                  "html",
+                  "section",
+                  "video",
+                  "audio",
+                  "pdf",
+                  "tabs",
+                  "markdown",
+                  "progress",
+                  "accordion",
+                  "diff",
+                  "steps",
+                  "stats",
+                  "timeline",
                 ].join(", ");
 
                 const issues = err.issues
-                  .map((issue) => {
+                  .map((issue: any) => {
                     let msg = `- Path [${issue.path.join(".")}]: ${issue.message}`;
                     if ((issue as any).received !== undefined) {
                       msg += ` (received: ${JSON.stringify((issue as any).received)})`;
                     }
                     const isRootUiTypeIssue =
                       issue.code === "invalid_union_discriminator" ||
-                      (issue.path.length === 1 && issue.path[0] === "ui" && issue.code === "invalid_union");
+                      (issue.path.length === 1 &&
+                        issue.path[0] === "ui" &&
+                        issue.code === "invalid_union");
                     if (isRootUiTypeIssue) {
                       msg += ` — Valid UI types are: ${VALID_UI_TYPES}`;
                     }
@@ -116,31 +133,9 @@ export function createManageCustomToolsTool(options: ManageCustomToolsOptions) {
 
             customToolStorage.upsert(username, parsedTool);
 
-            // Dynamically register into the active session if available
-            const session = sessionManager.getSession(username, sessionId);
-            if (session) {
-              const runtime = createCustomToolRuntime(parsedTool, {
-                cwd: session.cwd,
-                session,
-                username,
-                sessionId,
-              });
-
-              const filtered = (session.customTools || []).filter(
-                (t: any) => t.name !== parsedTool.name,
-              );
-              const nextTools = parsedTool.enabled ? [...filtered, runtime] : filtered;
-              session.customTools = nextTools;
-              (session as any)._customTools = nextTools;
-
-              if (typeof (session as any)._refreshToolRegistry === "function") {
-                (session as any)._refreshToolRegistry();
-              }
-            }
-
             // Broadcast refresh
             try {
-              const { broadcastToUser } = await import("../../ws/handler");
+              const { broadcastToUser } = await import("../ws-bridge");
               broadcastToUser(username, {
                 type: "entity-updated",
                 entityType: "custom_tool",
@@ -172,20 +167,9 @@ export function createManageCustomToolsTool(options: ManageCustomToolsOptions) {
 
             customToolStorage.delete(username, name);
 
-            // Dynamically remove from the active session
-            const session = sessionManager.getSession(username, sessionId);
-            if (session) {
-              const nextTools = (session.customTools || []).filter((t: any) => t.name !== name);
-              session.customTools = nextTools;
-              (session as any)._customTools = nextTools;
-              if (typeof (session as any)._refreshToolRegistry === "function") {
-                (session as any)._refreshToolRegistry();
-              }
-            }
-
             // Broadcast refresh
             try {
-              const { broadcastToUser } = await import("../../ws/handler");
+              const { broadcastToUser } = await import("../ws-bridge");
               broadcastToUser(username, {
                 type: "entity-updated",
                 entityType: "custom_tool",
@@ -215,30 +199,9 @@ export function createManageCustomToolsTool(options: ManageCustomToolsOptions) {
 
             customToolStorage.toggle(username, name, enabled);
 
-            // Dynamically sync enabling/disabling in session
-            const session = sessionManager.getSession(username, sessionId);
-            if (session) {
-              const def = customToolStorage.get(username, name);
-              let nextTools = (session.customTools || []).filter((t: any) => t.name !== name);
-              if (enabled && def) {
-                const runtime = createCustomToolRuntime(def, {
-                  cwd: session.cwd,
-                  session,
-                  username,
-                  sessionId,
-                });
-                nextTools = [...nextTools, runtime];
-              }
-              session.customTools = nextTools;
-              (session as any)._customTools = nextTools;
-              if (typeof (session as any)._refreshToolRegistry === "function") {
-                (session as any)._refreshToolRegistry();
-              }
-            }
-
             // Broadcast refresh
             try {
-              const { broadcastToUser } = await import("../../ws/handler");
+              const { broadcastToUser } = await import("../ws-bridge");
               broadcastToUser(username, {
                 type: "entity-updated",
                 entityType: "custom_tool",

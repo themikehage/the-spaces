@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 import { beforeEach, describe, expect, it, mock } from "bun:test";
-import { agentRegistry } from "../agents";
+import { AgentRegistry } from "../agents";
 import { createFactoryTool, validateParams } from "../core/tools/factory-tool";
+
+const agentRegistry = new AgentRegistry();
 
 const mockBroadcast = mock((username: string, data: any) => {});
 
@@ -154,7 +156,8 @@ describe("Spaces Tool Validation & Broadcast Tests", () => {
   describe("verifyCommandSafety word boundaries", () => {
     it("should allow commands containing 'skills' and port '3000'", async () => {
       const { verifyCommandSafety } = await import("../ai/bash-tool");
-      const cmd = "python -c \"import urllib.request; req=urllib.request.Request('http://localhost:3000/api/factory/contract/skills')\"";
+      const cmd =
+        "python -c \"import urllib.request; req=urllib.request.Request('http://localhost:3000/api/factory/contract/skills')\"";
       const result = verifyCommandSafety(cmd);
       expect(result.safe).toBe(true);
     });

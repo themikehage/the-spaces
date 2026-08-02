@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { legacyToolToBaseTool, type BaseTool } from "shared";
+import { legacyToolToBaseTool, type BaseTool } from "@spaces/core";
 import {
   createBashToolDefinition,
   createEditToolDefinition,
@@ -9,7 +9,6 @@ import {
   createReadToolDefinition,
   createWriteToolDefinition,
 } from "../../ai";
-import { createExaSearchTool } from "../../core/tools/exa-search-tool";
 import { createWebFetchTool } from "../../core/tools/web-fetch";
 
 export function createBashTool(workspaceDir: string): BaseTool {
@@ -42,8 +41,4 @@ export function createLsTool(workspaceDir: string): BaseTool {
 
 export function createWebFetchSdkTool(username = "default"): BaseTool {
   return legacyToolToBaseTool(createWebFetchTool({ username }));
-}
-
-export function createExaSearchSdkTool(username = "default"): BaseTool {
-  return legacyToolToBaseTool(createExaSearchTool({ username }));
 }

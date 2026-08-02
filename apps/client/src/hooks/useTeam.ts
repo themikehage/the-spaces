@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 import { apiFetch } from "@/lib/api";
 import { wsClient } from "@/lib/ws-client";
+import type { Team, TeamMember, TeamMessage, UpdateTeam } from "@spaces/core";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Team, TeamMember, TeamMessage, UpdateTeam } from "shared";
 import { useConnectionAwareEffect } from "./useConnectionAware";
 
 export interface StreamingAgentState {

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 import { Button } from "@/components/ui/Button";
 import { apiFetch } from "@/lib/api";
-import { useState } from "react";
 import { Download, LoaderCircle } from "lucide-react";
+import { useState } from "react";
 import { resolveImageUrl } from "../ImageGrid";
 
 interface Props {
@@ -137,11 +137,7 @@ export function ShareFileCard({
         <div className="text-[10px] text-muted-foreground truncate font-mono">{fileName}</div>
       </div>
       <Button variant="solid" size="sm" onClick={handleDownload} disabled={downloading}>
-        {downloading ? (
-          <LoaderCircle className="animate-spin" size={12} />
-        ) : (
-          <Download size={12} />
-        )}
+        {downloading ? <LoaderCircle className="animate-spin" size={12} /> : <Download size={12} />}
         {downloading ? "..." : "Download"}
       </Button>
     </div>

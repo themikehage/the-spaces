@@ -9,11 +9,10 @@ El repositorio es un monorepo con workspaces de `pnpm`:
 - **`apps/client`**: aplicación principal en React 19, Vite, TypeScript y Tailwind CSS v4. Incluye un dashboard operativo que prioriza sesiones activas y proyectos recientes, además de chat, agentes, equipos, delegaciones, workspace de archivos, preview, timeline, logs, plugins, skills y ajustes.
 - **`apps/landing`**: landing de producto en React, Vite y Tailwind CSS v4, rediseñada como una sala de control editorial que explica el flujo de delegación, ejecución y aprobación entre personas y agentes.
 - **`apps/server`**: servidor Bun + Hono. Expone API REST, autenticación, WebSocket y los servicios de ejecución del producto.
-- **`packages/shared`**: contratos, esquemas Zod, tipos y utilidades compartidos entre aplicaciones.
-- **`packages/core`**: interfaces puras (ports), tipos y schemas Zod sin implementaciones ni dependencias externas salvo Zod.
+- **`packages/core`**: fuente única de verdad para contratos, interfaces puras (ports), tipos y schemas Zod sin implementaciones ni dependencias externas salvo Zod.
 - **`packages/engine`**: `AgentRuntime` decoupled engine que compone dependencias inyectadas (`IModelProvider`, `ISessionStore`, `IToolExecutor`, `IPromptBuilder`, `IHookRunner`, `IPermissionEngine`).
 - **`packages/providers`**, **`packages/storage`**, **`packages/sandbox`**, **`packages/tools`**: implementaciones aisladas de proveedores, persistencia JSONL en filesystem, sandbox local y catálogo ITool.
-- **`packages/spaces-sdk`**: paquete de espacio de trabajo que re-exporta la superficie pública de extensibilidad (Service Store, BaseTool, LLMRegistry, PluginManager y SpacesHost).
+- **`packages/spaces-sdk`**: paquete de espacio de trabajo que re-exporta la superficie pública de extensibilidad desde `@spaces/core` y `@spaces/engine`.
 
 ## Capacidades principales
 

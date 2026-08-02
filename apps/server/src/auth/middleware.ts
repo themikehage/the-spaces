@@ -92,11 +92,15 @@ export async function sessionMiddleware(c: Context, next: Next) {
   let cookieHeader: string | null | undefined;
   try {
     cookieHeader = c.req.header("Cookie") ?? c.req.header("cookie");
-  } catch { /* noop */ }
+  } catch {
+    /* noop */
+  }
   if (!cookieHeader) {
     try {
       cookieHeader = c.req.raw?.headers?.get?.("Cookie") ?? c.req.raw?.headers?.get?.("cookie");
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
   }
 
   if (isWorkspaceProjects && process.env.SPACES_DEBUG_AUTH === "1") {

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { apiFetch } from "@/lib/api";
+import type { EntityType } from "@spaces/core";
 import { useCallback, useEffect, useState } from "react";
-import type { EntityType } from "shared";
 import { useEntityConfig } from "./useEntityConfig";
 
 export interface SkillInfo {

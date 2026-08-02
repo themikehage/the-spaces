@@ -1,6 +1,7 @@
-// SPDX-License-Identifier: MIT
-import { circuitBreakerRegistry } from "../core/circuit-breaker";
+import { CircuitBreakerRegistry } from "../core/circuit-breaker";
 import type { AuthStorage } from "./auth-storage.ts";
+
+const circuitBreakerRegistry = new CircuitBreakerRegistry();
 
 type ModelsDevCache = {
   data: Record<string, any>;

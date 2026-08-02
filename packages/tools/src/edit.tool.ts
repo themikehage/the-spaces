@@ -1,6 +1,6 @@
+import type { ITool, ToolContext, ToolResult } from "@spaces/core";
 import { constants } from "node:fs";
 import { access, readFile, writeFile } from "node:fs/promises";
-import type { ITool, ToolContext, ToolResult } from "@spaces/core";
 import { z } from "zod";
 import {
   applyEditsToNormalizedContent,
@@ -25,7 +25,8 @@ const EditParametersSchema = z.object({
 
 export const editTool: ITool = {
   name: "edit",
-  description: "Edit a single text file using exact text block replacements. Multiple disjoint replacements can be executed in one call.",
+  description:
+    "Edit a single text file using exact text block replacements. Multiple disjoint replacements can be executed in one call.",
   parameters: EditParametersSchema,
   requiresApproval: true,
   category: "filesystem",

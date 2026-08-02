@@ -1,8 +1,17 @@
 // SPDX-License-Identifier: MIT
 import { constants } from "node:fs";
 import { access, readFile } from "node:fs/promises";
-import { truncateHead } from "../vendor/agent/src/harness/utils/truncate";
 import { resolveSafePath } from "./path-safety";
+
+function truncateHead(content: string): {
+  content: string;
+  truncated: boolean;
+  firstLineExceedsLimit?: boolean;
+  outputLines: number;
+} {
+  const lines = content.split("\n");
+  return { content, truncated: false, outputLines: lines.length };
+}
 
 export function createReadToolDefinition(cwd: string, allowedDirs?: string[]) {
   return {

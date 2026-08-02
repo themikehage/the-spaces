@@ -2,9 +2,9 @@ import { RichMarkdown } from "@/components/chat/RichMarkdown";
 import { Modal } from "@/components/ui/Modal";
 import { useEntitySkills, type SkillInfo } from "@/hooks/useEntitySkills";
 import { useLiterals } from "@/lib";
+import type { EntityType } from "@spaces/core";
 import { Check } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import type { EntityType } from "shared";
 import { literals as u } from "./ChatInput.literals";
 import { PortalPopover } from "./PortalPopover";
 
@@ -50,8 +50,6 @@ export function SkillsPopover({
   const installedSkills = useEntityHook ? entitySkills.installedSkills : externalSkills || [];
   const activeSkillsList = useEntityHook ? entitySkills.activeSkills : externalActiveSkills || [];
   const isLoading = useEntityHook ? entitySkills.isLoading : externalLoading;
-
-
 
   const isGlobalSkill = (s: SkillInfo) =>
     s.scope === "user" || s.scope === "global" || s.scope === "temporary";

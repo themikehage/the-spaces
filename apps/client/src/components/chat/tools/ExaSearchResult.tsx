@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { useState } from "react";
 import { ChevronRight } from "lucide-react";
+import { useState } from "react";
 import type { ToolResultData } from "./ToolCallRow";
 
 interface Props {

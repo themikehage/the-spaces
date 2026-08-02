@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { apiFetch } from "@/lib/api";
-import type { CreateScheduleJob, ScheduleJob, ScheduleRun, UpdateScheduleJob } from "shared";
+import type { CreateScheduleJob, ScheduleJob, ScheduleRun, UpdateScheduleJob } from "@spaces/core";
 
 export async function fetchScheduleJobs(filters?: {
   projectId?: string;

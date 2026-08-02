@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
+import { getProviderModelsPath } from "@spaces/core";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
-import { getProviderModelsPath } from "shared";
 
 export function loadAllProviderModels(username: string): Record<string, any[]> {
   const path = getProviderModelsPath(username);

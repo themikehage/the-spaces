@@ -73,5 +73,3 @@ export class WebFetchCache {
     this.order = [];
   }
 }
-
-export const webFetchCache = new WebFetchCache();

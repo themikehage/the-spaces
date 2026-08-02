@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
+import { getUserDir } from "@spaces/core";
 import { describe, expect, it } from "bun:test";
 import { existsSync, mkdirSync, rmSync } from "node:fs";
-import { getUserDir } from "shared";
-import { bootstrapAgentSession } from "../core/session/agent-runtime";
+import { createAgentRuntime } from "../core/session/agent-runtime";
 
 function setupTestUser(prefix: string) {
   const username = `${prefix}_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
@@ -16,7 +16,9 @@ function cleanupTestUser(userDir: string) {
     if (existsSync(userDir)) {
       rmSync(userDir, { recursive: true, force: true });
     }
-  } catch { /* noop */ }
+  } catch {
+    /* noop */
+  }
 }
 
 describe("session-bootstrap profile and tool catalog integration", () => {
@@ -24,7 +26,7 @@ describe("session-bootstrap profile and tool catalog integration", () => {
     const { username, userDir } = setupTestUser("test_boot_user");
     try {
       const sessionId = "sess_user_bootstrap_001";
-      const { session, runtime } = await bootstrapAgentSession({
+      const { session, runtime } = await createAgentRuntime({
         username,
         sessionId,
         profile: "user-session",
@@ -34,7 +36,7 @@ describe("session-bootstrap profile and tool catalog integration", () => {
       expect(session).toBeDefined();
       expect(runtime.workspaceDir).toBeDefined();
 
-      const activeTools = session.getActiveToolNames();
+      const activeTools = (session as any).getActiveToolNames();
       expect(activeTools).toContain("request_approval");
       expect(activeTools).toContain("ask_question");
       expect(activeTools).toContain("manage_delegations");
@@ -51,7 +53,7 @@ describe("session-bootstrap profile and tool catalog integration", () => {
       const agentId = "agent_bot_001";
       const sessionId = `agent_server_${agentId}`;
 
-      const { session, runtime } = await bootstrapAgentSession({
+      const { session, runtime } = await createAgentRuntime({
         username,
         sessionId,
         agentId,
@@ -62,7 +64,7 @@ describe("session-bootstrap profile and tool catalog integration", () => {
       expect(session).toBeDefined();
       expect(runtime.context.sessionDir).toBeDefined();
 
-      const activeTools = session.getActiveToolNames();
+      const activeTools = (session as any).getActiveToolNames();
       expect(activeTools).toContain("read");
       expect(activeTools).toContain("write");
       expect(activeTools).toContain("edit");
@@ -77,7 +79,7 @@ describe("session-bootstrap profile and tool catalog integration", () => {
     const { username, userDir } = setupTestUser("test_boot_subagent");
     try {
       const sessionId = "subagent_bootstrap_test_001";
-      const { session } = await bootstrapAgentSession({
+      const { session } = await createAgentRuntime({
         username,
         sessionId,
         profile: "subagent",
@@ -85,7 +87,7 @@ describe("session-bootstrap profile and tool catalog integration", () => {
       });
 
       expect(session).toBeDefined();
-      const activeTools = session.getActiveToolNames();
+      const activeTools = (session as any).getActiveToolNames();
       expect(Array.isArray(activeTools)).toBe(true);
     } finally {
       cleanupTestUser(userDir);

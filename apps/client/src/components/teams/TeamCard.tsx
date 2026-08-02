@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 import { EntityAvatar } from "@/components/shared/EntityAvatar";
 import { useLiterals } from "@/lib";
+import type { AgentInfo, Team } from "@spaces/core";
 import { motion } from "framer-motion";
 import { Users } from "lucide-react";
-import type { AgentInfo, Team } from "shared";
 import { literals as u } from "./TeamCard.literals";
 
 interface Props {

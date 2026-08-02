@@ -21,7 +21,6 @@ export * from "./tool-registry.js";
 export * from "./webfetch.tool.js";
 export * from "./write.tool.js";
 
-
 export function createDefaultToolRegistry(): IToolRegistry {
   const registry = new DefaultToolRegistry();
   registry.register(bashTool);

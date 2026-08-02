@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { apiFetch } from "@/api/client";
+import { apiFetch } from "@/lib/api";
 import type { SessionData } from "@spaces/core";
 import { useCallback, useEffect, useState } from "react";
 

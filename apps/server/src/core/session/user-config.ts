@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: MIT
+import {
+  getAuthPath,
+  getCredentialsPath,
+  getEnvPath,
+  getSettingsPath,
+  getUserDir,
+} from "@spaces/core";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { getAuthPath, getCredentialsPath, getEnvPath, getSettingsPath, getUserDir } from "shared";
 import { AuthStorage, ModelRegistry } from "../../ai";
 import { auth } from "../../auth/index";
 import { decryptEnv, encryptEnv } from "../../lib/env-crypto";
@@ -212,6 +218,3 @@ export class UserConfigManager {
     writeFileSync(credPath, JSON.stringify({ passwordHash: hashB64 }, null, 2), "utf-8");
   }
 }
-
-export const userConfigManager = new UserConfigManager();
-export const userConfig = userConfigManager;

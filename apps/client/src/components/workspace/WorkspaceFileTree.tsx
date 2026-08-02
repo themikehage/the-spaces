@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 import { useLiterals } from "@/lib";
+import type { FileInfo } from "@spaces/core";
 import { ChevronRight, File, Folder, FolderOpen, Pencil, Trash2, UserPlus } from "lucide-react";
 import { useCallback, useState } from "react";
-import type { FileInfo } from "shared";
 import { literals as u } from "./WorkspaceFileTree.literals";
 
 interface FileTreeProps {
@@ -123,7 +123,10 @@ function TreeNode({
               onClick={handleToggle}
               className="p-0.5 hover:bg-surfaceHover rounded transition-colors text-muted-foreground hover:text-foreground flex-shrink-0 cursor-pointer"
             >
-              <ChevronRight size={12} className={`transition-transform duration-150 ${isExpanded ? "rotate-90" : ""}`} />
+              <ChevronRight
+                size={12}
+                className={`transition-transform duration-150 ${isExpanded ? "rotate-90" : ""}`}
+              />
             </button>
           ) : (
             <span className="w-[17px] flex-shrink-0" />

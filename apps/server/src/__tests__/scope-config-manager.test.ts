@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
+import { getScopeConfigPath, getUserDir } from "@spaces/core";
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { getScopeConfigPath, getUserDir } from "shared";
-import { scopeConfigManager } from "../core/scope/scope-config-manager";
+import { ScopeConfigManager } from "../core/scope/scope-config-manager";
+
+const scopeConfigManager = new ScopeConfigManager();
 
 describe("ScopeConfigManager Tests", () => {
   const username = "test_scope_config_user";

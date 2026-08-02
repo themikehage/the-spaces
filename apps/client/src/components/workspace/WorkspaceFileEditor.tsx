@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 import { useLiterals } from "@/lib";
 import { apiFetch } from "@/lib/api";
+import type { FileInfo } from "@spaces/core";
 import { Check, Download, ExternalLink, File, Maximize } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import type { FileInfo } from "shared";
 import { literals as u } from "./WorkspaceFileEditor.literals";
 
 interface Props {

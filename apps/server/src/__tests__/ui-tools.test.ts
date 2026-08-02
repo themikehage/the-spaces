@@ -1,6 +1,8 @@
 import { describe, expect, it } from "bun:test";
 import { createUiTools } from "../core/tools/ui-tools";
-import { uiApprovalRegistry } from "../core/ui-approval-registry";
+import { UiApprovalRegistry } from "../core/ui-approval-registry";
+
+const uiApprovalRegistry = new UiApprovalRegistry();
 
 describe("UI Tools Integration Tests", () => {
   const username = "test_user_ui_tools";

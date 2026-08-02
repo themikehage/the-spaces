@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 import { Modal } from "@/components/ui/Modal";
+import { BookOpen, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { RichMarkdown } from "./RichMarkdown";
-import { BookOpen, ChevronDown } from "lucide-react";
 
 export interface SkillInfo {
   name: string;

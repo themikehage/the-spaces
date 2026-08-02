@@ -1,7 +1,7 @@
-import { existsSync } from "node:fs";
-import { mkdir, readdir, readFile, appendFile, unlink, writeFile } from "node:fs/promises";
-import { join } from "node:path";
 import type { ISessionStore, MessageRecord, SessionData } from "@spaces/core";
+import { existsSync } from "node:fs";
+import { appendFile, mkdir, readdir, readFile, unlink, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 
 interface FileHeader {
   type: "header";

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
+import type { TaskRunnerState } from "@spaces/core";
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
-import type { TaskRunnerState } from "shared";
 import { CheckCircle, ChevronDown, Pause, Play, XCircle } from "lucide-react";
+import { useState } from "react";
 
 interface Props {
   tasksState: TaskRunnerState;
@@ -63,11 +63,7 @@ export function FloatingTasks({ tasksState, onToggleStatus }: Props) {
               }`}
               title={isRunning ? "Pausar" : "Reanudar"}
             >
-              {isRunning ? (
-                <Pause size={11} />
-              ) : (
-                <Play size={11} />
-              )}
+              {isRunning ? <Pause size={11} /> : <Play size={11} />}
             </button>
 
             <button

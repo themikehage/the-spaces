@@ -4,8 +4,8 @@ import { useAttention } from "@/hooks/useAttention";
 import { attentionStore } from "@/lib/attention/attention-store";
 import { AnimatePresence, motion } from "framer-motion";
 
+import type { AttentionItem } from "@spaces/core";
 import { useEffect, useState } from "react";
-import type { AttentionItem } from "shared";
 
 export function GlobalApprovalOverlay() {
   const approvals = useAttention((items) => items.filter((i) => i.kind === "approval"));

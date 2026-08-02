@@ -2,10 +2,10 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/api";
 import { resolveFileUrl } from "@/lib/file-urls";
+import { ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { HtmlPreview } from "./HtmlPreview";
 import { ImageGrid } from "./ImageGrid";
-import { ChevronRight } from "lucide-react";
 
 interface Props {
   toolName: string;
@@ -381,7 +381,10 @@ export function ToolResultInspector({
           <span className="font-mono font-semibold text-foreground truncate">{toolName}</span>
           <span className="text-xs text-muted-foreground">executed</span>
         </div>
-        <ChevronRight size={12} className={`text-muted-foreground transition-transform ${isOpen ? "rotate-90" : ""}`} />
+        <ChevronRight
+          size={12}
+          className={`text-muted-foreground transition-transform ${isOpen ? "rotate-90" : ""}`}
+        />
       </button>
 
       {isOpen && (

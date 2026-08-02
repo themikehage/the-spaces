@@ -1,6 +1,4 @@
 // SPDX-License-Identifier: MIT
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
 import {
   getAgentWorkspaceDir,
   getGlobalAgentsMdPath,
@@ -12,11 +10,37 @@ import {
   getWorkspaceDir,
   getWorkspaceSkillsDir,
   SessionPrefix,
-} from "shared";
+} from "@spaces/core";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 import { DEFAULT_AGENTS_MD, DEFAULT_FACTORY_SKILLS } from "../default-factory-skills";
-import { scopeConfigManager } from "../scope";
-import { sessionMetadataStore } from "./metadata-store";
-import { userConfigManager } from "./user-config";
+import { ScopeConfigManager } from "../scope";
+import { SessionMetadataStore } from "./metadata-store";
+import { UserConfigManager } from "./user-config";
+
+let scopeConfigManagerInstance: ScopeConfigManager | null = null;
+function getScopeConfigManager(): ScopeConfigManager {
+  if (!scopeConfigManagerInstance) {
+    scopeConfigManagerInstance = new ScopeConfigManager();
+  }
+  return scopeConfigManagerInstance;
+}
+
+let sessionMetadataStoreInstance: SessionMetadataStore | null = null;
+function getSessionMetadataStore(): SessionMetadataStore {
+  if (!sessionMetadataStoreInstance) {
+    sessionMetadataStoreInstance = new SessionMetadataStore();
+  }
+  return sessionMetadataStoreInstance;
+}
+
+let userConfigManagerInstance: UserConfigManager | null = null;
+function getUserConfigManager(): UserConfigManager {
+  if (!userConfigManagerInstance) {
+    userConfigManagerInstance = new UserConfigManager();
+  }
+  return userConfigManagerInstance;
+}
 
 export function getResolvedSkillPaths(cwd: string, username?: string): string[] {
   const paths: string[] = [];
@@ -118,7 +142,7 @@ export function resolveSubagentSessionDir(username: string, sessionId: string): 
     sessionId.startsWith(SessionPrefix.SUBAGENT) ||
     sessionId.startsWith(SessionPrefix.DELEGATE)
   ) {
-    const userDir = userConfigManager.ensureUserDir(username);
+    const userDir = getUserConfigManager().ensureUserDir(username);
     const sessionsDir = join(userDir, "sessions");
     if (existsSync(sessionsDir)) {
       try {
@@ -136,7 +160,9 @@ export function resolveSubagentSessionDir(username: string, sessionId: string): 
             return candidateDir;
           }
         }
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
     }
   }
   return null;
@@ -215,7 +241,7 @@ export function resolveSessionWorkspace(
   let resolvedProjectId = projectId;
   if (!resolvedProjectId && agentId) {
     try {
-      const membership = scopeConfigManager.getAgentMembership(username, agentId);
+      const membership = getScopeConfigManager().getAgentMembership(username, agentId);
       if (membership?.type === "project") {
         resolvedProjectId = membership.id;
       }
@@ -245,7 +271,7 @@ export function resolveSessionWorkspace(
 }
 
 export function resolveSessionAllowedWriteDir(username: string, sessionId: string): string {
-  const metadata = sessionMetadataStore.getSessionMetadata(username, sessionId);
+  const metadata = getSessionMetadataStore().getSessionMetadata(username, sessionId);
   if (!metadata) {
     return getUserDir(username);
   }
@@ -261,11 +287,13 @@ export function resolveSessionAllowedWriteDir(username: string, sessionId: strin
   let resolvedProjectId = metadata.projectId ?? metadata.projectName;
   if (!resolvedProjectId && metadata.agentId) {
     try {
-      const membership = scopeConfigManager.getAgentMembership(username, metadata.agentId);
+      const membership = getScopeConfigManager().getAgentMembership(username, metadata.agentId);
       if (membership?.type === "project") {
         resolvedProjectId = membership.id;
       }
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
   }
 
   if (resolvedProjectId) {

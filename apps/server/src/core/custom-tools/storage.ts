@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
+import { getUserDir } from "@spaces/core";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { getUserDir } from "shared";
 import { type CustomToolDefinition, CustomToolDefinitionSchema } from "./schemas";
 
 export interface RegistryEntry {
@@ -141,5 +141,3 @@ export class CustomToolStorage {
     }
   }
 }
-
-export const customToolStorage = new CustomToolStorage();

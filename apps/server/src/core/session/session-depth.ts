@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: MIT
-import { sessionMetadataStore } from "./metadata-store";
+import { SessionMetadataStore } from "./metadata-store";
 
-export function getSubagentDepth(username: string, parentSessionId: string): number {
+export function getSubagentDepth(
+  username: string,
+  parentSessionId: string,
+  store?: SessionMetadataStore,
+): number {
+  const sessionMetadataStore = store ?? new SessionMetadataStore();
   let depth = 0;
   let currentId = parentSessionId;
   const visited = new Set<string>();

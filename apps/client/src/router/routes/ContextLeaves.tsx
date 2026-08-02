@@ -2,7 +2,6 @@
 import { ChatArea } from "@/components/chat/ChatArea";
 import { DelegationsPanel } from "@/components/chat/DelegationsPanel";
 import { TimelineTabPanel } from "@/components/chat/TimelineTabPanel";
-import { PreviewPanel } from "@/components/preview/PreviewPanel";
 import { ProjectFloorPanel } from "@/components/projects/ProjectFloorPanel";
 import { TeamChatArea } from "@/components/teams/TeamChatArea";
 import { WorkspacePanel } from "@/components/workspace/WorkspacePanel";
@@ -97,8 +96,7 @@ export function WorkspaceRoute() {
 }
 
 export function PreviewRoute() {
-  const { activeProjectId, activeProjectFriendlyName } = useWorkspaceContext();
-  return <PreviewPanel activeProjectName={activeProjectFriendlyName || activeProjectId} />;
+  return <WorkspaceRoute />;
 }
 
 export function TeamDetailRoute() {

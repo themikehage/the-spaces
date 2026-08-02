@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 import { Dropdown, type DropdownOption } from "@/components/ui/Dropdown";
 import { Modal } from "@/components/ui/Modal";
+import type { CreateScheduleJob, ScheduleJob, ScheduleMode } from "@spaces/core";
 import { Clock, HelpCircle, Layers, MessageSquare, Sparkles, Terminal } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import type { CreateScheduleJob, ScheduleJob, ScheduleMode } from "shared";
 
 interface Props {
   open: boolean;

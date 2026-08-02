@@ -2,9 +2,9 @@
 import { RichMarkdown } from "@/components/chat/RichMarkdown";
 import { Modal } from "@/components/ui/Modal";
 import { useEntitySkills, type SkillInfo } from "@/hooks/useEntitySkills";
+import type { EntityType } from "@spaces/core";
 import { BookOpen, Check, RefreshCw, Zap } from "lucide-react";
 import { useState } from "react";
-import type { EntityType } from "shared";
 
 interface Props {
   entityType: EntityType;

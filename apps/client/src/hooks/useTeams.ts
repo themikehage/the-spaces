@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { apiFetch } from "@/lib/api";
+import type { CreateTeam, Team, UpdateTeam } from "@spaces/core";
 import { useCallback, useEffect, useState } from "react";
-import type { CreateTeam, Team, UpdateTeam } from "shared";
 
 export function useTeams() {
   const [teams, setTeams] = useState<Team[]>([]);

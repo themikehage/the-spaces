@@ -1,6 +1,6 @@
+import type { ITool, ToolContext, ToolResult } from "@spaces/core";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
-import type { ITool, ToolContext, ToolResult } from "@spaces/core";
 import { z } from "zod";
 import { resolveSafePath } from "./path-safety.js";
 
@@ -11,7 +11,8 @@ const WriteParametersSchema = z.object({
 
 export const writeTool: ITool = {
   name: "write",
-  description: "Write content to a file. Creates the file if it doesn't exist, and overwrites it if it does. Automatically creates parent directories.",
+  description:
+    "Write content to a file. Creates the file if it doesn't exist, and overwrites it if it does. Automatically creates parent directories.",
   parameters: WriteParametersSchema,
   requiresApproval: true,
   category: "filesystem",

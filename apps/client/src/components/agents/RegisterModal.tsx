@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/Button";
 import { useLiterals } from "@/lib";
 import { apiFetch } from "@/lib/api";
 import { DEFAULT_AVATAR_PREFIX, isDefaultAvatar } from "@/lib/defaultAvatars";
-import { X } from "lucide-react";
+import type { AgentDefinition, AgentInfo } from "@spaces/core";
 import { motion } from "framer-motion";
+import { X } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { AgentDefinition, AgentInfo } from "shared";
 import { literals as u } from "./RegisterModal.literals";
 
 const DEFAULT_FORM: AgentDefinition = {

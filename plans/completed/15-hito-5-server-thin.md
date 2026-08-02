@@ -22,14 +22,14 @@ apps/server/src/
     └── handler.ts      ← REFACTOR: usar AgentRuntime events
 ```
 
-| Tarea | Detalle | Estado |
-|---|---|---|
-| Crear `AppContext` | Reemplaza `createServerContext()` con deps del engine inyectadas | ✅ |
-| Migrar `POST /sessions` | Crea `AgentRuntime` en lugar de `AgentSession` | ✅ |
-| Migrar `GET /sessions` | Usa `ISessionStore.listSessions()` | ✅ |
-| Migrar `DELETE /sessions/:id` | `agent.dispose()` + `sessionStore.delete()` | ✅ |
-| Migrar WS handler | Forward de `agent.events` al WS client (`/ws/v2`) | ✅ |
-| Migrar `GET /health` | Sin cambios | ✅ |
+| Tarea                         | Detalle                                                          | Estado |
+| ----------------------------- | ---------------------------------------------------------------- | ------ |
+| Crear `AppContext`            | Reemplaza `createServerContext()` con deps del engine inyectadas | ✅     |
+| Migrar `POST /sessions`       | Crea `AgentRuntime` en lugar de `AgentSession`                   | ✅     |
+| Migrar `GET /sessions`        | Usa `ISessionStore.listSessions()`                               | ✅     |
+| Migrar `DELETE /sessions/:id` | `agent.dispose()` + `sessionStore.delete()`                      | ✅     |
+| Migrar WS handler             | Forward de `agent.events` al WS client (`/ws/v2`)                | ✅     |
+| Migrar `GET /health`          | Sin cambios                                                      | ✅     |
 
 > Rutas que NO migran en este hito: `/teams`, `/schedules`, `/approvals`, `/mcp`, `/backup`, `/preview`, `/files`, `/gallery`.
 

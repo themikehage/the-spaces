@@ -1,5 +1,4 @@
-// SPDX-License-Identifier: MIT
-import type { EnvelopeResult, IArtifactStore, IMemoryStore, ISessionStore } from "shared";
+import type { EnvelopeResult, IArtifactStore, IMemoryStore, ISessionStore } from "@spaces/core";
 import type { ModelResolutionContext } from "./model-resolver";
 import type { WorkspaceConfig } from "./workspace-config.port";
 

@@ -27,6 +27,7 @@ Plan 21: Limpieza final
 ```
 
 ---
+
 ## ✅ Plan 16 — Cablear AppContext y Migrar WebSocket + Rutas Core de Sesiones (COMPLETADO)
 
 > **Documento de finalización:** Ver [16-cablear-appcontext-ws-core.md](file:///c:/Users/themi/AgentWorkspace/the-spaces/plans/completed/16-cablear-appcontext-ws-core.md)
@@ -47,18 +48,18 @@ La auditoría reveló que `createAppContext()` (nuevo, usa `@spaces/engine`) y `
 
 ### Tareas
 
-| # | Tarea | Archivos | Detalle |
-|---|---|---|---|
-| 16.1 | **Eliminar `createServerContext()`** | `core/server-context.ts` (borrar), `core/index.ts` (quitar re-export), `index.ts` (quitar líneas 15, 77) | Ya no se usa. Es código huérfano. |
-| 16.2 | **Migrar `createAppContext()` a único contexto** | `context.ts` | Asegurar que `AppContext` expone TODO lo que las rutas necesitan: `sessionStore`, `toolRegistry`, `modelProvider`, `sandbox`, `eventBus`, `hookRunner`, `permissionEngine`, `promptBuilder`, `approvalChannel`, `scheduleService` |
-| 16.3 | **Migrar WS handler productivo** | `ws/handler.ts` → reescribir, `index.ts` línea 139 | Reemplazar el `upgradeWebSocket` de `/ws` por el que usa `appContext`. El nuevo handler: recibe `prompt` → llama `agent.prompt()`, recibe `abort` → llama `agent.abort()`, forwardea `agent.events` al cliente WS. Eliminar `/ws/v2` (ya no hace falta). |
-| 16.4 | **Migrar `POST /sessions`** | `routes/sessions/sessions-v2.ts` (nuevo) | Usar `appContext.sessionStore.create()` + `createAgent()` de `@spaces/engine`. Cachear el agente en `appContext.agentCache`. Devolver `{ id, name, createdAt }`. |
-| 16.5 | **Migrar `GET /sessions`** | `routes/sessions/sessions-v2.ts` | Usar `appContext.sessionStore.listSessions()`. |
-| 16.6 | **Migrar `DELETE /sessions/:id`** | `routes/sessions/sessions-v2.ts` | `agent.dispose()` + `sessionStore.delete()`. |
-| 16.7 | **Migrar `GET /sessions/:id/messages`** | `routes/sessions/sessions-v2.ts` | `appContext.sessionStore.getMessages(id)`. |
-| 16.8 | **Montar nuevas rutas como default** | `routes/sessions/index.ts`, `index.ts` | Reemplazar `defaultSessionCrudRouter` y `legacySessionsRouter` por `sessions-v2.ts`. Las rutas viejas se mueven a `routes/sessions/legacy/` para referencia. |
-| 16.9 | **Crear `GET /api/health`** | `routes/health.ts` | Usar `appContext` para verificar que todos los servicios están vivos. |
-| 16.10 | **Limpiar `index.ts`** | `index.ts` | Quitar `createServerContext`, quitar imports de singletons (`memoryRegistry` línea 11, `sessionManager` líneas 161/177), reemplazar handlers SIGTERM/SIGINT por `appContext.dispose()`. |
+| #     | Tarea                                            | Archivos                                                                                                 | Detalle                                                                                                                                                                                                                                                  |
+| ----- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 16.1  | **Eliminar `createServerContext()`**             | `core/server-context.ts` (borrar), `core/index.ts` (quitar re-export), `index.ts` (quitar líneas 15, 77) | Ya no se usa. Es código huérfano.                                                                                                                                                                                                                        |
+| 16.2  | **Migrar `createAppContext()` a único contexto** | `context.ts`                                                                                             | Asegurar que `AppContext` expone TODO lo que las rutas necesitan: `sessionStore`, `toolRegistry`, `modelProvider`, `sandbox`, `eventBus`, `hookRunner`, `permissionEngine`, `promptBuilder`, `approvalChannel`, `scheduleService`                        |
+| 16.3  | **Migrar WS handler productivo**                 | `ws/handler.ts` → reescribir, `index.ts` línea 139                                                       | Reemplazar el `upgradeWebSocket` de `/ws` por el que usa `appContext`. El nuevo handler: recibe `prompt` → llama `agent.prompt()`, recibe `abort` → llama `agent.abort()`, forwardea `agent.events` al cliente WS. Eliminar `/ws/v2` (ya no hace falta). |
+| 16.4  | **Migrar `POST /sessions`**                      | `routes/sessions/sessions-v2.ts` (nuevo)                                                                 | Usar `appContext.sessionStore.create()` + `createAgent()` de `@spaces/engine`. Cachear el agente en `appContext.agentCache`. Devolver `{ id, name, createdAt }`.                                                                                         |
+| 16.5  | **Migrar `GET /sessions`**                       | `routes/sessions/sessions-v2.ts`                                                                         | Usar `appContext.sessionStore.listSessions()`.                                                                                                                                                                                                           |
+| 16.6  | **Migrar `DELETE /sessions/:id`**                | `routes/sessions/sessions-v2.ts`                                                                         | `agent.dispose()` + `sessionStore.delete()`.                                                                                                                                                                                                             |
+| 16.7  | **Migrar `GET /sessions/:id/messages`**          | `routes/sessions/sessions-v2.ts`                                                                         | `appContext.sessionStore.getMessages(id)`.                                                                                                                                                                                                               |
+| 16.8  | **Montar nuevas rutas como default**             | `routes/sessions/index.ts`, `index.ts`                                                                   | Reemplazar `defaultSessionCrudRouter` y `legacySessionsRouter` por `sessions-v2.ts`. Las rutas viejas se mueven a `routes/sessions/legacy/` para referencia.                                                                                             |
+| 16.9  | **Crear `GET /api/health`**                      | `routes/health.ts`                                                                                       | Usar `appContext` para verificar que todos los servicios están vivos.                                                                                                                                                                                    |
+| 16.10 | **Limpiar `index.ts`**                           | `index.ts`                                                                                               | Quitar `createServerContext`, quitar imports de singletons (`memoryRegistry` línea 11, `sessionManager` líneas 161/177), reemplazar handlers SIGTERM/SIGINT por `appContext.dispose()`.                                                                  |
 
 ### Rutas que permanecen sin cambios en este plan
 
@@ -80,7 +81,9 @@ pnpm dev                                # server + client arrancan
 
 ---
 
-## Plan 17 — Eliminar `ai/vendor/` y `AgentSession`
+## ✅ Plan 17 — Eliminar `ai/vendor/` y `AgentSession` (COMPLETADO)
+
+> **Documento de finalización:** Ver [17-eliminar-vendor-agentsession.md](file:///c:/Users/themi/AgentWorkspace/the-spaces/plans/completed/17-eliminar-vendor-agentsession.md)
 
 ### Contexto
 
@@ -110,31 +113,31 @@ ai/vendor/ai/src/images.ts         ← core/tools/image-gen-tool.ts:5
 
 ### Tareas
 
-| # | Tarea | Archivos | Detalle |
-|---|---|---|---|
-| 17.1 | **Migrar `core/navigation-controller.ts`** | `core/navigation-controller.ts` | Deja de importar de `ai/vendor/agent/src/agent.ts`. Usa `IAgentRuntime.abort()` del engine. El `steer()` y `followUp()` se implementan como hooks en el engine. Si no se usa activamente, eliminar el archivo. |
-| 17.2 | **Migrar `core/tool-registry.ts`** | `core/tool-registry.ts` | Reemplazar import de `ai/vendor/agent/src/types.ts` por `ITool` de `@spaces/core`. Si es redundante con `@spaces/tools`, eliminar el archivo. |
-| 17.3 | **Migrar `core/tools/vision-tool.ts`** | `core/tools/vision-tool.ts` | Reemplazar `streamSimple` de vendor por `IModelProvider.streamComplete()` de `@spaces/providers`. |
-| 17.4 | **Migrar `core/tools/image-gen-tool.ts`** | `core/tools/image-gen-tool.ts` | Reemplazar imports de vendor (`image-models.ts`, `images.ts`) por lógica propia que use `fetch` directo a las APIs de imagen. |
-| 17.5 | **Migrar `teams/team-prompt-runner.ts`** | `teams/team-prompt-runner.ts` | Reemplazar `streamSimple` de vendor por `IModelProvider.streamComplete()`. |
-| 17.6 | **Eliminar `ai/agent-session.ts`** | `ai/agent-session.ts` (borrar) | Migrar los 9 importadores a usar `IAgentRuntime` de `@spaces/engine`. Ver lista abajo. |
-| 17.7 | **Migrar importadores de AgentSession** | Ver tabla abajo | Cada archivo que importa `AgentSession` debe recibir `IAgentRuntime` vía `AppContext` |
-| 17.8 | **Eliminar `ai/vendor/`** | `ai/vendor/` (borrar directorio completo) | Verificar que ningún archivo hace `import` del vendor. |
-| 17.9 | **Eliminar `ai/index.ts`** (si solo re-exportaba AgentSession) | `ai/index.ts` | Si tenía otros exports, mantenerlos. |
+| #    | Tarea                                                          | Archivos                                  | Detalle                                                                                                                                                                                                        |
+| ---- | -------------------------------------------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 17.1 | **Migrar `core/navigation-controller.ts`**                     | `core/navigation-controller.ts`           | Deja de importar de `ai/vendor/agent/src/agent.ts`. Usa `IAgentRuntime.abort()` del engine. El `steer()` y `followUp()` se implementan como hooks en el engine. Si no se usa activamente, eliminar el archivo. |
+| 17.2 | **Migrar `core/tool-registry.ts`**                             | `core/tool-registry.ts`                   | Reemplazar import de `ai/vendor/agent/src/types.ts` por `ITool` de `@spaces/core`. Si es redundante con `@spaces/tools`, eliminar el archivo.                                                                  |
+| 17.3 | **Migrar `core/tools/vision-tool.ts`**                         | `core/tools/vision-tool.ts`               | Reemplazar `streamSimple` de vendor por `IModelProvider.streamComplete()` de `@spaces/providers`.                                                                                                              |
+| 17.4 | **Migrar `core/tools/image-gen-tool.ts`**                      | `core/tools/image-gen-tool.ts`            | Reemplazar imports de vendor (`image-models.ts`, `images.ts`) por lógica propia que use `fetch` directo a las APIs de imagen.                                                                                  |
+| 17.5 | **Migrar `teams/team-prompt-runner.ts`**                       | `teams/team-prompt-runner.ts`             | Reemplazar `streamSimple` de vendor por `IModelProvider.streamComplete()`.                                                                                                                                     |
+| 17.6 | **Eliminar `ai/agent-session.ts`**                             | `ai/agent-session.ts` (borrar)            | Migrar los 9 importadores a usar `IAgentRuntime` de `@spaces/engine`. Ver lista abajo.                                                                                                                         |
+| 17.7 | **Migrar importadores de AgentSession**                        | Ver tabla abajo                           | Cada archivo que importa `AgentSession` debe recibir `IAgentRuntime` vía `AppContext`                                                                                                                          |
+| 17.8 | **Eliminar `ai/vendor/`**                                      | `ai/vendor/` (borrar directorio completo) | Verificar que ningún archivo hace `import` del vendor.                                                                                                                                                         |
+| 17.9 | **Eliminar `ai/index.ts`** (si solo re-exportaba AgentSession) | `ai/index.ts`                             | Si tenía otros exports, mantenerlos.                                                                                                                                                                           |
 
 ### Archivos que importan `AgentSession` y su migración
 
-| Archivo | Migración |
-|---|---|
-| `ai/index.ts:3` | Eliminar re-export |
-| `core/session-manager.ts:5` | Reemplazar por `IAgentRuntime` del engine, crear vía factory de `AppContext` |
-| `core/session/agent-runtime.ts:6` | Ya tiene acceso a `AppContext`, usar `createAgent()` del engine |
-| `core/session/mcp-attach.ts:2` | Recibir `IToolRegistry` en lugar de `AgentSession` |
-| `core/session/session-event-publisher.ts:2` | Usar `IEventBus` del engine |
-| `core/session/session-memory-enricher.ts:2` | Usar `IMemoryProvider` |
-| `core/custom-tools/pipeline-engine.ts:2` | Recibir `IToolExecutor` del engine |
-| `core/ports/core-services.port.ts:2` | Eliminar tipo `AgentSession` del port, usar `IAgentRuntime` |
-| `agents/types.ts:4` | Usar `IAgentRuntime` |
+| Archivo                                     | Migración                                                                    |
+| ------------------------------------------- | ---------------------------------------------------------------------------- |
+| `ai/index.ts:3`                             | Eliminar re-export                                                           |
+| `core/session-manager.ts:5`                 | Reemplazar por `IAgentRuntime` del engine, crear vía factory de `AppContext` |
+| `core/session/agent-runtime.ts:6`           | Ya tiene acceso a `AppContext`, usar `createAgent()` del engine              |
+| `core/session/mcp-attach.ts:2`              | Recibir `IToolRegistry` en lugar de `AgentSession`                           |
+| `core/session/session-event-publisher.ts:2` | Usar `IEventBus` del engine                                                  |
+| `core/session/session-memory-enricher.ts:2` | Usar `IMemoryProvider`                                                       |
+| `core/custom-tools/pipeline-engine.ts:2`    | Recibir `IToolExecutor` del engine                                           |
+| `core/ports/core-services.port.ts:2`        | Eliminar tipo `AgentSession` del port, usar `IAgentRuntime`                  |
+| `agents/types.ts:4`                         | Usar `IAgentRuntime`                                                         |
 
 ### Verificación
 
@@ -155,9 +158,9 @@ pnpm build      # exitoso
 
 ---
 
-## Plan 18 — Eliminar los 26 Singletons → Dependency Injection
+## ✅ Plan 18 — Eliminar los 26 Singletons → Dependency Injection (COMPLETADO)
 
-### Contexto
+> **Documento de finalización:** Ver [18-eliminar-singletons-di.md](file:///c:/Users/themi/AgentWorkspace/the-spaces/plans/completed/18-eliminar-singletons-di.md)
 
 La auditoría encontró **26 singletons** activos, todos definidos como `export const` a nivel de módulo. Cinco fueron marcados explícitamente en el plan de migración: `sessionManager`, `mcpRegistry`, `memoryRegistry`, `uiApprovalRegistry`, `delegationRegistry`.
 
@@ -180,49 +183,49 @@ No se eliminan todos de golpe. Se agrupan por dominio y se migran en orden:
 
 ### Tareas — Grupo 1: Los 5 Singletons Críticos
 
-| # | Tarea | Singleton | Archivos a modificar |
-|---|---|---|---|
-| 18.1 | **Migrar `sessionManager` → `AppContext.sessionStore`** | `core/session-manager.ts:340` | 17 importadores. Cada uno recibe `ISessionStore` del `AppContext`. Las rutas acceden vía `c.get("appContext")`. Los tools vía `ToolContext`. |
-| 18.2 | **Migrar `delegationRegistry` → `AppContext.delegationService`** | `core/delegation-registry.ts:224` | 6 importadores. Reemplazar por servicio inyectable que implementa `IDelegationService`. La lógica de registro de delegaciones se mueve al engine como hooks. |
-| 18.3 | **Migrar `mcpRegistry` → `AppContext.mcpRegistry`** | `core/mcp-registry.ts:481` | 5 importadores. Ya existe `McpRegistry` en `@spaces/tools`. Unificar. |
-| 18.4 | **Migrar `memoryRegistry` → `AppContext.memoryProvider`** | `core/memory/registry.ts:47` | 3 importadores. Reemplazar por `IMemoryProvider` del core. |
-| 18.5 | **Migrar `uiApprovalRegistry` → `AppContext.approvalChannel`** | `core/ui-approval-registry.ts:144` | 3 importadores. Ya existe `IApprovalChannel` en `@spaces/core/ports/approval.port.ts`. |
+| #    | Tarea                                                            | Singleton                          | Archivos a modificar                                                                                                                                         |
+| ---- | ---------------------------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 18.1 | **Migrar `sessionManager` → `AppContext.sessionStore`**          | `core/session-manager.ts:340`      | 17 importadores. Cada uno recibe `ISessionStore` del `AppContext`. Las rutas acceden vía `c.get("appContext")`. Los tools vía `ToolContext`.                 |
+| 18.2 | **Migrar `delegationRegistry` → `AppContext.delegationService`** | `core/delegation-registry.ts:224`  | 6 importadores. Reemplazar por servicio inyectable que implementa `IDelegationService`. La lógica de registro de delegaciones se mueve al engine como hooks. |
+| 18.3 | **Migrar `mcpRegistry` → `AppContext.mcpRegistry`**              | `core/mcp-registry.ts:481`         | 5 importadores. Ya existe `McpRegistry` en `@spaces/tools`. Unificar.                                                                                        |
+| 18.4 | **Migrar `memoryRegistry` → `AppContext.memoryProvider`**        | `core/memory/registry.ts:47`       | 3 importadores. Reemplazar por `IMemoryProvider` del core.                                                                                                   |
+| 18.5 | **Migrar `uiApprovalRegistry` → `AppContext.approvalChannel`**   | `core/ui-approval-registry.ts:144` | 3 importadores. Ya existe `IApprovalChannel` en `@spaces/core/ports/approval.port.ts`.                                                                       |
 
 ### Tareas — Grupo 2: Servicios de Sesión
 
-| # | Tarea | Singleton | Detalle |
-|---|---|---|---|
-| 18.6 | `sessionPromptBuilder` → `AppContext.promptBuilder` | `core/session/prompt-builder.ts:545` | Usar `IPromptBuilder` del engine |
-| 18.7 | `sessionLister` → `AppContext.sessionStore.listSessions()` | `core/session/session-lister.ts:294` | Ya está en `ISessionStore` |
-| 18.8 | `sessionToolFactory` → `AppContext.toolRegistry` | `core/session/tool-factory.ts:202` | Usar `IToolRegistry` |
-| 18.9 | `sessionMetadataStore` → `AppContext.sessionStore` | `core/session/metadata-store.ts:231` | Extender `ISessionStore` con metadata si es necesario |
-| 18.10 | `userConfigManager` → `AppContext.config` | `core/session/user-config.ts:216` | Nuevo port `IUserConfig` en core |
-| 18.11 | `workspaceConfigLoader` → `AppContext.workspaceConfig` | `core/session/workspace-config-loader.ts:25` | Usar `IWorkspaceProvider` existente |
+| #     | Tarea                                                      | Singleton                                    | Detalle                                               |
+| ----- | ---------------------------------------------------------- | -------------------------------------------- | ----------------------------------------------------- |
+| 18.6  | `sessionPromptBuilder` → `AppContext.promptBuilder`        | `core/session/prompt-builder.ts:545`         | Usar `IPromptBuilder` del engine                      |
+| 18.7  | `sessionLister` → `AppContext.sessionStore.listSessions()` | `core/session/session-lister.ts:294`         | Ya está en `ISessionStore`                            |
+| 18.8  | `sessionToolFactory` → `AppContext.toolRegistry`           | `core/session/tool-factory.ts:202`           | Usar `IToolRegistry`                                  |
+| 18.9  | `sessionMetadataStore` → `AppContext.sessionStore`         | `core/session/metadata-store.ts:231`         | Extender `ISessionStore` con metadata si es necesario |
+| 18.10 | `userConfigManager` → `AppContext.config`                  | `core/session/user-config.ts:216`            | Nuevo port `IUserConfig` en core                      |
+| 18.11 | `workspaceConfigLoader` → `AppContext.workspaceConfig`     | `core/session/workspace-config-loader.ts:25` | Usar `IWorkspaceProvider` existente                   |
 
 ### Tareas — Grupo 3: Servicios de Dominio
 
-| # | Tarea | Singleton | Detalle |
-|---|---|---|---|
-| 18.12 | `scopeConfigManager` → `AppContext.scopeConfig` | `core/scope/scope-config-manager.ts:487` | Nuevo port o integrar en `IPermissionEngine` |
-| 18.13 | `permissionEngine` → `AppContext.permissionEngine` | `core/sandbox/permission-engine.ts:237` | Ya existe `IPermissionEngine` en `@spaces/engine`. Unificar reglas DENY/ASK. |
-| 18.14 | `userPermissionStore` → `AppContext.permissionEngine` | `core/sandbox/user-permission-store.ts:71` | Integrar en `PermissionEngine` |
-| 18.15 | `promptFragmentRegistry` → `AppContext.promptBuilder` | `core/prompts/registry.ts:76` | Las secciones de prompt se registran en `IPromptBuilder` |
-| 18.16 | `promptComposer` → `AppContext.promptBuilder` | `core/prompts/composer.ts:163` | El engine ya compone prompts |
-| 18.17 | `customToolStorage` → `AppContext.customTools` | `core/custom-tools/storage.ts:145` | Nuevo port `ICustomToolStore` o integrar en `IToolRegistry` |
-| 18.18 | `pipelineExecutionStack` → `AppContext.pipelineEngine` | `core/custom-tools/runtime.ts:6` | Estado por request, no global |
-| 18.19 | `scheduleService` → `AppContext.scheduleService` | `core/schedules/index.ts:5` | Ya existe `IScheduleService` en `@spaces/core/ports/schedule.port.ts` |
-| 18.20 | `approvalManager` → `AppContext.approvalChannel` | `core/approvals/approval-manager.ts:168` | Ya existe `IApprovalChannel` |
-| 18.21 | `serverSpacesHost` → `AppContext.spacesHost` | `core/spaces-host.ts:164` | Ya existe interface |
-| 18.22 | `modelEnrichmentService` → `AppContext.modelRegistry` | `core/providers/model-enrichment-service.ts:32` | Integrar en `ProviderRegistry` de `@spaces/providers` |
+| #     | Tarea                                                  | Singleton                                       | Detalle                                                                      |
+| ----- | ------------------------------------------------------ | ----------------------------------------------- | ---------------------------------------------------------------------------- |
+| 18.12 | `scopeConfigManager` → `AppContext.scopeConfig`        | `core/scope/scope-config-manager.ts:487`        | Nuevo port o integrar en `IPermissionEngine`                                 |
+| 18.13 | `permissionEngine` → `AppContext.permissionEngine`     | `core/sandbox/permission-engine.ts:237`         | Ya existe `IPermissionEngine` en `@spaces/engine`. Unificar reglas DENY/ASK. |
+| 18.14 | `userPermissionStore` → `AppContext.permissionEngine`  | `core/sandbox/user-permission-store.ts:71`      | Integrar en `PermissionEngine`                                               |
+| 18.15 | `promptFragmentRegistry` → `AppContext.promptBuilder`  | `core/prompts/registry.ts:76`                   | Las secciones de prompt se registran en `IPromptBuilder`                     |
+| 18.16 | `promptComposer` → `AppContext.promptBuilder`          | `core/prompts/composer.ts:163`                  | El engine ya compone prompts                                                 |
+| 18.17 | `customToolStorage` → `AppContext.customTools`         | `core/custom-tools/storage.ts:145`              | Nuevo port `ICustomToolStore` o integrar en `IToolRegistry`                  |
+| 18.18 | `pipelineExecutionStack` → `AppContext.pipelineEngine` | `core/custom-tools/runtime.ts:6`                | Estado por request, no global                                                |
+| 18.19 | `scheduleService` → `AppContext.scheduleService`       | `core/schedules/index.ts:5`                     | Ya existe `IScheduleService` en `@spaces/core/ports/schedule.port.ts`        |
+| 18.20 | `approvalManager` → `AppContext.approvalChannel`       | `core/approvals/approval-manager.ts:168`        | Ya existe `IApprovalChannel`                                                 |
+| 18.21 | `serverSpacesHost` → `AppContext.spacesHost`           | `core/spaces-host.ts:164`                       | Ya existe interface                                                          |
+| 18.22 | `modelEnrichmentService` → `AppContext.modelRegistry`  | `core/providers/model-enrichment-service.ts:32` | Integrar en `ProviderRegistry` de `@spaces/providers`                        |
 
 ### Tareas — Grupo 4: Infraestructura
 
-| # | Tarea | Singleton | Detalle |
-|---|---|---|---|
-| 18.23 | `observabilityService` → `AppContext.observability` | `core/observability/observability-service.ts:84` | Nuevo port `IObservabilityService` |
-| 18.24 | `circuitBreakerRegistry` → `AppContext.circuitBreaker` | `core/circuit-breaker.ts:101` | Nuevo port `ICircuitBreaker` |
-| 18.25 | `rateLimiter` (web-fetch) → `AppContext.rateLimiter` | `core/tools/web-fetch/rate-limiter.ts:60` | Por request, no global |
-| 18.26 | `webFetchCache` → `AppContext.webFetchCache` | `core/tools/web-fetch/cache.ts:77` | Por request o inyectado |
+| #     | Tarea                                                  | Singleton                                        | Detalle                            |
+| ----- | ------------------------------------------------------ | ------------------------------------------------ | ---------------------------------- |
+| 18.23 | `observabilityService` → `AppContext.observability`    | `core/observability/observability-service.ts:84` | Nuevo port `IObservabilityService` |
+| 18.24 | `circuitBreakerRegistry` → `AppContext.circuitBreaker` | `core/circuit-breaker.ts:101`                    | Nuevo port `ICircuitBreaker`       |
+| 18.25 | `rateLimiter` (web-fetch) → `AppContext.rateLimiter`   | `core/tools/web-fetch/rate-limiter.ts:60`        | Por request, no global             |
+| 18.26 | `webFetchCache` → `AppContext.webFetchCache`           | `core/tools/web-fetch/cache.ts:77`               | Por request o inyectado            |
 
 ### Patrón de Migración (para cada singleton)
 
@@ -259,7 +262,9 @@ pnpm typecheck  # 0 errores
 
 ---
 
-## Plan 19 — Unificar Funcionalidades Duplicadas
+## ✅ Plan 19 — Unificar Funcionalidades Duplicadas (COMPLETADO)
+
+> **Documento de finalización:** Ver [19-unificar-duplicaciones.md](file:///c:/Users/themi/AgentWorkspace/the-spaces/plans/completed/19-unificar-duplicaciones.md)
 
 ### Contexto
 
@@ -275,20 +280,20 @@ La auditoría encontró **14 pares de implementaciones duplicadas**. Esto es res
 
 ### Tareas
 
-| # | Duplicación | Acción | Archivos |
-|---|---|---|---|
-| 19.1 | **Dos event buses** | Eliminar `core/event-bus.ts` (`TypedEventEmitter`). Migrar consumidores a `@spaces/engine` `EventBus`. | `core/event-bus.ts` (borrar), consumidores |
-| 19.2 | **Dos ISessionStore interfaces** | `@spaces/core/ports/session.port.ts` es el canónico. `shared/stores/session-store.ts` se marca como deprecated. | Agregar `@deprecated` JSDoc en shared |
-| 19.3 | **Cuatro session store impls** | Eliminar `core/stores/file-session-store.ts` y `core/stores/memory-session-store.ts`. `@spaces/storage` es canónico. `JsonlSessionStore` se elimina con `ai/session-persistence.ts`. | Borrar 3 archivos, migrar `ServerSpacesHost:18` |
-| 19.4 | **Cinco tool registries** | `@spaces/tools` `DefaultToolRegistry` es canónico. Eliminar `@spaces/engine` `ToolRegistry` (en `tool-executor.ts`), `core/tool-registry.ts`, `shared/tools/tool-registry.ts`. El engine recibe `IToolRegistry` del `AppContext`. | Modificar `engine/tool-executor.ts`, `engine/factories/default.agent.ts`, borrar legacy |
-| 19.5 | **Tres prompt builders** | `@spaces/engine` `PromptBuilder` es canónico. Eliminar `ai/prompt-builder.ts`. `SessionPromptBuilder` (546 líneas) se descompone en `PromptSection[]` registradas en el engine. | Borrar 2 archivos, crear secciones |
-| 19.6 | **Dos permission engines** | `@spaces/engine` `PermissionEngine` es canónico. Migrar reglas DENY/ASK del legacy (`core/sandbox/permission-engine.ts`) como `Rule[]` inyectables. | Borrar `core/sandbox/permission-engine.ts`, migrar reglas |
-| 19.7 | **Dos pipelines de sesiones** | Unificar en `createSessionAgent()` de `context.ts`. Eliminar `bootstrapAgentSession()`, `createAgentSession()`. | `context.ts`, borrar factories legacy |
-| 19.8 | **Dos WebSocket endpoints** | Eliminar `/ws/v2`, unificar en `/ws` con el engine. Ya hecho en Plan 16.3. Verificar. | `index.ts`, `ws/handler.ts` |
-| 19.9 | **`@spaces/engine` ToolRegistry = `@spaces/tools` DefaultToolRegistry** | Eliminar el del engine. El engine recibe `IToolRegistry` del `AppContext`, no crea el suyo. | `engine/tool-executor.ts:14-57` (borrar clase `ToolRegistry`), `engine/factories/default.agent.ts` |
-| 19.10 | **Resolved `z.unknown()` en core schemas** | `message.schema.ts:8`: reemplazar `z.array(z.unknown())` por `z.array(ContentBlockSchema)` definiendo `ContentBlockSchema` correctamente. | `core/schemas/message.schema.ts` |
-| 19.11 | **Eliminar `as any` en engine/tools/sandbox** | Extraer `zodToJsonSchema()` como utility en `@spaces/core`. Reemplazar hacks de `as any` en `tool-executor.ts` y `tool-registry.ts`. Reemplazar `as any` de Bun glob en `local.sandbox.ts` por type guard. | 4 archivos |
-| 19.12 | **Agregar `IProviderRegistry` a core** | `@spaces/providers` tiene `ProviderRegistry` concreto sin interfaz. Crear `IProviderRegistry` en `core/ports/provider.port.ts`. | `core/ports/provider.port.ts` (nuevo) |
+| #     | Duplicación                                                             | Acción                                                                                                                                                                                                                            | Archivos                                                                                           |
+| ----- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| 19.1  | **Dos event buses**                                                     | Eliminar `core/event-bus.ts` (`TypedEventEmitter`). Migrar consumidores a `@spaces/engine` `EventBus`.                                                                                                                            | `core/event-bus.ts` (borrar), consumidores                                                         |
+| 19.2  | **Dos ISessionStore interfaces**                                        | `@spaces/core/ports/session.port.ts` es el canónico. `shared/stores/session-store.ts` se marca como deprecated.                                                                                                                   | Agregar `@deprecated` JSDoc en shared                                                              |
+| 19.3  | **Cuatro session store impls**                                          | Eliminar `core/stores/file-session-store.ts` y `core/stores/memory-session-store.ts`. `@spaces/storage` es canónico. `JsonlSessionStore` se elimina con `ai/session-persistence.ts`.                                              | Borrar 3 archivos, migrar `ServerSpacesHost:18`                                                    |
+| 19.4  | **Cinco tool registries**                                               | `@spaces/tools` `DefaultToolRegistry` es canónico. Eliminar `@spaces/engine` `ToolRegistry` (en `tool-executor.ts`), `core/tool-registry.ts`, `shared/tools/tool-registry.ts`. El engine recibe `IToolRegistry` del `AppContext`. | Modificar `engine/tool-executor.ts`, `engine/factories/default.agent.ts`, borrar legacy            |
+| 19.5  | **Tres prompt builders**                                                | `@spaces/engine` `PromptBuilder` es canónico. Eliminar `ai/prompt-builder.ts`. `SessionPromptBuilder` (546 líneas) se descompone en `PromptSection[]` registradas en el engine.                                                   | Borrar 2 archivos, crear secciones                                                                 |
+| 19.6  | **Dos permission engines**                                              | `@spaces/engine` `PermissionEngine` es canónico. Migrar reglas DENY/ASK del legacy (`core/sandbox/permission-engine.ts`) como `Rule[]` inyectables.                                                                               | Borrar `core/sandbox/permission-engine.ts`, migrar reglas                                          |
+| 19.7  | **Dos pipelines de sesiones**                                           | Unificar en `createSessionAgent()` de `context.ts`. Eliminar `bootstrapAgentSession()`, `createAgentSession()`.                                                                                                                   | `context.ts`, borrar factories legacy                                                              |
+| 19.8  | **Dos WebSocket endpoints**                                             | Eliminar `/ws/v2`, unificar en `/ws` con el engine. Ya hecho en Plan 16.3. Verificar.                                                                                                                                             | `index.ts`, `ws/handler.ts`                                                                        |
+| 19.9  | **`@spaces/engine` ToolRegistry = `@spaces/tools` DefaultToolRegistry** | Eliminar el del engine. El engine recibe `IToolRegistry` del `AppContext`, no crea el suyo.                                                                                                                                       | `engine/tool-executor.ts:14-57` (borrar clase `ToolRegistry`), `engine/factories/default.agent.ts` |
+| 19.10 | **Resolved `z.unknown()` en core schemas**                              | `message.schema.ts:8`: reemplazar `z.array(z.unknown())` por `z.array(ContentBlockSchema)` definiendo `ContentBlockSchema` correctamente.                                                                                         | `core/schemas/message.schema.ts`                                                                   |
+| 19.11 | **Eliminar `as any` en engine/tools/sandbox**                           | Extraer `zodToJsonSchema()` como utility en `@spaces/core`. Reemplazar hacks de `as any` en `tool-executor.ts` y `tool-registry.ts`. Reemplazar `as any` de Bun glob en `local.sandbox.ts` por type guard.                        | 4 archivos                                                                                         |
+| 19.12 | **Agregar `IProviderRegistry` a core**                                  | `@spaces/providers` tiene `ProviderRegistry` concreto sin interfaz. Crear `IProviderRegistry` en `core/ports/provider.port.ts`.                                                                                                   | `core/ports/provider.port.ts` (nuevo)                                                              |
 
 ### Verificación
 
@@ -314,7 +319,9 @@ pnpm build      # exitoso
 
 ---
 
-## Plan 20 — Limpiar Cliente (Integrar v2, Eliminar Componentes Legacy)
+## ✅ Plan 20 — Limpiar Cliente (Integrar v2, Eliminar Componentes Legacy) (COMPLETADO)
+
+> **Documento de finalización:** Ver [20-clean-client.md](file:///c:/Users/themi/AgentWorkspace/the-spaces/plans/completed/20-clean-client.md)
 
 ### Contexto
 
@@ -333,27 +340,27 @@ La auditoría del cliente reveló la misma situación que el servidor: una isla 
 
 ### Tareas — Infraestructura
 
-| # | Tarea | Archivos | Detalle |
-|---|---|---|---|
-| 20.1 | **Unificar `apiFetch`** | `lib/api.ts` → reescribir, 49 consumidores | Reescribir `lib/api.ts` para que use la firma del nuevo `api/client.ts`: `apiFetch<T>(path, init?) → Promise<T>` con JSON parseado y `ApiError`. Eliminar `api/client.ts`. Migrar los 2 consumidores nuevos (`useChat.ts`, `useSessions.ts`) a importar de `lib/api.ts`. |
-| 20.2 | **Unificar `WsClient`** | `lib/ws-client.ts` → reescribir, 3 consumidores | Reescribir `lib/ws-client.ts` con el nuevo `WsClient` de `api/ws.ts` (conexión a `/ws`, `AgentEvent` types, reconexión). Eliminar `api/ws.ts`. Migrar `useWebSocket.ts` a importar de `lib/ws-client.ts`. Los consumidores legacy (`attention-store.ts`, `useConnectionAware.ts`, `useTeam.ts`) se actualizan a la nueva API. |
-| 20.3 | **Unificar gestión de sesiones** | `contexts/SessionsContext.tsx` → reescribir, consumidores | Reescribir `SessionsContext` para que use `useSessions` internamente. Mantener la interfaz pública (`SessionsProvider`, `useSessions` context) para no romper consumidores. Agregar kanban columns y status helpers como selectors sobre el estado base. |
+| #    | Tarea                            | Archivos                                                  | Detalle                                                                                                                                                                                                                                                                                                                       |
+| ---- | -------------------------------- | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 20.1 | **Unificar `apiFetch`**          | `lib/api.ts` → reescribir, 49 consumidores                | Reescribir `lib/api.ts` para que use la firma del nuevo `api/client.ts`: `apiFetch<T>(path, init?) → Promise<T>` con JSON parseado y `ApiError`. Eliminar `api/client.ts`. Migrar los 2 consumidores nuevos (`useChat.ts`, `useSessions.ts`) a importar de `lib/api.ts`.                                                      |
+| 20.2 | **Unificar `WsClient`**          | `lib/ws-client.ts` → reescribir, 3 consumidores           | Reescribir `lib/ws-client.ts` con el nuevo `WsClient` de `api/ws.ts` (conexión a `/ws`, `AgentEvent` types, reconexión). Eliminar `api/ws.ts`. Migrar `useWebSocket.ts` a importar de `lib/ws-client.ts`. Los consumidores legacy (`attention-store.ts`, `useConnectionAware.ts`, `useTeam.ts`) se actualizan a la nueva API. |
+| 20.3 | **Unificar gestión de sesiones** | `contexts/SessionsContext.tsx` → reescribir, consumidores | Reescribir `SessionsContext` para que use `useSessions` internamente. Mantener la interfaz pública (`SessionsProvider`, `useSessions` context) para no romper consumidores. Agregar kanban columns y status helpers como selectors sobre el estado base.                                                                      |
 
 ### Tareas — Componentes Core de Chat
 
-| # | Tarea | Archivos | Detalle |
-|---|---|---|---|
-| 20.4 | **Reemplazar `chat/ChatArea.tsx`** (927 líneas) | `components/chat/ChatArea.tsx` | Reemplazar por la versión v2 (51 líneas) + features del viejo que sean necesarios (tool calls inline, attachments, model selector). Migrar features uno a uno, manteniendo el componente bajo 300 líneas. |
-| 20.5 | **Reemplazar `chat/MessageList.tsx`** (852 líneas) | `components/chat/MessageList.tsx` | Versión v2 (40 líneas) + scroll automático + renderizado de tool calls. Extraer tool call rendering a `ToolCallCard.tsx` (< 150 líneas). |
-| 20.6 | **Reemplazar `chat/ChatInput.tsx`** (659 líneas) | `components/chat/ChatInput.tsx` | Versión v2 (70 líneas) + toolbar de attachments + model selector (extraído a prop). Extraer toolbar a `ChatToolbar.tsx` (< 100 líneas). |
-| 20.7 | **Reemplazar `layout/MainLayout.tsx`** (804 líneas) | `components/layout/MainLayout.tsx` | Descomponer en: `AppShell.tsx` (< 100 líneas), `AppSidebar.tsx` (< 150), `AppHeader.tsx` (< 100). Mantener soporte de mobile. |
+| #    | Tarea                                               | Archivos                           | Detalle                                                                                                                                                                                                   |
+| ---- | --------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 20.4 | **Reemplazar `chat/ChatArea.tsx`** (927 líneas)     | `components/chat/ChatArea.tsx`     | Reemplazar por la versión v2 (51 líneas) + features del viejo que sean necesarios (tool calls inline, attachments, model selector). Migrar features uno a uno, manteniendo el componente bajo 300 líneas. |
+| 20.5 | **Reemplazar `chat/MessageList.tsx`** (852 líneas)  | `components/chat/MessageList.tsx`  | Versión v2 (40 líneas) + scroll automático + renderizado de tool calls. Extraer tool call rendering a `ToolCallCard.tsx` (< 150 líneas).                                                                  |
+| 20.6 | **Reemplazar `chat/ChatInput.tsx`** (659 líneas)    | `components/chat/ChatInput.tsx`    | Versión v2 (70 líneas) + toolbar de attachments + model selector (extraído a prop). Extraer toolbar a `ChatToolbar.tsx` (< 100 líneas).                                                                   |
+| 20.7 | **Reemplazar `layout/MainLayout.tsx`** (804 líneas) | `components/layout/MainLayout.tsx` | Descomponer en: `AppShell.tsx` (< 100 líneas), `AppSidebar.tsx` (< 150), `AppHeader.tsx` (< 100). Mantener soporte de mobile.                                                                             |
 
 ### Tareas — Eliminar `/v2` Island
 
-| # | Tarea | Archivos | Detalle |
-|---|---|---|---|
-| 20.8 | **Eliminar ruta `/v2`** | `router/routes.tsx`, `App.tsx` | Quitar `Layout` (22 líneas) y sus componentes hijos del router. Ya no hacen falta — los componentes principales fueron reemplazados. |
-| 20.9 | **Eliminar componentes v2 huérfanos** | `components/Layout.tsx`, `components/ChatArea.tsx`, `components/ChatInput.tsx`, `components/MessageList.tsx`, `components/MessageBubble.tsx`, `components/Markdown.tsx`, `components/SessionList.tsx` | Todos fueron mergeados a sus contrapartes en `components/chat/` y `components/layout/`. Borrar. |
+| #    | Tarea                                 | Archivos                                                                                                                                                                                              | Detalle                                                                                                                              |
+| ---- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| 20.8 | **Eliminar ruta `/v2`**               | `router/routes.tsx`, `App.tsx`                                                                                                                                                                        | Quitar `Layout` (22 líneas) y sus componentes hijos del router. Ya no hacen falta — los componentes principales fueron reemplazados. |
+| 20.9 | **Eliminar componentes v2 huérfanos** | `components/Layout.tsx`, `components/ChatArea.tsx`, `components/ChatInput.tsx`, `components/MessageList.tsx`, `components/MessageBubble.tsx`, `components/Markdown.tsx`, `components/SessionList.tsx` | Todos fueron mergeados a sus contrapartes en `components/chat/` y `components/layout/`. Borrar.                                      |
 
 ### Verificación
 
@@ -384,7 +391,9 @@ pnpm build      # exitoso
 
 ---
 
-## Plan 21 — Limpieza Final
+## ✅ Plan 21 — Limpieza Final (COMPLETADO)
+
+> **Documento de finalización:** Ver [21-final-cleanup.md](file:///c:/Users/themi/AgentWorkspace/the-spaces/plans/completed/21-final-cleanup.md)
 
 ### Contexto
 
@@ -401,47 +410,47 @@ Este es el plan de cierre. Después de los Planes 16-20, el sistema ya funciona 
 
 ### Tareas
 
-| # | Tarea | Archivos | Detalle |
-|---|---|---|---|
-| 21.1 | **Decidir destino de `packages/shared`** | `packages/shared/` | Opción A: migrar schemas y tipos relevantes a `@spaces/core` (fuente única de verdad), eliminar `shared`. Opción B: mantener `shared` como paquete de compatibilidad pero sin implementaciones. **Recomendación: Opción A**. |
-| 21.2 | **Migrar schemas del gap analysis que sean necesarios** | `@spaces/core/src/schemas/` | Session, message y tool schemas ya están. Agregar: agent, team, project, schedule si estas features se mantienen. |
-| 21.3 | **Arreglar `packages/spaces-sdk`** | `packages/spaces-sdk/` | Agregar `tsconfig.json`, `devDependencies`, scripts de build. Re-exportar desde `@spaces/core` + `@spaces/engine` en lugar de `shared`. |
-| 21.4 | **Migrar o eliminar rutas legacy** | `routes/` | Decidir por cada ruta no migrada: migrar a thin handler que usa `AppContext`, o eliminar. Las críticas (auth, agents, teams, settings) se migran. Las postergables (preview, gallery, backup) se eliminan con flag feature. |
-| 21.5 | **Eliminar archivos legacy residuales** | `ai/`, `core/` | Barrer todo `ai/` (ya debería estar vacío después del Plan 17). Eliminar `core/session-manager.ts` y cualquier otro archivo legacy que haya sobrevivido. |
-| 21.6 | **Actualizar `AGENTS.md` y `about.md`** | raíz | Reflejar la arquitectura final: hexagonal, sin singletons, sin vendor, sin god objects. |
-| 21.7 | **Verificación final** | Workspace completo | `pnpm typecheck`, `pnpm build`, `pnpm lint`, smoke test manual de todas las features activas. |
+| #    | Tarea                                                   | Archivos                    | Detalle                                                                                                                                                                                                                      |
+| ---- | ------------------------------------------------------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 21.1 | **Decidir destino de `packages/shared`**                | `packages/shared/`          | Opción A: migrar schemas y tipos relevantes a `@spaces/core` (fuente única de verdad), eliminar `shared`. Opción B: mantener `shared` como paquete de compatibilidad pero sin implementaciones. **Recomendación: Opción A**. |
+| 21.2 | **Migrar schemas del gap analysis que sean necesarios** | `@spaces/core/src/schemas/` | Session, message y tool schemas ya están. Agregar: agent, team, project, schedule si estas features se mantienen.                                                                                                            |
+| 21.3 | **Arreglar `packages/spaces-sdk`**                      | `packages/spaces-sdk/`      | Agregar `tsconfig.json`, `devDependencies`, scripts de build. Re-exportar desde `@spaces/core` + `@spaces/engine` en lugar de `shared`.                                                                                      |
+| 21.4 | **Migrar o eliminar rutas legacy**                      | `routes/`                   | Decidir por cada ruta no migrada: migrar a thin handler que usa `AppContext`, o eliminar. Las críticas (auth, agents, teams, settings) se migran. Las postergables (preview, gallery, backup) se eliminan con flag feature.  |
+| 21.5 | **Eliminar archivos legacy residuales**                 | `ai/`, `core/`              | Barrer todo `ai/` (ya debería estar vacío después del Plan 17). Eliminar `core/session-manager.ts` y cualquier otro archivo legacy que haya sobrevivido.                                                                     |
+| 21.6 | **Actualizar `AGENTS.md` y `about.md`**                 | raíz                        | Reflejar la arquitectura final: hexagonal, sin singletons, sin vendor, sin god objects.                                                                                                                                      |
+| 21.7 | **Verificación final**                                  | Workspace completo          | `pnpm typecheck`, `pnpm build`, `pnpm lint`, smoke test manual de todas las features activas.                                                                                                                                |
 
 ### Decisión sobre Features del Gap Analysis
 
 Basado en `plans/15-gap-analysis.md`, features no cubiertas y su destino:
 
-| Feature | Destino | Razón |
-|---|---|---|
-| Auth | **Migrar** — crear `routes/auth.ts` thin, usar `AppContext` | Crítico para seguridad |
-| Proyectos | **Migrar** — `routes/projects.ts` thin | Core del producto |
-| Workspace archivos | **Migrar** — `routes/files.ts` thin | Core del producto |
-| Model Registry UI | **Migrar** — `routes/models.ts`, `routes/providers.ts` | Configuración esencial |
-| Settings / Env Vars | **Migrar** — `routes/settings.ts`, `routes/env.ts` | Configuración esencial |
-| Entity Config | **Migrar** — `routes/config.ts` | Feature arquitectónico |
-| Skills | **Migrar** — `routes/skills.ts` | Feature activo |
-| Tools Scoping | **Migrar** — `routes/agents.ts` scope endpoints | Feature activo |
-| Compaction | **Migrar** — hook en `@spaces/engine` | Necesario para sesiones largas |
-| Task Runner | **Migrar** — tool en `@spaces/tools` | Feature activo |
-| Factory | **Migrar** — `routes/factory.ts` | Feature activo |
-| SDK público | **Migrar** — `packages/spaces-sdk` | Estrategia open source |
-| Landing page | **Sin cambios** — `apps/landing` independiente | No depende de la migración |
-| Preview Server | **Postergar** — eliminar ruta, mantener código como referencia | Complejo, bajo uso |
-| Gallery | **Postergar** — eliminar ruta | Bajo uso |
-| Backup | **Postergar** — eliminar ruta | Bajo uso |
-| Image/Video Generation | **Postergar** — eliminar tools | Pueden reimplementarse como tools standalone |
-| Exa Search | **Postergar** | Puede volver como tool |
-| Pipelines | **Postergar** | Feature experimental |
-| Navigation Controller | **Eliminar** | El engine no tiene tree navigation en MVP |
-| Attention Hub | **Migrar** — componente UI existente | Se conecta al approval channel del engine |
-| Breadcrumbs | **Migrar** — componente UI existente | No depende de arquitectura |
-| Dashboard/Kanban/Timeline | **Migrar** — páginas existentes | Usan la misma API |
-| Analytics | **Migrar** — página existente | Usa la misma API |
-| Mobile/i18n/Theme | **Migrar** — sin cambios | Infraestructura UI, no depende de arquitectura |
+| Feature                   | Destino                                                        | Razón                                          |
+| ------------------------- | -------------------------------------------------------------- | ---------------------------------------------- |
+| Auth                      | **Migrar** — crear `routes/auth.ts` thin, usar `AppContext`    | Crítico para seguridad                         |
+| Proyectos                 | **Migrar** — `routes/projects.ts` thin                         | Core del producto                              |
+| Workspace archivos        | **Migrar** — `routes/files.ts` thin                            | Core del producto                              |
+| Model Registry UI         | **Migrar** — `routes/models.ts`, `routes/providers.ts`         | Configuración esencial                         |
+| Settings / Env Vars       | **Migrar** — `routes/settings.ts`, `routes/env.ts`             | Configuración esencial                         |
+| Entity Config             | **Migrar** — `routes/config.ts`                                | Feature arquitectónico                         |
+| Skills                    | **Migrar** — `routes/skills.ts`                                | Feature activo                                 |
+| Tools Scoping             | **Migrar** — `routes/agents.ts` scope endpoints                | Feature activo                                 |
+| Compaction                | **Migrar** — hook en `@spaces/engine`                          | Necesario para sesiones largas                 |
+| Task Runner               | **Migrar** — tool en `@spaces/tools`                           | Feature activo                                 |
+| Factory                   | **Migrar** — `routes/factory.ts`                               | Feature activo                                 |
+| SDK público               | **Migrar** — `packages/spaces-sdk`                             | Estrategia open source                         |
+| Landing page              | **Sin cambios** — `apps/landing` independiente                 | No depende de la migración                     |
+| Preview Server            | **Postergar** — eliminar ruta, mantener código como referencia | Complejo, bajo uso                             |
+| Gallery                   | **Postergar** — eliminar ruta                                  | Bajo uso                                       |
+| Backup                    | **Postergar** — eliminar ruta                                  | Bajo uso                                       |
+| Image/Video Generation    | **Postergar** — eliminar tools                                 | Pueden reimplementarse como tools standalone   |
+| Exa Search                | **Postergar**                                                  | Puede volver como tool                         |
+| Pipelines                 | **Postergar**                                                  | Feature experimental                           |
+| Navigation Controller     | **Eliminar**                                                   | El engine no tiene tree navigation en MVP      |
+| Attention Hub             | **Migrar** — componente UI existente                           | Se conecta al approval channel del engine      |
+| Breadcrumbs               | **Migrar** — componente UI existente                           | No depende de arquitectura                     |
+| Dashboard/Kanban/Timeline | **Migrar** — páginas existentes                                | Usan la misma API                              |
+| Analytics                 | **Migrar** — página existente                                  | Usa la misma API                               |
+| Mobile/i18n/Theme         | **Migrar** — sin cambios                                       | Infraestructura UI, no depende de arquitectura |
 
 ### Verificación Final
 
@@ -478,16 +487,16 @@ rg "export const [a-z][a-zA-Z]+ =" apps/server/src/core/ --type ts
 
 ## Resumen de Estimación
 
-| Plan | Alcance | Esfuerzo estimado | Depende de |
-|---|---|---|---|
-| 16 — Cablear AppContext + WS Core | `context.ts`, `ws/handler.ts`, `routes/sessions/`, `index.ts` | **6h** | — |
-| 17 — Eliminar vendor + AgentSession | `ai/vendor/`, `ai/agent-session.ts`, 6 importadores de vendor, 9 importadores de AgentSession | **8h** | Plan 16 |
-| 18 — Eliminar 26 singletons | 26 archivos de singleton, ~60 importadores | **12h** | Plan 17 |
-| 19 — Unificar duplicaciones | 12 pares de duplicaciones, contratos `shared` vs `core` | **8h** | Plan 18 |
-| 20 — Limpiar cliente | `lib/api.ts`, `lib/ws-client.ts`, `SessionsContext`, 4 componentes core, eliminar `/v2` | **10h** | Plan 16 (puede solaparse con 17-19) |
-| 21 — Limpieza final | Rutas restantes, `shared`, SDK, docs | **6h** | Plan 17-20 |
-| **Total** | | **~50h** | |
+| Plan                                | Alcance                                                                                       | Esfuerzo estimado | Depende de                          |
+| ----------------------------------- | --------------------------------------------------------------------------------------------- | ----------------- | ----------------------------------- |
+| 16 — Cablear AppContext + WS Core   | `context.ts`, `ws/handler.ts`, `routes/sessions/`, `index.ts`                                 | **6h**            | —                                   |
+| 17 — Eliminar vendor + AgentSession | `ai/vendor/`, `ai/agent-session.ts`, 6 importadores de vendor, 9 importadores de AgentSession | **8h**            | Plan 16                             |
+| 18 — Eliminar 26 singletons         | 26 archivos de singleton, ~60 importadores                                                    | **12h**           | Plan 17                             |
+| 19 — Unificar duplicaciones         | 12 pares de duplicaciones, contratos `shared` vs `core`                                       | **8h**            | Plan 18                             |
+| 20 — Limpiar cliente                | `lib/api.ts`, `lib/ws-client.ts`, `SessionsContext`, 4 componentes core, eliminar `/v2`       | **10h**           | Plan 16 (puede solaparse con 17-19) |
+| 21 — Limpieza final                 | Rutas restantes, `shared`, SDK, docs                                                          | **6h**            | Plan 17-20                          |
+| **Total**                           |                                                                                               | **~50h**          |                                     |
 
 ---
 
-*Basado en la auditoría `plans/15-post-migration-audit.md` y el gap analysis `plans/15-gap-analysis.md`.*
+_Basado en la auditoría `plans/15-post-migration-audit.md` y el gap analysis `plans/15-gap-analysis.md`._

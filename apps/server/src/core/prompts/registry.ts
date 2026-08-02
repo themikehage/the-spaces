@@ -55,7 +55,9 @@ export class PromptFragmentRegistry {
               priority: def?.priority || 1,
             };
           }
-        } catch { /* noop */ }
+        } catch {
+          /* noop */
+        }
       }
     }
     return this.defaults.get(key);
@@ -72,5 +74,3 @@ export class PromptFragmentRegistry {
     return list.sort((a, b) => a.priority - b.priority);
   }
 }
-
-export const promptFragmentRegistry = new PromptFragmentRegistry();

@@ -1,30 +1,56 @@
 // SPDX-License-Identifier: MIT
 
-// Service Abstraction
+// Core Contracts & Ports
 export type {
-  ArtifactMetadata,
-  IArtifactStore,
-  IMemoryStore,
+  AgentContext,
+  AgentEvent,
+  AgentMessage,
+  IAgentRuntime,
+  IEventBus,
+  IHookRunner,
+  IMemoryProvider,
+  IModelProvider,
+  IPermissionEngine,
+  IPromptBuilder,
+  ISandbox,
   ISessionStore,
+  ITool,
+  IToolExecutor,
+  IToolRegistry,
+  IWorkspaceProvider,
+  LLMMessage,
+  MessageDelta,
   MessageRecord,
-  RecallOptions,
-  RecalledMemory,
+  PromptContext,
+  PromptSection,
+  RuleContext,
   SessionData,
-  SessionSummary,
-} from "shared";
+  ToolCall,
+  ToolCallContext,
+  ToolContext,
+  ToolResult,
+} from "@spaces/core";
 
-// Tool Abstraction
-export { FunctionTool, ToolRegistry, legacyToolToBaseTool } from "shared";
-export type { BaseTool, ToolDeclaration, ToolResult, ToolResultMetadata } from "shared";
+// Schemas & Utilities
+export {
+  AgentDefinitionSchema,
+  AgentStatusSchema,
+  CreateSessionSchema,
+  MessageSchema,
+  ProjectSchema,
+  ScheduleJobSchema,
+  SessionSchema,
+  TeamSchema,
+  ToolCallSchema,
+  zodToJsonSchema,
+} from "@spaces/core";
 
-// Model Providers Abstraction
-export { LLMRegistry } from "shared";
-export type { BaseLlmProvider, ProviderCapabilities, ProviderModelInfo } from "shared";
-
-// Plugin System Abstraction
-export { BasePlugin, PluginManager } from "shared";
-export type { ModelCallContext, SessionContext, ToolCallContext } from "shared";
-
-// Declarative Agent Config Schema
-export { SpacesAgentConfigSchema } from "shared";
-export type { SpacesAgentConfig } from "shared";
+// Engine Implementation & Factories
+export {
+  AgentRuntime,
+  EventBus,
+  HookRunner,
+  PermissionEngine,
+  PromptBuilder,
+  createAgent,
+} from "@spaces/engine";

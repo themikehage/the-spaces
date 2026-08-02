@@ -1,5 +1,6 @@
-// SPDX-License-Identifier: MIT
-import { promptFragmentRegistry, type PromptFragment } from "./registry";
+import { PromptFragmentRegistry, type PromptFragment } from "./registry";
+
+const promptFragmentRegistry = new PromptFragmentRegistry();
 
 export interface DeploymentMember {
   agentId: string;
@@ -58,7 +59,7 @@ export class PromptComposer {
               : "role.member";
       const roleFrags = promptFragmentRegistry
         .listByCategory("role", workspaceDir)
-        .filter((f) => f.key.startsWith(roleToLoad));
+        .filter((f: PromptFragment) => f.key.startsWith(roleToLoad));
       fragments.push(...roleFrags);
     }
 
@@ -159,5 +160,3 @@ export class PromptComposer {
     };
   }
 }
-
-export const promptComposer = new PromptComposer();

@@ -4,8 +4,8 @@ import {
   type ScheduleJob,
   type ScheduleRun,
   type UpdateScheduleJob,
-} from "shared";
-import { sessionManager } from "../session-manager";
+} from "@spaces/core";
+import type { ISessionResolver } from "../ports/core-services.port";
 import { createUserSession } from "../session/create-user-session";
 import {
   deleteJob as dbDeleteJob,
@@ -23,6 +23,11 @@ import {
 
 export class ScheduleService {
   private activeRuns = new Set<string>();
+  private sessionResolver?: ISessionResolver;
+
+  constructor(resolver?: ISessionResolver) {
+    this.sessionResolver = resolver;
+  }
   private activeSessions = new Map<string, string>(); // runId -> sessionId
 
   async createJob(username: string, input: CreateScheduleJob): Promise<ScheduleJob> {
@@ -157,48 +162,45 @@ export class ScheduleService {
       this.activeSessions.set(run.id, createdSessionId);
       dbUpdateRun(run.id, { sessionId: createdSessionId });
 
-      const agentSession = await sessionManager.getOrCreateSession(
+      const agentSession = await this.sessionResolver?.getOrCreateSession(
         job.username,
         createdSessionId,
         job.projectId ?? undefined,
         job.agentId ?? undefined,
       );
 
-      if (agentSession.modelRegistry) {
+      const sessionAny = agentSession as any;
+      if (sessionAny?.modelRegistry) {
         if (job.modelId) {
           const parts = job.modelId.split("/");
           const provider = parts.length > 1 ? parts[0] : "";
           const modelId = parts.length > 1 ? parts.slice(1).join("/") : job.modelId;
 
-          let found = provider ? agentSession.modelRegistry.find(provider, modelId) : undefined;
+          let found = provider ? sessionAny.modelRegistry.find(provider, modelId) : undefined;
           if (!found) {
-            found = agentSession.modelRegistry
+            found = sessionAny.modelRegistry
               .getAvailable()
               .find((m: any) => m.id === job.modelId || m.id === modelId);
           }
           if (found) {
-            await agentSession.setModel(found);
+            await sessionAny.setModel(found);
           }
         }
 
-        if (!agentSession.model) {
-          const available = agentSession.modelRegistry.getAvailable();
+        if (!sessionAny.model) {
+          const available = sessionAny.modelRegistry.getAvailable();
           if (available.length > 0) {
-            await agentSession.setModel(available[0]);
+            await sessionAny.setModel(available[0]);
           }
         }
       }
 
-      if (!agentSession.model) {
-        throw new Error(
-          "No AI model configured for scheduled execution. Please configure an AI provider in settings.",
-        );
+      if (agentSession) {
+        await agentSession.prompt(job.prompt);
       }
-
-      await agentSession.prompt(job.prompt);
 
       // Extract last assistant text message
-      const messages = agentSession.messages || [];
+      const messages = sessionAny?.messages || [];
       const assistantMessages = messages.filter((m: any) => m.role === "assistant");
       const lastMsg = assistantMessages[assistantMessages.length - 1];
 
@@ -235,9 +237,9 @@ export class ScheduleService {
       this.activeSessions.delete(run.id);
 
       if (createdSessionId && job.preserveSession === false) {
-        sessionManager
-          .destroySession(job.username, createdSessionId)
-          .catch((e) =>
+        this.sessionResolver
+          ?.destroySession(job.username, createdSessionId)
+          .catch((e: any) =>
             console.error(`[ScheduleService] Error destroying session ${createdSessionId}:`, e),
           );
       }
@@ -252,7 +254,7 @@ export class ScheduleService {
 
     const sessionId = this.activeSessions.get(runId) || run.sessionId;
     if (sessionId) {
-      const activeSession = sessionManager.getSession(username, sessionId);
+      const activeSession = this.sessionResolver?.getSession?.(username, sessionId);
       if (activeSession) {
         await activeSession.abort().catch(() => {});
       }

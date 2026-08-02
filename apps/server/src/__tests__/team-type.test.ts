@@ -6,11 +6,13 @@ mock.module("../ws/handler", () => {
   return {};
 });
 
+import { UpdateTeamSchema, getTeamDir, type UpdateTeam } from "@spaces/core";
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { UpdateTeamSchema, getTeamDir, type UpdateTeam } from "shared";
-import { teamStore } from "../teams/team-store";
+import { TeamStore } from "../teams/team-store";
+
+const teamStore = new TeamStore();
 
 const TMP_TEST_DIR = join(import.meta.dirname, "../../tmp-team-type-tests");
 
@@ -103,9 +105,9 @@ describe("Team Type - Schema and Store Tests", () => {
 
     const teams = teamStore.listTeams(u);
     expect(teams.length).toBe(2);
-    expect(teams.every((t) => t.teamType !== undefined)).toBe(true);
+    expect(teams.every((t: any) => t.teamType !== undefined)).toBe(true);
 
-    const types = teams.map((t) => t.teamType).sort();
+    const types = teams.map((t: any) => t.teamType).sort();
     expect(types).toContain("Orchestration");
   });
 });

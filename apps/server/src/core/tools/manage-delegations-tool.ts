@@ -1,8 +1,7 @@
-// SPDX-License-Identifier: MIT
-import { agentRegistry } from "@/agents";
+import { SessionPrefix } from "@spaces/core";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { SessionPrefix } from "shared";
+import { AgentRegistry } from "../../agents";
 import {
   AuthStorage,
   DefaultResourceLoader,
@@ -19,13 +18,21 @@ import {
   parseEnvelope,
 } from "../agent-utils";
 import { filterSecretsFromOutput } from "../bash-output-filter";
-import { delegationRegistry } from "../delegation-registry";
+import { DelegationRegistry } from "../delegation-registry";
+import type { ISessionResolver } from "../ports/core-services.port";
 import { assemblePromptAppends, wrapDelegationTask } from "../prompts/prompt-assembly";
 import { buildSubagentRules } from "../sandbox";
-import { sessionManager } from "../session-manager";
+import { SessionMetadataStore } from "../session/metadata-store";
 import { getSubagentDepth } from "../session/session-depth";
-import { sessionToolFactory } from "../session/tool-factory";
+import { SessionToolFactory } from "../session/tool-factory";
+import { UserConfigManager } from "../session/user-config";
 import { createUiTools } from "./ui-tools";
+
+const agentRegistry = new AgentRegistry();
+const delegationRegistry = new DelegationRegistry();
+const sessionMetadataStore = new SessionMetadataStore();
+const userConfigManager = new UserConfigManager();
+const sessionToolFactory = new SessionToolFactory();
 
 export interface ManageDelegationsOptions {
   workspaceDir: string;
@@ -39,7 +46,8 @@ export interface ManageDelegationsOptions {
   parentModel?: any;
   delegationRegistry?: typeof delegationRegistry;
   agentRegistry?: typeof agentRegistry;
-  sessionManager?: typeof sessionManager;
+  sessionManager?: ISessionResolver;
+  sessionResolver?: ISessionResolver;
 }
 
 export function createManageDelegationsTool(opts: ManageDelegationsOptions) {
@@ -55,7 +63,7 @@ export function createManageDelegationsTool(opts: ManageDelegationsOptions) {
     parentModel,
     delegationRegistry: activeDelegationRegistry = delegationRegistry,
     agentRegistry: activeAgentRegistry = agentRegistry,
-    sessionManager: activeSessionManager = sessionManager,
+    sessionManager: activeSessionManager = opts.sessionResolver ?? opts.sessionManager,
   } = opts;
 
   return {
@@ -125,7 +133,7 @@ Use 'delegate' to delegate to a specific target.`,
     execute: async (toolCallId: string, args: any, parentSignal?: AbortSignal) => {
       const { action, task, targetType, targetId } = args;
 
-      const userSettings = activeSessionManager.userConfig.getUserSettings(username);
+      const userSettings = userConfigManager.getUserSettings(username);
       const appConfig = getAppConfig();
       const maxDepth =
         userSettings.subagentMaxDepth !== undefined
@@ -144,7 +152,7 @@ Use 'delegate' to delegate to a specific target.`,
 
       if (action === "spawn") {
         const subagentSessionId = `${SessionPrefix.SUBAGENT}${toolCallId}`;
-        const userDir = activeSessionManager.userConfig.ensureUserDir(username);
+        const userDir = userConfigManager.ensureUserDir(username);
         const subagentDir = join(
           userDir,
           "sessions",
@@ -154,8 +162,7 @@ Use 'delegate' to delegate to a specific target.`,
         );
         mkdirSync(subagentDir, { recursive: true });
 
-        const parentMeta =
-          activeSessionManager.metadataStore.getSessionMetadata(username, parentSessionId) || {};
+        const parentMeta = sessionMetadataStore.getSessionMetadata(username, parentSessionId) || {};
         const parentExecutionMode = parentMeta.executionMode;
         const resolvedSubagentType =
           args.subagentType || (parentExecutionMode === "autonomous" ? "autonomous" : "builder");
@@ -209,7 +216,7 @@ Use 'delegate' to delegate to a specific target.`,
 
         const customBashTool = createBashToolDefinition(workspaceDir, {
           spawnHook: (context) => {
-            const userEnv = activeSessionManager.userConfig.getUserEnv(username);
+            const userEnv = userConfigManager.getUserEnv(username);
             const injectToken = process.env.SPACES_BASH_INJECT_TOKEN !== "0";
             const token = injectToken
               ? getOrCreateToolSessionToken(username, parentSessionId)
@@ -224,16 +231,18 @@ Use 'delegate' to delegate to a specific target.`,
             };
           },
           outputFilter: (output: string) => {
-            const userEnv = activeSessionManager.userConfig.getUserEnv(username);
+            const userEnv = userConfigManager.getUserEnv(username);
             const secrets = Object.values(userEnv).filter(Boolean);
             const injectToken = process.env.SPACES_BASH_INJECT_TOKEN !== "0";
             if (injectToken) {
               try {
                 const token = getOrCreateToolSessionToken(username, parentSessionId);
                 if (token) secrets.push(token);
-              } catch { /* noop */ }
+              } catch {
+                /* noop */
+              }
             }
-            return filterSecretsFromOutput(output, secrets);
+            return filterSecretsFromOutput(output, secrets as string[]);
           },
         });
 
@@ -255,18 +264,18 @@ Use 'delegate' to delegate to a specific target.`,
         });
         await subResourceLoader.reload();
 
-        const { customTools: subSessionTools } = sessionToolFactory.createSessionTools({
+        const { customTools: subSessionTools } = sessionToolFactory.createTools({
           username,
           sessionId: subagentSessionId,
           workspaceDir,
           memoryEnabled: false,
-          memory: null,
+          memory: undefined,
           modelRegistry,
           authStorage,
           resourceLoader: subResourceLoader,
         });
 
-        const subSession = await activeSessionManager.getOrCreateSession(
+        const subSession = await activeSessionManager?.getOrCreateSession(
           username,
           subagentSessionId,
           undefined,
@@ -280,14 +289,9 @@ Use 'delegate' to delegate to a specific target.`,
           },
         );
 
-        const parentSession = activeSessionManager.getSession(username, parentSessionId);
-        if (parentSession?.model) {
-          await subSession.setModel(parentSession.model);
-        }
-
         const childToken = new AbortToken(parentSignal, `spawn:${subagentSessionId}`);
         childToken.register(() => {
-          subSession.abort();
+          subSession?.abort();
           activeDelegationRegistry.abortAllRecursive(subagentSessionId);
         }, `session:${subagentSessionId}`);
 
@@ -320,78 +324,83 @@ Use 'delegate' to delegate to a specific target.`,
           ? `${task}\n\nInput Payload:\n\`\`\`json\n${JSON.stringify(args.payload, null, 2)}\n\`\`\``
           : task;
 
-        subSession
-          .prompt(effectiveTask)
-          .then(async () => {
-            let status: "success" | "error" | "blocked" = "success";
-            const lastText = getLastAssistantText(subSession.messages);
-            const envelope = parseEnvelope(lastText);
+        if (subSession) {
+          subSession
+            .prompt(effectiveTask)
+            .then(async () => {
+              let status: "success" | "error" | "blocked" = "success";
+              const msgs = (subSession as any).messages || [];
+              const lastText = getLastAssistantText(msgs);
+              const envelope = parseEnvelope(lastText);
 
-            if (parentSignal?.aborted) {
-              status = "blocked";
-              envelope.status = "blocked";
-              envelope.executive_summary =
-                "Subagent execution was aborted by the parent orchestrator.";
-            } else {
-              status = envelope.status as any;
-            }
+              if (parentSignal?.aborted) {
+                status = "blocked";
+                envelope.status = "blocked";
+                envelope.executive_summary =
+                  "Subagent execution was aborted by the parent orchestrator.";
+              } else {
+                status = envelope.status as any;
+              }
 
-            metadata.status = status;
-            metadata.completedAt = new Date().toISOString();
-            try {
-              writeFileSync(
-                join(subagentDir, "metadata.json"),
-                JSON.stringify(metadata, null, 2),
-                "utf-8",
-              );
-            } catch (e) {
-              console.error("Failed to write subagent metadata.json", e);
-            }
+              metadata.status = status;
+              metadata.completedAt = new Date().toISOString();
+              try {
+                writeFileSync(
+                  join(subagentDir, "metadata.json"),
+                  JSON.stringify(metadata, null, 2),
+                  "utf-8",
+                );
+              } catch (e) {
+                console.error("Failed to write subagent metadata.json", e);
+              }
 
-            await handleDelegationCompletion({
-              username,
-              parentSessionId,
-              toolCallId,
-              status,
-              envelope,
-              subagentSessionId,
-              toolName: "manage_delegations",
-              lastText,
+              await handleDelegationCompletion({
+                username,
+                parentSessionId,
+                toolCallId,
+                status,
+                envelope,
+                subagentSessionId,
+                toolName: "manage_delegations",
+                lastText,
+              });
+            })
+            .catch(async (err: any) => {
+              console.error(`[Subagent Execution Error] ${subagentSessionId}:`, err);
+              const envelope = {
+                status: "error" as const,
+                executive_summary: `Subagent execution failed: ${err.message || err}`,
+                artifacts: "none",
+                risks: "Execution encountered an error.",
+              };
+
+              metadata.status = "error";
+              metadata.completedAt = new Date().toISOString();
+              try {
+                writeFileSync(
+                  join(subagentDir, "metadata.json"),
+                  JSON.stringify(metadata, null, 2),
+                  "utf-8",
+                );
+              } catch (e) {
+                /* noop */
+              }
+
+              await handleDelegationCompletion({
+                username,
+                parentSessionId,
+                toolCallId,
+                status: "error",
+                envelope,
+                subagentSessionId,
+                toolName: "manage_delegations",
+              });
+            })
+            .finally(() => {
+              subagentUnsub();
+              childToken.abortAll();
             });
-          })
-          .catch(async (err) => {
-            console.error(`[Subagent Execution Error] ${subagentSessionId}:`, err);
-            const envelope = {
-              status: "error" as const,
-              executive_summary: `Subagent execution failed: ${err.message || err}`,
-              artifacts: "none",
-              risks: "Execution encountered an error.",
-            };
-
-            metadata.status = "error";
-            metadata.completedAt = new Date().toISOString();
-            try {
-              writeFileSync(
-                join(subagentDir, "metadata.json"),
-                JSON.stringify(metadata, null, 2),
-                "utf-8",
-              );
-            } catch (e) { /* noop */ }
-
-            await handleDelegationCompletion({
-              username,
-              parentSessionId,
-              toolCallId,
-              status: "error",
-              envelope,
-              subagentSessionId,
-              toolName: "manage_delegations",
-            });
-          })
-          .finally(() => {
-            subagentUnsub();
-            childToken.abortAll();
-          });
+        }
 
         return {
           content: [
@@ -419,11 +428,10 @@ Use 'delegate' to delegate to a specific target.`,
         const delegateSessionId = `${SessionPrefix.DELEGATE}${toolCallId}`;
         const childToken = new AbortToken(parentSignal, `delegate:${delegateSessionId}`);
 
-        const parentMeta =
-          activeSessionManager.metadataStore.getSessionMetadata(username, parentSessionId) || {};
+        const parentMeta = sessionMetadataStore.getSessionMetadata(username, parentSessionId) || {};
         const resolvedExecutionMode = args.autonomyMode || parentMeta.executionMode || undefined;
 
-        activeSessionManager.metadataStore.saveSessionMetadata(username, delegateSessionId, {
+        sessionMetadataStore.saveSessionMetadata(username, delegateSessionId, {
           name: `Delegation: ${targetType} - ${targetId}`,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -451,7 +459,7 @@ Use 'delegate' to delegate to a specific target.`,
                 );
               }
 
-              const session = await activeSessionManager.getOrCreateSession(
+              const session = await activeSessionManager?.getOrCreateSession(
                 username,
                 delegateSessionId,
                 undefined,
@@ -462,17 +470,22 @@ Use 'delegate' to delegate to a specific target.`,
               let resolvedModel = parentModel || null;
               if (!resolvedModel) {
                 try {
-                  const parentSession = activeSessionManager.getSession(username, parentSessionId);
-                  if (parentSession?.model) {
-                    resolvedModel = parentSession.model;
+                  const parentSession = activeSessionManager?.getSession?.(
+                    username,
+                    parentSessionId,
+                  );
+                  if ((parentSession as any)?.model) {
+                    resolvedModel = (parentSession as any).model;
                   }
-                } catch { /* noop */ }
+                } catch {
+                  /* noop */
+                }
               }
 
               if (args.model) {
                 try {
                   const { modelRegistry: userModelReg } =
-                    activeSessionManager.userConfig.getUserContext(username);
+                    userConfigManager.getUserContext(username);
                   userModelReg.refresh();
                   const found = userModelReg
                     .getAvailable()
@@ -490,19 +503,8 @@ Use 'delegate' to delegate to a specific target.`,
                 }
               }
 
-              if (resolvedModel) {
-                try {
-                  await session.setModel(resolvedModel);
-                } catch (e) {
-                  console.error(
-                    `[Delegate Action] Failed to set model on delegate session ${delegateSessionId}:`,
-                    e,
-                  );
-                }
-              }
-
               childToken.register(() => {
-                session.abort();
+                session?.abort?.();
                 activeDelegationRegistry.abortAllRecursive(delegateSessionId);
               }, `agent:${targetId}`);
 
@@ -514,15 +516,16 @@ Use 'delegate' to delegate to a specific target.`,
               );
 
               try {
-                await session.prompt(wrapDelegationTask(task, targetType));
+                await session?.prompt(wrapDelegationTask(task, targetType));
               } finally {
                 unsub?.();
               }
 
-              lastText = getLastAssistantText(session.messages);
+              const msgs = (session as any)?.messages || [];
+              lastText = getLastAssistantText(msgs);
               parsedEnvelope = parseEnvelope(lastText);
               if (args.includeFullHistory) {
-                executionResultText = session.messages
+                executionResultText = msgs
                   .map(
                     (m: any) =>
                       `[${m.role.toUpperCase()}]: ${typeof m.content === "string" ? m.content : JSON.stringify(m.content)}`,
@@ -531,7 +534,7 @@ Use 'delegate' to delegate to a specific target.`,
                   .slice(0, 4000);
               }
             } else if (targetType === "project") {
-              const session = await activeSessionManager.getOrCreateSession(
+              const session = await activeSessionManager?.getOrCreateSession(
                 username,
                 delegateSessionId,
                 targetId,
@@ -540,17 +543,22 @@ Use 'delegate' to delegate to a specific target.`,
               let resolvedModel = parentModel || null;
               if (!resolvedModel) {
                 try {
-                  const parentSession = activeSessionManager.getSession(username, parentSessionId);
-                  if (parentSession?.model) {
-                    resolvedModel = parentSession.model;
+                  const parentSession = activeSessionManager?.getSession?.(
+                    username,
+                    parentSessionId,
+                  );
+                  if ((parentSession as any)?.model) {
+                    resolvedModel = (parentSession as any).model;
                   }
-                } catch { /* noop */ }
+                } catch {
+                  /* noop */
+                }
               }
 
               if (args.model) {
                 try {
                   const { modelRegistry: userModelReg } =
-                    activeSessionManager.userConfig.getUserContext(username);
+                    userConfigManager.getUserContext(username);
                   userModelReg.refresh();
                   const found = userModelReg
                     .getAvailable()
@@ -568,19 +576,8 @@ Use 'delegate' to delegate to a specific target.`,
                 }
               }
 
-              if (resolvedModel) {
-                try {
-                  await session.setModel(resolvedModel);
-                } catch (e) {
-                  console.error(
-                    `[Delegate Action] Failed to set model on delegate session ${delegateSessionId}:`,
-                    e,
-                  );
-                }
-              }
-
               childToken.register(() => {
-                session.abort();
+                session?.abort?.();
                 activeDelegationRegistry.abortAllRecursive(delegateSessionId);
               }, `project:${targetId}`);
 
@@ -592,15 +589,16 @@ Use 'delegate' to delegate to a specific target.`,
               );
 
               try {
-                await session.prompt(wrapDelegationTask(task, targetType));
+                await session?.prompt(wrapDelegationTask(task, targetType));
               } finally {
                 unsub?.();
               }
 
-              lastText = getLastAssistantText(session.messages);
+              const msgs = (session as any)?.messages || [];
+              lastText = getLastAssistantText(msgs);
               parsedEnvelope = parseEnvelope(lastText);
               if (args.includeFullHistory) {
-                executionResultText = session.messages
+                executionResultText = msgs
                   .map(
                     (m: any) =>
                       `[${m.role.toUpperCase()}]: ${typeof m.content === "string" ? m.content : JSON.stringify(m.content)}`,
@@ -609,8 +607,10 @@ Use 'delegate' to delegate to a specific target.`,
                   .slice(0, 4000);
               }
             } else if (targetType === "team") {
-              const { teamStore } = await import("../../teams/team-store");
-              const { teamOrchestrator } = await import("../../teams/team-orchestrator");
+              const { TeamStore } = await import("../../teams/team-store");
+              const { TeamOrchestrator } = await import("../../teams/team-orchestrator");
+              const teamStore = new TeamStore();
+              const teamOrchestrator = new TeamOrchestrator(teamStore);
 
               const team = teamStore.getTeam(username, targetId);
               if (!team) {
@@ -649,25 +649,26 @@ Use 'delegate' to delegate to a specific target.`,
                   .slice(0, 4000);
               }
             } else if (targetType === "session") {
-              const session = await activeSessionManager.getOrCreateSession(username, targetId);
+              const session = await activeSessionManager?.getOrCreateSession(username, targetId);
 
               childToken.register(() => {
-                session.abort();
+                session?.abort?.();
                 activeDelegationRegistry.abortAllRecursive(targetId);
               }, `session:${targetId}`);
 
               const unsub = forwardSubagentEvents(session, parentSessionId, targetId, toolCallId);
 
               try {
-                await session.prompt(wrapDelegationTask(task, targetType));
+                await session?.prompt(wrapDelegationTask(task, targetType));
               } finally {
                 unsub?.();
               }
 
-              lastText = getLastAssistantText(session.messages);
+              const msgs = (session as any)?.messages || [];
+              lastText = getLastAssistantText(msgs);
               parsedEnvelope = parseEnvelope(lastText);
               if (args.includeFullHistory) {
-                executionResultText = session.messages
+                executionResultText = msgs
                   .map(
                     (m: any) =>
                       `[${m.role.toUpperCase()}]: ${typeof m.content === "string" ? m.content : JSON.stringify(m.content)}`,

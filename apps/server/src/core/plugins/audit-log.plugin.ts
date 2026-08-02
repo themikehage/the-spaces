@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { BasePlugin, type ToolCallContext, type ToolResult } from "shared";
+import { BasePlugin, type LegacyToolResult, type PluginToolCallContext } from "@spaces/core";
 import { recordToolCallAudit } from "../audit-log";
 
 export interface AuditLogPluginConfig {
@@ -17,7 +17,7 @@ export class AuditLogPlugin extends BasePlugin {
     super();
   }
 
-  async afterToolCall(ctx: ToolCallContext, result: ToolResult | any): Promise<void> {
+  async afterToolCall(ctx: PluginToolCallContext, result: LegacyToolResult | any): Promise<void> {
     const toolName = typeof ctx.tool === "string" ? ctx.tool : ctx.tool.name;
     const isError =
       result && typeof result === "object" && "isError" in result ? Boolean(result.isError) : false;

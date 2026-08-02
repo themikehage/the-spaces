@@ -3,8 +3,8 @@ import { AvatarUploadField } from "@/components/shared/AvatarUploadField";
 import { Button } from "@/components/ui/Button";
 import { useLiterals } from "@/lib";
 import { DEFAULT_AVATAR_PREFIX } from "@/lib/defaultAvatars";
-import { X } from "lucide-react";
 import { motion } from "framer-motion";
+import { X } from "lucide-react";
 import { useState } from "react";
 import { literals as u } from "./ProjectCreateModal.literals";
 

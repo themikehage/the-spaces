@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
+import { getUserDir } from "@spaces/core";
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { getUserDir } from "shared";
-import { userPermissionStore } from "../core/sandbox/user-permission-store";
+import { UserPermissionStore } from "../core/sandbox/user-permission-store";
 import { createBeforeToolCallHook } from "../core/session/before-tool-call-hook";
+
+const userPermissionStore = new UserPermissionStore();
 
 describe("Subagent PermissionEngine", () => {
   beforeAll(() => {

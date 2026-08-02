@@ -3,11 +3,11 @@ import { useWebSocket } from "@/hooks/useWebSocket";
 import { useLiterals } from "@/lib";
 import { apiFetch } from "@/lib/api";
 import { AnimatePresence, motion } from "framer-motion";
+import { ArrowRight, CheckCircle, Users, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { literals as u } from "./DelegationsPanel.literals";
 import type { PendingDelegation } from "./FloatingDelegations";
-import { ArrowRight, CheckCircle, Users, X } from "lucide-react";
 
 interface Props {
   sessionId: string | null;

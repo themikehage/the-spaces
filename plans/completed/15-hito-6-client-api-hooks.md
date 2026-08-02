@@ -8,20 +8,20 @@
 
 ## API Layer (`src/api/`)
 
-| Tarea | Archivo | Estado |
-|---|---|---|
-| `apiFetch` wrapper tipado + `ApiError` | `apps/client/src/api/client.ts` | ✅ |
-| `WsClient` adaptado a `AgentEvent` de engine | `apps/client/src/api/ws.ts` | ✅ |
+| Tarea                                        | Archivo                         | Estado |
+| -------------------------------------------- | ------------------------------- | ------ |
+| `apiFetch` wrapper tipado + `ApiError`       | `apps/client/src/api/client.ts` | ✅     |
+| `WsClient` adaptado a `AgentEvent` de engine | `apps/client/src/api/ws.ts`     | ✅     |
 
 ---
 
 ## Hooks Base (`src/hooks/`)
 
-| Tarea | Archivo | Estado |
-|---|---|---|
-| `useWebSocket` (auto-subscribe por sessionId + overloads engine/legacy) | `apps/client/src/hooks/useWebSocket.ts` | ✅ |
-| `useSessions` (CRUD: list, create, remove, select) | `apps/client/src/hooks/useSessions.ts` | ✅ |
-| `useChat` (messages, streaming, send, abort) | `apps/client/src/hooks/useChat.ts` | ✅ |
+| Tarea                                                                   | Archivo                                 | Estado |
+| ----------------------------------------------------------------------- | --------------------------------------- | ------ |
+| `useWebSocket` (auto-subscribe por sessionId + overloads engine/legacy) | `apps/client/src/hooks/useWebSocket.ts` | ✅     |
+| `useSessions` (CRUD: list, create, remove, select)                      | `apps/client/src/hooks/useSessions.ts`  | ✅     |
+| `useChat` (messages, streaming, send, abort)                            | `apps/client/src/hooks/useChat.ts`      | ✅     |
 
 ---
 

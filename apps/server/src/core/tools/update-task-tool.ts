@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
 import { join } from "node:path";
-import { broadcastToSession } from "../../ws/handler";
-import { sessionManager } from "../session-manager";
+import { UserConfigManager } from "../session/user-config";
+import { broadcastToSession } from "../ws-bridge";
 import { TaskStateManager } from "./task-state-manager";
+
+const userConfigManager = new UserConfigManager();
 
 export interface UpdateTaskOptions {
   username: string;
@@ -42,7 +44,7 @@ After marking a task as 'done', the task runner will automatically identify the 
       const status: "done" | "failed" = args.status;
       const log: string = args.log || "";
 
-      const userDir = sessionManager.userConfig.ensureUserDir(username);
+      const userDir = userConfigManager.ensureUserDir(username);
       const sessionDir = join(userDir, "sessions", parentSessionId);
 
       const state = TaskStateManager.getTaskState(sessionDir);
@@ -151,7 +153,7 @@ Use this ONLY when all tasks in the list have been marked as 'done' and you have
     execute: async (toolCallId: string, args: any, _parentSignal?: AbortSignal) => {
       const summary: string = args.summary;
 
-      const userDir = sessionManager.userConfig.ensureUserDir(username);
+      const userDir = userConfigManager.ensureUserDir(username);
       const sessionDir = join(userDir, "sessions", parentSessionId);
 
       const state = TaskStateManager.getTaskState(sessionDir);

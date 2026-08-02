@@ -80,5 +80,3 @@ export class ObservabilityService {
     };
   }
 }
-
-export const observabilityService = new ObservabilityService();

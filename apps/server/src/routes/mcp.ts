@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
 import { zValidator } from "@hono/zod-validator";
+import { McpConfigSchema, McpServerConfigSchema, getWorkspaceDir } from "@spaces/core";
 import { Hono } from "hono";
-import { McpConfigSchema, McpServerConfigSchema, getWorkspaceDir } from "shared";
-import { MCP_CATALOG, mcpRegistry } from "../core/mcp-registry.js";
+import type { AppContext } from "../context";
+import { MCP_CATALOG } from "../core/mcp-registry.js";
 import { getUsername } from "../lib/auth-helpers.js";
 import { authMiddleware } from "../middleware/auth.js";
 
-export const mcpRouter = new Hono();
+export const mcpRouter = new Hono<{ Variables: { appContext: AppContext } }>();
 
 mcpRouter.use("/*", authMiddleware);
 
@@ -17,6 +18,7 @@ mcpRouter.get("/", (c) => {
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
 
+  const { mcpRegistry } = c.get("appContext");
   const config = mcpRegistry.loadConfig(username);
   return c.json(config);
 });
@@ -26,6 +28,7 @@ mcpRouter.post("/", zValidator("json", McpConfigSchema), async (c) => {
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
 
+  const { mcpRegistry } = c.get("appContext");
   try {
     const config = c.req.valid("json");
     mcpRegistry.saveConfig(username, config);
@@ -47,6 +50,7 @@ mcpRouter.get("/servers", (c) => {
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
 
+  const { mcpRegistry } = c.get("appContext");
   const config = mcpRegistry.loadConfig(username);
   return c.json({ servers: Object.values(config.mcpServers) });
 });
@@ -56,6 +60,7 @@ mcpRouter.post("/servers", zValidator("json", McpServerConfigSchema), async (c) 
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
 
+  const { mcpRegistry } = c.get("appContext");
   try {
     const newServer = c.req.valid("json");
     const config = mcpRegistry.loadConfig(username);
@@ -79,6 +84,7 @@ mcpRouter.put("/servers/:id", zValidator("json", McpServerConfigSchema), async (
   if (!username) return c.json({ error: "Unauthorized" }, 401);
 
   const id = c.req.param("id");
+  const { mcpRegistry } = c.get("appContext");
   try {
     const updatedServer = c.req.valid("json");
     const config = mcpRegistry.loadConfig(username);
@@ -106,6 +112,7 @@ mcpRouter.delete("/servers/:id", (c) => {
   if (!username) return c.json({ error: "Unauthorized" }, 401);
 
   const id = c.req.param("id");
+  const { mcpRegistry } = c.get("appContext");
   const config = mcpRegistry.loadConfig(username);
 
   const server = config.mcpServers[id];
@@ -132,6 +139,7 @@ mcpRouter.post("/servers/:id/connect", async (c) => {
   if (!username) return c.json({ error: "Unauthorized" }, 401);
 
   const id = c.req.param("id");
+  const { mcpRegistry } = c.get("appContext");
   const config = mcpRegistry.loadConfig(username);
   const srv = config.mcpServers[id];
   if (!srv) return c.json({ error: "Server not found" }, 404);
@@ -140,7 +148,7 @@ mcpRouter.post("/servers/:id/connect", async (c) => {
   mcpRegistry.saveConfig(username, config);
 
   // Trigger connection asynchronously to prevent gateway timeouts
-  mcpRegistry.connectGlobalServer(username, id).catch((err) => {
+  mcpRegistry.connectGlobalServer(username, id).catch((err: unknown) => {
     console.error(`[MCP Connect Async] Failed for ${id}:`, err);
   });
 
@@ -153,6 +161,7 @@ mcpRouter.post("/servers/:id/disconnect", (c) => {
   if (!username) return c.json({ error: "Unauthorized" }, 401);
 
   const id = c.req.param("id");
+  const { mcpRegistry } = c.get("appContext");
   mcpRegistry.disconnectGlobalServer(username, id);
   const config = mcpRegistry.loadConfig(username);
   return c.json({ success: true, server: config.mcpServers[id] });
@@ -163,6 +172,7 @@ mcpRouter.post("/servers/test-connection", zValidator("json", McpServerConfigSch
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
 
+  const { mcpRegistry } = c.get("appContext");
   try {
     const testConfig = c.req.valid("json");
     const result = await mcpRegistry.testConnection(username, testConfig);
@@ -183,6 +193,7 @@ mcpRouter.post("/catalog/:id/install", async (c) => {
     return c.json({ error: "Catalog item not found" }, 404);
   }
 
+  const { mcpRegistry } = c.get("appContext");
   const config = mcpRegistry.loadConfig(username);
   const userWorkspace = getWorkspaceDir(username);
   const processedArgs =
@@ -210,7 +221,7 @@ mcpRouter.post("/catalog/:id/install", async (c) => {
   mcpRegistry.saveConfig(username, config);
 
   // Connect asynchronously in the background to avoid timeouts
-  mcpRegistry.connectGlobalServer(username, id).catch((err) => {
+  mcpRegistry.connectGlobalServer(username, id).catch((err: unknown) => {
     console.error(`[MCP Install Async] Failed to connect for ${id}:`, err);
   });
 
@@ -222,8 +233,9 @@ mcpRouter.get("/status", (c) => {
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
 
+  const { mcpRegistry } = c.get("appContext");
   const config = mcpRegistry.loadConfig(username);
-  const statuses = Object.entries(config.mcpServers).map(([id, srv]) => ({
+  const statuses = Object.entries(config.mcpServers).map(([id, srv]: [string, any]) => ({
     id,
     status: srv.status,
     error: srv.error,

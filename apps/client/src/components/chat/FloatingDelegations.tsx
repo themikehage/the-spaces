@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { useLiterals } from "@/lib";
-import { literals as u } from "./FloatingDelegations.literals";
 import { ChevronRight } from "lucide-react";
+import { literals as u } from "./FloatingDelegations.literals";
 
 export interface PendingDelegation {
   toolCallId: string;

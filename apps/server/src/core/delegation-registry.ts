@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
+import type { EnvelopeResult } from "@spaces/core";
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import type { EnvelopeResult } from "shared";
-import { userConfig } from "./session/user-config";
+import { UserConfigManager } from "./session/user-config";
+
+const userConfigManager = new UserConfigManager();
 
 export interface PendingDelegation {
   toolCallId: string;
@@ -61,7 +63,7 @@ export class DelegationRegistry {
   }
 
   private getDelegationsDir(username: string, parentSessionId: string): string {
-    const userDir = userConfig.ensureUserDir(username);
+    const userDir = userConfigManager.ensureUserDir(username);
     const dir = join(userDir, "sessions", parentSessionId, "delegations");
     if (!existsSync(dir)) {
       mkdirSync(dir, { recursive: true });
@@ -163,11 +165,15 @@ export class DelegationRegistry {
               status: "blocked",
               result: d.result,
             });
-          } catch { /* noop */ }
+          } catch {
+            /* noop */
+          }
         }
         list.push(d);
       }
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
     return list;
   }
 
@@ -220,5 +226,3 @@ export class DelegationRegistry {
     this.abortAllRecursive(subagentSessionId);
   }
 }
-
-export const delegationRegistry = new DelegationRegistry();

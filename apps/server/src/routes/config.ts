@@ -1,7 +1,4 @@
 // SPDX-License-Identifier: MIT
-import { Hono } from "hono";
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
 import {
   EntityConfigSchema,
   EntityTypeSchema,
@@ -9,12 +6,14 @@ import {
   getProjectWorkspaceDir,
   getTeamWorkspaceDir,
   getWorkspaceDir,
-} from "shared";
-import { cascadeConfigLoader } from "../core/config";
-import { workspaceConfigLoader } from "../core/session/workspace-config-loader";
+} from "@spaces/core";
+import { Hono } from "hono";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import type { AppContext } from "../context";
 import { authMiddleware, getAuthPayload } from "../middleware/auth";
 
-export const configRouter = new Hono();
+export const configRouter = new Hono<{ Variables: { appContext: AppContext } }>();
 
 configRouter.use("/*", authMiddleware);
 
@@ -45,6 +44,7 @@ configRouter.get("/:entityType/:entityId", async (c) => {
     return c.json({ error: "Invalid target entity" }, 400);
   }
 
+  const { workspaceConfigLoader } = c.get("appContext");
   const config = await workspaceConfigLoader.load(workspaceDir);
   return c.json(config ?? {});
 });
@@ -105,6 +105,7 @@ configRouter.get("/:entityType/:entityId/resolved", async (c) => {
           ? { teamId: entityId }
           : {};
 
+  const { cascadeConfigLoader } = c.get("appContext");
   const resolved = await cascadeConfigLoader.load(username, entityRef);
   return c.json(resolved);
 });

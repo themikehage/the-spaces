@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
+import { getAuditDir } from "@spaces/core";
 import { appendFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { getAuditDir } from "shared";
 
 export interface ToolCallAuditEvent {
   timestamp: string;
@@ -79,7 +79,9 @@ export function getToolCallLogs(username: string, limit = 100): ToolCallAuditEve
     for (const line of lines.slice(-limit)) {
       try {
         logs.push(JSON.parse(line));
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
     }
     return logs.reverse();
   } catch (err) {

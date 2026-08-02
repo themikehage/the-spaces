@@ -90,7 +90,8 @@ export function ProvidersTab() {
         const data = await res.json();
         setInfoProvider({ ...provider, models: data.models ?? provider.models });
       }
-    } catch { /* noop */
+    } catch {
+      /* noop */
     } finally {
       setInfoLoading(false);
     }
@@ -148,7 +149,10 @@ export function ProvidersTab() {
       </div>
       {error && <p className="text-destructive text-sm mb-4 p-3 bg-card rounded-lg">{error}</p>}
       <div className="relative mb-4">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+        <Search
+          size={16}
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
+        />
         <input
           type="text"
           autoComplete="off"

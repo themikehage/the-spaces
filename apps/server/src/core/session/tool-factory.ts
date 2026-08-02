@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { getTeamWorkspaceDir, legacyToolToBaseTool, type BaseTool } from "shared";
+import { getTeamWorkspaceDir, legacyToolToBaseTool, type BaseTool } from "@spaces/core";
 import type { DefaultResourceLoader } from "../../ai";
 import {
   createBashToolDefinition,
@@ -13,39 +13,40 @@ import {
 import type { AuthStorage } from "../../ai/auth-storage";
 import type { ModelRegistry } from "../../ai/model-registry";
 import { getOrCreateToolSessionToken } from "../../auth/ephemeral-tool-session";
-import { teamStore } from "../../teams/team-store";
+import { TeamStore } from "../../teams/team-store";
 import { filterSecretsFromOutput } from "../bash-output-filter";
 import {
   createCustomToolRuntime,
   createManageCustomToolsTool,
-  customToolStorage,
+  CustomToolStorage,
 } from "../custom-tools";
 import { createMemoryTools } from "../memory/memory-tools";
 import type { MemoryProvider } from "../memory/types";
-import { scopeConfigManager } from "../scope";
-import { createExaSearchTool } from "../tools/exa-search-tool";
+import { ScopeConfigManager } from "../scope";
 import { createFactoryTool } from "../tools/factory-tool";
 import { createPreviewTools } from "../tools/preview-tools";
 import { createUiTools } from "../tools/ui-tools";
 import { createWebFetchTool } from "../tools/web-fetch";
-import { userConfigManager } from "./user-config";
+import { UserConfigManager } from "./user-config";
 
 export interface CreateSessionToolsParams {
   username: string;
   sessionId: string;
   workspaceDir: string;
-  memoryEnabled: boolean;
-  memory: MemoryProvider | null;
-  modelRegistry: ModelRegistry;
-  authStorage: AuthStorage;
-  resourceLoader: DefaultResourceLoader;
+  subagentId?: string;
   contextAgentId?: string;
   teamId?: string;
   projectId?: string;
+  modelRegistry?: ModelRegistry;
+  authStorage?: AuthStorage;
+  resourceLoader?: DefaultResourceLoader;
+  memoryEnabled?: boolean;
+  memory?: MemoryProvider;
 }
 
 export class SessionToolFactory {
-  createSessionTools(params: CreateSessionToolsParams): {
+  createTools(params: CreateSessionToolsParams): {
+    tools: BaseTool[];
     customTools: BaseTool[];
     hasExaKey: boolean;
   } {
@@ -53,43 +54,51 @@ export class SessionToolFactory {
       username,
       sessionId,
       workspaceDir,
-      memoryEnabled,
-      memory,
+      contextAgentId,
       modelRegistry,
       authStorage,
       resourceLoader,
-      contextAgentId,
+      memoryEnabled,
+      memory,
     } = params;
 
-    const customBashTool = createBashToolDefinition(workspaceDir, {
-      spawnHook: (context) => {
+    const teamStore = new TeamStore();
+    const userConfigManager = new UserConfigManager();
+    const scopeConfigManager = new ScopeConfigManager();
+
+    const customToolStorage = new CustomToolStorage();
+    const customToolDefs = customToolStorage.loadAll(username);
+    const customTools = customToolDefs.map((def: any) =>
+      createCustomToolRuntime(def, { workspaceDir }),
+    );
+
+    const bashTool = createBashToolDefinition(workspaceDir, {
+      outputFilter: (output) => {
+        const secrets: string[] = [];
         const userEnv = userConfigManager.getUserEnv(username);
-        const injectToken = process.env.SPACES_BASH_INJECT_TOKEN !== "0";
-        const token = injectToken ? getOrCreateToolSessionToken(username, sessionId) : undefined;
-        return {
-          ...context,
-          env: {
-            ...context.env,
-            ...userEnv,
-            ...(token ? { TOKEN: token, JWT_TOKEN: token } : {}),
-          },
-        };
-      },
-      outputFilter: (output: string) => {
-        const userEnv = userConfigManager.getUserEnv(username);
-        const secrets = Object.values(userEnv).filter(Boolean);
+
+        for (const [key, val] of Object.entries(process.env)) {
+          if (val && (key.includes("TOKEN") || key.includes("SECRET") || key.includes("KEY"))) {
+            secrets.push(val);
+          }
+        }
+        for (const val of Object.values(userEnv)) {
+          if (typeof val === "string" && val.length > 0) secrets.push(val);
+        }
+
         const injectToken = process.env.SPACES_BASH_INJECT_TOKEN !== "0";
         if (injectToken) {
           try {
             const token = getOrCreateToolSessionToken(username, sessionId);
             if (token) secrets.push(token);
-          } catch { /* noop */ }
+          } catch {
+            /* noop */
+          }
         }
         return filterSecretsFromOutput(output, secrets);
       },
     });
 
-    const exaSearchTool = createExaSearchTool({ username });
     const webFetchTool = createWebFetchTool({ username });
     const memoryTools = memoryEnabled && memory ? createMemoryTools(memory) : [];
 
@@ -158,45 +167,32 @@ export class SessionToolFactory {
       ? new Set(scopeConfigManager.resolveToolsForAgent(username, contextAgentId))
       : null;
 
-    const activeCustomDefs = customToolStorage
-      .loadAll(username)
-      .filter(
-        (d: any) => d.enabled && (resolvedToolNames === null || resolvedToolNames.has(d.name)),
-      );
-    const activeCustomTools = activeCustomDefs.map((def: any) =>
-      createCustomToolRuntime(def, {
-        cwd: workspaceDir,
-        session: null as any,
-        username,
-        sessionId,
-      }),
-    );
-
-    const rawTools = [
-      customBashTool,
-      readTool,
-      writeTool,
-      editTool,
-      grepTool,
-      findTool,
-      lsTool,
-      factoryTool,
-      manageCustomToolsTool,
-      ...activeCustomTools,
-      ...uiTools,
-      exaSearchTool,
-      webFetchTool,
-      ...memoryTools,
-      ...previewTools,
+    const builtInTools: { name: string; tool: BaseTool }[] = [
+      { name: "read", tool: legacyToolToBaseTool(readTool) },
+      { name: "write", tool: legacyToolToBaseTool(writeTool) },
+      { name: "edit", tool: legacyToolToBaseTool(editTool) },
+      { name: "grep", tool: legacyToolToBaseTool(grepTool) },
+      { name: "find", tool: legacyToolToBaseTool(findTool) },
+      { name: "ls", tool: legacyToolToBaseTool(lsTool) },
+      { name: "bash", tool: legacyToolToBaseTool(bashTool) },
+      { name: "web_fetch", tool: legacyToolToBaseTool(webFetchTool) },
+      ...(Array.isArray(factoryTool)
+        ? factoryTool.map((t: any) => ({ name: t.name, tool: t }))
+        : [{ name: (factoryTool as any).name, tool: factoryTool }]),
+      ...uiTools.map((t: any) => ({ name: t.name, tool: t })),
+      ...previewTools.map((t: any) => ({ name: t.name, tool: t })),
+      ...memoryTools.map((t: any) => ({ name: t.name, tool: t })),
+      { name: manageCustomToolsTool.name, tool: manageCustomToolsTool },
     ];
 
-    const customTools: BaseTool[] = rawTools.map((t) => legacyToolToBaseTool(t));
+    const filteredBuiltInTools = resolvedToolNames
+      ? builtInTools.filter(({ name }) => resolvedToolNames.has(name)).map(({ tool }) => tool)
+      : builtInTools.map(({ tool }) => tool);
 
     return {
+      tools: filteredBuiltInTools,
       customTools,
       hasExaKey,
     };
   }
 }
-
-export const sessionToolFactory = new SessionToolFactory();

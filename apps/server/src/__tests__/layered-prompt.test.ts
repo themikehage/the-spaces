@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: MIT
 import { describe, expect, test } from "bun:test";
-import { promptComposer, type DeploymentContext } from "../core/prompts/composer";
-import { promptFragmentRegistry } from "../core/prompts/registry";
+import { PromptComposer, type DeploymentContext } from "../core/prompts/composer";
+import { PromptFragmentRegistry } from "../core/prompts/registry";
+
+const promptComposer = new PromptComposer();
+const promptFragmentRegistry = new PromptFragmentRegistry();
 
 describe("Layered Prompt System Tests", () => {
   test("PromptFragmentRegistry - default fragments registered", () => {

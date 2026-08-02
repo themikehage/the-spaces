@@ -1,12 +1,8 @@
-// SPDX-License-Identifier: MIT
-import type { AgentSession } from "../../ai";
-import { mcpRegistry } from "../mcp-registry";
+import { McpRegistry } from "../mcp-registry";
 
-/**
- * Internal helper to attach MCP tools dynamically to an active session.
- */
+const mcpRegistry = new McpRegistry();
 export async function attachSessionMcpTools(
-  session: AgentSession,
+  session: any,
   username: string,
   key: string,
 ): Promise<void> {

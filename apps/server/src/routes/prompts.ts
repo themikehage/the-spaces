@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: MIT
+import { PromptPreviewRequestSchema } from "@spaces/core";
 import { Hono } from "hono";
-import { PromptPreviewRequestSchema } from "shared";
-import { sessionPromptBuilder } from "../core/session/prompt-builder";
+import type { AppContext } from "../context";
+import { SessionPromptBuilder } from "../core/session/prompt-builder";
 import { authMiddleware, getAuthPayload } from "../middleware/auth";
 
-export const promptsRouter = new Hono();
+export const promptsRouter = new Hono<{ Variables: { appContext: AppContext } }>();
 
 promptsRouter.use("/*", authMiddleware);
+
+const sessionPromptBuilder = new SessionPromptBuilder();
 
 promptsRouter.post("/preview", async (c) => {
   const { username } = getAuthPayload(c);

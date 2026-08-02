@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { motion } from "framer-motion";
-import { useState } from "react";
 import { Download, ShieldCheck } from "lucide-react";
+import { useState } from "react";
 
 interface Props {
   html: string;

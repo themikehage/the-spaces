@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
-import { type TeamMember, type TeamMessage } from "shared";
-import { agentRegistry } from "../../agents";
+import { type TeamMember, type TeamMessage } from "@spaces/core";
+import { AgentRegistry } from "../../agents";
+
+const agentRegistry = new AgentRegistry();
 
 export function buildAgentNameMap(members: TeamMember[]): Map<string, string> {
   const map = new Map<string, string>();

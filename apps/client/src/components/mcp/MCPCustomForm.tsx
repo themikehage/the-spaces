@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 import { Button } from "@/components/ui/Button";
+import type { McpServerConfig } from "@spaces/core";
 import { Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { McpServerConfig } from "shared";
 
 interface MCPCustomFormProps {
   initialConfig?: McpServerConfig | null;
@@ -99,7 +99,9 @@ export function MCPCustomForm({ initialConfig, onSubmit, onCancel, onTest }: MCP
     let parsedArgs: string[] = [];
     try {
       parsedArgs = JSON.parse(argsStr);
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
 
     const envMap: Record<string, string> = {};
     for (const row of envRows) {

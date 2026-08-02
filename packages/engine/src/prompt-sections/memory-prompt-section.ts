@@ -7,9 +7,10 @@ export class MemoryPromptSection implements PromptSection {
   constructor(private memoryProvider: IMemoryProvider) {}
 
   async render(ctx: AgentContext): Promise<string> {
-    const lastMsg = typeof ctx.messages.at(-1)?.content === "string" 
-      ? (ctx.messages.at(-1)?.content as string) 
-      : "";
+    const lastMsg =
+      typeof ctx.messages.at(-1)?.content === "string"
+        ? (ctx.messages.at(-1)?.content as string)
+        : "";
     if (!lastMsg) return "";
 
     const memories = await this.memoryProvider.search(lastMsg);

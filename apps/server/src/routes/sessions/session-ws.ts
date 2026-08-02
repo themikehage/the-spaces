@@ -15,7 +15,10 @@ const AGENT_EVENT_TYPES: Array<AgentEvent["type"]> = [
   "agent_error",
 ];
 
-function subscribeAllEvents(events: IEventBus<AgentEvent>, ws: { send(data: string): void }): () => void {
+function subscribeAllEvents(
+  events: IEventBus<AgentEvent>,
+  ws: { send(data: string): void },
+): () => void {
   const unsubs = AGENT_EVENT_TYPES.map((type) =>
     events.on(type, (event) => {
       try {
@@ -29,7 +32,7 @@ function subscribeAllEvents(events: IEventBus<AgentEvent>, ws: { send(data: stri
 }
 
 export function registerEngineWsRoute(
-  app: Hono,
+  app: Hono<any>,
   appContext: AppContext,
   upgradeWebSocket: ReturnType<typeof createBunWebSocket>["upgradeWebSocket"],
 ): void {
@@ -52,7 +55,9 @@ export function registerEngineWsRoute(
         async onMessage(evt, ws) {
           try {
             const rawData =
-              typeof evt.data === "string" ? evt.data : new TextDecoder().decode(evt.data as ArrayBuffer);
+              typeof evt.data === "string"
+                ? evt.data
+                : new TextDecoder().decode(evt.data as ArrayBuffer);
             const msg = JSON.parse(rawData);
 
             const targetSessionId = msg.sessionId || currentSessionId;

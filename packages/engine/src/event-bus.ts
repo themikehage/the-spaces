@@ -5,24 +5,31 @@ export class EventBus<T extends { type: string }> implements IEventBus<T> {
 
   emit(event: T): void {
     const typeHandlers = this.handlers.get(event.type);
-    if (!typeHandlers) return;
-    for (const handler of typeHandlers) {
-      handler(event);
+    if (typeHandlers) {
+      for (const handler of typeHandlers) {
+        handler(event);
+      }
+    }
+    const wildcardHandlers = this.handlers.get("*");
+    if (wildcardHandlers) {
+      for (const handler of wildcardHandlers) {
+        handler(event);
+      }
     }
   }
 
-  on<E extends T["type"]>(type: E, handler: (event: Extract<T, { type: E }>) => void): () => void {
+  on<E extends T["type"] | "*">(type: E, handler: (event: any) => void): () => void {
     let typeHandlers = this.handlers.get(type);
     if (!typeHandlers) {
       typeHandlers = new Set();
       this.handlers.set(type, typeHandlers);
     }
-    typeHandlers.add(handler as (event: any) => void);
+    typeHandlers.add(handler);
 
     return () => {
       const currentHandlers = this.handlers.get(type);
       if (currentHandlers) {
-        currentHandlers.delete(handler as (event: any) => void);
+        currentHandlers.delete(handler);
         if (currentHandlers.size === 0) {
           this.handlers.delete(type);
         }

@@ -37,7 +37,7 @@ export class SpacesRunner {
       { id: string; name: string; arguments?: any; result?: any }
     >();
 
-    const unsubscribe = session.subscribe((evt: any) => {
+    const unsubscribe = session.events.on("*", (evt: any) => {
       if (evt.type === "message_update") {
         if (evt.assistantMessageEvent?.type === "text_delta" && evt.assistantMessageEvent.delta) {
           fullText += evt.assistantMessageEvent.delta;
@@ -68,7 +68,7 @@ export class SpacesRunner {
       unsubscribe();
     }
 
-    const messages = session.messages || [];
+    const messages = (session as any).messages || [];
     // If fullText is empty from deltas, extract last assistant message text
     if (!fullText && messages.length > 0) {
       const lastAssistant = [...messages].reverse().find((m: any) => m.role === "assistant");
@@ -109,7 +109,7 @@ export class SpacesRunner {
       }
     };
 
-    const unsubscribe = session.subscribe((evt: any) => {
+    const unsubscribe = session.events.on("*", (evt: any) => {
       if (evt.type === "message_update") {
         if (evt.assistantMessageEvent?.type === "text_delta" && evt.assistantMessageEvent.delta) {
           pushEvent({
@@ -175,6 +175,6 @@ export class SpacesRunner {
   }
 
   get messages(): any[] {
-    return this._runtime?.session?.messages || [];
+    return (this._runtime?.session as any)?.messages || [];
   }
 }

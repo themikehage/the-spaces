@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import type { AttentionItem, AttentionKind } from "shared";
+import type { AttentionItem, AttentionKind } from "@spaces/core";
 
 export function normalizeAttentionItem(raw: any): AttentionItem | null {
   if (!raw || typeof raw !== "object") return null;

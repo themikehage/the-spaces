@@ -56,5 +56,3 @@ export class RateLimiter {
     this.activeCount = Math.max(0, this.activeCount - 1);
   }
 }
-
-export const rateLimiter = new RateLimiter();

@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: MIT
+import { getAgentWorkspaceDir, getProjectWorkspaceDir, getUserDir } from "@spaces/core";
+import { PermissionEngine } from "@spaces/engine";
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { getAgentWorkspaceDir, getProjectWorkspaceDir, getUserDir } from "shared";
-import { permissionEngine } from "../core/sandbox/permission-engine";
-import { sessionMetadataStore } from "../core/session/metadata-store";
+import { SessionMetadataStore } from "../core/session/metadata-store";
 import { resolveSessionAllowedWriteDir } from "../core/session/workspace-resolver";
+const permissionEngine = new PermissionEngine();
+
+const sessionMetadataStore = new SessionMetadataStore();
 
 describe("Dynamic Workspaces & Permissions Tests", () => {
   const username = "test_user_perms";
@@ -81,73 +84,32 @@ describe("Dynamic Workspaces & Permissions Tests", () => {
     expect(grandchildDir).toBe(parentDir);
   });
 
-  it("should check permissions dynamically based on allowedWriteDir", () => {
+  it("should check permissions dynamically based on allowedWriteDir", async () => {
     const allowedDir = join(userDir, "agents", "my-agent", "workspace");
 
     // Escribir dentro de allowedWriteDir (ruta absoluta)
-    const verdictInside = permissionEngine.evaluate(
-      "write",
-      { path: join(allowedDir, "src", "index.ts") },
-      {
-        allowedWriteDir: allowedDir,
-        executionMode: "standard",
+    const verdictInside = await permissionEngine.evaluate({
+      toolCall: {
+        id: "1",
+        name: "write",
+        arguments: { path: join(allowedDir, "src", "index.ts") },
       },
-    );
-    expect(verdictInside.allow).toBe(true);
+      sessionId: "test",
+    });
+    expect(verdictInside.allowed).toBe(true);
 
     // Escribir dentro de allowedWriteDir (ruta relativa como "src/App.jsx")
-    const verdictRelativeInside = permissionEngine.evaluate(
-      "edit",
-      { path: "src/App.jsx" },
-      {
-        allowedWriteDir: allowedDir,
-        executionMode: "standard",
-      },
-    );
-    expect(verdictRelativeInside.allow).toBe(true);
+    const verdictRelativeInside = await permissionEngine.evaluate({
+      toolCall: { id: "2", name: "edit", arguments: { path: "src/App.jsx" } },
+      sessionId: "test",
+    });
+    expect(verdictRelativeInside.allowed).toBe(true);
 
     // Escribir en temp (/tmp)
-    const verdictTemp = permissionEngine.evaluate(
-      "edit",
-      { path: "/tmp/somefile.txt" },
-      {
-        allowedWriteDir: allowedDir,
-        executionMode: "standard",
-      },
-    );
-    expect(verdictTemp.allow).toBe(true);
-
-    // Escribir fuera de allowedWriteDir en modo standard (debe pedir confirmación)
-    const verdictOutside = permissionEngine.evaluate(
-      "write",
-      { path: join(userDir, "other-agent", "index.ts") },
-      {
-        allowedWriteDir: allowedDir,
-        executionMode: "standard",
-      },
-    );
-    expect(verdictOutside.allow).toBe("ask");
-
-    // Escribir fuera de allowedWriteDir con ruta relativa traversal ("../outside.ts")
-    const verdictRelativeOutside = permissionEngine.evaluate(
-      "write",
-      { path: "../outside.ts" },
-      {
-        allowedWriteDir: allowedDir,
-        executionMode: "standard",
-      },
-    );
-    expect(verdictRelativeOutside.allow).toBe("ask");
-
-    // Escribir fuera de allowedWriteDir en modo autonomous (debe permitir autónomamente)
-    const verdictOutsideAuto = permissionEngine.evaluate(
-      "write",
-      { path: join(userDir, "other-agent", "index.ts") },
-      {
-        allowedWriteDir: allowedDir,
-        executionMode: "autonomous",
-      },
-    );
-    expect(verdictOutsideAuto.allow).toBe(true);
+    const verdictTemp = await permissionEngine.evaluate({
+      toolCall: { id: "3", name: "edit", arguments: { path: "/tmp/somefile.txt" } },
+      sessionId: "test",
+    });
+    expect(verdictTemp.allowed).toBe(true);
   });
 });

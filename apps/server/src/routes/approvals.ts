@@ -1,17 +1,15 @@
 // SPDX-License-Identifier: MIT
 import { zValidator } from "@hono/zod-validator";
+import { ResolveAttentionSchema } from "@spaces/core";
 import { Hono } from "hono";
-import { ResolveAttentionSchema } from "shared";
-import { approvalManager } from "../core/approvals/approval-manager";
-import { sessionMetadataStore } from "../core/session/metadata-store";
-import { uiApprovalRegistry } from "../core/ui-approval-registry";
+import type { AppContext } from "../context";
 import { authMiddleware, getAuthPayload } from "../middleware/auth";
 
-export const approvalsRouter = new Hono();
+export const approvalsRouter = new Hono<{ Variables: { appContext: AppContext } }>();
 
 approvalsRouter.use("/*", authMiddleware);
 
-function enrichItem(username: string, item: any) {
+function enrichItem(sessionMetadataStore: any, username: string, item: any) {
   const meta = item.sessionId
     ? sessionMetadataStore.getSessionMetadata(username, item.sessionId)
     : null;
@@ -25,9 +23,11 @@ function enrichItem(username: string, item: any) {
 
 approvalsRouter.get("/", async (c) => {
   const { username } = getAuthPayload(c);
-  const securityApprovals = approvalManager.getAll(username).map((a) => {
+  const { approvalManager, uiApprovalRegistry, sessionMetadataStore } = c.get("appContext");
+
+  const securityApprovals = approvalManager.getAll(username).map((a: any) => {
     const kind = "approval" as const;
-    return enrichItem(username, {
+    return enrichItem(sessionMetadataStore, username, {
       ...a,
       kind,
       type: kind,
@@ -35,7 +35,7 @@ approvalsRouter.get("/", async (c) => {
   });
   const questionActions = uiApprovalRegistry.getAll(username).map((q) => {
     const kind = q.type === "ui_action" ? ("ui_action" as const) : ("question" as const);
-    return enrichItem(username, {
+    return enrichItem(sessionMetadataStore, username, {
       ...q,
       kind,
       type: kind,
@@ -47,6 +47,8 @@ approvalsRouter.get("/", async (c) => {
 approvalsRouter.post("/:id", zValidator("json", ResolveAttentionSchema), async (c) => {
   const { id } = c.req.param();
   const { action, payload } = c.req.valid("json");
+  const { approvalManager, uiApprovalRegistry } = c.get("appContext");
+
   const success =
     approvalManager.resolve(id, { action: action as any, payload }) ||
     uiApprovalRegistry.resolve(id, { action, payload });

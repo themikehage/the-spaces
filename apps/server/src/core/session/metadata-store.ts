@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { AVAILABLE_TOOLS, getSessionDir } from "@spaces/core";
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { AVAILABLE_TOOLS, getSessionDir } from "shared";
 import { resolveSubagentSessionDir } from "./workspace-resolver";
 
 export interface TeamConfigReader {
@@ -40,10 +40,23 @@ export class SessionMetadataStore {
     if (existsSync(metadataPath)) {
       try {
         metadata = JSON.parse(readFileSync(metadataPath, "utf-8"));
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
     }
     Object.assign(metadata, data);
     writeFileSync(metadataPath, JSON.stringify(metadata, null, 2), "utf-8");
+  }
+
+  deleteSessionMetadata(username: string, sessionId: string): void {
+    const metadataPath = this.getMetadataPath(username, sessionId);
+    if (existsSync(metadataPath)) {
+      try {
+        unlinkSync(metadataPath);
+      } catch {
+        /* noop */
+      }
+    }
   }
 
   persistSessionMetadata(username: string, sessionId: string, data: Record<string, unknown>): void {
@@ -55,7 +68,9 @@ export class SessionMetadataStore {
     if (existsSync(metadataPath)) {
       try {
         return JSON.parse(readFileSync(metadataPath, "utf-8"));
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
     }
     return null;
   }
@@ -66,7 +81,9 @@ export class SessionMetadataStore {
     if (existsSync(metadataPath)) {
       try {
         metadata = JSON.parse(readFileSync(metadataPath, "utf-8"));
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
     }
     metadata.tools = tools;
     this.saveSessionMetadata(username, sessionId, metadata);
@@ -82,7 +99,9 @@ export class SessionMetadataStore {
           if (teamType === "Negotiation") {
             return ["read", "grep", "find", "ls"];
           }
-        } catch { /* noop */ }
+        } catch {
+          /* noop */
+        }
       }
       return [...AVAILABLE_TOOLS];
     };
@@ -128,7 +147,9 @@ export class SessionMetadataStore {
           if (teamType === "Negotiation") {
             return "readonly";
           }
-        } catch { /* noop */ }
+        } catch {
+          /* noop */
+        }
       }
     }
     return undefined;
@@ -227,5 +248,3 @@ export class SessionMetadataStore {
     });
   }
 }
-
-export const sessionMetadataStore = new SessionMetadataStore();

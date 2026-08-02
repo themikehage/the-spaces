@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 import { apiFetch } from "@/lib/api";
-import { useCallback, useEffect, useState } from "react";
 import type {
   CustomToolSummary,
   EntityToolsScopeResponse,
   EntityType,
   ToolScopeTarget,
-} from "shared";
+} from "@spaces/core";
+import { useCallback, useEffect, useState } from "react";
 
 export function useEntityCustomTools(entityType: EntityType, entityId?: string) {
   const [availableTools, setAvailableTools] = useState<CustomToolSummary[]>([]);

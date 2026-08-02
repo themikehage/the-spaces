@@ -1,6 +1,4 @@
 // SPDX-License-Identifier: MIT
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
 import {
   SPACES_DATA_PATH,
   USERS_DIR,
@@ -10,13 +8,17 @@ import {
   type AgentInfo,
   type AgentScopeTarget,
   type AgentStatus,
-} from "shared";
-import { scopeConfigManager } from "../core/scope";
+} from "@spaces/core";
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { ScopeConfigManager } from "../core/scope";
 import { getAgentStopCallback } from "./agent-stop-callback";
 import { createAgentServer } from "./create-agent-server";
 import type { AgentEntry } from "./types";
 
-class AgentRegistry {
+const scopeConfigManager = new ScopeConfigManager();
+
+export class AgentRegistry {
   private agents = new Map<string, AgentEntry>();
 
   constructor() {}
@@ -97,7 +99,7 @@ class AgentRegistry {
       entry.server = server;
       entry.status = "idle";
 
-      server.session.subscribe((event) => {
+      server.session.subscribe((event: any) => {
         if (event.type === "agent_start") entry.status = "streaming";
         if (event.type === "agent_end") entry.status = "idle";
       });
@@ -176,7 +178,9 @@ class AgentRegistry {
       const files = readdirSync(agentDir);
       const avatarFile = files.find((f) => f.startsWith("avatar."));
       if (avatarFile) return join(agentDir, avatarFile);
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
     return null;
   }
 
@@ -294,9 +298,3 @@ class AgentRegistry {
     }
   }
 }
-
-export const agentRegistry = new AgentRegistry();
-// Auto initialize persisted agents on startup (deferred to prevent circular dependency TDZ)
-process.nextTick(() => {
-  agentRegistry.init().catch((err) => console.error("[AgentRegistry] Init error:", err));
-});

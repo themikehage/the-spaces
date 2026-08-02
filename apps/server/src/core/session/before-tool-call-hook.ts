@@ -1,9 +1,16 @@
 // SPDX-License-Identifier: MIT
-import { SessionPrefix } from "shared";
-import { approvalManager } from "../approvals/approval-manager";
-import { extractSubject, permissionEngine, userPermissionStore } from "../sandbox";
-import { sessionMetadataStore } from "./metadata-store";
+import { SessionPrefix } from "@spaces/core";
+import { PermissionEngine } from "@spaces/engine";
+import { ApprovalManager } from "../approvals/approval-manager";
+import { extractSubject, UserPermissionStore } from "../sandbox";
+import { SessionMetadataStore } from "./metadata-store";
 import { resolveSessionAllowedWriteDir } from "./workspace-resolver";
+
+const approvalManager = new ApprovalManager();
+const userPermissionStore = new UserPermissionStore();
+const sessionMetadataStore = new SessionMetadataStore();
+
+const permissionEngine = new PermissionEngine();
 
 export interface CreateBeforeToolCallHookParams {
   sessionId: string;
@@ -53,7 +60,7 @@ export function createBeforeToolCallHook({
 
     const allowedWriteDir = resolveSessionAllowedWriteDir(resolvedUsername, sessionId);
 
-    const verdict = permissionEngine.evaluate(toolName, args as Record<string, unknown>, {
+    const verdict = await permissionEngine.evaluate(toolName, args as Record<string, unknown>, {
       isSubagent: resolvedIsSubagent,
       username: resolvedUsername,
       sessionId,
@@ -62,14 +69,15 @@ export function createBeforeToolCallHook({
       allowedWriteDir,
       permissionOverrides,
     });
-    if (verdict.allow === false) {
-      return { block: true, reason: `[Permission Denied] ${verdict.reason}` };
+    if (!verdict.allowed) {
+      return {
+        block: true,
+        reason: `[Permission Denied] ${verdict.reason ?? "Permission blocked"}`,
+      };
     }
 
     const harmlessTools = ["ask_question", "request_approval", "memory_recall"];
-    const needsApproval =
-      verdict.allow === "ask" ||
-      (resolvedAutonomy === "propose" && !harmlessTools.includes(toolName));
+    const needsApproval = resolvedAutonomy === "propose" && !harmlessTools.includes(toolName);
 
     if (needsApproval) {
       const toolCallId = toolCall.id;
@@ -80,10 +88,7 @@ export function createBeforeToolCallHook({
         toolCallId,
         toolName,
         args: args as Record<string, unknown>,
-        reason:
-          "reason" in verdict && typeof verdict.reason === "string"
-            ? verdict.reason
-            : "Enforced by Propose autonomy level",
+        reason: verdict.reason ?? "Enforced by Propose autonomy level",
       });
 
       const onAbort = () => {

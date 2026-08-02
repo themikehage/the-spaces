@@ -104,8 +104,11 @@
 - [x] Implementar Plan 15 — Core Architecture Migration Hito 5 (Server Hono Thin): `loadEngineConfig`, contenedor DI `AppContext`, sub-router `engine-session-crud` (`POST`, `GET`, `DELETE`), websocket streaming por eventos `session-ws` (`/ws/v2`), integración no invasiva en `routes/sessions/index.ts` y `src/index.ts`, e inclusión de dependencias de workspace `@spaces/*`.
 - [x] Implementar Plan 15 — Core Architecture Migration Hito 6 (Client API Layer + Hooks Base): `apiFetch` tipado + `ApiError`, `WsClient` adaptado a eventos de engine (`AgentEvent`), y hooks `useWebSocket`, `useSessions` y `useChat` sin romper la UI existente.
 - [x] Implementar Plan 16 — Remoción de Legacy (Cablear AppContext + WS Core): Se amplió `AppContext` con `dispose()`, migró la ruta productiva `/ws` al motor desacoplado del engine, reemplazó `/api/sessions` por `createEngineSessionCrudRouter`, eliminó `createServerContext()` y sincronizó el cliente WS (`api/ws.ts`). Verification limpia en workspace completo.
-
-
+- [x] Implementar Plan 17 — Remoción de Legacy (Eliminar `ai/vendor/` y `AgentSession`): Se eliminaron físicamente `ai/vendor/` y `ai/agent-session.ts`, desacoplaron todos los importadores (ports, custom tools, event publisher, memory enricher, mcp attach, tool registry, vision/image tools, team prompt runner, etc.) hacia interfaces de `@spaces/core` / `@spaces/engine`. Typecheck 100% limpio en todo el monorepo.
+- [x] Implementar Plan 18 — Remoción de Legacy (Eliminar 26 Singletons -> Dependency Injection): Se eliminó el anti-patrón de singletons globales en favor de inyección de dependencias vía `AppContext` y ports de `@spaces/core`.
+- [x] Implementar Plan 19 — Remoción de Legacy (Unificar Duplicaciones): Se unificaron event buses, tool registries, session stores y prompt builders redundantes.
+- [x] Implementar Plan 20 — Remoción de Legacy (Limpiar Cliente): Se unificó `apiFetch` (`lib/api.ts`) y `WsClient` (`lib/ws-client.ts`), eliminaron componentes huérfanos v2 y la ruta `/v2`, y redujeron los componentes core de chat y layout a < 300 líneas.
+- [x] Implementar Plan 22 — Remoción de Legacy Final: Se eliminó `SessionManager` (god object de 337 líneas), se migraron 73 imports de `shared` a `@spaces/core`, se eliminaron los 15 singletons restantes wired en `AppContext`, se eliminó físicamente `packages/shared`, se corrigieron referencias obsoletas en `about.md` y se confirmó la compilación completa de monorepo (`pnpm build` y `pnpm typecheck` limpios en 11 paquetes).
 
 ## Criterio de cierre del sprint
 

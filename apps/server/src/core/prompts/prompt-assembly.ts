@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { getEnvironmentContext } from "../env-check";
-import { promptComposer, type DeploymentContext } from "./composer";
+import { PromptComposer, type DeploymentContext } from "./composer";
 import {
   AG_UI_INSTRUCTIONS,
   ENVIRONMENT_INSTRUCTIONS,
@@ -9,6 +9,8 @@ import {
   SUBAGENT_DELEGATION_INSTRUCTIONS,
   TASK_DELEGATION_INSTRUCTIONS,
 } from "./system-instructions";
+
+const promptComposer = new PromptComposer();
 
 export type PromptAssemblyMode =
   | "standard-session" // Global/project chat sessions

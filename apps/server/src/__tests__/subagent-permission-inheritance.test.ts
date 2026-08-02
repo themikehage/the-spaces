@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: MIT
+import { getUserDir } from "@spaces/core";
+import { PermissionEngine } from "@spaces/engine";
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { getUserDir } from "shared";
-import { permissionEngine } from "../core/sandbox/permission-engine";
 import { buildSubagentRules, evaluateSubagentRules } from "../core/sandbox/subagent-permissions";
-import { userPermissionStore } from "../core/sandbox/user-permission-store";
-import { sessionMetadataStore } from "../core/session/metadata-store";
+import { UserPermissionStore } from "../core/sandbox/user-permission-store";
+import { SessionMetadataStore } from "../core/session/metadata-store";
+const permissionEngine = new PermissionEngine();
+
+const userPermissionStore = new UserPermissionStore();
+const sessionMetadataStore = new SessionMetadataStore();
 
 describe("Subagent Permission Inheritance", () => {
   const testUser = "test_user_perm";
@@ -108,22 +112,17 @@ describe("Subagent Permission Inheritance", () => {
     expect(otherVerdict!.allow).toBe("ask");
   });
 
-  it("should not bypass critical static safety denies (fork bomb)", () => {
+  it("should not bypass critical static safety denies (fork bomb)", async () => {
     // Even if user allowed bash *, fork bomb should be caught by PermissionEngine static rules
     userPermissionStore.saveDecision(testUser, "bash", "*", "allow");
 
-    const verdict = permissionEngine.evaluate(
-      "bash",
-      { command: ":(){ :|:& };:" },
-      {
-        isSubagent: true,
-        username: testUser,
-        sessionId: subagentSessionId,
-      },
-    );
+    const verdict = await permissionEngine.evaluate({
+      toolCall: { id: "1", name: "bash", arguments: { command: ":(){ :|:& };:" } },
+      sessionId: subagentSessionId,
+    });
 
-    expect(verdict.allow).toBe(false);
-    expect((verdict as any).reason).toContain("Fork bomb");
+    expect(verdict.allowed).toBe(false);
+    expect(verdict.reason).toContain("Fork bomb");
   });
 
   describe("autonomous subagent", () => {
@@ -189,25 +188,19 @@ describe("Subagent Permission Inheritance", () => {
   });
 
   describe("PermissionEngine evaluation under autonomous mode", () => {
-    it("should allow bash command without asking in autonomous mode when subagentType is missing in metadata but executionMode is autonomous", () => {
+    it("should allow bash command without asking in autonomous mode when subagentType is missing in metadata but executionMode is autonomous", async () => {
       const delSessionId = "del_delegated_session_test";
       // Save metadata for delegate session with only executionMode: autonomous
       sessionMetadataStore.saveSessionMetadata(testUser, delSessionId, {
         executionMode: "autonomous",
       });
 
-      const verdict = permissionEngine.evaluate(
-        "bash",
-        { command: "git clone x" },
-        {
-          isSubagent: true,
-          username: testUser,
-          sessionId: delSessionId,
-          executionMode: "autonomous",
-        },
-      );
+      const verdict = await permissionEngine.evaluate({
+        toolCall: { id: "1", name: "bash", arguments: { command: "git clone x" } },
+        sessionId: delSessionId,
+      });
 
-      expect(verdict.allow).toBe(true);
+      expect(verdict.allowed).toBe(true);
     });
   });
 });

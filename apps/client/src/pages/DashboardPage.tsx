@@ -7,8 +7,8 @@ import { useSessions, type SessionItem } from "@/contexts/SessionsContext";
 import { useToast } from "@/contexts/ToastContext";
 import { useLiterals } from "@/lib";
 import { apiFetch } from "@/lib/api";
-import { Info, Trash2 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
+import { Info, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { literals as dashboardLiterals } from "./DashboardPage.literals";
 

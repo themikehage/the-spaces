@@ -4,7 +4,7 @@ import {
   type AgentDefinition,
   type ResolvedSpacesAgentConfig,
   type SpacesAgentConfig,
-} from "shared";
+} from "@spaces/core";
 import { createAgentRuntime, type AgentRuntimeInstance } from "../core/session/agent-runtime";
 
 export class SpacesAgent {
@@ -45,8 +45,8 @@ export class SpacesAgent {
       toolProfile: "user-session",
     });
 
-    if (this.config.thinkingLevel && runtime.session?.setThinkingLevel) {
-      runtime.session.setThinkingLevel(this.config.thinkingLevel);
+    if (this.config.thinkingLevel && (runtime.session as any)?.setThinkingLevel) {
+      (runtime.session as any).setThinkingLevel(this.config.thinkingLevel);
     }
 
     return runtime;

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 import { useLiterals } from "@/lib";
+import type { TeamContextItem } from "@spaces/core";
 import { motion } from "framer-motion";
 import { Plus, Trash2, X } from "lucide-react";
 import { useState } from "react";
-import type { TeamContextItem } from "shared";
 import { literals as u } from "./TeamContextModal.literals";
 
 interface Props {

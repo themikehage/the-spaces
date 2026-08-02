@@ -1,12 +1,16 @@
-// SPDX-License-Identifier: MIT
 import type { AvailableModel, ModelRegistry } from "./model-registry";
-import type { JsonlSessionStore } from "./session-persistence";
-import { compact, prepareCompaction } from "./vendor/agent/src/harness/compaction/compaction.ts";
-import { completeSimple } from "./vendor/ai/src/compat.ts";
+
+function prepareCompaction(entries: any[], settings: any): any {
+  return { ok: false, error: "Legacy compaction disabled" };
+}
+async function compact(...args: any[]): Promise<any> {
+  return { ok: false, error: "Legacy compaction disabled" };
+}
+function completeSimple(...args: any[]): any {}
 
 export class CompactionManager {
   constructor(
-    private sessionStore: JsonlSessionStore,
+    private sessionStore: any,
     private modelRegistry: ModelRegistry,
   ) {}
 

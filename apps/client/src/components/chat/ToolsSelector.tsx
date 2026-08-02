@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 import { Modal } from "@/components/ui/Modal";
 import { useLiterals } from "@/lib";
+import { ChevronDown, Shield } from "lucide-react";
 import { useState } from "react";
 import { literals as u } from "./ToolsSelector.literals";
-import { ChevronDown, Shield } from "lucide-react";
 
 export interface ToolDefinition {
   id: string;

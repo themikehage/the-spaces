@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { apiFetch } from "@/lib/api";
+import type { AgentDefinition, AgentInfo } from "@spaces/core";
 import { useCallback, useEffect, useState } from "react";
-import type { AgentDefinition, AgentInfo } from "shared";
 
 export function useAgents() {
   const [agents, setAgents] = useState<AgentInfo[]>([]);

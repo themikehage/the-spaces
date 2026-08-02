@@ -2,9 +2,9 @@
 import { MessageList } from "@/components/chat/MessageList";
 import { useChatScroll } from "@/hooks/useChatScroll";
 import type { StreamingAgentState } from "@/hooks/useTeam";
+import type { TeamMessage } from "@spaces/core";
 import { ChevronDown } from "lucide-react";
 import { useRef } from "react";
-import type { TeamMessage } from "shared";
 
 interface Props {
   messages: TeamMessage[];

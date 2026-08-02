@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Classes
-export { AgentSession, createAgentSession } from "./agent-session";
 export { AuthStorage } from "./auth-storage";
 export { ModelRegistry } from "./model-registry";
 export { DefaultResourceLoader } from "./resource-loader";
-export { JsonlSessionStore } from "./session-persistence";
 
 // Functions
 export { createBashToolDefinition } from "./bash-tool";
@@ -15,6 +13,3 @@ export { createGrepToolDefinition } from "./tools/grep-tool";
 export { createLsToolDefinition } from "./tools/ls-tool";
 export { createReadToolDefinition } from "./tools/read-tool";
 export { createWriteToolDefinition } from "./tools/write-tool";
-
-// Types
-export type { AgentSessionEvent } from "./agent-session";

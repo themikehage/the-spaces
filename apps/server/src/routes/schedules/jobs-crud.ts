@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 import { zValidator } from "@hono/zod-validator";
+import { CreateScheduleJobSchema, UpdateScheduleJobSchema } from "@spaces/core";
 import { Hono } from "hono";
-import { CreateScheduleJobSchema, UpdateScheduleJobSchema } from "shared";
-import { scheduleRunner, scheduleService } from "../../core/schedules";
+import type { AppContext } from "../../context";
 import { getUsername } from "../../lib/auth-helpers";
 import { authMiddleware } from "../../middleware/auth";
 
-export const jobsCrudRouter = new Hono();
+export const jobsCrudRouter = new Hono<{ Variables: { appContext: AppContext } }>();
 
 jobsCrudRouter.use("/*", authMiddleware);
 
@@ -18,6 +18,7 @@ jobsCrudRouter.get("/", async (c) => {
   const agentId = c.req.query("agentId");
   const teamId = c.req.query("teamId");
 
+  const { scheduleService } = c.get("appContext");
   const jobs = await scheduleService.listJobs(username, { projectId, agentId, teamId });
   return c.json(jobs);
 });
@@ -27,6 +28,7 @@ jobsCrudRouter.post("/", zValidator("json", CreateScheduleJobSchema), async (c) 
   if (!username) return c.json({ error: "Unauthorized" }, 401);
 
   const input = c.req.valid("json");
+  const { scheduleService, scheduleRunner } = c.get("appContext");
   const job = await scheduleService.createJob(username, input);
   scheduleRunner.onJobChanged(job);
 
@@ -38,6 +40,7 @@ jobsCrudRouter.get("/:jobId", async (c) => {
   if (!username) return c.json({ error: "Unauthorized" }, 401);
 
   const jobId = c.req.param("jobId");
+  const { scheduleService } = c.get("appContext");
   const job = await scheduleService.getJob(username, jobId);
   if (!job) return c.json({ error: "Schedule job not found" }, 404);
 
@@ -51,6 +54,7 @@ jobsCrudRouter.patch("/:jobId", zValidator("json", UpdateScheduleJobSchema), asy
   const jobId = c.req.param("jobId");
   const input = c.req.valid("json");
 
+  const { scheduleService, scheduleRunner } = c.get("appContext");
   const updated = await scheduleService.updateJob(username, jobId, input);
   if (!updated) return c.json({ error: "Schedule job not found" }, 404);
 
@@ -63,6 +67,7 @@ jobsCrudRouter.delete("/:jobId", async (c) => {
   if (!username) return c.json({ error: "Unauthorized" }, 401);
 
   const jobId = c.req.param("jobId");
+  const { scheduleService, scheduleRunner } = c.get("appContext");
   const success = await scheduleService.deleteJob(username, jobId);
   if (!success) return c.json({ error: "Schedule job not found" }, 404);
 

@@ -1,4 +1,13 @@
 // SPDX-License-Identifier: MIT
+import type {
+  CreateTeam,
+  Team,
+  TeamContextItem,
+  TeamMember,
+  TeamMessage,
+  UpdateTeam,
+} from "@spaces/core";
+import { getTeamDir, getTeamMessagesPath, getTeamsDir } from "@spaces/core";
 import {
   appendFileSync,
   closeSync,
@@ -15,19 +24,10 @@ import {
   writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
-import type {
-  CreateTeam,
-  Team,
-  TeamContextItem,
-  TeamMember,
-  TeamMessage,
-  UpdateTeam,
-} from "shared";
-import { getTeamDir, getTeamMessagesPath, getTeamsDir } from "shared";
 
 // --- Store ---
 
-class TeamStore {
+export class TeamStore {
   private getBaseDir(username: string): string {
     return getTeamsDir(username);
   }
@@ -105,7 +105,9 @@ class TeamStore {
               try {
                 const stats = statSync(msgPath);
                 team.updatedAt = stats.mtime.toISOString();
-              } catch { /* noop */ }
+              } catch {
+                /* noop */
+              }
             }
             teams.push(team);
           }
@@ -235,7 +237,9 @@ class TeamStore {
                 break;
               }
             }
-          } catch { /* noop */ }
+          } catch {
+            /* noop */
+          }
         }
       }
 
@@ -245,7 +249,9 @@ class TeamStore {
           if (!sessionId || parsed.sessionId === sessionId) {
             messages.unshift(parsed);
           }
-        } catch { /* noop */ }
+        } catch {
+          /* noop */
+        }
       }
 
       return messages;
@@ -256,10 +262,10 @@ class TeamStore {
       if (fd !== null) {
         try {
           closeSync(fd);
-        } catch { /* noop */ }
+        } catch {
+          /* noop */
+        }
       }
     }
   }
 }
-
-export const teamStore = new TeamStore();

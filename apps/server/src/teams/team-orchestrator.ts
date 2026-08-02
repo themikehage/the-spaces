@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { OrchestrationRunner } from "./orchestration/orchestration-runner";
 import type { ActiveTeamStream } from "./team-prompt-runner";
-import { teamStore } from "./team-store";
+import { TeamStore } from "./team-store";
 
 type TeamBroadcastFn = (teamId: string, data: any) => void;
 let broadcastToTeamFn: TeamBroadcastFn | null = null;
@@ -16,9 +16,11 @@ function broadcast(teamId: string, data: any) {
 
 export class TeamOrchestrator {
   private orchestrationRunner: OrchestrationRunner;
+  private teamStore: TeamStore;
 
-  constructor() {
-    this.orchestrationRunner = new OrchestrationRunner(broadcast);
+  constructor(teamStore?: TeamStore) {
+    this.teamStore = teamStore ?? new TeamStore();
+    this.orchestrationRunner = new OrchestrationRunner(broadcast, this.teamStore);
   }
 
   getActiveStreams(teamId: string, sessionId?: string): Record<string, ActiveTeamStream> {
@@ -26,7 +28,7 @@ export class TeamOrchestrator {
   }
 
   abortDispatch(username: string, teamId: string, sessionId?: string): void {
-    const team = teamStore.getTeam(username, teamId);
+    const team = this.teamStore.getTeam(username, teamId);
     if (!team) return;
 
     this.orchestrationRunner.abort(username, teamId);
@@ -39,11 +41,9 @@ export class TeamOrchestrator {
     userContent: string,
     sessionId?: string,
   ): Promise<void> {
-    const team = teamStore.getTeam(username, teamId);
+    const team = this.teamStore.getTeam(username, teamId);
     if (!team) throw new Error("Team not found");
 
     await this.orchestrationRunner.dispatch(username, teamId, userContent, sessionId);
   }
 }
-
-export const teamOrchestrator = new TeamOrchestrator();

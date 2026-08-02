@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
+import { type ArtifactMetadata, type IArtifactStore } from "@spaces/core";
 import { existsSync, mkdirSync } from "node:fs";
 import { readdir, readFile, stat, unlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { type ArtifactMetadata, type IArtifactStore } from "shared";
 
 export class FileArtifactStore implements IArtifactStore {
   constructor(private readonly baseArtifactsDir: string) {}

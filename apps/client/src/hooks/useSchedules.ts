@@ -8,8 +8,8 @@ import {
   triggerScheduleRun,
   updateScheduleJob,
 } from "@/lib/api/schedules";
+import type { CreateScheduleJob, ScheduleJob, ScheduleRun, UpdateScheduleJob } from "@spaces/core";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { CreateScheduleJob, ScheduleJob, ScheduleRun, UpdateScheduleJob } from "shared";
 
 export function useSchedules(filters?: { projectId?: string; agentId?: string; teamId?: string }) {
   const [jobs, setJobs] = useState<ScheduleJob[]>([]);
@@ -116,7 +116,9 @@ export function useScheduleRuns(jobId: string | null) {
         try {
           const data = await fetchScheduleRuns(jobId);
           setRuns(data);
-        } catch { /* noop */ }
+        } catch {
+          /* noop */
+        }
       }, 3000);
     } else if (pollTimer.current) {
       clearInterval(pollTimer.current);

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { attentionStore } from "@/lib/attention/attention-store";
+import type { AttentionItem } from "@spaces/core";
 import { useSyncExternalStore } from "react";
-import type { AttentionItem } from "shared";
 
 export function useAttention(): AttentionItem[];
 export function useAttention<T>(selector: (items: AttentionItem[]) => T): T;

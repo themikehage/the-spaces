@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { BasePlugin, type ModelCallContext } from "shared";
+import { BasePlugin, type ModelCallContext } from "@spaces/core";
 
 export interface MemoryEnricherPluginConfig {
   memory?: any;

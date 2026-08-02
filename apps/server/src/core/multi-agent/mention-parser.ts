@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import type { TeamMember } from "shared";
+import type { TeamMember } from "@spaces/core";
 
 export interface MentionTarget {
   agentId: string;

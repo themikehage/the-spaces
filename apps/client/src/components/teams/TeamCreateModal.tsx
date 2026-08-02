@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/Button";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { useLiterals } from "@/lib";
 import { DEFAULT_AVATAR_PREFIX } from "@/lib/defaultAvatars";
-import { X } from "lucide-react";
+import type { CreateTeam, TeamMember } from "@spaces/core";
 import { motion } from "framer-motion";
+import { X } from "lucide-react";
 import { useState } from "react";
-import type { CreateTeam, TeamMember } from "shared";
 import { literals as u } from "./TeamCreateModal.literals";
 
 interface TeamCreateModalProps {

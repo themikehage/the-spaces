@@ -5,10 +5,10 @@ import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useToast } from "@/contexts/ToastContext";
 import { useLiterals } from "@/lib";
 import { apiFetch } from "@/lib/api";
-import { Code, Plus } from "lucide-react";
+import type { McpCatalogItem, McpServerConfig } from "@spaces/core";
 import { AnimatePresence, motion } from "framer-motion";
+import { Code, Plus } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import type { McpCatalogItem, McpServerConfig } from "shared";
 import { literals } from "./MCPMarketplacePage.literals";
 
 export function MCPMarketplacePage() {

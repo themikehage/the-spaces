@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 import { useAttention } from "@/hooks/useAttention";
 import { attentionStore } from "@/lib/attention/attention-store";
+import type { AttentionItem } from "@spaces/core";
 import { AnimatePresence, motion } from "framer-motion";
 import { Bell, ExternalLink, HelpCircle, ShieldAlert, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import type { AttentionItem } from "shared";
 
 export type { AttentionItem };
 

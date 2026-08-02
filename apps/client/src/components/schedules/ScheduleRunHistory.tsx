@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { useScheduleRuns } from "@/hooks/useSchedules";
+import type { ScheduleJob, ScheduleRun } from "@spaces/core";
 import {
   AlertCircle,
   Ban,
@@ -11,7 +12,6 @@ import {
   RotateCcw,
 } from "lucide-react";
 import React, { useState } from "react";
-import type { ScheduleJob, ScheduleRun } from "shared";
 
 interface Props {
   job: ScheduleJob | null;

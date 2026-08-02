@@ -3,8 +3,8 @@ import { Dropdown } from "@/components/ui/Dropdown";
 import { useLiterals } from "@/lib";
 import { apiFetch } from "@/lib/api";
 import { literals as u } from "@/pages/LogsConsolePage.literals";
+import type { GlobalLogEvent } from "@spaces/core";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { GlobalLogEvent } from "shared";
 
 function groupConsecutiveDeltas(events: GlobalLogEvent[]): GlobalLogEvent[] {
   const result: GlobalLogEvent[] = [];
@@ -82,7 +82,9 @@ export function SessionConsoleView() {
             return groupConsecutiveDeltas(next);
           });
         }
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
     };
 
     ws.onclose = () => {

@@ -1,12 +1,14 @@
-// SPDX-License-Identifier: MIT
-import { webFetchCache, type CacheEntry } from "./cache";
+import { WebFetchCache, type CacheEntry } from "./cache";
 import { extractContent } from "./extractor";
-import { rateLimiter } from "./rate-limiter";
+import { RateLimiter } from "./rate-limiter";
 import { resolveAndValidate, validateUrl } from "./security";
 
 export interface WebFetchOptions {
   username: string;
 }
+
+const cache = new WebFetchCache();
+const rateLimiter = new RateLimiter();
 
 export interface WebFetchArgs {
   url: string;
@@ -68,7 +70,7 @@ export function createWebFetchTool(opts: WebFetchOptions) {
 
       // 2. Cache Check (if not forced refresh)
       if (!forceRefresh) {
-        const cachedEntry = webFetchCache.get(urlString);
+        const cachedEntry = cache.get(urlString);
         if (cachedEntry) {
           const contentText =
             extractMode === "text" ? cachedEntry.textContent : cachedEntry.markdown;
@@ -186,7 +188,7 @@ export function createWebFetchTool(opts: WebFetchOptions) {
           extractedSize: extracted.markdown.length,
         };
 
-        webFetchCache.set(urlString, cacheEntry);
+        cache.set(urlString, cacheEntry);
 
         // 9. Truncate for LLM return limit
         const contentText = extractMode === "text" ? extracted.textContent : extracted.markdown;

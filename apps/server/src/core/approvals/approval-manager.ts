@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { broadcastToUser } from "../../ws/handler";
+import { broadcastToUser } from "../ws-bridge";
 
 export interface ApprovalRequest {
   approvalId: string; // matches toolCallId
@@ -25,7 +25,7 @@ type PendingApproval = {
   timeoutId: ReturnType<typeof setTimeout>;
 };
 
-class ApprovalManager {
+export class ApprovalManager {
   private pending = new Map<string, PendingApproval>();
 
   async request(params: {
@@ -164,5 +164,3 @@ class ApprovalManager {
     return list;
   }
 }
-
-export const approvalManager = new ApprovalManager();

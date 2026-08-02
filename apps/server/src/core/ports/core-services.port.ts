@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import type { AgentSession } from "../../ai";
+import type { IAgentRuntime } from "@spaces/core";
 
 export interface SessionOverrides {
   model?: { provider: string; modelId: string };
@@ -10,14 +10,15 @@ export interface SessionOverrides {
   skipMemory?: boolean;
 }
 
-export interface ISessionManager {
+export interface ISessionResolver {
   getOrCreateSession(
     username: string,
     sessionId: string,
     projectId?: string,
     agentId?: string,
     overrides?: SessionOverrides,
-  ): Promise<AgentSession>;
+  ): Promise<IAgentRuntime>;
+  getSession?(username: string, sessionId: string): IAgentRuntime | null;
   destroySession(username: string, sessionId: string): Promise<void>;
 }
 

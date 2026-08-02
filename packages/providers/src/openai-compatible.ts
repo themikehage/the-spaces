@@ -1,5 +1,4 @@
 import type { IModelProvider, StreamCompleteOptions } from "@spaces/core";
-import type { LLMMessage, MessageDelta, ToolCall } from "@spaces/core";
 
 export interface OpenAICompatibleOptions {
   name?: string;
@@ -24,7 +23,11 @@ export class OpenAICompatibleProvider implements IModelProvider {
   async streamComplete(opts: StreamCompleteOptions): Promise<void> {
     const { messages, tools, system, signal, onDelta } = opts;
 
-    const formattedMessages: Array<{ role: string; content: string | unknown[]; tool_call_id?: string }> = [];
+    const formattedMessages: Array<{
+      role: string;
+      content: string | unknown[];
+      tool_call_id?: string;
+    }> = [];
 
     if (system) {
       formattedMessages.push({ role: "system", content: system });
@@ -128,7 +131,9 @@ export class OpenAICompatibleProvider implements IModelProvider {
                     toolCall: {
                       id: tc.id,
                       name: tc.function?.name,
-                      arguments: tc.function?.arguments ? JSON.parse(tc.function.arguments) : undefined,
+                      arguments: tc.function?.arguments
+                        ? JSON.parse(tc.function.arguments)
+                        : undefined,
                     },
                   });
                 }

@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
 import { join } from "node:path";
-import { broadcastToSession } from "../../ws/handler";
-import { sessionManager } from "../session-manager";
+import { UserConfigManager } from "../session/user-config";
+import { broadcastToSession } from "../ws-bridge";
 import { TaskStateManager } from "./task-state-manager";
+
+const userConfigManager = new UserConfigManager();
 
 export interface DecomposeTasksOptions {
   username: string;
@@ -54,13 +56,17 @@ function parseTasksFromText(text: string): unknown | null {
   if (jsonMatch) {
     try {
       return JSON.parse(jsonMatch[1].trim());
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
   }
   const trimmed = text.trim();
   if (trimmed.startsWith("[") || trimmed.startsWith("{")) {
     try {
       return JSON.parse(trimmed);
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
   }
   return null;
 }
@@ -135,7 +141,7 @@ Once the plan is registered, execute each task in order using your available too
         };
       }
 
-      const userDir = sessionManager.userConfig.ensureUserDir(username);
+      const userDir = userConfigManager.ensureUserDir(username);
       const sessionDir = join(userDir, "sessions", parentSessionId);
 
       const oldState = TaskStateManager.getTaskState(sessionDir);

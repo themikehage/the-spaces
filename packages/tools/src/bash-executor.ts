@@ -111,19 +111,30 @@ export function executeBashCommand(params: BashExecuteParams): Promise<BashExecu
     child.stderr?.on("data", (data) => appendData(data.toString(), true));
 
     const onAbort = () => {
-      try { child.kill(); } catch {}
+      try {
+        child.kill();
+      } catch {
+        // ignore kill error
+      }
       let finalOutput = output + errorOutput + "\n[Command aborted by user]";
       if (truncated) finalOutput += "\n[...output truncated at 50KB limit]";
       resolve({ exitCode: null, output: finalOutput, cancelled: true });
     };
 
     if (signal) {
-      if (signal.aborted) { onAbort(); return; }
+      if (signal.aborted) {
+        onAbort();
+        return;
+      }
       signal.addEventListener("abort", onAbort);
     }
 
     const timeoutHandle = setTimeout(() => {
-      try { child.kill(); } catch {}
+      try {
+        child.kill();
+      } catch {
+        // ignore kill error
+      }
       let finalOutput = output + errorOutput + `\n[Command timed out after ${effectiveTimeout}s]`;
       if (truncated) finalOutput += "\n[...output truncated at 50KB limit]";
       resolve({ exitCode: null, output: finalOutput, timedOut: true });

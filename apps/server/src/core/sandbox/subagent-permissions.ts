@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
-import { AVAILABLE_TOOLS } from "shared";
-import { sessionManager } from "../session-manager";
-import { sessionMetadataStore } from "../session/metadata-store";
-import { userPermissionStore } from "./user-permission-store";
+import { AVAILABLE_TOOLS } from "@spaces/core";
+import { SessionMetadataStore } from "../session/metadata-store";
+import { UserPermissionStore } from "./user-permission-store";
+
+const sessionMetadataStore = new SessionMetadataStore();
+const userPermissionStore = new UserPermissionStore();
 
 export interface ToolPermissionRule {
   /** Name of the tool (e.g., "bash", "write", "*") */
@@ -144,10 +146,7 @@ export function buildSubagentRules(
 
   // 2. Parent constraints
   if (parentSessionId) {
-    const parentSession = sessionManager.getSession(username, parentSessionId);
-    const parentTools = parentSession
-      ? parentSession.getActiveToolNames()
-      : sessionMetadataStore.getSessionTools(username, parentSessionId);
+    const parentTools = sessionMetadataStore.getSessionTools(username, parentSessionId);
 
     // Any tool NOT in the parent's active list is denied (Read-Only ceiling)
     const allKnownTools = [...AVAILABLE_TOOLS];

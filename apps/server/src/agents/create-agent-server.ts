@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
+import { type AgentDefinition, getAgentDir } from "@spaces/core";
 import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { type AgentDefinition, getAgentDir } from "shared";
 import type { AgentServer } from "./types";
 
 function ensureAgentWorkspace(username: string, id: string): string {
@@ -34,28 +34,31 @@ export async function createAgentServer(
   const app = new Hono();
   let activeObservers = 0;
 
+  const sAny = session as any;
+
   app.get("/health", (c) =>
     c.json({
       id: definition.id,
       name: definition.name,
-      streaming: session.isStreaming,
+      streaming: sAny.isStreaming || false,
       activeObservers,
     }),
   );
 
   app.get("/messages", (c) => {
-    return c.json({ messages: session.messages });
+    return c.json({ messages: sAny.messages || [] });
   });
 
   app.get("/observe", async (c) => {
     activeObservers++;
     return streamSSE(c, async (sse) => {
-      const unsub = session.subscribe((event: any) => {
+      const handler = (event: any) => {
         sse.writeSSE({ data: JSON.stringify(event), event: event.type }).catch(() => {});
-      });
+      };
+      const unsub = sAny.events?.on ? sAny.events.on("*", handler) : sAny.subscribe?.(handler);
       c.req.raw.signal.addEventListener("abort", () => {
         activeObservers = Math.max(0, activeObservers - 1);
-        unsub();
+        unsub?.();
       });
       while (!c.req.raw.signal.aborted) {
         await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -75,7 +78,9 @@ export async function createAgentServer(
         if (existsSync(summaryPath)) {
           executions.push(JSON.parse(readFileSync(summaryPath, "utf-8")));
         }
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
     }
     executions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     return c.json({ executions });
@@ -147,7 +152,7 @@ export async function createAgentServer(
     const errors: string[] = [];
     const startTime = Date.now();
 
-    const unsubLog = session.subscribe((event: any) => {
+    const logHandler = (event: any) => {
       if (event.type === "tool_execution_start") {
         toolCalls.push({
           id: event.toolCall.id,
@@ -165,13 +170,16 @@ export async function createAgentServer(
       } else if (event.type === "agent_error") {
         errors.push(event.error || "Unknown agent error");
       }
-    });
+    };
+    const unsubLog = sAny.events?.on
+      ? sAny.events.on("*", logHandler)
+      : sAny.subscribe?.(logHandler);
 
     const finalize = () => {
-      unsubLog();
+      unsubLog?.();
       const durationMs = Date.now() - startTime;
       try {
-        const msgs = session.messages;
+        const msgs = sAny.messages || [];
         writeFileSync(
           join(execDir, "messages.jsonl"),
           msgs.map((m: any) => JSON.stringify(m)).join("\n"),
@@ -200,7 +208,7 @@ export async function createAgentServer(
     if (!stream) {
       try {
         await session.prompt(message);
-        const msgs = session.messages;
+        const msgs = sAny.messages || [];
         return c.json({ messages: msgs });
       } catch (err) {
         errors.push(String(err));
@@ -211,9 +219,10 @@ export async function createAgentServer(
     }
 
     return streamSSE(c, async (sse) => {
-      const unsub = session.subscribe((event: any) => {
+      const handler = (event: any) => {
         sse.writeSSE({ data: JSON.stringify(event), event: event.type }).catch(() => {});
-      });
+      };
+      const unsub = sAny.events?.on ? sAny.events.on("*", handler) : sAny.subscribe?.(handler);
 
       try {
         await session.prompt(message);
@@ -232,9 +241,7 @@ export async function createAgentServer(
   });
 
   app.post("/abort", async (c) => {
-    if (session.isStreaming) {
-      await session.abort();
-    }
+    await session.abort();
     return c.json({ aborted: true });
   });
 
@@ -244,7 +251,7 @@ export async function createAgentServer(
     definition,
     session,
     app,
-    memory,
+    memory: memory as any,
     getActiveObservers() {
       return activeObservers;
     },
@@ -252,9 +259,9 @@ export async function createAgentServer(
       console.log(`Agent [${definition.id}] initialized in-process`);
     },
     async stop() {
-      if (session.isStreaming) await session.abort();
+      await session.abort();
       await session.dispose();
-      await memory.shutdown();
+      await (memory as any)?.shutdown?.();
       if (bunServer) {
         bunServer.stop(true);
         bunServer = null;

@@ -1,8 +1,8 @@
+import type { ITool, ToolContext, ToolResult } from "@spaces/core";
+import ignore from "ignore";
 import { existsSync } from "node:fs";
 import { readdir, readFile, stat } from "node:fs/promises";
 import { basename, join, relative } from "node:path";
-import type { ITool, ToolContext, ToolResult } from "@spaces/core";
-import ignore from "ignore";
 import { z } from "zod";
 import { resolveSafePath } from "./path-safety.js";
 
@@ -21,7 +21,8 @@ function globToRegex(glob: string): RegExp {
 
 export const globTool: ITool = {
   name: "glob",
-  description: "Search for files by glob pattern. Returns matching file paths relative to search directory.",
+  description:
+    "Search for files by glob pattern. Returns matching file paths relative to search directory.",
   parameters: GlobParametersSchema,
   category: "filesystem",
   async execute(args: unknown, ctx: ToolContext): Promise<ToolResult> {
@@ -39,7 +40,9 @@ export const globTool: ITool = {
         try {
           const gitignoreContent = await readFile(gitignorePath, "utf-8");
           ig.add(gitignoreContent);
-        } catch { /* noop */ }
+        } catch {
+          /* noop */
+        }
       }
 
       const results: string[] = [];

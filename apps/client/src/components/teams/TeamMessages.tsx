@@ -2,8 +2,8 @@
 import { RichMarkdown } from "@/components/chat/RichMarkdown";
 import { AgentAvatar } from "@/components/shared/AgentAvatar";
 import type { StreamingAgentState } from "@/hooks/useTeam";
+import type { TeamMessage } from "@spaces/core";
 import { useEffect, useRef } from "react";
-import type { TeamMessage } from "shared";
 
 interface Props {
   messages: TeamMessage[];

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 import { useLiterals } from "@/lib";
 import { apiFetch } from "@/lib/api";
+import { ChevronDown, ChevronLeft, ChevronRight, Plus, Table } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { literals as u } from "./ChatInput.literals";
 import { PortalPopover } from "./PortalPopover";
-import { ChevronDown, ChevronLeft, ChevronRight, Plus, Table } from "lucide-react";
 
 interface ProviderInfo {
   id: string;
@@ -242,7 +242,10 @@ export function ModelSelector({
             !
           </span>
         )}
-        <ChevronDown size={10} className={`transition-transform flex-shrink-0 ${open ? "rotate-180" : ""}`} />
+        <ChevronDown
+          size={10}
+          className={`transition-transform flex-shrink-0 ${open ? "rotate-180" : ""}`}
+        />
       </button>
 
       <PortalPopover

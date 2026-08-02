@@ -2,13 +2,13 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useLiterals } from "@/lib";
 import { resolveFileUrl } from "@/lib/file-urls";
+import { Check, ChevronDown, Copy, Zap } from "lucide-react";
 import { useState } from "react";
 import { HtmlPreview } from "./HtmlPreview";
 import { ImageGrid } from "./ImageGrid";
 import { literals as ml } from "./MessageBlocks.literals";
 import { RichMarkdown } from "./RichMarkdown";
 import { extractFileMarkers, HtmlFileFetcher, isHtml } from "./ToolResultInspector";
-import { Check, ChevronDown, Copy, Zap } from "lucide-react";
 
 function LightningIcon({ className }: { className?: string }) {
   return <Zap size={11} className={`flex-shrink-0 ${className ?? ""}`} />;
@@ -102,11 +102,7 @@ export function AssistantTextBlock({
       className="absolute top-2 right-2 p-1.5 rounded-md bg-card/80 hover:bg-card border border-border/50 hover:border-primary/30 text-text-secondary hover:text-text-primary transition-all opacity-0 group-hover:opacity-100 backdrop-blur-sm"
       title={copied ? "Copiado!" : "Copiar mensaje"}
     >
-      {copied ? (
-        <Check size={14} className="text-success" />
-      ) : (
-        <Copy size={14} />
-      )}
+      {copied ? <Check size={14} className="text-success" /> : <Copy size={14} />}
     </button>
   );
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { WsClient, type WsInMessage, type WsOutMessage } from "@/api/ws";
+import { WsClient, type WsInMessage, type WsOutMessage } from "@/lib/ws-client";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type EventHandler = (data: any) => void;

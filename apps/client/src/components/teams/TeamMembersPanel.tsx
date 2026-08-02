@@ -2,9 +2,9 @@
 import { AgentAvatar } from "@/components/shared/AgentAvatar";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { useLiterals } from "@/lib";
+import type { AgentInfo, TeamMember, TeamRole } from "@spaces/core";
 import { Plus, X } from "lucide-react";
 import { useState } from "react";
-import type { AgentInfo, TeamMember, TeamRole } from "shared";
 import { literals as u } from "./TeamMembersPanel.literals";
 
 const TEAM_ROLE_OPTIONS: { value: TeamRole; label: string }[] = [

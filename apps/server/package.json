@@ -3,7 +3,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "bun run --watch src/index.ts",
-    "build": "bun build src/index.ts --outdir ./dist --target bun",
+    "build": "bun build src/index.ts --outdir ./dist --target bun --external linkedom",
     "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit",
     "test": "bun test"
@@ -19,11 +19,8 @@
     "diff": "^9.0.0",
     "hono": "^4",
     "ignore": "^7.0.5",
-    "jsonwebtoken": "^9",
-    "linkedom": "^0.18.13",
-    "openai": "^6.45.0",
+    "linkedom": "^0.18.6",
     "partial-json": "^0.1.7",
-    "shared": "workspace:*",
     "@spaces/core": "workspace:*",
     "@spaces/engine": "workspace:*",
     "@spaces/providers": "workspace:*",

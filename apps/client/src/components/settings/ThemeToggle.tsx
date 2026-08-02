@@ -31,7 +31,9 @@ export function ThemeToggle() {
     applyTheme(theme);
     try {
       localStorage.setItem("theme", theme);
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
   }, [theme, applyTheme]);
 
   useEffect(() => {

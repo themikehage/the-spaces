@@ -8,4 +8,3 @@ export function createSessionsRouter(appContext: AppContext): Hono {
   router.route("/", createEngineSessionCrudRouter(appContext));
   return router;
 }
-

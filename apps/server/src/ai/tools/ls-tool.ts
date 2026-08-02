@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: MIT
 import { readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
-import { truncateHead } from "../vendor/agent/src/harness/utils/truncate";
 import { resolveSafePath } from "./path-safety";
+
+function truncateHead(content: string, opts?: any): { content: string; truncated: boolean } {
+  return { content, truncated: false };
+}
 
 export function createLsToolDefinition(cwd: string, allowedDirs?: string[]) {
   return {

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { apiFetch } from "@/api/client";
 import { useWebSocket } from "@/hooks/useWebSocket";
+import { apiFetch } from "@/lib/api";
 import type { AgentEvent, AgentMessage, MessageRecord } from "@spaces/core";
 import { useCallback, useEffect, useState } from "react";
 

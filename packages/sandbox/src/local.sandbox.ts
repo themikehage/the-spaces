@@ -1,8 +1,8 @@
+import type { ISandbox, SandboxOptions, SandboxResult } from "@spaces/core";
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
-import { readFile, writeFile, readdir, mkdir } from "node:fs/promises";
-import { dirname, join, isAbsolute } from "node:path";
-import type { ISandbox, SandboxOptions, SandboxResult } from "@spaces/core";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import { dirname, isAbsolute, join } from "node:path";
 import { isRestrictedPath } from "./restricted-paths";
 
 const MAX_OUTPUT_BYTES = 50 * 1024; // 50 KB output limit
@@ -116,9 +116,14 @@ export class LocalSandbox implements ISandbox {
   }
 
   async listFiles(pattern: string): Promise<string[]> {
-    // If Bun glob is available, use it
-    if (typeof globalThis !== "undefined" && "Bun" in globalThis && (globalThis as any).Bun?.Glob) {
-      const glob = new (globalThis as any).Bun.Glob(pattern);
+    interface BunWithGlob {
+      Bun?: {
+        Glob?: new (pattern: string) => { scan(opts: { cwd: string }): AsyncIterable<string> };
+      };
+    }
+    const bunGlobal = globalThis as unknown as BunWithGlob;
+    if (bunGlobal.Bun?.Glob) {
+      const glob = new bunGlobal.Bun.Glob(pattern);
       const matches: string[] = [];
       for await (const file of glob.scan({ cwd: this.defaultCwd })) {
         matches.push(file);

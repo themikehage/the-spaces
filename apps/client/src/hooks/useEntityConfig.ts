@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { apiFetch } from "@/lib/api";
+import type { EntityConfigType, EntityType } from "@spaces/core";
 import { useCallback, useEffect, useState } from "react";
-import type { EntityConfigType, EntityType } from "shared";
 
 export function useEntityConfig(entityType: EntityType, entityId: string) {
   const [config, setConfig] = useState<EntityConfigType>({});

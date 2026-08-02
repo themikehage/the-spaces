@@ -5,7 +5,17 @@ export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    ignores: ["**/dist/**", "**/build/**", "**/node_modules/**", "**/local/**", "**/.turbo/**", "**/public/assets/**", "**/public/*.js", "**/vendor/**"],
+    ignores: [
+      "**/dist/**",
+      "**/build/**",
+      "**/out/**",
+      "**/node_modules/**",
+      "**/local/**",
+      "**/.turbo/**",
+      "**/public/assets/**",
+      "**/public/*.js",
+      "**/vendor/**",
+    ],
   },
   {
     files: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.mjs"],

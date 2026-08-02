@@ -3,8 +3,8 @@ import { AgentAvatar } from "@/components/shared/AgentAvatar";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { Modal } from "@/components/ui/Modal";
 import { useLiterals } from "@/lib";
+import type { AgentInfo, TeamMember, TeamRole } from "@spaces/core";
 import { useState } from "react";
-import type { AgentInfo, TeamMember, TeamRole } from "shared";
 import { literals as u } from "./TeamMembersModal.literals";
 
 const TEAM_ROLE_OPTIONS: { value: TeamRole; label: string }[] = [

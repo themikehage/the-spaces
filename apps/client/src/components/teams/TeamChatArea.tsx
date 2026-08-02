@@ -6,10 +6,10 @@ import { EntityAvatar } from "@/components/shared/EntityAvatar";
 import { useTeam } from "@/hooks/useTeam";
 import { apiFetch } from "@/lib/api";
 import { getSessionPath } from "@/lib/session-utils";
+import type { AgentInfo, TeamContextItem, TeamMember } from "@spaces/core";
 import { List, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import type { AgentInfo, TeamContextItem, TeamMember } from "shared";
 import { TeamContextModal } from "./TeamContextModal";
 import { TeamMembersModal } from "./TeamMembersModal";
 import { TeamMessageList } from "./TeamMessageList";
@@ -64,7 +64,9 @@ export function TeamChatArea({ activeTeam, sessionId, variantMode = false }: Pro
         const data = await agRes.json();
         setRegisteredAgents(data.agents || []);
       }
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
   }, [activeTeam.id]);
 
   useEffect(() => {

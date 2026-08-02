@@ -85,7 +85,7 @@ export class CircuitBreaker {
   }
 }
 
-class CircuitBreakerRegistry {
+export class CircuitBreakerRegistry {
   private breakers = new Map<string, CircuitBreaker>();
 
   public get(name: string, options?: CircuitBreakerOptions): CircuitBreaker {
@@ -97,5 +97,3 @@ class CircuitBreakerRegistry {
     return breaker;
   }
 }
-
-export const circuitBreakerRegistry = new CircuitBreakerRegistry();

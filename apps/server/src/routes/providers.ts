@@ -1,26 +1,24 @@
 // SPDX-License-Identifier: MIT
 import { zValidator } from "@hono/zod-validator";
+import { SetApiKeySchema } from "@spaces/core";
 import { Hono } from "hono";
-import { SetApiKeySchema } from "shared";
+import type { AppContext } from "../context";
 import { clearProviderModels, saveProviderModels } from "../core/providers/provider-persistence";
-import { sessionManager } from "../core/session-manager";
 import { authMiddleware, getAuthPayload } from "../middleware/auth";
 
-export const providersRouter = new Hono();
+export const providersRouter = new Hono<{ Variables: { appContext: AppContext } }>();
 
 providersRouter.use("/*", authMiddleware);
 
-function buildAuthStatus(
-  authStorage: ReturnType<typeof sessionManager.userConfig.getUserContext>["authStorage"],
-  provider: string,
-) {
+function buildAuthStatus(authStorage: any, provider: string) {
   const base = authStorage.getAuthStatus(provider);
   return { ...base, configured: authStorage.hasAuth(provider) };
 }
 
 providersRouter.get("/", (c) => {
   const { username } = getAuthPayload(c);
-  const { authStorage, modelRegistry } = sessionManager.userConfig.getUserContext(username);
+  const { userConfigManager } = c.get("appContext");
+  const { authStorage, modelRegistry } = userConfigManager.getUserContext(username);
 
   const providers = modelRegistry.getProviders();
   const providersMap = new Map<
@@ -67,7 +65,8 @@ providersRouter.get("/", (c) => {
 providersRouter.get("/:id/models", (c) => {
   const providerId = c.req.param("id");
   const { username } = getAuthPayload(c);
-  const { modelRegistry } = sessionManager.userConfig.getUserContext(username);
+  const { userConfigManager } = c.get("appContext");
+  const { modelRegistry } = userConfigManager.getUserContext(username);
 
   const models = modelRegistry.getAll().filter((m) => (m.provider as string) === providerId);
 
@@ -88,7 +87,8 @@ providersRouter.post("/:id/key", zValidator("json", SetApiKeySchema), (c) => {
   const providerId = c.req.param("id");
   const { apiKey } = c.req.valid("json");
   const { username } = getAuthPayload(c);
-  const { authStorage, modelRegistry } = sessionManager.userConfig.getUserContext(username);
+  const { userConfigManager } = c.get("appContext");
+  const { authStorage, modelRegistry } = userConfigManager.getUserContext(username);
 
   authStorage.set(providerId, { type: "api_key", key: apiKey });
   modelRegistry.refresh();
@@ -112,7 +112,8 @@ providersRouter.post("/:id/key", zValidator("json", SetApiKeySchema), (c) => {
 providersRouter.delete("/:id/key", (c) => {
   const providerId = c.req.param("id");
   const { username } = getAuthPayload(c);
-  const { authStorage, modelRegistry } = sessionManager.userConfig.getUserContext(username);
+  const { userConfigManager } = c.get("appContext");
+  const { authStorage, modelRegistry } = userConfigManager.getUserContext(username);
 
   authStorage.remove(providerId);
   modelRegistry.refresh();
@@ -128,7 +129,8 @@ providersRouter.delete("/:id/key", (c) => {
 providersRouter.post("/:id/refresh", async (c) => {
   const providerId = c.req.param("id");
   const { username } = getAuthPayload(c);
-  const { modelRegistry } = sessionManager.userConfig.getUserContext(username);
+  const { userConfigManager } = c.get("appContext");
+  const { modelRegistry } = userConfigManager.getUserContext(username);
 
   try {
     const models = await modelRegistry.refreshProviderModels(providerId);

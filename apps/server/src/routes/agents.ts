@@ -1,8 +1,5 @@
 // SPDX-License-Identifier: MIT
 import { zValidator } from "@hono/zod-validator";
-import { Hono } from "hono";
-import { existsSync, readdirSync, unlinkSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
 import {
   AgentDefinitionSchema,
   AgentScopeTargetSchema,
@@ -10,17 +7,17 @@ import {
   PatchScopeToolsSchema,
   UpdateAgentDefinitionSchema,
   getAgentDir,
-} from "shared";
+} from "@spaces/core";
+import { Hono } from "hono";
+import { existsSync, readdirSync, unlinkSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { z } from "zod";
-import { agentRegistry } from "../agents";
+import type { AppContext } from "../context";
 import { applyCacheHeaders } from "../core/cache-headers";
-import { scopeConfigManager } from "../core/scope";
-
-import { sessionManager } from "../core/session-manager";
 import { getUsername } from "../lib/auth-helpers";
 import { authMiddleware } from "../middleware/auth";
 
-export const agentsRouter = new Hono();
+export const agentsRouter = new Hono<{ Variables: { appContext: AppContext } }>();
 
 // Avatar GET must be before authMiddleware so browser <img> tags can authenticate
 // via ?token= query param (supported by getUsername())
@@ -28,6 +25,7 @@ agentsRouter.get("/:id/avatar", async (c) => {
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
   const id = c.req.param("id");
+  const { agentRegistry } = c.get("appContext");
   const entry = agentRegistry.get(id, username);
   if (!entry) return c.json({ error: "Agent not found" }, 404);
 
@@ -62,6 +60,7 @@ agentsRouter.use("/*", authMiddleware);
 agentsRouter.get("/", (c) => {
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
+  const { agentRegistry } = c.get("appContext");
   return c.json({ agents: agentRegistry.list(username) });
 });
 
@@ -69,6 +68,7 @@ agentsRouter.post("/", zValidator("json", AgentDefinitionSchema), async (c) => {
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
   const definition = c.req.valid("json");
+  const { agentRegistry } = c.get("appContext");
 
   if (agentRegistry.get(definition.id)) {
     return c.json({ error: `Agent "${definition.id}" already exists` }, 409);
@@ -95,6 +95,7 @@ agentsRouter.get("/:id", (c) => {
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
   const id = c.req.param("id");
+  const { agentRegistry } = c.get("appContext");
   const entry = agentRegistry.get(id, username);
   if (!entry) return c.json({ error: "Agent not found" }, 404);
 
@@ -113,16 +114,24 @@ agentsRouter.delete("/:id", async (c) => {
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
   const id = c.req.param("id");
+  const { agentRegistry, sessionMetadataStore } = c.get("appContext");
   const entry = agentRegistry.get(id, username);
   if (!entry) return c.json({ error: "Agent not found" }, 404);
 
   // Cascading delete: destroy all chat sessions associated with this agent
-  const sessions = await sessionManager.listSessions(username).catch(() => []);
+  const sessions = await c
+    .get("appContext")
+    .sessionStore.listSessions()
+    .catch(() => []);
   for (const s of sessions) {
-    if (s.agentId === id) {
-      await sessionManager
-        .destroySession(username, s.id)
-        .catch((err) => console.error(`[AgentsRoute] Failed to destroy session ${s.id}:`, err));
+    const meta = sessionMetadataStore.getSessionMetadata(username, s.id);
+    if (meta?.agentId === id) {
+      await c
+        .get("appContext")
+        .sessionStore.delete(s.id)
+        .catch((err: unknown) =>
+          console.error(`[AgentsRoute] Failed to destroy session ${s.id}:`, err),
+        );
     }
   }
 
@@ -135,6 +144,7 @@ agentsRouter.patch("/:id", zValidator("json", UpdateAgentDefinitionSchema), asyn
   if (!username) return c.json({ error: "Unauthorized" }, 401);
   const id = c.req.param("id");
   const updates = c.req.valid("json");
+  const { agentRegistry } = c.get("appContext");
 
   const entry = agentRegistry.get(id, username);
   if (!entry) return c.json({ error: "Agent not found" }, 404);
@@ -155,6 +165,7 @@ agentsRouter.patch("/:id", zValidator("json", UpdateAgentDefinitionSchema), asyn
 agentsRouter.get("/scope/tools", async (c) => {
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
+  const { scopeConfigManager } = c.get("appContext");
 
   const entityType = c.req.query("entityType") as EntityType | undefined;
   const entityId = c.req.query("entityId");
@@ -188,7 +199,7 @@ agentsRouter.get("/scope/tools", async (c) => {
     const membership = scopeConfigManager.getAgentMembership(username, entityId);
     const teamId = scopeConfigManager.getAgentTeamMembership(username, entityId);
     const projectTools =
-      membership?.type === "project" ? config.projects[membership.id]?.tools ?? [] : undefined;
+      membership?.type === "project" ? (config.projects[membership.id]?.tools ?? []) : undefined;
     const teamTools = teamId ? config.teams?.[teamId]?.tools : undefined;
 
     return c.json({
@@ -203,29 +214,25 @@ agentsRouter.get("/scope/tools", async (c) => {
   return c.json({ error: "Invalid entityType" }, 400);
 });
 
-agentsRouter.patch(
-  "/scope/tools",
-  zValidator("json", PatchScopeToolsSchema),
-  async (c) => {
-    const username = getUsername(c);
-    if (!username) return c.json({ error: "Unauthorized" }, 401);
-    const { target, add, remove } = c.req.valid("json");
+agentsRouter.patch("/scope/tools", zValidator("json", PatchScopeToolsSchema), async (c) => {
+  const username = getUsername(c);
+  if (!username) return c.json({ error: "Unauthorized" }, 401);
+  const { target, add, remove } = c.req.valid("json");
+  const { scopeConfigManager } = c.get("appContext");
 
-    try {
-      await scopeConfigManager.setScopeTools(username, target, { add, remove: remove ?? [] });
-      const { broadcastToUser } = await import("../ws/handler");
-      broadcastToUser(username, {
-        type: "entity-updated",
-        entityType: "custom_tool_scope",
-        payload: { target },
-      });
-      return c.json({ ok: true });
-    } catch (err) {
-      return c.json({ error: String(err) }, 500);
-    }
-  },
-);
-
+  try {
+    await scopeConfigManager.setScopeTools(username, target, { add, remove: remove ?? [] });
+    const { broadcastToUser } = await import("../core/ws-bridge");
+    broadcastToUser(username, {
+      type: "entity-updated",
+      entityType: "custom_tool_scope",
+      payload: { target },
+    });
+    return c.json({ ok: true });
+  } catch (err) {
+    return c.json({ error: String(err) }, 500);
+  }
+});
 
 agentsRouter.patch(
   "/:id/scope",
@@ -235,6 +242,7 @@ agentsRouter.patch(
     if (!username) return c.json({ error: "Unauthorized" }, 401);
     const id = c.req.param("id");
     const { scope } = c.req.valid("json");
+    const { agentRegistry, scopeConfigManager } = c.get("appContext");
 
     const entry = agentRegistry.get(id, username);
     if (!entry) return c.json({ error: "Agent not found" }, 404);
@@ -256,6 +264,7 @@ agentsRouter.post(
     if (!username) return c.json({ error: "Unauthorized" }, 401);
     const id = c.req.param("id");
     const { message, stream = true } = c.req.valid("json");
+    const { agentRegistry } = c.get("appContext");
 
     const entry = agentRegistry.get(id, username);
     if (!entry) return c.json({ error: "Agent not found" }, 404);
@@ -276,6 +285,7 @@ agentsRouter.get("/:id/messages", async (c) => {
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
   const id = c.req.param("id");
+  const { agentRegistry } = c.get("appContext");
   const entry = agentRegistry.get(id, username);
   if (!entry) return c.json({ error: "Agent not found" }, 404);
 
@@ -286,6 +296,7 @@ agentsRouter.post("/:id/abort", async (c) => {
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
   const id = c.req.param("id");
+  const { agentRegistry } = c.get("appContext");
   const entry = agentRegistry.get(id, username);
   if (!entry) return c.json({ error: "Agent not found" }, 404);
 
@@ -299,6 +310,7 @@ agentsRouter.get("/:id/observe", async (c) => {
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
   const id = c.req.param("id");
+  const { agentRegistry } = c.get("appContext");
   const entry = agentRegistry.get(id, username);
   if (!entry) return c.json({ error: "Agent not found" }, 404);
 
@@ -314,6 +326,7 @@ agentsRouter.get("/:id/executions", async (c) => {
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
   const id = c.req.param("id");
+  const { agentRegistry } = c.get("appContext");
   const entry = agentRegistry.get(id, username);
   if (!entry) return c.json({ error: "Agent not found" }, 404);
 
@@ -330,6 +343,7 @@ agentsRouter.get("/:id/executions/:execId", async (c) => {
   if (!username) return c.json({ error: "Unauthorized" }, 401);
   const id = c.req.param("id");
   const execId = c.req.param("execId");
+  const { agentRegistry } = c.get("appContext");
   const entry = agentRegistry.get(id, username);
   if (!entry) return c.json({ error: "Agent not found" }, 404);
 
@@ -345,6 +359,7 @@ agentsRouter.post("/:id/avatar", async (c) => {
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
   const id = c.req.param("id");
+  const { agentRegistry } = c.get("appContext");
   const entry = agentRegistry.get(id, username);
   if (!entry) return c.json({ error: "Agent not found" }, 404);
 
@@ -365,7 +380,9 @@ agentsRouter.post("/:id/avatar", async (c) => {
         unlinkSync(join(agentDir, f));
       }
     }
-  } catch { /* noop */ }
+  } catch {
+    /* noop */
+  }
 
   const ext = file.name.split(".").pop() || "png";
   const avatarPath = join(agentDir, `avatar.${ext}`);
@@ -382,6 +399,7 @@ agentsRouter.delete("/:id/avatar", async (c) => {
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
   const id = c.req.param("id");
+  const { agentRegistry } = c.get("appContext");
   const entry = agentRegistry.get(id, username);
   if (!entry) return c.json({ error: "Agent not found" }, 404);
 
@@ -394,7 +412,9 @@ agentsRouter.delete("/:id/avatar", async (c) => {
           unlinkSync(join(agentDir, f));
         }
       }
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
   }
 
   agentRegistry.setAvatarUrl(username, id, null);

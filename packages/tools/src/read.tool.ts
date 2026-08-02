@@ -1,6 +1,6 @@
+import type { ITool, ToolContext, ToolResult } from "@spaces/core";
 import { constants } from "node:fs";
 import { access, readFile } from "node:fs/promises";
-import type { ITool, ToolContext, ToolResult } from "@spaces/core";
 import { z } from "zod";
 import { resolveSafePath } from "./path-safety.js";
 
@@ -14,7 +14,8 @@ const MAX_READ_BYTES = 50 * 1024; // 50 KB limit for single read output
 
 export const readTool: ITool = {
   name: "read",
-  description: "Read the contents of a text file. Supports offset and limit parameters for paginating large files.",
+  description:
+    "Read the contents of a text file. Supports offset and limit parameters for paginating large files.",
   parameters: ReadParametersSchema,
   category: "filesystem",
   async execute(args: unknown, ctx: ToolContext): Promise<ToolResult> {
@@ -31,7 +32,8 @@ export const readTool: ITool = {
       if (textContent.includes("\u0000")) {
         return {
           toolCallId: "",
-          output: "[Binary file detected. Reading binary files directly is not supported by this tool.]",
+          output:
+            "[Binary file detected. Reading binary files directly is not supported by this tool.]",
           isError: true,
         };
       }
@@ -48,9 +50,10 @@ export const readTool: ITool = {
         };
       }
 
-      const selectedLines = limit !== undefined
-        ? allLines.slice(startLine, startLine + limit)
-        : allLines.slice(startLine);
+      const selectedLines =
+        limit !== undefined
+          ? allLines.slice(startLine, startLine + limit)
+          : allLines.slice(startLine);
 
       let outputText = selectedLines.join("\n");
       if (Buffer.byteLength(outputText, "utf-8") > MAX_READ_BYTES) {

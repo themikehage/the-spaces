@@ -1,8 +1,14 @@
 // SPDX-License-Identifier: MIT
+import {
+  getAgentDir,
+  getProjectDir,
+  getProjectsDir,
+  getSessionsDir,
+  SessionPrefix,
+} from "@spaces/core";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { getAgentDir, getProjectDir, getProjectsDir, getSessionsDir, SessionPrefix } from "shared";
 
 export type SessionListItem = {
   id: string;
@@ -74,7 +80,9 @@ export class SessionLister {
             try {
               const metaContent = await readFile(metadataPath, "utf-8");
               metadata = JSON.parse(metaContent);
-            } catch { /* noop */ }
+            } catch {
+              /* noop */
+            }
           }
 
           let messageCount = typeof metadata.messageCount === "number" ? metadata.messageCount : -1;
@@ -96,9 +104,13 @@ export class SessionLister {
                       messageCount++;
                     }
                   }
-                } catch { /* noop */ }
+                } catch {
+                  /* noop */
+                }
               }
-            } catch { /* noop */ }
+            } catch {
+              /* noop */
+            }
           }
 
           const status = deps.isSessionActive(sessionId);
@@ -134,7 +146,8 @@ export class SessionLister {
 
       // 1. Agent Executions
       try {
-        const { agentRegistry } = await import("../../agents");
+        const { AgentRegistry } = await import("../../agents");
+        const agentRegistry = new AgentRegistry();
         const agentsList = agentRegistry.list(username);
         for (const agent of agentsList) {
           const execsDir = join(getAgentDir(username, agent.id), "executions");
@@ -162,7 +175,9 @@ export class SessionLister {
                     archived: false,
                   });
                 }
-              } catch { /* noop */ }
+              } catch {
+                /* noop */
+              }
             }
           }
         }
@@ -202,7 +217,9 @@ export class SessionLister {
                         archived: false,
                       });
                     }
-                  } catch { /* noop */ }
+                  } catch {
+                    /* noop */
+                  }
                 }
               }
             }
@@ -290,5 +307,3 @@ export class SessionLister {
     }
   }
 }
-
-export const sessionLister = new SessionLister();

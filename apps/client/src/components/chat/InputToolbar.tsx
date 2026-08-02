@@ -1,7 +1,7 @@
 import { useLiterals, type ContextUsage } from "@/lib";
+import type { EntityType } from "@spaces/core";
 import { BookOpen, Paperclip, Sliders } from "lucide-react";
 import { useRef, useState } from "react";
-import type { EntityType } from "shared";
 import { literals as u } from "./ChatInput.literals";
 import { ContextButton } from "./ContextButton";
 import { ModelSelector } from "./ModelSelector";

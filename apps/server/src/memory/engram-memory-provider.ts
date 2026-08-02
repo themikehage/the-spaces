@@ -5,9 +5,7 @@ export class EngramMemoryProvider implements IMemoryProvider {
 
   async search(query: string, limit = 5): Promise<MemoryEntry[]> {
     const q = query.toLowerCase();
-    return this.memories
-      .filter((m) => m.content.toLowerCase().includes(q))
-      .slice(0, limit);
+    return this.memories.filter((m) => m.content.toLowerCase().includes(q)).slice(0, limit);
   }
 
   async store(entry: Omit<MemoryEntry, "id">): Promise<string> {

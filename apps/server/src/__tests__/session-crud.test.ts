@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
+import { getUserDir } from "@spaces/core";
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { existsSync, mkdirSync, rmSync } from "node:fs";
-import { getUserDir } from "shared";
-import { sessionMetadataStore } from "../core/session/metadata-store";
+import { SessionMetadataStore } from "../core/session/metadata-store";
+
+const sessionMetadataStore = new SessionMetadataStore();
 
 describe("Session CRUD Router Tests", () => {
   const username = "test_user_session_crud";

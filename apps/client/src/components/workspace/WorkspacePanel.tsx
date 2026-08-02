@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { apiFetch } from "@/lib/api";
+import type { FileInfo } from "@spaces/core";
 import { Folder, RefreshCw, UserPlus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { FileInfo } from "shared";
 import { WorkspaceFileEditor } from "./WorkspaceFileEditor";
 import { WorkspaceFileTree } from "./WorkspaceFileTree";
 

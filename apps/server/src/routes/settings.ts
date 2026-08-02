@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+import { getGlobalAgentsMdPath, getUserDir, getWorkspaceDir } from "@spaces/core";
 import { Hono } from "hono";
 import {
   existsSync,
@@ -9,17 +10,13 @@ import {
   writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
-import { getGlobalAgentsMdPath, getUserDir, getWorkspaceDir } from "shared";
 import { getAppConfig } from "../config/app-config";
+import type { AppContext } from "../context";
 import { applyCacheHeaders } from "../core/cache-headers";
-import { sessionManager } from "../core/session-manager";
-import { runImageGenModel } from "../core/tools/image-gen-tool";
-import { runVideoGenModel } from "../core/tools/video-gen-tool";
-import { runVisionModel } from "../core/tools/vision-tool";
 import { getUsername } from "../lib/auth-helpers";
 import { authMiddleware, getAuthPayload } from "../middleware/auth";
 
-export const settingsRouter = new Hono();
+export const settingsRouter = new Hono<{ Variables: { appContext: AppContext } }>();
 
 settingsRouter.get("/avatar", async (c) => {
   const username = getUsername(c);
@@ -52,7 +49,8 @@ settingsRouter.use("/*", authMiddleware);
 
 settingsRouter.get("/", (c) => {
   const { username } = getAuthPayload(c);
-  const settings = sessionManager.userConfig.getUserSettings(username);
+  const { userConfigManager } = c.get("appContext");
+  const settings = userConfigManager.getUserSettings(username);
   const appConfig = getAppConfig();
 
   const globalAgentsMd = getGlobalAgentsMdPath(username);
@@ -83,6 +81,7 @@ settingsRouter.get("/", (c) => {
 
 settingsRouter.patch("/", async (c) => {
   const { username } = getAuthPayload(c);
+  const { userConfigManager } = c.get("appContext");
   try {
     const body = await c.req.json<{
       memoryEnabled?: boolean;
@@ -146,11 +145,11 @@ settingsRouter.patch("/", async (c) => {
       updates.showPromptPreviews = !!body.showPromptPreviews;
     }
 
-    sessionManager.userConfig.saveUserSettings(username, updates);
+    userConfigManager.saveUserSettings(username, updates);
 
     return c.json({
       ok: true,
-      settings: { ...sessionManager.userConfig.getUserSettings(username) },
+      settings: { ...userConfigManager.getUserSettings(username) },
     });
   } catch (e) {
     return c.json({ error: "Invalid request body" }, 400);
@@ -160,6 +159,7 @@ settingsRouter.patch("/", async (c) => {
 settingsRouter.post("/avatar", async (c) => {
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
+  const { userConfigManager } = c.get("appContext");
 
   const body = await c.req.parseBody();
   const file = body.file as File | undefined;
@@ -177,7 +177,9 @@ settingsRouter.post("/avatar", async (c) => {
         unlinkSync(join(userDir, f));
       }
     }
-  } catch { /* noop */ }
+  } catch {
+    /* noop */
+  }
 
   const ext = file.name.split(".").pop() || "png";
   const avatarPath = join(userDir, `factory-avatar.${ext}`);
@@ -185,7 +187,7 @@ settingsRouter.post("/avatar", async (c) => {
   writeFileSync(avatarPath, Buffer.from(buffer));
 
   const avatarUrl = `/api/settings/avatar`;
-  sessionManager.userConfig.saveUserSettings(username, { factoryAvatarUrl: avatarUrl });
+  userConfigManager.saveUserSettings(username, { factoryAvatarUrl: avatarUrl });
 
   return c.json({ avatarUrl });
 });
@@ -193,6 +195,7 @@ settingsRouter.post("/avatar", async (c) => {
 settingsRouter.delete("/avatar", async (c) => {
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
+  const { userConfigManager } = c.get("appContext");
 
   const userDir = getUserDir(username);
   if (existsSync(userDir)) {
@@ -203,10 +206,12 @@ settingsRouter.delete("/avatar", async (c) => {
           unlinkSync(join(userDir, f));
         }
       }
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
   }
 
-  sessionManager.userConfig.saveUserSettings(username, { factoryAvatarUrl: null });
+  userConfigManager.saveUserSettings(username, { factoryAvatarUrl: null });
 
   return c.json({ ok: true });
 });
@@ -231,8 +236,7 @@ settingsRouter.post("/test-vision", async (c) => {
     const base64Data = body.image || defaultImage;
     const mimeType = body.mimeType || "image/png";
 
-    const responseText = await runVisionModel(username, body.modelId, prompt, base64Data, mimeType);
-    return c.json({ ok: true, response: responseText });
+    return c.json({ error: "Vision feature is postponed" }, 400);
   } catch (err: any) {
     return c.json({ error: err.message || String(err) }, 500);
   }
@@ -254,8 +258,9 @@ settingsRouter.post("/test-image-gen", async (c) => {
       return c.json({ error: "Missing prompt" }, 400);
     }
 
-    const { authStorage } = sessionManager.userConfig.getUserContext(username);
-    const userEnv = sessionManager.userConfig.getUserEnv(username);
+    const { userConfigManager } = c.get("appContext");
+    const { authStorage } = userConfigManager.getUserContext(username);
+    const userEnv = userConfigManager.getUserEnv(username);
     const apiKey =
       authStorage.getApiKey("qwen") ||
       userEnv.DASHSCOPE_API_KEY ||
@@ -265,14 +270,7 @@ settingsRouter.post("/test-image-gen", async (c) => {
     const workspaceDir = getWorkspaceDir(username);
     const size = body.size || "1024x1024";
 
-    const localPath = await runImageGenModel(
-      username,
-      body.modelId,
-      body.prompt,
-      size,
-      workspaceDir,
-    );
-    return c.json({ ok: true, imageUrl: `/api/workspace/${localPath.replace(/\\/g, "/")}` });
+    return c.json({ error: "Image generation feature is postponed" }, 400);
   } catch (err: any) {
     console.error(`[DIAGNOSTIC TEST-IMAGE-GEN] Error: ${err.message || String(err)}`);
     return c.json({ error: err.message || String(err) }, 500);
@@ -280,40 +278,8 @@ settingsRouter.post("/test-image-gen", async (c) => {
 });
 
 settingsRouter.post("/test-video-gen", async (c) => {
-  const { username } = getAuthPayload(c);
   try {
-    const body = await c.req.json<{
-      modelId: string;
-      prompt: string;
-      aspectRatio?: string;
-      duration?: number;
-    }>();
-
-    if (!body.modelId) {
-      return c.json({ error: "Missing modelId" }, 400);
-    }
-    if (!body.prompt) {
-      return c.json({ error: "Missing prompt" }, 400);
-    }
-
-    const { authStorage } = sessionManager.userConfig.getUserContext(username);
-    const userEnv = sessionManager.userConfig.getUserEnv(username);
-    const apiKey =
-      authStorage.getApiKey("openrouter") ||
-      userEnv.OPENROUTER_API_KEY ||
-      process.env.OPENROUTER_API_KEY ||
-      "";
-
-    const workspaceDir = getWorkspaceDir(username);
-    const localPath = await runVideoGenModel(
-      username,
-      body.modelId,
-      body.prompt,
-      body.aspectRatio || "16:9",
-      body.duration || 5,
-      workspaceDir,
-    );
-    return c.json({ ok: true, videoUrl: `/api/workspace/${localPath.replace(/\\/g, "/")}` });
+    return c.json({ error: "Video generation feature is postponed" }, 400);
   } catch (err: any) {
     console.error(`[DIAGNOSTIC TEST-VIDEO-GEN] Error: ${err.message || String(err)}`);
     return c.json({ error: err.message || String(err) }, 500);

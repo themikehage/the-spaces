@@ -9,7 +9,8 @@ const BashParametersSchema = z.object({
 
 export const bashTool: ITool = {
   name: "bash",
-  description: "Run commands in a bash shell or terminal. Use this to run builds, tests, or scripts.",
+  description:
+    "Run commands in a bash shell or terminal. Use this to run builds, tests, or scripts.",
   parameters: BashParametersSchema,
   requiresApproval: true,
   category: "system",

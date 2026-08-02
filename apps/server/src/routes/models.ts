@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 import { Hono } from "hono";
-import { sessionManager } from "../core/session-manager";
+import type { AppContext } from "../context";
 import { authMiddleware, getAuthPayload } from "../middleware/auth";
 
 import { IMAGE_MODELS } from "../config/image-models";
 
-export const modelsRouter = new Hono();
+export const modelsRouter = new Hono<{ Variables: { appContext: AppContext } }>();
 
 const QWEN_IMAGE_MODELS = [
   {
@@ -102,8 +102,9 @@ const QWEN_IMAGE_MODELS = [
 
 modelsRouter.get("/images", authMiddleware, (c) => {
   const { username } = getAuthPayload(c);
-  const { authStorage } = sessionManager.userConfig.getUserContext(username);
-  const userEnv = sessionManager.userConfig.getUserEnv(username);
+  const { userConfigManager } = c.get("appContext");
+  const { authStorage } = userConfigManager.getUserContext(username);
+  const userEnv = userConfigManager.getUserEnv(username);
 
   const hasQwen =
     authStorage.hasAuth("qwen") ||
@@ -146,8 +147,9 @@ modelsRouter.get("/images", authMiddleware, (c) => {
 
 modelsRouter.get("/videos", authMiddleware, async (c) => {
   const { username } = getAuthPayload(c);
-  const { authStorage } = sessionManager.userConfig.getUserContext(username);
-  const userEnv = sessionManager.userConfig.getUserEnv(username);
+  const { userConfigManager } = c.get("appContext");
+  const { authStorage } = userConfigManager.getUserContext(username);
+  const userEnv = userConfigManager.getUserEnv(username);
   const apiKey =
     authStorage.getApiKey("openrouter") ||
     userEnv.OPENROUTER_API_KEY ||
@@ -190,7 +192,8 @@ modelsRouter.get("/videos", authMiddleware, async (c) => {
 
 modelsRouter.get("/", authMiddleware, (c) => {
   const { username } = getAuthPayload(c);
-  const { modelRegistry } = sessionManager.userConfig.getUserContext(username);
+  const { userConfigManager } = c.get("appContext");
+  const { modelRegistry } = userConfigManager.getUserContext(username);
 
   const available = modelRegistry.getAvailable();
 

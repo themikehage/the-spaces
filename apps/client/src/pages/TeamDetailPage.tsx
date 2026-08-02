@@ -324,7 +324,11 @@ export function TeamDetailPage({ teamId, onNavigate }: Props) {
         {activeSubTab === "tools" && (
           <div className="flex-1 overflow-y-auto p-6 space-y-6 max-w-4xl">
             <EntitySkillsEditor entityType="team" entityId={teamId} title="Team Skills" />
-            <EntityCustomToolsEditor entityType="team" entityId={teamId} title="Team Custom Tools" />
+            <EntityCustomToolsEditor
+              entityType="team"
+              entityId={teamId}
+              title="Team Custom Tools"
+            />
           </div>
         )}
       </div>

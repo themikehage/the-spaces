@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { wsClient } from "@/lib/ws-client";
-import type { AttentionItem, ResolveAttention } from "shared";
+import type { AttentionItem, ResolveAttention } from "@spaces/core";
 import { fetchPendingAttention, resolveAttentionApi } from "./attention-api";
 import { normalizeAttentionItem } from "./normalize";
 

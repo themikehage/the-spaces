@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
+import type { AgentDefinition, AgentStatus } from "@spaces/core";
 import type { Hono } from "hono";
-import type { AgentDefinition, AgentStatus } from "shared";
-import type { AgentSession } from "../ai";
 import type { MemoryProvider } from "../core/memory/types";
 
 export interface AgentServer {
   definition: AgentDefinition;
-  session: AgentSession;
+  session: any;
   app: Hono;
   memory: MemoryProvider;
   start(): Promise<void>;

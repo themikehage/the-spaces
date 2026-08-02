@@ -1,21 +1,28 @@
 // SPDX-License-Identifier: MIT
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { agentRegistry } from "../agents";
-import { teamStore } from "../teams/team-store";
-import { delegationRegistry } from "./delegation-registry";
-import { mcpRegistry } from "./mcp-registry";
+import { AgentRegistry } from "../agents";
+import { TeamStore } from "../teams/team-store";
+import { DelegationRegistry } from "./delegation-registry";
+import { McpRegistry } from "./mcp-registry";
 import type { SpacesHost } from "./ports/spaces-host.port";
 import type { WorkspaceConfig } from "./ports/workspace-config.port";
-import { workspaceConfigLoader } from "./session/workspace-config-loader";
+import { FileWorkspaceConfigLoader } from "./session/workspace-config-loader";
 import { resolveProjectDir } from "./session/workspace-resolver";
-import { uiApprovalRegistry } from "./ui-approval-registry";
+import { UiApprovalRegistry } from "./ui-approval-registry";
 
+import { FilesystemSessionStore } from "@spaces/storage";
 import { FileArtifactStore } from "./stores/file-artifact-store";
-import { FileSessionStore } from "./stores/file-session-store";
+
+const agentRegistry = new AgentRegistry();
+const teamStore = new TeamStore();
+const delegationRegistry = new DelegationRegistry();
+const mcpRegistry = new McpRegistry();
+const workspaceConfigLoader = new FileWorkspaceConfigLoader();
+const uiApprovalRegistry = new UiApprovalRegistry();
 
 export class ServerSpacesHost implements SpacesHost {
   stores = {
-    session: new FileSessionStore(),
+    session: new FilesystemSessionStore(process.cwd()),
     artifact: new FileArtifactStore(process.cwd()),
   };
 
@@ -78,7 +85,7 @@ export class ServerSpacesHost implements SpacesHost {
       username: string;
     }): Promise<any> {
       const list = delegationRegistry.getAll(params.username, params.parentSessionId);
-      const found = list.find((d) => d.targetLabel.includes(params.targetAgentId));
+      const found = list.find((d: any) => d.targetLabel.includes(params.targetAgentId));
       if (found?.result) return found.result;
       return {
         status: "success",
@@ -94,7 +101,7 @@ export class ServerSpacesHost implements SpacesHost {
       username: string;
     }): Promise<any> {
       const list = delegationRegistry.getAll(params.username, params.parentSessionId);
-      const found = list.find((d) => d.targetLabel.includes(params.targetAgentId));
+      const found = list.find((d: any) => d.targetLabel.includes(params.targetAgentId));
       if (found?.result) return found.result;
       return {
         status: "success",
@@ -129,8 +136,8 @@ export class ServerSpacesHost implements SpacesHost {
       if (!team) return null;
       return {
         name: team.name,
-        leaderId: team.members.find((m) => m.role === "lead")?.agentId || "",
-        memberIds: team.members.map((m) => m.agentId),
+        leaderId: team.members.find((m: any) => m.role === "lead")?.agentId || "",
+        memberIds: team.members.map((m: any) => m.agentId),
       };
     },
   };
@@ -139,7 +146,7 @@ export class ServerSpacesHost implements SpacesHost {
     async getTools() {
       const config = mcpRegistry.loadConfig("admin");
       const tools: Array<{ name: string; description?: string; parameters?: unknown }> = [];
-      for (const srv of Object.values(config.mcpServers)) {
+      for (const srv of Object.values(config.mcpServers) as any[]) {
         if (srv.enabled && Array.isArray(srv.tools)) {
           for (const t of srv.tools) {
             tools.push({ name: `mcp_${srv.id}_${t}`, description: `MCP tool from ${srv.id}` });
@@ -160,5 +167,3 @@ export class ServerSpacesHost implements SpacesHost {
     },
   };
 }
-
-export const serverSpacesHost = new ServerSpacesHost();

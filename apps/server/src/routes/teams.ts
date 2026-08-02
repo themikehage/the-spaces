@@ -1,30 +1,28 @@
 // SPDX-License-Identifier: MIT
 import { zValidator } from "@hono/zod-validator";
-import { Hono } from "hono";
-import { existsSync, readdirSync, unlinkSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
 import {
   CreateTeamSchema,
   SessionPrefix,
   TeamMemberSchema,
   UpdateTeamSchema,
   getTeamDir,
-  getTeamWorkspaceDir,
-} from "shared";
+} from "@spaces/core";
+import { Hono } from "hono";
+import { existsSync, readdirSync, unlinkSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { z } from "zod";
-import { agentRegistry } from "../agents";
+import type { AppContext } from "../context";
 import { applyCacheHeaders } from "../core/cache-headers";
-import { sessionManager } from "../core/session-manager";
 import { getUsername } from "../lib/auth-helpers";
 import { authMiddleware } from "../middleware/auth";
-import { teamOrchestrator, teamStore } from "../teams";
 
-export const teamsRouter = new Hono();
+export const teamsRouter = new Hono<{ Variables: { appContext: AppContext } }>();
 
 teamsRouter.get("/:id/avatar", async (c) => {
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
   const id = c.req.param("id");
+  const { teamStore } = c.get("appContext");
   const team = teamStore.getTeam(username, id);
   if (!team) return c.json({ error: "Team not found" }, 404);
 
@@ -56,7 +54,7 @@ teamsRouter.get("/:id/avatar", async (c) => {
 
 teamsRouter.use("/*", authMiddleware);
 
-function cleanTeamGhostMembers(team: any, username: string): any {
+function cleanTeamGhostMembers(agentRegistry: any, team: any, username: string): any {
   if (!team || !team.members) return team;
 
   const cleanedMembers = team.members.filter((m: any) => {
@@ -70,7 +68,7 @@ function cleanTeamGhostMembers(team: any, username: string): any {
 }
 
 function validateTeamMembers(members: any[]): string | null {
-  const leaders = members.filter((m) => m.role === "lead");
+  const leaders = members.filter((m: any) => m.role === "lead");
   if (leaders.length === 0) {
     return "A team must have at least one leader.";
   }
@@ -84,8 +82,9 @@ teamsRouter.get("/", (c) => {
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
 
+  const { teamStore, agentRegistry } = c.get("appContext");
   const teams = teamStore.listTeams(username);
-  const cleanedTeams = teams.map((t) => cleanTeamGhostMembers(t, username));
+  const cleanedTeams = teams.map((t: any) => cleanTeamGhostMembers(agentRegistry, t, username));
   return c.json({ teams: cleanedTeams });
 });
 
@@ -99,6 +98,7 @@ teamsRouter.post("/", zValidator("json", CreateTeamSchema), (c) => {
     return c.json({ error: validationError }, 400);
   }
 
+  const { teamStore } = c.get("appContext");
   const team = teamStore.createTeam(username, data);
   return c.json(team, 201);
 });
@@ -107,12 +107,13 @@ teamsRouter.post("/:id/orchestration-session", async (c) => {
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
 
+  const { teamStore, agentRegistry, sessionMetadataStore } = c.get("appContext");
   const team = teamStore.getTeam(username, c.req.param("id"));
   if (!team) return c.json({ error: "Team not found" }, 404);
   if (team.teamType !== "Orchestration")
     return c.json({ error: "Only Orchestration teams have an owner session" }, 400);
 
-  const leader = team.members.find((member) => member.role === "lead");
+  const leader = team.members.find((member: any) => member.role === "lead");
   if (!leader || !agentRegistry.get(leader.agentId, username)) {
     return c.json({ error: "The orchestration leader is not available" }, 400);
   }
@@ -120,9 +121,9 @@ teamsRouter.post("/:id/orchestration-session", async (c) => {
   const sessionId = `${SessionPrefix.TEAM}${team.id}`;
   const now = new Date().toISOString();
 
-  const meta = sessionManager.metadataStore.getSessionMetadata(username, sessionId);
+  const meta = sessionMetadataStore.getSessionMetadata(username, sessionId);
   if (!meta) {
-    sessionManager.metadataStore.saveSessionMetadata(username, sessionId, {
+    sessionMetadataStore.saveSessionMetadata(username, sessionId, {
       name: `${team.name} — Orchestration`,
       createdAt: now,
       updatedAt: now,
@@ -131,9 +132,7 @@ teamsRouter.post("/:id/orchestration-session", async (c) => {
     });
   }
 
-  await sessionManager.getOrCreateSession(username, sessionId, undefined, leader.agentId, {
-    workspaceDir: getTeamWorkspaceDir(username, team.id),
-  });
+  c.get("appContext").createSessionAgent(sessionId);
   return c.json({ sessionId, leaderAgentId: leader.agentId });
 });
 
@@ -141,12 +140,13 @@ teamsRouter.get("/:id/orchestration-session", async (c) => {
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
 
+  const { teamStore } = c.get("appContext");
   const team = teamStore.getTeam(username, c.req.param("id"));
   if (!team) return c.json({ error: "Team not found" }, 404);
   if (team.teamType !== "Orchestration")
     return c.json({ error: "Only Orchestration teams have an owner session" }, 400);
 
-  const leader = team.members.find((member) => member.role === "lead");
+  const leader = team.members.find((member: any) => member.role === "lead");
   if (!leader) {
     return c.json({ error: "The orchestration leader is not available" }, 400);
   }
@@ -160,9 +160,10 @@ teamsRouter.get("/:id", (c) => {
   if (!username) return c.json({ error: "Unauthorized" }, 401);
 
   const id = c.req.param("id");
+  const { teamStore, agentRegistry } = c.get("appContext");
   const team = teamStore.getTeam(username, id);
   if (!team) return c.json({ error: "Team not found" }, 404);
-  return c.json(cleanTeamGhostMembers(team, username));
+  return c.json(cleanTeamGhostMembers(agentRegistry, team, username));
 });
 
 teamsRouter.patch("/:id", zValidator("json", UpdateTeamSchema), (c) => {
@@ -171,6 +172,7 @@ teamsRouter.patch("/:id", zValidator("json", UpdateTeamSchema), (c) => {
 
   const id = c.req.param("id");
   const data = c.req.valid("json");
+  const { teamStore } = c.get("appContext");
 
   if (data.members !== undefined) {
     const validationError = validateTeamMembers(data.members);
@@ -183,7 +185,7 @@ teamsRouter.patch("/:id", zValidator("json", UpdateTeamSchema), (c) => {
   if (arbiterAgentId) {
     const team = teamStore.getTeam(username, id);
     if (team) {
-      const valid = team.members.some((m) => m.agentId === arbiterAgentId);
+      const valid = team.members.some((m: any) => m.agentId === arbiterAgentId);
       if (!valid) {
         return c.json({ error: "arbiterAgentId must be an existing team member" }, 400);
       }
@@ -200,12 +202,16 @@ teamsRouter.delete("/:id", async (c) => {
   if (!username) return c.json({ error: "Unauthorized" }, 401);
 
   const id = c.req.param("id");
+  const { teamStore, sessionMetadataStore, sessionStore } = c.get("appContext");
   const team = teamStore.getTeam(username, id);
   if (!team) return c.json({ error: "Team not found" }, 404);
 
-  const sessions = await sessionManager.listSessions(username).catch(() => []);
-  for (const session of sessions.filter((item) => item.teamId === id)) {
-    await sessionManager.destroySession(username, session.id).catch(() => {});
+  const sessions = await sessionStore.listSessions().catch(() => []);
+  for (const session of sessions) {
+    const meta = sessionMetadataStore.getSessionMetadata(username, session.id);
+    if (meta?.teamId === id) {
+      await sessionStore.delete(session.id).catch(() => {});
+    }
   }
 
   const deleted = teamStore.deleteTeam(username, id);
@@ -218,6 +224,7 @@ teamsRouter.post("/:id/members", zValidator("json", TeamMemberSchema), (c) => {
   if (!username) return c.json({ error: "Unauthorized" }, 401);
 
   const id = c.req.param("id");
+  const { teamStore, agentRegistry } = c.get("appContext");
   const team = teamStore.getTeam(username, id);
   if (!team) return c.json({ error: "Team not found" }, 404);
 
@@ -228,7 +235,9 @@ teamsRouter.post("/:id/members", zValidator("json", TeamMemberSchema), (c) => {
   }
 
   if (data.role === "lead") {
-    const existingLead = team.members.find((m) => m.role === "lead" && m.agentId !== data.agentId);
+    const existingLead = team.members.find(
+      (m: any) => m.role === "lead" && m.agentId !== data.agentId,
+    );
     if (existingLead) {
       return c.json(
         { error: "Team already has a leader. Remove or reassign the current leader first." },
@@ -237,7 +246,7 @@ teamsRouter.post("/:id/members", zValidator("json", TeamMemberSchema), (c) => {
     }
   }
 
-  const existingIndex = team.members.findIndex((m) => m.agentId === data.agentId);
+  const existingIndex = team.members.findIndex((m: any) => m.agentId === data.agentId);
   const updatedMembers = [...team.members];
   const memberWithRole = {
     ...data,
@@ -274,13 +283,16 @@ teamsRouter.patch(
 
     const id = c.req.param("id");
     const agentId = c.req.param("agentId");
+    const { teamStore } = c.get("appContext");
     const team = teamStore.getTeam(username, id);
     if (!team) return c.json({ error: "Team not found" }, 404);
 
     const data = c.req.valid("json");
 
     if (data.role === "lead") {
-      const existingLead = team.members.find((m) => m.role === "lead" && m.agentId !== agentId);
+      const existingLead = team.members.find(
+        (m: any) => m.role === "lead" && m.agentId !== agentId,
+      );
       if (existingLead) {
         return c.json(
           { error: "Team already has a leader. Remove or reassign the current leader first." },
@@ -289,7 +301,7 @@ teamsRouter.patch(
       }
     }
 
-    const index = team.members.findIndex((m) => m.agentId === agentId);
+    const index = team.members.findIndex((m: any) => m.agentId === agentId);
     if (index === -1) return c.json({ error: "Member not found in team" }, 404);
 
     const updatedMembers = [...team.members];
@@ -315,10 +327,11 @@ teamsRouter.delete("/:id/members/:agentId", (c) => {
 
   const id = c.req.param("id");
   const agentId = c.req.param("agentId");
+  const { teamStore } = c.get("appContext");
   const team = teamStore.getTeam(username, id);
   if (!team) return c.json({ error: "Team not found" }, 404);
 
-  const updatedMembers = team.members.filter((m) => m.agentId !== agentId);
+  const updatedMembers = team.members.filter((m: any) => m.agentId !== agentId);
   const validationError = validateTeamMembers(updatedMembers);
   if (validationError) {
     return c.json({ error: validationError }, 400);
@@ -335,6 +348,7 @@ teamsRouter.get("/:id/messages", (c) => {
   const id = c.req.param("id");
   const limit = c.req.query("limit") ? parseInt(c.req.query("limit")!) : 100;
   const sessionId = c.req.query("sessionId");
+  const { teamStore } = c.get("appContext");
   const team = teamStore.getTeam(username, id);
   if (!team) return c.json({ error: "Team not found" }, 404);
 
@@ -347,6 +361,7 @@ teamsRouter.get("/:id/negotiation-state", (c) => {
   if (!username) return c.json({ error: "Unauthorized" }, 401);
 
   const id = c.req.param("id");
+  const { teamStore } = c.get("appContext");
   const team = teamStore.getTeam(username, id);
   if (!team) return c.json({ error: "Team not found" }, 404);
 
@@ -362,6 +377,7 @@ teamsRouter.get("/:id/active-streamings", (c) => {
 
   const id = c.req.param("id");
   const sessionId = c.req.query("sessionId");
+  const { teamStore, teamOrchestrator } = c.get("appContext");
   const team = teamStore.getTeam(username, id);
   if (!team) return c.json({ error: "Team not found" }, 404);
 
@@ -378,32 +394,25 @@ teamsRouter.post(
 
     const id = c.req.param("id");
     const { message } = c.req.valid("json");
+    const { teamStore, teamOrchestrator } = c.get("appContext");
     const team = teamStore.getTeam(username, id);
     if (!team) return c.json({ error: "Team not found" }, 404);
 
     if (team.teamType === "Orchestration") {
-      const leader = team.members.find((member) => member.role === "lead");
+      const leader = team.members.find((member: any) => member.role === "lead");
       if (!leader) {
         return c.json({ error: "The orchestration leader is not available" }, 400);
       }
       const ownerSessionId = `${SessionPrefix.TEAM}${team.id}`;
-      const session = await sessionManager.getOrCreateSession(
-        username,
-        ownerSessionId,
-        undefined,
-        leader.agentId,
-        {
-          workspaceDir: getTeamWorkspaceDir(username, team.id),
-        },
-      );
-      session.prompt(message).catch((err) => {
+      const session = c.get("appContext").createSessionAgent(ownerSessionId);
+      session.prompt(message).catch((err: any) => {
         console.error(`[TeamsRoute] Persistent session prompt error:`, err);
       });
     } else {
       // Trigger dispatch asynchronously for Negotiation
       teamOrchestrator
         .dispatchUserMessage(username, id, message, c.req.valid("json").sessionId)
-        .catch((err) => {
+        .catch((err: any) => {
           console.error(`[TeamsRoute] Error dispatching message for team ${id}:`, err);
         });
     }
@@ -421,15 +430,15 @@ teamsRouter.post(
 
     const id = c.req.param("id");
     const body = c.req.valid("json");
+    const { teamStore, teamOrchestrator, delegationRegistry } = c.get("appContext");
     const team = teamStore.getTeam(username, id);
 
     if (team && team.teamType === "Orchestration") {
       const ownerSessionId = `${SessionPrefix.TEAM}${team.id}`;
-      const session = sessionManager.getSession(username, ownerSessionId);
+      const session = c.get("appContext").agentCache.get(ownerSessionId);
       if (session) {
         await session.abort().catch(() => {});
       }
-      const { delegationRegistry } = await import("../core/delegation-registry");
       delegationRegistry.abortAllRecursive(ownerSessionId);
     } else {
       teamOrchestrator.abortDispatch(username, id, body?.sessionId);
@@ -441,6 +450,7 @@ teamsRouter.post(
 teamsRouter.get("/:id/agents", (c) => {
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
+  const { agentRegistry } = c.get("appContext");
   return c.json({ agents: agentRegistry.list(username) });
 });
 
@@ -456,6 +466,7 @@ teamsRouter.put(
 
     const id = c.req.param("id");
     const { context } = c.req.valid("json");
+    const { teamStore } = c.get("appContext");
     const updated = teamStore.updateTeamContext(username, id, context);
     if (!updated) return c.json({ error: "Team not found" }, 404);
     return c.json(updated);
@@ -466,6 +477,7 @@ teamsRouter.post("/:id/avatar", async (c) => {
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
   const id = c.req.param("id");
+  const { teamStore } = c.get("appContext");
   const team = teamStore.getTeam(username, id);
   if (!team) return c.json({ error: "Team not found" }, 404);
 
@@ -486,7 +498,9 @@ teamsRouter.post("/:id/avatar", async (c) => {
         unlinkSync(join(teamDir, f));
       }
     }
-  } catch { /* noop */ }
+  } catch {
+    /* noop */
+  }
 
   const ext = file.name.split(".").pop() || "png";
   const avatarPath = join(teamDir, `avatar.${ext}`);
@@ -503,6 +517,7 @@ teamsRouter.delete("/:id/avatar", async (c) => {
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
   const id = c.req.param("id");
+  const { teamStore } = c.get("appContext");
   const team = teamStore.getTeam(username, id);
   if (!team) return c.json({ error: "Team not found" }, 404);
 
@@ -515,7 +530,9 @@ teamsRouter.delete("/:id/avatar", async (c) => {
           unlinkSync(join(teamDir, f));
         }
       }
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
   }
 
   teamStore.updateTeam(username, id, { avatarUrl: "" });
@@ -527,6 +544,7 @@ teamsRouter.get("/:id/analytics", async (c) => {
   if (!username) return c.json({ error: "Unauthorized" }, 401);
 
   const id = c.req.param("id");
+  const { teamStore, sessionMetadataStore, sessionStore } = c.get("appContext");
   const team = teamStore.getTeam(username, id);
   if (!team) return c.json({ error: "Team not found" }, 404);
 
@@ -549,7 +567,7 @@ teamsRouter.get("/:id/analytics", async (c) => {
   }
 
   const turnsPerAgent = Object.values(turnsMap);
-  const totalTurns = msgs.filter((m) => m.role === "agent").length;
+  const totalTurns = msgs.filter((m: any) => m.role === "agent").length;
   const vetoRate = totalTurns > 0 ? parseFloat((vetoCount / totalTurns).toFixed(2)) : 0;
 
   const arbitrationRounds = 0;
@@ -574,8 +592,11 @@ teamsRouter.get("/:id/analytics", async (c) => {
   }
   const avgResponseTimeMs = responseCount > 0 ? Math.round(totalResponseTime / responseCount) : 0;
 
-  const sessions = await sessionManager.listSessions(username, { teamId: id });
-  const totalSessions = sessions.length;
+  const sessions = await sessionStore.listSessions().catch(() => []);
+  const totalSessions = sessions.filter((s) => {
+    const meta = sessionMetadataStore.getSessionMetadata(username, s.id);
+    return meta?.teamId === id;
+  }).length;
 
   return c.json({
     turnsPerAgent,

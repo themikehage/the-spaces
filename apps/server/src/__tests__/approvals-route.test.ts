@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: MIT
 import { describe, expect, it } from "bun:test";
-import { approvalManager } from "../core/approvals/approval-manager";
-import { uiApprovalRegistry } from "../core/ui-approval-registry";
+import { ApprovalManager } from "../core/approvals/approval-manager";
+import { UiApprovalRegistry } from "../core/ui-approval-registry";
+
+const approvalManager = new ApprovalManager();
+const uiApprovalRegistry = new UiApprovalRegistry();
 
 describe("routes/approvals", () => {
   it("should format approvals with correct kind discriminators", () => {
@@ -29,11 +32,11 @@ describe("routes/approvals", () => {
     });
 
     const username = "testuser";
-    const securityApprovals = approvalManager.getAll(username).map((a) => {
+    const securityApprovals = approvalManager.getAll(username).map((a: any) => {
       const kind = "approval" as const;
       return { ...a, kind, type: kind };
     });
-    const questionActions = uiApprovalRegistry.getAll(username).map((q) => {
+    const questionActions = uiApprovalRegistry.getAll(username).map((q: any) => {
       const kind = q.type === "ui_action" ? ("ui_action" as const) : ("question" as const);
       return { ...q, kind, type: kind };
     });

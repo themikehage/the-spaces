@@ -1,6 +1,4 @@
 // SPDX-License-Identifier: MIT
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
 import {
   getAgentAgentsMdPath,
   getGlobalAgentsMdPath,
@@ -8,12 +6,14 @@ import {
   getTeamAgentsMdPath,
   getWorkspaceDir,
   SessionPrefix,
-} from "shared";
+} from "@spaces/core";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { loadSkills } from "../../ai";
 import type { EntityConfig } from "../config";
 import { CUSTOM_TOOL_INSTRUCTIONS } from "../custom-tools";
 import { DEFAULT_AGENTS_MD } from "../default-factory-skills";
-import { promptComposer } from "../prompts/composer";
+import { PromptComposer } from "../prompts/composer";
 import { buildProjectContextPrompt } from "../prompts/project-context";
 import { assemblePromptAppends } from "../prompts/prompt-assembly";
 import {
@@ -25,9 +25,13 @@ import {
   TASK_DELEGATION_INSTRUCTIONS,
 } from "../prompts/system-instructions";
 import { TaskStateManager } from "../tools/task-state-manager";
-import { sessionMetadataStore } from "./metadata-store";
-import { userConfig } from "./user-config";
+import { SessionMetadataStore } from "./metadata-store";
+import { UserConfigManager } from "./user-config";
 import { resolveProjectDir } from "./workspace-resolver";
+
+const promptComposer = new PromptComposer();
+const sessionMetadataStore = new SessionMetadataStore();
+const userConfigManager = new UserConfigManager();
 
 export interface BuildPromptsParams {
   username: string;
@@ -95,9 +99,8 @@ export class SessionPromptBuilder {
           const projectJsonPath = join(projectDir, "project.json");
           if (existsSync(projectJsonPath)) {
             const projectMeta = JSON.parse(readFileSync(projectJsonPath, "utf-8"));
-            const { getPreviewState } = await import("../preview-watcher");
-            const previewState = getPreviewState(username, projectMeta.name);
-            const previewUrl = `/api/preview/${encodeURIComponent(username)}/${encodeURIComponent(projectMeta.name)}/index.html`;
+            const previewState = undefined;
+            const previewUrl = undefined;
 
             const projectPrompt = buildProjectContextPrompt({
               projectId: projectMeta.id,
@@ -120,7 +123,8 @@ export class SessionPromptBuilder {
               const { assignment } = projectMeta;
               if (assignment.leaderId) {
                 try {
-                  const { agentRegistry } = await import("../../agents");
+                  const { AgentRegistry } = await import("../../agents");
+                  const agentRegistry = new AgentRegistry();
                   const leaderEntry = agentRegistry.get(assignment.leaderId, username);
                   if (leaderEntry?.server.definition.systemPrompt) {
                     appendPrompts.push(
@@ -130,7 +134,10 @@ export class SessionPromptBuilder {
                     );
                   }
                 } catch (err) {
-                  console.error("[PromptBuilder] Failed to load leader agent prompt:", err);
+                  console.error(
+                    "[PromptBuilder] Failed to load leader agent prompt in session:",
+                    err,
+                  );
                 }
               }
 
@@ -155,18 +162,9 @@ export class SessionPromptBuilder {
       }
     }
 
-    if (cachedMcpToolNames.length > 0) {
-      appendPrompts.push(
-        `\n\nModel Context Protocol (MCP) Tools Available:\n` +
-          `You have the following custom MCP tools registered and active:\n` +
-          `${cachedMcpToolNames.map((name: string) => `- ${name}`).join("\n")}\n` +
-          `Use these tools when the task requires interacting with external databases, APIs, searching the web, or product integrations (like Slack, Linear, Jira, Google Drive). Do not assume you need to use bash if a specific MCP tool is more suitable.\n`,
-      );
-    }
-
     try {
-      const { customToolStorage } = await import("../custom-tools/storage");
-      const customDefs = customToolStorage
+      const { CustomToolStorage } = await import("../custom-tools/storage");
+      const customDefs = new CustomToolStorage()
         .loadAll(username)
         .filter((d: any) => d.enabled !== false);
       if (customDefs.length > 0) {
@@ -188,7 +186,8 @@ export class SessionPromptBuilder {
         teamId = sessionId.slice(SessionPrefix.TEAM.length);
       }
       if (teamId) {
-        const { teamStore } = await import("../../teams/team-store");
+        const { TeamStore } = await import("../../teams/team-store");
+        const teamStore = new TeamStore();
         const team = teamStore.getTeam(username, teamId);
         if (team && team.context && team.context.length > 0) {
           const contextSnippet =
@@ -270,20 +269,22 @@ export class SessionPromptBuilder {
       const meta = sessionMetadataStore.getSessionMetadata(username, sessionId);
 
       if (meta?.teamId) {
-        const { teamStore } = await import("../../teams/team-store");
-        const { agentRegistry } = await import("../../agents");
+        const { TeamStore } = await import("../../teams/team-store");
+        const { AgentRegistry } = await import("../../agents");
+        const teamStore = new TeamStore();
+        const agentRegistry = new AgentRegistry();
         const team = teamStore.getTeam(username, meta.teamId);
         const ownerId = params.resolvedAgentId || "";
         if (
           team?.teamType === "Orchestration" &&
-          team.members.some((member) => member.agentId === ownerId && member.role === "lead")
+          team.members.some((member: any) => member.agentId === ownerId && member.role === "lead")
         ) {
           return {
             mode: "orchestration",
             agentRole: "lead",
             members: team.members
-              .filter((member) => member.agentId !== ownerId && member.role !== "observer")
-              .map((member) => {
+              .filter((member: any) => member.agentId !== ownerId && member.role !== "observer")
+              .map((member: any) => {
                 const entry = agentRegistry.get(member.agentId, username);
                 const capability =
                   entry?.server.definition.systemPrompt?.replace(/\s+/g, " ").slice(0, 180) ||
@@ -318,7 +319,7 @@ export class SessionPromptBuilder {
     estimatedTokens: number;
   }> {
     const { username, entityType, agentId, projectId, teamId, subagentId } = params;
-    const settings = userConfig.getUserSettings(username);
+    const settings = userConfigManager.getUserSettings(username);
     const workspaceDir = getWorkspaceDir(username);
     const sections: Array<{ title: string; content: string }> = [];
 
@@ -345,7 +346,8 @@ export class SessionPromptBuilder {
     let agentDef: any = null;
     if (targetAgentId) {
       try {
-        const { agentRegistry } = await import("../../agents");
+        const { AgentRegistry } = await import("../../agents");
+        const agentRegistry = new AgentRegistry();
         const entry = agentRegistry.get(targetAgentId, username);
         if (entry?.server?.definition) {
           agentDef = entry.server.definition;
@@ -388,9 +390,8 @@ export class SessionPromptBuilder {
           const projectJsonPath = join(projectDir, "project.json");
           if (existsSync(projectJsonPath)) {
             const projectMeta = JSON.parse(readFileSync(projectJsonPath, "utf-8"));
-            const { getPreviewState } = await import("../preview-watcher");
-            const previewState = getPreviewState(username, projectMeta.name);
-            const previewUrl = `/api/preview/${encodeURIComponent(username)}/${encodeURIComponent(projectMeta.name)}/index.html`;
+            const previewState = undefined;
+            const previewUrl = undefined;
 
             const projectPrompt = buildProjectContextPrompt({
               projectId: projectMeta.id,
@@ -414,7 +415,8 @@ export class SessionPromptBuilder {
               const { assignment } = projectMeta;
               if (assignment.leaderId) {
                 try {
-                  const { agentRegistry } = await import("../../agents");
+                  const { AgentRegistry } = await import("../../agents");
+                  const agentRegistry = new AgentRegistry();
                   const leaderEntry = agentRegistry.get(assignment.leaderId, username);
                   if (leaderEntry?.server.definition.systemPrompt) {
                     projectContextFull +=
@@ -459,7 +461,8 @@ export class SessionPromptBuilder {
     const targetTeamId = teamId;
     if (targetTeamId) {
       try {
-        const { teamStore } = await import("../../teams/team-store");
+        const { TeamStore } = await import("../../teams/team-store");
+        const teamStore = new TeamStore();
         const team = teamStore.getTeam(username, targetTeamId);
         if (team) {
           let teamContent = `Team: ${team.name} (Type: ${team.teamType || "General"})\nDescription: ${team.description || "N/A"}`;
@@ -485,8 +488,8 @@ export class SessionPromptBuilder {
 
     // 7. Registered Tools & MCP Extensions
     try {
-      const { customToolStorage } = await import("../custom-tools/storage");
-      const customDefs = customToolStorage
+      const { CustomToolStorage } = await import("../custom-tools/storage");
+      const customDefs = new CustomToolStorage()
         .loadAll(username)
         .filter((d: any) => d.enabled !== false);
 
@@ -541,5 +544,3 @@ export class SessionPromptBuilder {
     };
   }
 }
-
-export const sessionPromptBuilder = new SessionPromptBuilder();

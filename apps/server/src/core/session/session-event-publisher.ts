@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT
-import type { AgentSession } from "../../ai";
-import { eventBroker } from "../../lib/event-broker";
+import { EventBroker } from "../../lib/event-broker";
 
 export interface SubscribeSessionEventsParams {
-  session: AgentSession;
+  session: any;
   username: string;
   sessionId: string;
   metadataStore: {
@@ -15,6 +14,7 @@ export interface SubscribeSessionEventsParams {
     getSessionMetadata: (username: string, sessionId: string) => Record<string, any> | null;
     computeAndPersistMetrics?: (username: string, sessionId: string, session: any) => void;
   };
+  eventBroker?: EventBroker;
 }
 
 export function subscribeSessionEvents({
@@ -22,6 +22,7 @@ export function subscribeSessionEvents({
   username,
   sessionId,
   metadataStore,
+  eventBroker = new EventBroker(),
 }: SubscribeSessionEventsParams): () => void {
   let cachedSessionName = sessionId;
   try {
@@ -29,7 +30,9 @@ export function subscribeSessionEvents({
     if (meta?.name) {
       cachedSessionName = meta.name;
     }
-  } catch { /* noop */ }
+  } catch {
+    /* noop */
+  }
 
   const globalLogUnsub = session.subscribe((evt: any) => {
     const ev = evt as any;
@@ -45,7 +48,9 @@ export function subscribeSessionEvents({
         metadataStore.saveSessionMetadata(username, sessionId, {
           updatedAt: new Date().toISOString(),
         });
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
     }
 
     if (evt.type === "agent_start") {
@@ -55,7 +60,9 @@ export function subscribeSessionEvents({
         if (meta?.name) {
           cachedSessionName = meta.name;
         }
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
 
       eventBroker.publishEvent(username, {
         sourceType: "session",

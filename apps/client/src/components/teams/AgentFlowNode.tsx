@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { AgentAvatar } from "@/components/shared/AgentAvatar";
+import type { AgentInfo, TeamMember, TeamRole } from "@spaces/core";
 import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
-import type { AgentInfo, TeamMember, TeamRole } from "shared";
 
 export type AgentNodeData = {
   member: TeamMember;

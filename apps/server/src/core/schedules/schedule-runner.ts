@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
+import { type ScheduleJob } from "@spaces/core";
 import { Cron } from "croner";
-import { type ScheduleJob } from "shared";
 import { type ScheduleService } from "./schedule-service";
 
 interface JobRunnerEntry {

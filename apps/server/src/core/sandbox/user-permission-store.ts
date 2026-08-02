@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
+import { getUserDir } from "@spaces/core";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { getUserDir } from "shared";
 import type { ToolPermissionRule } from "./subagent-permissions";
 
 export class UserPermissionStore {
@@ -67,5 +67,3 @@ export class UserPermissionStore {
     }
   }
 }
-
-export const userPermissionStore = new UserPermissionStore();

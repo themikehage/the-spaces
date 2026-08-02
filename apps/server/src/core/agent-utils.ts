@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import type { DelegationNotificationDetails, EnvelopeResult } from "shared";
-import { DELEGATION_NOTIFICATION_TYPE } from "shared";
+import type { DelegationNotificationDetails, EnvelopeResult } from "@spaces/core";
+import { DELEGATION_NOTIFICATION_TYPE } from "@spaces/core";
 import type { ModelRegistry } from "../ai";
 
 /**
@@ -58,16 +58,16 @@ export function parseEnvelope(text: string): EnvelopeResult {
  * to the parent session so they can be rendered in the parent UI session.
  */
 export function forwardSubagentEvents(
-  subSession: { subscribe: (fn: (evt: any) => void) => () => void },
+  subSession: any,
   parentSessionId: string,
   subagentSessionId: string,
   toolCallId: string,
 ): () => void {
   let unsub: (() => void) | undefined;
   try {
-    unsub = subSession.subscribe((evt: any) => {
+    const handler = (evt: any) => {
       try {
-        import("../ws/handler")
+        import("./ws-bridge")
           .then(({ broadcastToSession }) => {
             broadcastToSession(parentSessionId, {
               type: "subagent_event",
@@ -83,12 +83,15 @@ export function forwardSubagentEvents(
       } catch (err) {
         console.error("[Subagent Event Forwarding Error]:", err);
       }
-    });
+    };
+    unsub = subSession?.events?.on
+      ? subSession.events.on("*", handler)
+      : subSession?.subscribe?.(handler);
   } catch (err) {
     console.error("[forwardSubagentEvents] Subscribe failed:", err);
     unsub = () => {};
   }
-  return unsub;
+  return unsub || (() => {});
 }
 
 let registerChannelInterceptorFn: any = null;
@@ -267,6 +270,7 @@ export async function handleDelegationCompletion(opts: {
   lastText?: string;
   includeFullHistory?: boolean;
   executionResultText?: string;
+  sessionManager?: any;
 }) {
   const {
     username,
@@ -282,15 +286,16 @@ export async function handleDelegationCompletion(opts: {
   } = opts;
 
   // Complete in registry
-  const { delegationRegistry } = await import("./delegation-registry");
+  const { DelegationRegistry } = await import("./delegation-registry");
+  const delegationRegistry = new DelegationRegistry();
   delegationRegistry.complete(username, parentSessionId, toolCallId, status, envelope);
 
   // Add to parent session's result queue
-  const { sessionManager } = await import("./session-manager");
-  let parent = sessionManager.getSession(username, parentSessionId);
-  if (!parent) {
+  const sm = opts.sessionManager;
+  let parent = sm?.getSession(username, parentSessionId);
+  if (!parent && sm) {
     try {
-      parent = await sessionManager.getOrCreateSession(username, parentSessionId);
+      parent = await sm.getOrCreateSession(username, parentSessionId);
     } catch (e) {
       console.error(`[Delegation] Failed to load/create parent session ${parentSessionId}`, e);
     }
@@ -334,7 +339,7 @@ export async function handleDelegationCompletion(opts: {
 
       if (!success) {
         try {
-          const { broadcastToUser } = await import("../ws/handler");
+          const { broadcastToUser } = await import("./ws-bridge");
           broadcastToUser(username, {
             type: "delegation_completed",
             parentSessionId,

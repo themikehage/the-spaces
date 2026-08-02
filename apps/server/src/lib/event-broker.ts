@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import type { GlobalLogEvent } from "shared";
+import type { GlobalLogEvent } from "@spaces/core";
 
 type BroadcastFn = (username: string, data: unknown) => void;
 let broadcasterFn: BroadcastFn | null = null;
@@ -8,7 +8,7 @@ export function setEventBroadcaster(fn: BroadcastFn) {
   broadcasterFn = fn;
 }
 
-class EventBroker {
+export class EventBroker {
   private history = new Map<string, GlobalLogEvent[]>();
 
   publishEvent(username: string, event: Omit<GlobalLogEvent, "timestamp">) {
@@ -31,5 +31,3 @@ class EventBroker {
     return this.history.get(username) ?? [];
   }
 }
-
-export const eventBroker = new EventBroker();

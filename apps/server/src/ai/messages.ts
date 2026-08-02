@@ -1,5 +1,14 @@
 // SPDX-License-Identifier: MIT
-import type { ImageContent, Message, TextContent } from "./vendor/ai/src/index.ts";
+export interface TextContent {
+  type: "text";
+  text: string;
+}
+export interface ImageContent {
+  type: "image";
+  mimeType: string;
+  data: string;
+}
+export type Message = any;
 
 export const COMPACTION_SUMMARY_PREFIX = `The conversation history before this point was compacted into the following summary:
 

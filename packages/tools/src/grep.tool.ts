@@ -1,8 +1,8 @@
+import type { ITool, ToolContext, ToolResult } from "@spaces/core";
+import ignore from "ignore";
 import { existsSync } from "node:fs";
 import { readFile, readdir, stat } from "node:fs/promises";
 import { basename, join, relative } from "node:path";
-import type { ITool, ToolContext, ToolResult } from "@spaces/core";
-import ignore from "ignore";
 import { z } from "zod";
 import { resolveSafePath } from "./path-safety.js";
 
@@ -11,7 +11,10 @@ const GrepParametersSchema = z.object({
   path: z.string().optional().describe("Directory or file to search (default: workspace root)"),
   glob: z.string().optional().describe("Filter files by glob pattern, e.g. '*.ts'"),
   ignoreCase: z.boolean().optional().describe("Case-insensitive search (default: false)"),
-  literal: z.boolean().optional().describe("Treat pattern as literal string instead of regex (default: false)"),
+  literal: z
+    .boolean()
+    .optional()
+    .describe("Treat pattern as literal string instead of regex (default: false)"),
   limit: z.number().optional().describe("Maximum number of matches to return (default: 100)"),
 });
 
@@ -24,11 +27,19 @@ function globToRegex(glob: string): RegExp {
 
 export const grepTool: ITool = {
   name: "grep",
-  description: "Search file contents for a pattern. Returns matching lines with file paths and line numbers.",
+  description:
+    "Search file contents for a pattern. Returns matching lines with file paths and line numbers.",
   parameters: GrepParametersSchema,
   category: "filesystem",
   async execute(args: unknown, ctx: ToolContext): Promise<ToolResult> {
-    const { pattern, path: searchDir, glob: globPattern, ignoreCase, literal, limit } = GrepParametersSchema.parse(args);
+    const {
+      pattern,
+      path: searchDir,
+      glob: globPattern,
+      ignoreCase,
+      literal,
+      limit,
+    } = GrepParametersSchema.parse(args);
     const cwd = ctx.workspaceRoot ?? process.cwd();
     const effectiveLimit = limit && limit > 0 ? limit : 100;
 
@@ -42,7 +53,9 @@ export const grepTool: ITool = {
         try {
           const gitignoreContent = await readFile(gitignorePath, "utf-8");
           ig.add(gitignoreContent);
-        } catch { /* noop */ }
+        } catch {
+          /* noop */
+        }
       }
 
       const files: string[] = [];
@@ -104,7 +117,9 @@ export const grepTool: ITool = {
               if (matches.length >= effectiveLimit) break;
             }
           }
-        } catch { /* noop */ }
+        } catch {
+          /* noop */
+        }
       }
 
       if (matches.length === 0) {
