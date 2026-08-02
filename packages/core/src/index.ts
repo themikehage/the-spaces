@@ -15,7 +15,10 @@ export * from "./ports/session.port.js";
 export * from "./ports/sandbox.port.js";
 export * from "./ports/workspace.port.js";
 export * from "./ports/memory.port.js";
+export * from "./ports/approval.port.js";
+export * from "./ports/schedule.port.js";
 export * from "./ports/agent.port.js";
+
 
 // Schemas
 export * from "./schemas/message.schema.js";

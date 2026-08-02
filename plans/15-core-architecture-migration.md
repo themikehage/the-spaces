@@ -273,19 +273,19 @@ apps/server/src/
 
 ---
 
-### Hito 7: Client — Componentes Core
+### Hito 7: Client — Componentes Core — ✅ [COMPLETADO](completed/15-hito-7-client-components.md)
 
 **Objetivo**: componentes de chat refactorizados, < 200 líneas cada uno.
 
-| Componente | Descripción | Límite |
-|---|---|---|
-| `Layout.tsx` | Shell: header + sidebar + main, responsive | < 150 líneas |
-| `SessionList.tsx` | Sidebar: crear/seleccionar/eliminar | < 150 líneas |
-| `MessageBubble.tsx` | Burbuja user/assistant con avatar | < 100 líneas |
-| `Markdown.tsx` | Renderer con react-markdown | < 80 líneas |
-| `MessageList.tsx` | Lista + scroll automático + tool calls básicos | < 200 líneas |
-| `ChatInput.tsx` | Textarea + send/stop, Enter envía | < 100 líneas |
-| `ChatArea.tsx` | Compone MessageList + ChatInput + useChat | < 150 líneas |
+| Componente | Descripción | Límite | Estado |
+|---|---|---|---|
+| `Layout.tsx` | Shell: header + sidebar + main, responsive | < 150 líneas | ✅ |
+| `SessionList.tsx` | Sidebar: crear/seleccionar/eliminar | < 150 líneas | ✅ |
+| `MessageBubble.tsx` | Burbuja user/assistant con avatar | < 100 líneas | ✅ |
+| `Markdown.tsx` | Renderer con react-markdown | < 80 líneas | ✅ |
+| `MessageList.tsx` | Lista + scroll automático + tool calls básicos | < 200 líneas | ✅ |
+| `ChatInput.tsx` | Textarea + send/stop, Enter envía | < 100 líneas | ✅ |
+| `ChatArea.tsx` | Compone MessageList + ChatInput + useChat | < 150 líneas | ✅ |
 
 > Las páginas avanzadas (`AgentsPage`, `TeamsPage`, etc.) se migran en el Hito 8.
 
@@ -293,55 +293,12 @@ apps/server/src/
 
 ---
 
-### Hito 8: Migración de Features Avanzados
+### Hito 8: Migración de Features Avanzados — ✅ [COMPLETADO](completed/15-hito-8-advanced-features.md)
 
-**Objetivo**: migrar features existentes a la nueva arquitectura sin romper funcionalidad.
-
-#### 8a — MCP Integration
-- `McpToolAdapter` implementa `ITool` usando el MCP client existente
-- `McpHook` para logging/audit de tool calls MCP
-- Registrar en `IToolRegistry` desde `AppContext`
-
-#### 8b — Approvals
-- `ApprovalHook` implementa `Hook.beforeToolCall` → `null` si deniega
-- Conectar con el WS de aprobación existente
-- Eliminar `uiApprovalRegistry` singleton
-
-#### 8c — Schedules
-- `ScheduleService` como dependencia inyectable en `AppContext`
-- Rutas `/schedules` migran al patrón sub-router
-
-#### 8d — Teams / Multi-agent
-- `createTeamAgent()` factory que compone múltiples `AgentRuntime`
-- `DelegationHook` implementa `Hook` para delegación
-- Eliminar `delegationRegistry` singleton
-
-#### 8e — Memory / RAG
-- `MemoryPromptSection` implementa `PromptSection` (priority: 30)
-- `IMemoryProvider` ya definido en core — enchufar implementación concreta
-
-#### 8f — Custom Tools
-- `CustomToolAdapter` implementa `ITool` con schema Zod generado dinámicamente
-- Cargados en `AppContext` por sesión/entidad
-
-**Criterio de done por subsistema**: typecheck + prueba funcional del feature migrado.
 
 ---
 
-### Hito 9: Integración Final y Limpieza
-
-**Objetivo**: sistema completo, sin código legacy, build limpio.
-
-| Tarea |
-|---|
-| Eliminar `AgentSession` (god object) |
-| Eliminar singletons globales (`sessionManager`, `mcpRegistry`, `memoryRegistry`, `uiApprovalRegistry`, `delegationRegistry`) |
-| Eliminar `ai/vendor/` (extraído al engine) |
-| `pnpm typecheck` workspace completo → 0 errores |
-| `pnpm build` workspace completo → exitoso |
-| `pnpm lint` → 0 errores |
-| Prueba manual end-to-end de todos los features |
-| Actualizar `AGENTS.md` del workspace con la nueva arquitectura |
+### Hito 9: Integración Final y Limpieza — ✅ [COMPLETADO](completed/15-hito-9-final-integration.md)
 
 ---
 

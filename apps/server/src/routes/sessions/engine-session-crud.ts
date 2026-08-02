@@ -23,6 +23,12 @@ export function createEngineSessionCrudRouter(appContext: AppContext): Hono {
     return c.json(session, 201);
   });
 
+  router.get("/:id/messages", async (c) => {
+    const id = c.req.param("id");
+    const messages = await appContext.sessionStore.getMessages(id);
+    return c.json({ messages });
+  });
+
   router.delete("/:id", async (c) => {
     const id = c.req.param("id");
     const cachedAgent = appContext.agentCache.get(id);

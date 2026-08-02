@@ -28,9 +28,12 @@ import { McpRedirectRoute } from "@/router/routes/McpRedirectRoute";
 import { NotFoundRoute } from "@/router/routes/NotFoundRoute";
 import { Route, Routes } from "react-router-dom";
 
+import Layout from "@/components/Layout";
+
 export function AppRoutes() {
   return (
     <Routes>
+      <Route path="/v2" element={<Layout />} />
       <Route element={<AppRouter />}>
         <Route index element={<ChatRoute />} />
         <Route path="session/*" element={<SessionRoute />} />

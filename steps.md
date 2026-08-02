@@ -103,6 +103,7 @@
 - [x] Eliminar barra superior de título de chats en `ChatArea` y trasladar el título activo de la sesión y la navegación de sub-sesiones a los `Breadcrumbs` de `MainLayout`.
 - [x] Implementar Plan 15 — Core Architecture Migration Hito 5 (Server Hono Thin): `loadEngineConfig`, contenedor DI `AppContext`, sub-router `engine-session-crud` (`POST`, `GET`, `DELETE`), websocket streaming por eventos `session-ws` (`/ws/v2`), integración no invasiva en `routes/sessions/index.ts` y `src/index.ts`, e inclusión de dependencias de workspace `@spaces/*`.
 - [x] Implementar Plan 15 — Core Architecture Migration Hito 6 (Client API Layer + Hooks Base): `apiFetch` tipado + `ApiError`, `WsClient` adaptado a eventos de engine (`AgentEvent`), y hooks `useWebSocket`, `useSessions` y `useChat` sin romper la UI existente.
+- [x] Implementar Plan 16 — Remoción de Legacy (Cablear AppContext + WS Core): Se amplió `AppContext` con `dispose()`, migró la ruta productiva `/ws` al motor desacoplado del engine, reemplazó `/api/sessions` por `createEngineSessionCrudRouter`, eliminó `createServerContext()` y sincronizó el cliente WS (`api/ws.ts`). Verification limpia en workspace completo.
 
 
 

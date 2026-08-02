@@ -6,3 +6,7 @@ export * from "./tool-executor.js";
 export * from "./agent-loop.js";
 export * from "./agent-runtime.js";
 export * from "./factories/default.agent.js";
+export * from "./hooks/approval-hook.js";
+export * from "./hooks/delegation-hook.js";
+export * from "./prompt-sections/memory-prompt-section.js";
+

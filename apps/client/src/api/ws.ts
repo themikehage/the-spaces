@@ -159,7 +159,7 @@ export class WsClient {
     const sessionParam = this.activeSessionId
       ? `?sessionId=${encodeURIComponent(this.activeSessionId)}`
       : "";
-    const url = `${protocol}//${host}/ws/v2${sessionParam}`;
+    const url = `${protocol}//${host}/ws${sessionParam}`;
 
     try {
       const ws = new WebSocket(url);

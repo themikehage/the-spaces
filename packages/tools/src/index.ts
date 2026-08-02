@@ -9,14 +9,18 @@ import { webfetchTool } from "./webfetch.tool.js";
 import { writeTool } from "./write.tool.js";
 
 export * from "./bash.tool.js";
+export * from "./custom/index.js";
 export * from "./edit.tool.js";
+
 export * from "./glob.tool.js";
 export * from "./grep.tool.js";
+export * from "./mcp/index.js";
 export * from "./path-safety.js";
 export * from "./read.tool.js";
 export * from "./tool-registry.js";
 export * from "./webfetch.tool.js";
 export * from "./write.tool.js";
+
 
 export function createDefaultToolRegistry(): IToolRegistry {
   const registry = new DefaultToolRegistry();

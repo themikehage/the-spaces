@@ -1,5 +1,6 @@
 import type {
   AgentRuntimeDependencies,
+  Hook,
   IModelProvider,
   ISessionStore,
 } from "@spaces/core";
@@ -12,10 +13,16 @@ import { ToolExecutor, ToolRegistry } from "../tool-executor.js";
 export type CreateAgentOptions = Partial<AgentRuntimeDependencies> & {
   modelProvider: IModelProvider;
   sessionStore: ISessionStore;
+  hooks?: Hook[];
 };
 
 export function createAgent(id: string, options: CreateAgentOptions): AgentRuntime {
   const hookRunner = options.hookRunner ?? new HookRunner();
+  if (options.hooks) {
+    for (const h of options.hooks) {
+      hookRunner.register(h);
+    }
+  }
   const permissionEngine = options.permissionEngine ?? new PermissionEngine();
   const promptBuilder = options.promptBuilder ?? new PromptBuilder();
   const toolExecutor =
@@ -34,3 +41,4 @@ export function createAgent(id: string, options: CreateAgentOptions): AgentRunti
 
   return new AgentRuntime(id, deps);
 }
+

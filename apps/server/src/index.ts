@@ -8,11 +8,9 @@ import { join } from "node:path";
 import { SPACES_DATA_PATH } from "shared";
 import { auth } from "./auth/index";
 import { ensureAuthTables } from "./auth/migrate";
-import { memoryRegistry } from "./core/memory/registry";
 import { globalErrorHandler } from "./core/middleware/error-handler";
 import { requestIdMiddleware } from "./core/middleware/request-id";
 import { scheduleRunner } from "./core/schedules/index";
-import { createServerContext } from "./core/server-context";
 import { sessionMetadataStore } from "./core/session/metadata-store";
 import { handleRequest as previewRequest, startPreviewServer } from "./preview-server";
 import { agentsRouter } from "./routes/agents";
@@ -38,7 +36,6 @@ import { settingsRouter } from "./routes/settings";
 import { skillsRouter } from "./routes/skills";
 import { teamsRouter } from "./routes/teams";
 import { teamStore } from "./teams/team-store";
-import { createWsContext } from "./ws/factory";
 import { createAppContext } from "./context";
 
 import { purgeExpiredSessions } from "./auth/ephemeral-tool-session";
@@ -74,7 +71,6 @@ purgeExpiredSessions();
 
 const { upgradeWebSocket, websocket } = createBunWebSocket();
 
-const serverContext = createServerContext();
 const appContext = await createAppContext();
 const app = new Hono();
 
@@ -101,17 +97,20 @@ app.use(
 app.use("/*", logger());
 app.onError(globalErrorHandler);
 
-app.get("/api/health", (c) =>
-  c.json({
+app.get("/api/health", async (c) => {
+  const sessions = await appContext.sessionStore.listSessions();
+  return c.json({
     status: "ok",
     version: "1.0.0",
     uptime: process.uptime(),
+    sessionsCount: sessions.length,
+    activeAgentsCount: appContext.agentCache.size,
     ...(!isProduction || process.env.SPACES_HEALTH_VERBOSE === "1"
       ? { dataPath: SPACES_DATA_PATH() }
       : {}),
     timestamp: Date.now(),
-  }),
-);
+  });
+});
 
 app.route("/api/preview", previewRouter);
 app.route("/api/prompts", promptsRouter);
@@ -136,55 +135,7 @@ app.route("/api/approvals", approvalsRouter);
 app.route("/api/schedules", schedulesRouter);
 app.route("/api", filesRouter);
 
-app.get(
-  "/ws",
-  upgradeWebSocket((c) => {
-    const rawHeaders = c.req.raw.headers;
-    const wsContext = createWsContext();
-    return {
-      onOpen: (evt: Event, ws: any) => wsContext.onOpen(evt, ws, rawHeaders),
-      onMessage: (evt: any, ws: any) => wsContext.onMessage(evt, ws),
-      onClose: (evt: any, ws: any) => wsContext.onClose(evt, ws),
-    };
-  }),
-);
-
 await ensureAuthTables();
-
-// Run session auto-cleanup on startup
-try {
-  const usersBase = join(SPACES_DATA_PATH(), "users");
-  if (existsSync(usersBase)) {
-    const userDirs = readdirSync(usersBase, { withFileTypes: true })
-      .filter((ent) => ent.isDirectory())
-      .map((ent) => ent.name);
-    const { sessionManager } = await import("./core/session-manager");
-    for (const username of userDirs) {
-      sessionManager.autoCleanupSessions(username).catch((err) => {
-        console.error(`[Auto Cleanup] Failed for user ${username}:`, err);
-      });
-    }
-
-    // Run periodic auto-cleanup every 12 hours
-    setInterval(
-      () => {
-        try {
-          if (existsSync(usersBase)) {
-            const uDirs = readdirSync(usersBase, { withFileTypes: true })
-              .filter((ent) => ent.isDirectory())
-              .map((ent) => ent.name);
-            for (const u of uDirs) {
-              sessionManager.autoCleanupSessions(u).catch(() => {});
-            }
-          }
-        } catch { /* noop */ }
-      },
-      12 * 60 * 60 * 1000,
-    );
-  }
-} catch (err) {
-  console.error("Failed to run startup cleanup tasks:", err);
-}
 
 const STATIC_EXTENSIONS = /\.(webmanifest|js|json|png|ico|svg|css)$/;
 
@@ -220,15 +171,15 @@ scheduleRunner.start().catch((err) => {
 });
 
 process.on("SIGTERM", async () => {
-  console.log("SIGTERM received, shutting down memory providers and schedule runner...");
+  console.log("SIGTERM received, shutting down app context and schedule runner...");
   scheduleRunner.stop();
-  await memoryRegistry.shutdownAll();
+  await appContext.dispose();
   process.exit(0);
 });
 
 process.on("SIGINT", async () => {
-  console.log("SIGINT received, shutting down memory providers and schedule runner...");
+  console.log("SIGINT received, shutting down app context and schedule runner...");
   scheduleRunner.stop();
-  await memoryRegistry.shutdownAll();
+  await appContext.dispose();
   process.exit(0);
 });

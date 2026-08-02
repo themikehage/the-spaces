@@ -42,7 +42,7 @@ El repositorio es un monorepo con workspaces de `pnpm`:
 - Previsualización en vivo de proyectos HTML con herramientas nativas (`manage_preview`).
 - Integración con skills, plugins y servidores MCP.
 - Backups, logs, galería de imágenes generadas y factory de agentes/proyectos/equipos.
-- Comunicación en tiempo real mediante WebSocket en `/ws`.
+- Comunicación en tiempo real mediante WebSocket desacoplado del engine en `/ws` (Plan 16), respaldado por `AppContext` DI container y `createEngineSessionCrudRouter` en `/api/sessions`.
 
 ## Backend
 

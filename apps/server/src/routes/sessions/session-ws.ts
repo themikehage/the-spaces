@@ -34,7 +34,7 @@ export function registerEngineWsRoute(
   upgradeWebSocket: ReturnType<typeof createBunWebSocket>["upgradeWebSocket"],
 ): void {
   app.get(
-    "/ws/v2",
+    "/ws",
     upgradeWebSocket((c) => {
       let unsub: (() => void) | null = null;
       let currentSessionId: string | null = null;

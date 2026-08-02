@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import { sessionManager } from "../core/session-manager";
 import { authMiddleware, getAuthPayload } from "../middleware/auth";
 
-import { IMAGE_MODELS } from "../ai/vendor/ai/src/image-models.generated.ts";
+import { IMAGE_MODELS } from "../config/image-models";
 
 export const modelsRouter = new Hono();
 

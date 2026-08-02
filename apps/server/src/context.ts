@@ -4,7 +4,7 @@ import { createAgent } from "@spaces/engine";
 import { OpenAICompatibleProvider } from "@spaces/providers";
 import { LocalSandbox } from "@spaces/sandbox";
 import { FilesystemSessionStore } from "@spaces/storage";
-import { createDefaultToolRegistry } from "@spaces/tools";
+import { createDefaultToolRegistry, McpRegistry } from "@spaces/tools";
 import { loadEngineConfig } from "./config/engine-config";
 
 export interface AppContext {
@@ -12,8 +12,10 @@ export interface AppContext {
   modelProvider: IModelProvider;
   toolRegistry: IToolRegistry;
   sandbox: ISandbox;
+  mcpRegistry: McpRegistry;
   agentCache: Map<string, IAgentRuntime>;
   createSessionAgent(sessionId: string): IAgentRuntime;
+  dispose(): Promise<void>;
 }
 
 export async function createAppContext(): Promise<AppContext> {
@@ -27,6 +29,7 @@ export async function createAppContext(): Promise<AppContext> {
   });
   const toolRegistry = createDefaultToolRegistry();
   const sandbox = new LocalSandbox();
+  const mcpRegistry = new McpRegistry();
   const agentCache = new Map<string, IAgentRuntime>();
 
   const createSessionAgent = (sessionId: string): IAgentRuntime => {
@@ -41,12 +44,22 @@ export async function createAppContext(): Promise<AppContext> {
     return agent;
   };
 
+  const dispose = async (): Promise<void> => {
+    for (const [, agent] of agentCache) {
+      await agent.dispose().catch(() => {});
+    }
+    agentCache.clear();
+  };
+
   return {
     sessionStore,
     modelProvider,
     toolRegistry,
     sandbox,
+    mcpRegistry,
     agentCache,
     createSessionAgent,
+    dispose,
   };
 }
+

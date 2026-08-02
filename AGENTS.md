@@ -18,30 +18,52 @@ Before any work, read: `about.md`, `steps.md`, `AGENTS.md` (this file). These ar
 
 - `pnpm dev` - Start client, landing, and server in parallel
 - `pnpm build` - Build all apps and packages
-- `pnpm --filter client run dev` - Run client development server
-- `pnpm --filter landing run dev` - Run landing development server
+- `pnpm typecheck` - Run TypeScript typecheck across all workspaces
+- `pnpm --filter @spaces/core typecheck` - Typecheck core interfaces package
+- `pnpm --filter @spaces/engine typecheck` - Typecheck agent runtime engine package
+- `pnpm --filter @spaces/tools typecheck` - Typecheck tools package
+- `pnpm --filter @spaces/providers typecheck` - Typecheck LLM model providers package
+- `pnpm --filter @spaces/storage typecheck` - Typecheck session storage package
+- `pnpm --filter @spaces/sandbox typecheck` - Typecheck sandbox execution package
 - `pnpm --filter server run dev` - Run server in watch mode
 - `pnpm --filter server run typecheck` - Run TypeScript typecheck on server package
+- `pnpm --filter client run dev` - Run client development server
+
+## Architecture & Principles (de `out/auto-browser/PLAN.md`)
+
+1. **Composición > Herencia:** Cero god objects, cero singletons. `AgentRuntime` se compone inyectando dependencias via constructor.
+2. **Tipos de Agente como Factories:** Misma clase `AgentRuntime`, distintas dependencias inyectadas por fábrica (`createAgent()`).
+3. **Prompt Pipeline por Secciones:** Ensamblado determinista por prioridades (`PromptSection`), sin lógica spaghetti.
+4. **Hooks como Middleware Chain:** Cadena `beforePrompt`, `afterPrompt`, `beforeToolCall` (con capability de short-circuit con `null`), `afterToolCall`, `onError`.
+5. **Rules Declarativas:** Separadas de hooks (`IPermissionEngine`), evaluadas antes de cada ejecucion de herramientas.
+6. **Tool Registry Tipado:** `ITool` con Zod schema obligatorio desde el día 0.
+7. **Sandbox e IWorkspace Inyectables:** El runtime nunca ejecuta directamente comandos ni manipula archivos sin abstraer la infraestructura.
 
 ## Maintainability & Modularity Directives
 
-- **Single Responsibility & Sub-modules:** Avoid God Objects (e.g. classes or files > 300 lines). Extract distinct responsibilities into specialized modules (e.g. `EventBus`, `ToolRegistry`, `PromptBuilder`, `CompactionManager`, `NavigationController`).
-- **Modular Routing (Sub-router Pattern):** Keep Hono route handlers decomposed into sub-directory modules (`routes/<domain>/index.ts`, `routes/<domain>/<subdomain>-crud.ts`). The root `routes/<domain>/index.ts` must act solely as an assembler of sub-routers.
-- **Dependency Injection:** Access core services via `ServerContext` (`createServerContext()`) and port interfaces (`ISessionManager`, `IMcpRegistry`, `IDelegationRegistry`, `IMemoryRegistry`, `IUiApprovalRegistry`) rather than coupling to global singletons directly.
-- **Typed Contracts First:** Define shared data models, API payloads, and WebSocket events in `packages/shared` (`ws-messages.ts`, `schemas.ts`) with Zod schemas. Do not invent inline untyped payloads.
-- **Tool Registry Standard:** Register and query runtime tools exclusively through `ToolRegistry` and `BaseTool` adapters to prevent tool map state drift.
-- **Strict Verification:** Always run `pnpm build` or package typechecks before declaring any feature or refactor completed.
+- **Single Responsibility & Sub-modules:** Evitar clases o archivos > 300 líneas, clases > 200 líneas.
+- **Modular Routing (Sub-router Pattern):** Controladores Hono descompuestos en submódulos (`routes/<domain>/index.ts`).
+- **Dependency Injection:** Acceso a servicios centrales vía `AppContext` (`createAppContext()`) y contratos de puertos (`@spaces/core`).
+- **Typed Contracts First:** Definir modelos compartidos, cargas útiles de API y eventos de WebSocket en `@spaces/core` y `packages/shared`.
+- **Strict Verification:** Ejecutar siempre `pnpm typecheck` y `pnpm build` antes de dar por terminada cualquier tarea.
 
 ## Code Conventions
 
-- TypeScript strict mode, no `any` types
-- Tailwind CSS v4 only, define custom values in `index.css` via `@theme`
-- No comments in production code
-- Absolute imports: `@/` alias for `client/src/`
-- Functional components with React hooks
+- TypeScript strict mode, cero tipos `any`
+- Tailwind CSS v4 únicamente, definir valores en `index.css` via `@theme`
+- No comentarios en código de producción
+- Imports absolutos: alias `@/` para `client/src/`
+- Componentes funcionales con hooks de React
 
 ## Stack
 
-- **Backend:** Bun + Hono + Zod
+- **Backend:** Bun + Hono + Zod + `@spaces/engine`
 - **Frontend:** React 19 + Vite + TypeScript + Tailwind CSS v4
-- **Shared:** TypeScript library with Zod schemas for shared models and contracts
+- **Packages:**
+  - `@spaces/core`: Contratos puramente tipados, interfaces (ports) y Zod schemas.
+  - `@spaces/engine`: Runtime del agente, PromptBuilder, HookRunner, EventBus y PermissionEngine.
+  - `@spaces/tools`: Herramientas nativas (`ITool`) con validación Zod y conectores MCP/custom.
+  - `@spaces/providers`: Clientes de modelos LLM compatibles con OpenAI SSE streaming.
+  - `@spaces/storage`: Adaptadores de almacenamiento (`FilesystemSessionStore`, `MemorySessionStore`).
+  - `@spaces/sandbox`: Aislamiento de ejecución en entorno local/restringido (`LocalSandbox`).
+  - `shared`: Tipos compartidos y esquemas auxiliares.
