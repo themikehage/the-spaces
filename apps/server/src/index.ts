@@ -32,12 +32,14 @@ import { previewRouter } from "./routes/preview";
 import { promptsRouter } from "./routes/prompts";
 import { providersRouter } from "./routes/providers";
 import { schedulesRouter } from "./routes/schedules/index";
-import { sessionsRouter } from "./routes/sessions/index";
+import { createSessionsRouter } from "./routes/sessions/index";
+import { registerEngineWsRoute } from "./routes/sessions/session-ws";
 import { settingsRouter } from "./routes/settings";
 import { skillsRouter } from "./routes/skills";
 import { teamsRouter } from "./routes/teams";
 import { teamStore } from "./teams/team-store";
 import { createWsContext } from "./ws/factory";
+import { createAppContext } from "./context";
 
 import { purgeExpiredSessions } from "./auth/ephemeral-tool-session";
 import { authRateLimiter, generalRateLimiter } from "./core/middleware/rate-limiter";
@@ -73,7 +75,10 @@ purgeExpiredSessions();
 const { upgradeWebSocket, websocket } = createBunWebSocket();
 
 const serverContext = createServerContext();
+const appContext = await createAppContext();
 const app = new Hono();
+
+registerEngineWsRoute(app, appContext, upgradeWebSocket);
 
 app.use("/*", requestIdMiddleware());
 app.use("/*", securityHeadersMiddleware());
@@ -113,7 +118,7 @@ app.route("/api/prompts", promptsRouter);
 app.route("/api/config", configRouter);
 app.route("/api/auth", authRouter);
 app.on(["GET", "POST"], "/api/auth/**", (c) => auth.handler(c.req.raw));
-app.route("/api/sessions", sessionsRouter);
+app.route("/api/sessions", createSessionsRouter(appContext));
 app.route("/api/models", modelsRouter);
 app.route("/api/providers", providersRouter);
 app.route("/api/skills", skillsRouter);

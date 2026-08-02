@@ -1,12 +1,21 @@
 // SPDX-License-Identifier: MIT
 import { Hono } from "hono";
+import type { AppContext } from "../../context";
 import { sessionsRouter as legacySessionsRouter } from "../sessions";
-import { sessionCrudRouter } from "./session-crud";
+import { createEngineSessionCrudRouter } from "./engine-session-crud";
+import { sessionCrudRouter as defaultSessionCrudRouter } from "./session-crud";
 
-export const sessionsRouter = new Hono();
+export function createSessionsRouter(appContext?: AppContext): Hono {
+  const router = new Hono();
 
-// Mount modular sub-routers
-// sessionCrudRouter owns collection CRUD routes: GET /, GET /statuses, POST /, DELETE /:id
-sessionsRouter.route("/", sessionCrudRouter);
-// legacySessionsRouter owns session sub-resources: prompt, SSE, analytics, tools, delegations
-sessionsRouter.route("/", legacySessionsRouter);
+  if (appContext) {
+    router.route("/v2", createEngineSessionCrudRouter(appContext));
+  }
+
+  router.route("/", defaultSessionCrudRouter);
+  router.route("/", legacySessionsRouter);
+
+  return router;
+}
+
+export const sessionsRouter = createSessionsRouter();

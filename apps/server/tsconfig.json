@@ -8,7 +8,13 @@
     "noEmit": true,
     "allowImportingTsExtensions": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@spaces/core": ["../../packages/core/src/index.ts"],
+      "@spaces/engine": ["../../packages/engine/src/index.ts"],
+      "@spaces/providers": ["../../packages/providers/src/index.ts"],
+      "@spaces/sandbox": ["../../packages/sandbox/src/index.ts"],
+      "@spaces/storage": ["../../packages/storage/src/index.ts"],
+      "@spaces/tools": ["../../packages/tools/src/index.ts"]
     }
   },
   "include": ["src"],

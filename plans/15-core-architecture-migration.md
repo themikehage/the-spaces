@@ -109,55 +109,54 @@ the-spaces/apps/client  ─────────────►  refactored/a
 
 ---
 
-### Hito 1: Core — Interfaces Puras
+### Hito 1: Core — Interfaces Puras — ✅ [COMPLETADO](completed/15-hito-1-core-interfaces.md)
 
 **Objetivo**: `@spaces/core` completo con todos los ports, tipos y schemas. Cero implementaciones. Cero dependencias externas salvo Zod.
 
-| Tarea | Archivo destino |
-|---|---|
-| Tipos base: `AgentMessage`, `LLMMessage`, `ToolCall`, `ToolResult`, `MessageDelta`, `ContextUsage` | `packages/core/src/types.ts` |
-| Contextos: `AgentContext`, `ToolContext`, `PromptContext`, `RuleContext` | `packages/core/src/types.ts` |
-| `IEventBus<T>` + `AgentEvent` union | `packages/core/src/ports/event-bus.port.ts` + `events.ts` |
-| `IModelProvider` (streamComplete) | `packages/core/src/ports/model.port.ts` |
-| `ITool`, `IToolRegistry`, `IToolExecutor`, `LLMToolDefinition` | `packages/core/src/ports/tool.port.ts` |
-| `PromptSection`, `IPromptBuilder` | `packages/core/src/ports/prompt.port.ts` |
-| `Hook`, `IHookRunner` | `packages/core/src/ports/hook.port.ts` |
-| `Rule`, `IPermissionEngine` | `packages/core/src/ports/permission.port.ts` |
-| `ISessionStore` (create, appendMessage, getMessages, listSessions, delete) | `packages/core/src/ports/session.port.ts` |
-| `ISandbox`, `SandboxOptions`, `SandboxResult` | `packages/core/src/ports/sandbox.port.ts` |
-| `IWorkspaceProvider` | `packages/core/src/ports/workspace.port.ts` |
-| `IMemoryProvider` (stub para futuro) | `packages/core/src/ports/memory.port.ts` |
-| `IAgentRuntime` + `AgentRuntimeDependencies` | `packages/core/src/ports/agent.port.ts` |
-| Schemas Zod: `SessionSchema`, `MessageSchema`, `ToolCallSchema` | `packages/core/src/schemas/` |
-| Barrel export | `packages/core/src/index.ts` |
+| Tarea | Archivo destino | Estado |
+|---|---|---|
+| Tipos base: `AgentMessage`, `LLMMessage`, `ToolCall`, `ToolResult`, `MessageDelta`, `ContextUsage` | `packages/core/src/types.ts` | ✅ |
+| Contextos: `AgentContext`, `ToolContext`, `PromptContext`, `RuleContext` | `packages/core/src/types.ts` | ✅ |
+| `IEventBus<T>` + `AgentEvent` union | `packages/core/src/ports/event-bus.port.ts` + `events.ts` | ✅ |
+| `IModelProvider` (streamComplete) | `packages/core/src/ports/model.port.ts` | ✅ |
+| `ITool`, `IToolRegistry`, `IToolExecutor`, `LLMToolDefinition` | `packages/core/src/ports/tool.port.ts` | ✅ |
+| `PromptSection`, `IPromptBuilder` | `packages/core/src/ports/prompt.port.ts` | ✅ |
+| `Hook`, `IHookRunner` | `packages/core/src/ports/hook.port.ts` | ✅ |
+| `Rule`, `IPermissionEngine` | `packages/core/src/ports/permission.port.ts` | ✅ |
+| `ISessionStore` (create, appendMessage, getMessages, listSessions, delete) | `packages/core/src/ports/session.port.ts` | ✅ |
+| `ISandbox`, `SandboxOptions`, `SandboxResult` | `packages/core/src/ports/sandbox.port.ts` | ✅ |
+| `IWorkspaceProvider` | `packages/core/src/ports/workspace.port.ts` | ✅ |
+| `IMemoryProvider` (stub para futuro) | `packages/core/src/ports/memory.port.ts` | ✅ |
+| `IAgentRuntime` + `AgentRuntimeDependencies` | `packages/core/src/ports/agent.port.ts` | ✅ |
+| Schemas Zod: `SessionSchema`, `MessageSchema`, `ToolCallSchema` | `packages/core/src/schemas/` | ✅ |
+| Barrel export | `packages/core/src/index.ts` | ✅ |
 
 **Criterio de done**: `pnpm --filter @spaces/core typecheck` → 0 errores.
 
 ---
 
-### Hito 2: Engine — AgentRuntime
+### Hito 2: Engine — AgentRuntime — ✅ [COMPLETADO](completed/15-hito-2-engine.md)
 
 **Objetivo**: implementación del runtime desacoplado del vendor. El agent loop extraído de `ai/vendor/`.
 
-| Tarea | Archivo destino | Fuente |
+| Tarea | Archivo destino | Estado |
 |---|---|---|
-| `EventBus` | `packages/engine/src/event-bus.ts` | `core/event-bus.ts` (adaptar) |
-| `PromptBuilder` — pipeline de secciones | `packages/engine/src/prompt-builder.ts` | `ai/prompt-builder.ts` (adaptar) |
-| `HookRunner` — middleware chain | `packages/engine/src/hook-runner.ts` | nuevo |
-| `PermissionEngine` — evaluador de rules | `packages/engine/src/permission-engine.ts` | nuevo |
-| `ToolExecutor` — registry + execute + hooks | `packages/engine/src/tool-executor.ts` | `core/tool-registry.ts` (adaptar) |
-| `AgentRuntime` — compone todo, implementa `IAgentRuntime` | `packages/engine/src/agent-runtime.ts` | `ai/agent-session.ts` (reescribir) |
-| `runAgentLoop` — extraído del vendor | `packages/engine/src/agent-loop.ts` | `ai/vendor/agent/src/agent-loop.ts` |
-| `createAgent()` factory | `packages/engine/src/factories/default.agent.ts` | nuevo |
-| Barrel export | `packages/engine/src/index.ts` | — |
-
-> **Punto crítico**: `AgentSession` tiene ~28 KB. El agent-loop del vendor debe desacoplarse de sus tipos internos y usar las interfaces del core. Es la tarea de mayor riesgo del proyecto.
+| `EventBus` | `packages/engine/src/event-bus.ts` | ✅ |
+| `PromptBuilder` — pipeline de secciones | `packages/engine/src/prompt-builder.ts` | ✅ |
+| `HookRunner` — middleware chain | `packages/engine/src/hook-runner.ts` | ✅ |
+| `PermissionEngine` — evaluador de rules | `packages/engine/src/permission-engine.ts` | ✅ |
+| `ToolExecutor` — registry + execute + hooks | `packages/engine/src/tool-executor.ts` | ✅ |
+| `AgentRuntime` — compone todo, implementa `IAgentRuntime` | `packages/engine/src/agent-runtime.ts` | ✅ |
+| `runAgentLoop` — extraído del vendor | `packages/engine/src/agent-loop.ts` | ✅ |
+| `createAgent()` factory | `packages/engine/src/factories/default.agent.ts` | ✅ |
+| Barrel export | `packages/engine/src/index.ts` | ✅ |
 
 **Criterio de done**: `pnpm --filter @spaces/engine typecheck` → 0 errores.
 
+
 ---
 
-### Hito 3: Providers + Storage + Sandbox
+### Hito 3: Providers + Storage + Sandbox — ✅ [COMPLETADO](completed/15-hito-3-providers-storage-sandbox.md)
 
 **Objetivo**: implementaciones concretas de las interfaces del core.
 
@@ -190,7 +189,7 @@ the-spaces/apps/client  ─────────────►  refactored/a
 
 ---
 
-### Hito 4: Tools — Implementaciones ITool
+### Hito 4: Tools — Implementaciones ITool — ✅ [COMPLETADO](completed/15-hito-4-tools.md)
 
 **Objetivo**: tools migradas al contrato `ITool` con Zod schema obligatorio. Cada tool < 100 líneas.
 
@@ -211,7 +210,7 @@ the-spaces/apps/client  ─────────────►  refactored/a
 
 ---
 
-### Hito 5: Server — Hono Thin
+### Hito 5: Server — Hono Thin — ✅ [COMPLETADO](completed/15-hito-5-server-thin.md)
 
 **Objetivo**: reemplazar el server monolítico por uno que delega al engine. Las rutas avanzadas conviven durante la transición.
 
@@ -249,7 +248,7 @@ apps/server/src/
 
 ---
 
-### Hito 6: Client — API Layer + Hooks Base
+### Hito 6: Client — API Layer + Hooks Base — ✅ [COMPLETADO](completed/15-hito-6-client-api-hooks.md)
 
 **Objetivo**: cliente con capa API tipada y hooks base. Sin romper la UI existente.
 

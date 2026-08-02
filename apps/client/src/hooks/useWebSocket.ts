@@ -1,54 +1,68 @@
 // SPDX-License-Identifier: MIT
-import { wsClient } from "@/lib/ws-client";
-import { useCallback, useEffect, useState } from "react";
-import { isSessionScopedType, type WsClientMessage, type WsServerMessageType } from "shared";
-import { useConnectionAwareEffect } from "./useConnectionAware";
+import { WsClient, type WsInMessage, type WsOutMessage } from "@/api/ws";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-type EventHandler = (data: unknown) => void;
+type EventHandler = (data: any) => void;
 
-interface WebSocketState {
+interface UseWebSocketResult {
   connected: boolean;
-  send: (data: Record<string, unknown> | WsClientMessage) => void;
-  subscribe: (type: WsServerMessageType | string, handler: EventHandler) => () => void;
+  send: (msg: any) => void;
+  subscribe: (
+    typeOrHandler: string | ((event: WsInMessage) => void),
+    handler?: EventHandler,
+  ) => () => void;
 }
 
-export function useWebSocket(sessionId: string | null): WebSocketState {
-  const [connected, setConnected] = useState<boolean>(wsClient.getState() === "connected");
+export function useWebSocket(sessionId: string | null = null): UseWebSocketResult {
+  const clientRef = useRef<WsClient | null>(null);
+  const [connected, setConnected] = useState(false);
+
+  if (!clientRef.current) {
+    clientRef.current = new WsClient(sessionId);
+  }
 
   useEffect(() => {
-    const unsub = wsClient.onStateChange((state) => {
+    const client = clientRef.current;
+    if (!client) return;
+
+    client.setSessionId(sessionId);
+
+    const unsubState = client.onStateChange((state) => {
       setConnected(state === "connected");
     });
-    return unsub;
-  }, []);
 
-  useConnectionAwareEffect(() => {
-    if (!sessionId) return;
-    wsClient.send({ type: "session_subscribe", sessionId });
+    if (sessionId) {
+      client.connect();
+    }
+
     return () => {
-      wsClient.send({ type: "session_unsubscribe", sessionId });
+      unsubState();
     };
   }, [sessionId]);
 
-  const send = useCallback(
-    (data: Record<string, unknown> | WsClientMessage) => {
-      const payload = { ...(sessionId ? { sessionId } : {}), ...data } as WsClientMessage;
-      wsClient.send(payload);
-    },
-    [sessionId],
-  );
+  const send = useCallback((msg: any) => {
+    clientRef.current?.send(msg as WsOutMessage);
+  }, []);
 
   const subscribe = useCallback(
-    (type: WsServerMessageType | string, handler: EventHandler) => {
-      return wsClient.subscribe(type as WsServerMessageType, (data: any) => {
-        if (isSessionScopedType(type)) {
-          const sid = data?.sessionId;
-          if (sid && sessionId && sid !== sessionId) return;
-        }
-        handler(data);
-      });
+    (
+      typeOrHandler: string | ((event: WsInMessage) => void),
+      handler?: EventHandler,
+    ): (() => void) => {
+      if (!clientRef.current) return () => {};
+      if (typeof typeOrHandler === "function") {
+        return clientRef.current.subscribe(typeOrHandler);
+      }
+      if (typeof typeOrHandler === "string" && handler) {
+        return clientRef.current.subscribe((event: WsInMessage) => {
+          if (typeOrHandler === "*" || (event && (event as any).type === typeOrHandler)) {
+            handler(event);
+          }
+        });
+      }
+      return () => {};
     },
-    [sessionId],
+    [],
   );
 
   return { connected, send, subscribe };

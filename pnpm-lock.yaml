@@ -154,6 +154,24 @@ importers:
       '@mozilla/readability':
         specifier: ^0.6.0
         version: 0.6.0
+      '@spaces/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@spaces/engine':
+        specifier: workspace:*
+        version: link:../../packages/engine
+      '@spaces/providers':
+        specifier: workspace:*
+        version: link:../../packages/providers
+      '@spaces/sandbox':
+        specifier: workspace:*
+        version: link:../../packages/sandbox
+      '@spaces/storage':
+        specifier: workspace:*
+        version: link:../../packages/storage
+      '@spaces/tools':
+        specifier: workspace:*
+        version: link:../../packages/tools
       '@types/turndown':
         specifier: ^5.0.6
         version: 5.0.6
@@ -225,6 +243,67 @@ importers:
         specifier: ^5
         version: 5.9.3
 
+  packages/core:
+    dependencies:
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.20.1
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  packages/engine:
+    dependencies:
+      '@spaces/core':
+        specifier: workspace:*
+        version: link:../core
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.20.1
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  packages/providers:
+    dependencies:
+      '@spaces/core':
+        specifier: workspace:*
+        version: link:../core
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.20.1
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  packages/sandbox:
+    dependencies:
+      '@spaces/core':
+        specifier: workspace:*
+        version: link:../core
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.20.1
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
   packages/shared:
     dependencies:
       zod:
@@ -243,6 +322,47 @@ importers:
       shared:
         specifier: workspace:*
         version: link:../shared
+
+  packages/storage:
+    dependencies:
+      '@spaces/core':
+        specifier: workspace:*
+        version: link:../core
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.20.1
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  packages/tools:
+    dependencies:
+      '@spaces/core':
+        specifier: workspace:*
+        version: link:../core
+      diff:
+        specifier: ^9.0.0
+        version: 9.0.0
+      ignore:
+        specifier: ^7.0.5
+        version: 7.0.6
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
+    devDependencies:
+      '@types/diff':
+        specifier: ^8.0.0
+        version: 8.0.0
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.20.1
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
 
 packages:
 
