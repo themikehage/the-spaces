@@ -85,12 +85,12 @@ export interface IPromptBuilder {
 
 ## Checklist
 
-- [ ] Crear `session-store.port.ts`
-- [ ] Crear `prompt-builder.port.ts`
-- [ ] `JsonlSessionStore implements ISessionStore` — typecheck pasa
-- [ ] `PromptBuilder implements IPromptBuilder` — typecheck pasa
-- [ ] `AgentSession` usa los tipos de interfaz en lugar de los concretos
-- [ ] `pnpm --filter server run typecheck` sin errores
+- [x] Crear `session-store.port.ts`
+- [x] Crear `prompt-builder.port.ts`
+- [x] `JsonlSessionStore implements ISessionStore` — typecheck pasa
+- [x] `PromptBuilder implements IPromptBuilder` — typecheck pasa
+- [x] `AgentSession` usa los tipos de interfaz en lugar de los concretos
+- [x] `pnpm --filter server run typecheck` sin errores
 
 ## Verificación
 

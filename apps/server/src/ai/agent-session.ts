@@ -3,6 +3,7 @@ import { TypedEventEmitter } from "../core/event-bus";
 import { NavigationController } from "../core/navigation-controller";
 import type { IAgentRuntime } from "../core/ports/agent-runtime.port";
 import type { IEventBus } from "../core/ports/event-bus.port";
+import type { IPromptBuilder } from "../core/ports/prompt-builder.port";
 import { ToolRegistry } from "../core/tool-registry";
 import type { AuthStorage } from "./auth-storage.ts";
 import { CompactionManager } from "./compaction-manager";
@@ -93,7 +94,7 @@ export class AgentSession implements IAgentRuntime {
   private agent!: Agent;
   private eventBus: IEventBus = new TypedEventEmitter();
   private toolRegistry = new ToolRegistry();
-  private promptBuilder!: PromptBuilder;
+  private promptBuilder!: IPromptBuilder;
   private compactionManager!: CompactionManager;
   private navigationController!: NavigationController;
   private activeSkillPrompts: string[] = [];
