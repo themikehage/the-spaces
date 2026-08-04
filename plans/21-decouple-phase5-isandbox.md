@@ -95,12 +95,12 @@ export interface ServerContext {
 
 ## Checklist
 
-- [ ] Crear `sandbox.port.ts`
-- [ ] Crear `local.sandbox.ts` con `LocalSandbox implements ISandbox`
-- [ ] `bash-tool.ts` recibe `ISandbox` y delega ejecución
-- [ ] `ServerContext` incluye `sandbox: ISandbox`
-- [ ] `createServerContext()` instancia `LocalSandbox` por defecto
-- [ ] `pnpm --filter server run typecheck` sin errores
+- [x] Crear `sandbox.port.ts`
+- [x] Crear `local.sandbox.ts` con `LocalSandbox implements ISandbox`
+- [x] `bash-tool.ts` recibe `ISandbox` y delega ejecución
+- [x] `ServerContext` incluye `sandbox: ISandbox`
+- [x] `createServerContext()` instancia `LocalSandbox` por defecto
+- [x] `pnpm --filter server run typecheck` sin errores
 
 ## Verificación
 

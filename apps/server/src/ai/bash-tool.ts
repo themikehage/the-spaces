@@ -4,6 +4,9 @@ import { existsSync } from "node:fs";
 import { logBashExecution } from "../core/middleware/bash-audit-logger";
 import { isRestrictedPath } from "./restricted-paths";
 
+import type { ISandbox } from "../core/ports/sandbox.port";
+import { LocalSandbox } from "../core/sandbox/local.sandbox";
+
 const MAX_OUTPUT_BYTES = 50 * 1024; // 50 KB output limit
 const DEFAULT_TIMEOUT_SECONDS = 30;
 
@@ -19,6 +22,7 @@ export type BashSpawnHook = (context: BashSpawnContext) => BashSpawnContext;
 export interface BashToolOptions {
   spawnHook?: BashSpawnHook;
   outputFilter?: (output: string) => string;
+  sandbox?: ISandbox;
 }
 
 export interface BashExecuteParams {

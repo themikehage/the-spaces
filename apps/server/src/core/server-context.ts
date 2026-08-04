@@ -9,7 +9,9 @@ import {
   type ISessionManager,
   type IUiApprovalRegistry,
 } from "./ports/core-services.port";
+import type { ISandbox } from "./ports/sandbox.port";
 import { type SpacesHost } from "./ports/spaces-host.port";
+import { LocalSandbox } from "./sandbox/local.sandbox";
 import { sessionManager as defaultSessionManager } from "./session-manager";
 import { serverSpacesHost as defaultServerSpacesHost } from "./spaces-host";
 import { uiApprovalRegistry as defaultUiApprovalRegistry } from "./ui-approval-registry";
@@ -21,6 +23,7 @@ export interface ServerContext {
   memoryRegistry: IMemoryRegistry;
   uiApprovalRegistry: IUiApprovalRegistry;
   spacesHost: SpacesHost;
+  sandbox: ISandbox;
 }
 
 export interface ServerContextOptions {
@@ -30,6 +33,7 @@ export interface ServerContextOptions {
   memoryRegistry?: IMemoryRegistry;
   uiApprovalRegistry?: IUiApprovalRegistry;
   spacesHost?: SpacesHost;
+  sandbox?: ISandbox;
 }
 
 /**
@@ -44,5 +48,6 @@ export function createServerContext(options?: ServerContextOptions): ServerConte
     memoryRegistry: options?.memoryRegistry ?? defaultMemoryRegistry,
     uiApprovalRegistry: options?.uiApprovalRegistry ?? defaultUiApprovalRegistry,
     spacesHost: options?.spacesHost ?? defaultServerSpacesHost,
+    sandbox: options?.sandbox ?? new LocalSandbox(),
   };
 }
