@@ -143,18 +143,20 @@ export const TimelineSchema = z.object({
       date: z.string().optional(),
       title: z.string(),
       description: z.string().optional(),
-      status: z.enum([
-        "success",
-        "warning",
-        "error",
-        "info",
-        "neutral",
-        "done",
-        "active",
-        "pending",
-        "in_progress",
-        "failed",
-      ]).optional(),
+      status: z
+        .enum([
+          "success",
+          "warning",
+          "error",
+          "info",
+          "neutral",
+          "done",
+          "active",
+          "pending",
+          "in_progress",
+          "failed",
+        ])
+        .optional(),
     }),
   ),
   title: z.string().optional(),
@@ -266,7 +268,6 @@ export const JSONSchemaLiteral = z.object({
 
 export { ToolScopeTargetSchema, type ToolScopeTarget };
 
-
 export const CustomToolDefinitionSchema = z.object({
   name: z
     .string()
@@ -281,7 +282,10 @@ export const CustomToolDefinitionSchema = z.object({
     "UI presentation preferences for how the tool appears in chat",
   ),
   enabled: z.boolean().default(true),
-  dependencies: z.array(z.string()).optional().describe("External packages or binary dependencies required by this tool"),
+  dependencies: z
+    .array(z.string())
+    .optional()
+    .describe("External packages or binary dependencies required by this tool"),
   scope: ToolScopeTargetSchema.optional(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),

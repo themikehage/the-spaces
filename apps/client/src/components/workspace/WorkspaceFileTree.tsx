@@ -123,7 +123,10 @@ function TreeNode({
               onClick={handleToggle}
               className="p-0.5 hover:bg-surfaceHover rounded transition-colors text-muted-foreground hover:text-foreground flex-shrink-0 cursor-pointer"
             >
-              <ChevronRight size={12} className={`transition-transform duration-150 ${isExpanded ? "rotate-90" : ""}`} />
+              <ChevronRight
+                size={12}
+                className={`transition-transform duration-150 ${isExpanded ? "rotate-90" : ""}`}
+              />
             </button>
           ) : (
             <span className="w-[17px] flex-shrink-0" />

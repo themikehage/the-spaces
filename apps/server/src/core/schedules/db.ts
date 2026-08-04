@@ -77,11 +77,15 @@ export function initSchedulesTables(db: Database = getSchedulesDb()): void {
 
   try {
     db.exec("ALTER TABLE schedule_jobs ADD COLUMN preserve_session INTEGER NOT NULL DEFAULT 1;");
-  } catch { /* noop */ }
+  } catch {
+    /* noop */
+  }
 
   try {
     db.exec("DELETE FROM schedule_jobs WHERE username LIKE 'test_user_%';");
-  } catch { /* noop */ }
+  } catch {
+    /* noop */
+  }
 
   try {
     db.exec(`
@@ -93,7 +97,9 @@ export function initSchedulesTables(db: Database = getSchedulesDb()): void {
     db.exec(
       "CREATE UNIQUE INDEX IF NOT EXISTS idx_schedule_jobs_username_name ON schedule_jobs(username, name);",
     );
-  } catch { /* noop - index may already exist */ }
+  } catch {
+    /* noop - index may already exist */
+  }
 }
 
 function mapRowToJob(row: any): ScheduleJob {

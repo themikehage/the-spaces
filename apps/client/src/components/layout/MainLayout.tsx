@@ -17,7 +17,17 @@ import { getSessionPath } from "@/lib/session-utils";
 import { wsClient, type ConnectionState } from "@/lib/ws-client";
 import type { RoutePage } from "@/router/useRoutePage";
 import { AnimatePresence } from "framer-motion";
-import { Clock, Download, Folder, Globe, List, MessageSquare, Plus, Settings, Users } from "lucide-react";
+import {
+  Clock,
+  Download,
+  Folder,
+  Globe,
+  List,
+  MessageSquare,
+  Plus,
+  Settings,
+  Users,
+} from "lucide-react";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
@@ -446,9 +456,7 @@ export function MainLayout({
         id: "chat",
         label: l.tabChat,
         path: sessionId ? `${basePath}/session/${sessionId}` : basePath ? `${basePath}/chat` : "/",
-        icon: (
-            <MessageSquare size={14} />
-        ),
+        icon: <MessageSquare size={14} />,
       },
     ];
 
@@ -462,17 +470,13 @@ export function MainLayout({
             : basePath
               ? `${basePath}/delegations`
               : "/delegations",
-          icon: (
-            <Users size={14} />
-          ),
+          icon: <Users size={14} />,
         },
         {
           id: "workspace",
           label: l.tabFiles,
           path: basePath ? `${basePath}/workspace` : "/workspace",
-          icon: (
-            <Folder size={14} />
-          ),
+          icon: <Folder size={14} />,
         },
         {
           id: "timeline",
@@ -482,9 +486,7 @@ export function MainLayout({
             : basePath
               ? `${basePath}/timeline`
               : "/timeline",
-          icon: (
-            <Clock size={14} />
-          ),
+          icon: <Clock size={14} />,
         },
       );
     }
@@ -494,9 +496,7 @@ export function MainLayout({
         id: "preview",
         label: l.tabPreview,
         path: basePath ? `${basePath}/preview` : "/preview",
-        icon: (
-            <Globe size={14} />
-        ),
+        icon: <Globe size={14} />,
       });
     }
 
@@ -505,9 +505,7 @@ export function MainLayout({
         id: "org",
         label: l.tabOrgChart,
         path: `${basePath}/org`,
-        icon: (
-            <List size={14} />
-        ),
+        icon: <List size={14} />,
       });
     }
 

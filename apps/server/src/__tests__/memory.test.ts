@@ -11,7 +11,9 @@ describe("LocalMemoryProvider with Session Scoping", () => {
     if (existsSync(TEST_DB)) {
       try {
         unlinkSync(TEST_DB);
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
     }
   });
 

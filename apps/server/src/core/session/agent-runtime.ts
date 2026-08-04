@@ -145,11 +145,7 @@ export async function createAgentRuntime(
     sessionMetadataStore.setAutonomyLevel(username, sessionId, entityConfig.autonomyLevel);
   }
   if (entityConfig.executionMode && (!metadata || !metadata.executionMode)) {
-    sessionMetadataStore.setExecutionMode(
-      username,
-      sessionId,
-      entityConfig.executionMode as any,
-    );
+    sessionMetadataStore.setExecutionMode(username, sessionId, entityConfig.executionMode as any);
   }
   const skillPaths = getResolvedSkillPaths(workspaceDir, username);
   const metadataSkills: string[] =
@@ -305,7 +301,9 @@ export async function createAgentRuntime(
         const meta = JSON.parse(readFileSync(metadataPath, "utf-8"));
         if (!existingParentId) existingParentId = meta.parentSessionId;
         if (!existingSubagentType) existingSubagentType = meta.subagentType;
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
     }
   }
 

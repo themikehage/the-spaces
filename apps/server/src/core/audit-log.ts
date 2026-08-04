@@ -79,7 +79,9 @@ export function getToolCallLogs(username: string, limit = 100): ToolCallAuditEve
     for (const line of lines.slice(-limit)) {
       try {
         logs.push(JSON.parse(line));
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
     }
     return logs.reverse();
   } catch (err) {

@@ -82,7 +82,9 @@ export function SessionConsoleView() {
             return groupConsecutiveDeltas(next);
           });
         }
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
     };
 
     ws.onclose = () => {

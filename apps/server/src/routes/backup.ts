@@ -38,7 +38,10 @@ async function addFilesRecursively(
 
         // Only traverse directories relevant to configs, skills, agents, teams
         const shouldTraverse =
-          (isWorkspaceParent && (parts.length === 1 || relPath.startsWith("workspace/.agents") || relPath.startsWith("workspace/.spaces"))) ||
+          (isWorkspaceParent &&
+            (parts.length === 1 ||
+              relPath.startsWith("workspace/.agents") ||
+              relPath.startsWith("workspace/.spaces"))) ||
           (isAgentsParent && parts.length <= 2) ||
           (isTeamsParent && parts.length <= 2);
 
@@ -61,7 +64,9 @@ async function addFilesRecursively(
             "mcp-servers.json",
             "mcp-config.json",
           ].includes(parts[0]);
-        const isCustomSkill = relPath.startsWith("workspace/.agents/skills/") || relPath.startsWith("workspace/.spaces/skills/");
+        const isCustomSkill =
+          relPath.startsWith("workspace/.agents/skills/") ||
+          relPath.startsWith("workspace/.spaces/skills/");
         const isAgentDef =
           parts.length === 3 && parts[0] === "agents" && parts[2] === "definition.json";
         const isTeamDef = parts.length === 3 && parts[0] === "teams" && parts[2] === "team.json";

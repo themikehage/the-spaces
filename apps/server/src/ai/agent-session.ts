@@ -1,6 +1,8 @@
 import type { BaseTool } from "shared";
 import { TypedEventEmitter } from "../core/event-bus";
 import { NavigationController } from "../core/navigation-controller";
+import type { IAgentRuntime } from "../core/ports/agent-runtime.port";
+import type { IEventBus } from "../core/ports/event-bus.port";
 import { ToolRegistry } from "../core/tool-registry";
 import type { AuthStorage } from "./auth-storage.ts";
 import { CompactionManager } from "./compaction-manager";
@@ -65,8 +67,11 @@ export type AgentSessionEvent =
     }
   | { type: "agent_error"; error: string };
 
-export class AgentSession {
+export class AgentSession implements IAgentRuntime {
   cwd: string;
+  get sessionId(): string {
+    return this.sessionStore?.getSessionId() || "";
+  }
   sessionStore: JsonlSessionStore;
   get sessionManager(): JsonlSessionStore {
     return this.sessionStore;
@@ -86,7 +91,7 @@ export class AgentSession {
   model: AvailableModel | null = null;
 
   private agent!: Agent;
-  private eventBus = new TypedEventEmitter();
+  private eventBus: IEventBus = new TypedEventEmitter();
   private toolRegistry = new ToolRegistry();
   private promptBuilder!: PromptBuilder;
   private compactionManager!: CompactionManager;
@@ -531,7 +536,15 @@ export class AgentSession {
   }
 
   subscribe(listener: (evt: any) => void): () => void {
-    return this.eventBus.on(listener);
+    return this.eventBus.onAny(listener);
+  }
+
+  on(handler: (event: AgentSessionEvent) => void): () => void {
+    return this.eventBus.onAny(handler);
+  }
+
+  getMessages(): any[] {
+    return this.messages;
   }
 
   private emit(event: any) {

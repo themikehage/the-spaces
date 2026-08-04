@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/Button";
 import { useLiterals } from "@/lib";
 import { apiFetch } from "@/lib/api";
 import { DEFAULT_AVATAR_PREFIX, isDefaultAvatar } from "@/lib/defaultAvatars";
-import { X } from "lucide-react";
 import { motion } from "framer-motion";
+import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { literals as u } from "./GlobalAgentSettingsModal.literals";
 
@@ -232,7 +232,11 @@ export function GlobalAgentSettingsModal({ onClose, onSaveSuccess }: Props) {
               </div>
             </form>
           ) : (
-            <SystemPromptViewer entityType="global" title="Global System Prompt Inspector" embedded />
+            <SystemPromptViewer
+              entityType="global"
+              title="Global System Prompt Inspector"
+              embedded
+            />
           )}
         </div>
       </motion.div>

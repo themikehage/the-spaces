@@ -2,8 +2,8 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/api";
 import { resolveFileUrl } from "@/lib/file-urls";
-import { useCallback, useEffect, useRef, useState } from "react";
 import { Download, ExternalLink, Image, Minus, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface ImageItem {
   url: string;

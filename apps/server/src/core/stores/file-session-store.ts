@@ -79,10 +79,13 @@ export class FileSessionStore implements ISessionStore {
             try {
               const metaContent = await readFile(metadataPath, "utf-8");
               metadata = JSON.parse(metaContent);
-            } catch { /* noop */ }
+            } catch {
+              /* noop */
+            }
           }
 
-          const messageCount = typeof metadata.messageCount === "number" ? metadata.messageCount : 0;
+          const messageCount =
+            typeof metadata.messageCount === "number" ? metadata.messageCount : 0;
 
           return {
             id: sessionId,

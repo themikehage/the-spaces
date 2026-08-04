@@ -51,8 +51,6 @@ export function SkillsPopover({
   const activeSkillsList = useEntityHook ? entitySkills.activeSkills : externalActiveSkills || [];
   const isLoading = useEntityHook ? entitySkills.isLoading : externalLoading;
 
-
-
   const isGlobalSkill = (s: SkillInfo) =>
     s.scope === "user" || s.scope === "global" || s.scope === "temporary";
   const isLocalSkill = (s: SkillInfo) => !isGlobalSkill(s);

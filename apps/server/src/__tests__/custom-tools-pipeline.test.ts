@@ -1,10 +1,7 @@
 import { describe, expect, it } from "bun:test";
-import {
-  buildScopeWithDefaults,
-  resolveVariables,
-} from "../core/custom-tools/pipeline-engine";
-import { CustomToolDefinitionSchema } from "../core/custom-tools/schemas";
 import { createManageCustomToolsTool } from "../core/custom-tools/manage-custom-tools-tool";
+import { buildScopeWithDefaults, resolveVariables } from "../core/custom-tools/pipeline-engine";
+import { CustomToolDefinitionSchema } from "../core/custom-tools/schemas";
 
 describe("Custom Tools Pipeline Fixes", () => {
   describe("buildScopeWithDefaults", () => {

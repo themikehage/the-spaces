@@ -121,7 +121,11 @@ export function SystemPromptViewer({
             disabled={loading}
             className="text-xs px-2.5 py-1 bg-background hover:bg-card-hover border border-input/40 rounded-lg text-muted-foreground hover:text-foreground font-medium transition-colors cursor-pointer"
           >
-            {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+            {loading ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <RefreshCw className="w-3.5 h-3.5" />
+            )}
           </button>
         </div>
 
@@ -140,20 +144,22 @@ export function SystemPromptViewer({
                 <button
                   type="button"
                   onClick={() => setActiveTab("sections")}
-                  className={`px-3 py-1 text-xs rounded-lg font-semibold transition-all cursor-pointer ${activeTab === "sections"
+                  className={`px-3 py-1 text-xs rounded-lg font-semibold transition-all cursor-pointer ${
+                    activeTab === "sections"
                       ? "bg-primary text-primary-foreground shadow-sm"
                       : "bg-background/80 text-muted-foreground hover:text-foreground border border-input/20"
-                    }`}
+                  }`}
                 >
                   Secciones ({previewData.sections.length})
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveTab("full")}
-                  className={`px-3 py-1 text-xs rounded-lg font-semibold transition-all cursor-pointer ${activeTab === "full"
+                  className={`px-3 py-1 text-xs rounded-lg font-semibold transition-all cursor-pointer ${
+                    activeTab === "full"
                       ? "bg-primary text-primary-foreground shadow-sm"
                       : "bg-background/80 text-muted-foreground hover:text-foreground border border-input/20"
-                    }`}
+                  }`}
                 >
                   Prompt Completo
                 </button>
@@ -171,15 +177,11 @@ export function SystemPromptViewer({
             {activeTab === "sections" ? (
               <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-1">
                 {previewData.sections.map((sec, i) => (
-                  <div
-                    key={i}
-                    className="bg-bg rounded-xl p-3 border border-input/40 space-y-1.5"
-                  >
+                  <div key={i} className="bg-bg rounded-xl p-3 border border-input/40 space-y-1.5">
                     <div className="text-[11px] font-bold text-primary uppercase tracking-wider font-mono">
                       {sec.title}
                     </div>
                     <RichMarkdown content={sec.content} />
-                  
                   </div>
                 ))}
               </div>
@@ -234,20 +236,22 @@ export function SystemPromptViewer({
                   <button
                     type="button"
                     onClick={() => setActiveTab("sections")}
-                    className={`px-3 py-1 text-xs rounded-lg font-semibold transition-all cursor-pointer ${activeTab === "sections"
+                    className={`px-3 py-1 text-xs rounded-lg font-semibold transition-all cursor-pointer ${
+                      activeTab === "sections"
                         ? "bg-primary text-primary-foreground shadow-sm"
                         : "bg-background/80 text-muted-foreground hover:text-foreground border border-input/20"
-                      }`}
+                    }`}
                   >
                     Secciones ({previewData.sections.length})
                   </button>
                   <button
                     type="button"
                     onClick={() => setActiveTab("full")}
-                    className={`px-3 py-1 text-xs rounded-lg font-semibold transition-all cursor-pointer ${activeTab === "full"
+                    className={`px-3 py-1 text-xs rounded-lg font-semibold transition-all cursor-pointer ${
+                      activeTab === "full"
                         ? "bg-primary text-primary-foreground shadow-sm"
                         : "bg-background/80 text-muted-foreground hover:text-foreground border border-input/20"
-                      }`}
+                    }`}
                   >
                     Prompt Completo Concatenado
                   </button>

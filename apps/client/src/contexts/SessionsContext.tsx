@@ -81,7 +81,9 @@ export function SessionsProvider({ children }: { children: ReactNode }) {
       if (!res.ok) return;
       const data = await res.json();
       setStatuses((prev) => ({ ...data.statuses, ...prev }));
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
   }, []);
 
   useEffect(() => {

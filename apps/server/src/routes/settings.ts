@@ -177,7 +177,9 @@ settingsRouter.post("/avatar", async (c) => {
         unlinkSync(join(userDir, f));
       }
     }
-  } catch { /* noop */ }
+  } catch {
+    /* noop */
+  }
 
   const ext = file.name.split(".").pop() || "png";
   const avatarPath = join(userDir, `factory-avatar.${ext}`);
@@ -203,7 +205,9 @@ settingsRouter.delete("/avatar", async (c) => {
           unlinkSync(join(userDir, f));
         }
       }
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
   }
 
   sessionManager.userConfig.saveUserSettings(username, { factoryAvatarUrl: null });

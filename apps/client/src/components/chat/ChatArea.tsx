@@ -13,6 +13,7 @@ import {
   getSessionName,
   getSessionPath,
 } from "@/lib/session-utils";
+import { ChevronDown, Lock } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { TaskRunnerState } from "shared";
@@ -21,7 +22,6 @@ import { ChatInput, processAttachments } from "./ChatInput";
 import { FloatingTasks } from "./FloatingTasks";
 import { MessageList } from "./MessageList";
 import { WelcomeChatInput } from "./WelcomeChatInput";
-import { ChevronDown, Lock } from "lucide-react";
 
 const ALL_TOOL_NAMES = ["read", "write", "edit", "bash", "grep", "find", "ls"];
 

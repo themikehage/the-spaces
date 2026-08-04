@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 import { AgentAvatar } from "@/components/shared/AgentAvatar";
 import type { StreamingAgentState } from "@/hooks/useTeam";
-import type { AgentInfo, TeamMember } from "shared";
 import { ChevronRight } from "lucide-react";
+import type { AgentInfo, TeamMember } from "shared";
 
 interface Props {
   members: TeamMember[];

@@ -172,7 +172,9 @@ try {
               sessionManager.autoCleanupSessions(u).catch(() => {});
             }
           }
-        } catch { /* noop */ }
+        } catch {
+          /* noop */
+        }
       },
       12 * 60 * 60 * 1000,
     );

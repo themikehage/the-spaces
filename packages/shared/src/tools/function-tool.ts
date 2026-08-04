@@ -47,13 +47,13 @@ export class FunctionTool<T = Record<string, unknown>> implements BaseTool {
         const resAny = rawRes as any;
         const isError = Boolean(
           resAny.isError ||
-            (resAny.exitCode !== undefined && resAny.exitCode !== 0) ||
-            (resAny.details?.exitCode !== undefined && resAny.details?.exitCode !== 0),
+          (resAny.exitCode !== undefined && resAny.exitCode !== 0) ||
+          (resAny.details?.exitCode !== undefined && resAny.details?.exitCode !== 0),
         );
         const content =
           resAny.content !== undefined
             ? resAny.content
-            : resAny.output ?? resAny.text ?? resAny.result ?? JSON.stringify(rawRes);
+            : (resAny.output ?? resAny.text ?? resAny.result ?? JSON.stringify(rawRes));
         const details = resAny.details !== undefined ? resAny.details : rawRes;
 
         return {

@@ -170,7 +170,9 @@ export function PreviewPanel({ activeProjectName }: Props) {
       await apiFetch(`/api/preview/build?project=${encodeURIComponent(projectName)}`, {
         method: "POST",
       });
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
   }, [projectName, setBuildLogs]);
 
   const handleReload = useCallback(() => {

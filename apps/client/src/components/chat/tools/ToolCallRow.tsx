@@ -9,8 +9,8 @@ import {
   Check,
   ChevronRight,
   Database,
-  Eye,
   ExternalLink,
+  Eye,
   FileText,
   Folder,
   Globe,
@@ -25,9 +25,9 @@ import {
   RefreshCw,
   Search,
   SearchX,
-  UserCheck,
   Terminal,
   Trash2,
+  UserCheck,
   Users,
 } from "lucide-react";
 import { HtmlPreview } from "../HtmlPreview";
@@ -932,7 +932,9 @@ export function ToolCallRow({
   const meta = TOOL_META[toolName] ?? {
     label: toolName,
     colorClass: "text-primary",
-    icon: hasUiDetails ? <Package size={13} strokeWidth={2.5} /> : (
+    icon: hasUiDetails ? (
+      <Package size={13} strokeWidth={2.5} />
+    ) : (
       <span className="w-3 h-3 rounded-full bg-text-secondary/30" />
     ),
   };

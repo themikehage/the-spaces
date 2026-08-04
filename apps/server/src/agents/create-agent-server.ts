@@ -75,7 +75,9 @@ export async function createAgentServer(
         if (existsSync(summaryPath)) {
           executions.push(JSON.parse(readFileSync(summaryPath, "utf-8")));
         }
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
     }
     executions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     return c.json({ executions });

@@ -188,7 +188,7 @@ agentsRouter.get("/scope/tools", async (c) => {
     const membership = scopeConfigManager.getAgentMembership(username, entityId);
     const teamId = scopeConfigManager.getAgentTeamMembership(username, entityId);
     const projectTools =
-      membership?.type === "project" ? config.projects[membership.id]?.tools ?? [] : undefined;
+      membership?.type === "project" ? (config.projects[membership.id]?.tools ?? []) : undefined;
     const teamTools = teamId ? config.teams?.[teamId]?.tools : undefined;
 
     return c.json({
@@ -203,29 +203,24 @@ agentsRouter.get("/scope/tools", async (c) => {
   return c.json({ error: "Invalid entityType" }, 400);
 });
 
-agentsRouter.patch(
-  "/scope/tools",
-  zValidator("json", PatchScopeToolsSchema),
-  async (c) => {
-    const username = getUsername(c);
-    if (!username) return c.json({ error: "Unauthorized" }, 401);
-    const { target, add, remove } = c.req.valid("json");
+agentsRouter.patch("/scope/tools", zValidator("json", PatchScopeToolsSchema), async (c) => {
+  const username = getUsername(c);
+  if (!username) return c.json({ error: "Unauthorized" }, 401);
+  const { target, add, remove } = c.req.valid("json");
 
-    try {
-      await scopeConfigManager.setScopeTools(username, target, { add, remove: remove ?? [] });
-      const { broadcastToUser } = await import("../ws/handler");
-      broadcastToUser(username, {
-        type: "entity-updated",
-        entityType: "custom_tool_scope",
-        payload: { target },
-      });
-      return c.json({ ok: true });
-    } catch (err) {
-      return c.json({ error: String(err) }, 500);
-    }
-  },
-);
-
+  try {
+    await scopeConfigManager.setScopeTools(username, target, { add, remove: remove ?? [] });
+    const { broadcastToUser } = await import("../ws/handler");
+    broadcastToUser(username, {
+      type: "entity-updated",
+      entityType: "custom_tool_scope",
+      payload: { target },
+    });
+    return c.json({ ok: true });
+  } catch (err) {
+    return c.json({ error: String(err) }, 500);
+  }
+});
 
 agentsRouter.patch(
   "/:id/scope",
@@ -365,7 +360,9 @@ agentsRouter.post("/:id/avatar", async (c) => {
         unlinkSync(join(agentDir, f));
       }
     }
-  } catch { /* noop */ }
+  } catch {
+    /* noop */
+  }
 
   const ext = file.name.split(".").pop() || "png";
   const avatarPath = join(agentDir, `avatar.${ext}`);
@@ -394,7 +391,9 @@ agentsRouter.delete("/:id/avatar", async (c) => {
           unlinkSync(join(agentDir, f));
         }
       }
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
   }
 
   agentRegistry.setAvatarUrl(username, id, null);

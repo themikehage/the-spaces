@@ -2,8 +2,8 @@
 import { useToast } from "@/contexts/ToastContext";
 import { toSafeString } from "@/lib/safe-string";
 import { wsClient } from "@/lib/ws-client";
-import { useEffect, useState } from "react";
 import { Check } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface Props {
   toolCallId: string;
@@ -160,9 +160,7 @@ export function AskQuestionForm({ toolCallId, args, result, sessionId }: Props) 
                       isMultiSelect ? "rounded-[2px]" : "rounded-full"
                     } ${isChecked ? "bg-primary text-primary-foreground" : "bg-card-hover/60"}`}
                   >
-                    {isChecked && (
-                      <Check className="w-2 h-2" strokeWidth={3} />
-                    )}
+                    {isChecked && <Check className="w-2 h-2" strokeWidth={3} />}
                   </div>
                 </button>
               );

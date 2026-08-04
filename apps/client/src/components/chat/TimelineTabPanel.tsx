@@ -2,10 +2,10 @@
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { useLiterals } from "@/lib";
 import { apiFetch } from "@/lib/api";
+import { Clock } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { SessionTimeline } from "./SessionTimeline";
 import { literals as u } from "./TimelineTabPanel.literals";
-import { Clock } from "lucide-react";
 
 interface Props {
   sessionId: string | null;

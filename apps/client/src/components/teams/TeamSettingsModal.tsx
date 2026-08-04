@@ -4,8 +4,8 @@ import { AvatarUploadField } from "@/components/shared/AvatarUploadField";
 import { Button } from "@/components/ui/Button";
 import { useLiterals } from "@/lib";
 import { DEFAULT_AVATAR_PREFIX, isDefaultAvatar } from "@/lib/defaultAvatars";
-import { X } from "lucide-react";
 import { motion } from "framer-motion";
+import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Team } from "shared";
 import { literals as u } from "./TeamSettingsModal.literals";
@@ -242,7 +242,9 @@ export function TeamSettingsModal({
                 </div>
 
                 <div>
-                  <label className="block text-muted-foreground font-medium mb-2">{l.teamType}</label>
+                  <label className="block text-muted-foreground font-medium mb-2">
+                    {l.teamType}
+                  </label>
                   <div className="p-3 rounded-xl border border-input bg-background">
                     <span className="font-semibold text-xs text-foreground">{teamType}</span>
                     <p className="text-[10px] leading-tight text-muted-foreground mt-1">

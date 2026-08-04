@@ -54,13 +54,17 @@ function parseTasksFromText(text: string): unknown | null {
   if (jsonMatch) {
     try {
       return JSON.parse(jsonMatch[1].trim());
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
   }
   const trimmed = text.trim();
   if (trimmed.startsWith("[") || trimmed.startsWith("{")) {
     try {
       return JSON.parse(trimmed);
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
   }
   return null;
 }

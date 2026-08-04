@@ -5,6 +5,7 @@ import { useLiterals, type MessageUsage } from "@/lib";
 import { resolveFileUrl } from "@/lib/file-urls";
 import clsx from "clsx";
 import { AnimatePresence, motion } from "framer-motion";
+import { AlertCircle, MessageSquare } from "lucide-react";
 import { type FC } from "react";
 import { DELEGATION_NOTIFICATION_TYPE } from "shared";
 import { ImageGrid } from "./ImageGrid";
@@ -12,7 +13,6 @@ import { AssistantTextBlock, ThinkingBlock } from "./MessageBlocks";
 import { literals as u } from "./MessageList.literals";
 import { RichMarkdown } from "./RichMarkdown";
 import { getFileType, type MediaType } from "./ToolResultInspector";
-import { AlertCircle, MessageSquare } from "lucide-react";
 import { ToolCallRow, type ToolResultData } from "./tools/ToolCallRow";
 
 function formatTimestamp(ts: number): string {

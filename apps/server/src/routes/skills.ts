@@ -45,7 +45,8 @@ skillsRouter.get("/", async (c) => {
     const skillsWithContent = result.skills.map((skill) => {
       const isEntityLocal =
         entityType && entityType !== "global" && entityId && skill.filePath
-          ? skill.filePath.startsWith(workspaceDir) && !skill.filePath.startsWith(userGlobalWorkspaceDir)
+          ? skill.filePath.startsWith(workspaceDir) &&
+            !skill.filePath.startsWith(userGlobalWorkspaceDir)
           : false;
 
       return {

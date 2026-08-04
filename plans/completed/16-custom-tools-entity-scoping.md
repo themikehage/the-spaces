@@ -10,28 +10,28 @@ Que las custom tools tengan el mismo nivel de gestionabilidad por entidad que la
 
 ### Lo que SÍ funciona
 
-| Aspecto | Estado | Detalle |
-|---|---|---|
-| CRUD de custom tools | OK | `manage_custom_tools` tool: upsert, delete, toggle (`manage-custom-tools-tool.ts`) |
-| Storage file-based | OK | `<userDir>/custom-tools/<name>.json` + `_index.json` (`storage.ts`) |
-| ScopeConfigManager con tools por entidad | OK | `global.tools`, `projects[].tools`, `agentTools[agentId]` (`scope-config-manager.ts`) |
-| API `PATCH /api/agents/scope/tools` | OK | Acepta `ToolScopeTarget` (global / project / agent) (`routes/agents.ts:153`) |
-| Filtrado al bootstrap por scope | OK | `SessionToolFactory` resuelve `resolveToolsForAgent()` y filtra (`tool-factory.ts:157-165`) |
-| Ejecución pipeline/ui | OK | `createCustomToolRuntime()` + `executePipeline()` (`runtime.ts`, `pipeline-engine.ts`) |
-| UI de render de resultados | OK | `CustomToolBody.tsx` → `CustomUiRenderer.tsx` — 18 componentes |
-| Broadcast WS en upsert/delete/toggle | OK | `manage_custom_tools` emite `entity-updated` con `entityType: "custom_tool"` |
+| Aspecto                                  | Estado | Detalle                                                                                     |
+| ---------------------------------------- | ------ | ------------------------------------------------------------------------------------------- |
+| CRUD de custom tools                     | OK     | `manage_custom_tools` tool: upsert, delete, toggle (`manage-custom-tools-tool.ts`)          |
+| Storage file-based                       | OK     | `<userDir>/custom-tools/<name>.json` + `_index.json` (`storage.ts`)                         |
+| ScopeConfigManager con tools por entidad | OK     | `global.tools`, `projects[].tools`, `agentTools[agentId]` (`scope-config-manager.ts`)       |
+| API `PATCH /api/agents/scope/tools`      | OK     | Acepta `ToolScopeTarget` (global / project / agent) (`routes/agents.ts:153`)                |
+| Filtrado al bootstrap por scope          | OK     | `SessionToolFactory` resuelve `resolveToolsForAgent()` y filtra (`tool-factory.ts:157-165`) |
+| Ejecución pipeline/ui                    | OK     | `createCustomToolRuntime()` + `executePipeline()` (`runtime.ts`, `pipeline-engine.ts`)      |
+| UI de render de resultados               | OK     | `CustomToolBody.tsx` → `CustomUiRenderer.tsx` — 18 componentes                              |
+| Broadcast WS en upsert/delete/toggle     | OK     | `manage_custom_tools` emite `entity-updated` con `entityType: "custom_tool"`                |
 
 ### Lo que NO funciona (gaps)
 
-| Gap | Impacto | Ubicación |
-|---|---|---|
-| **Scoping solo aditivo** | `resolveToolsForAgent()` hace unión pura de global + project + agent. Si una tool está en global, no se puede quitar de un agente específico. | `scope-config-manager.ts:290-313` |
-| **No hay broadcast WS en cambio de scope** | Cuando se llama a `PATCH /api/agents/scope/tools`, las sesiones activas no se enteran del cambio. | `routes/agents.ts:162` |
-| **No hay UI para asignar tools por entidad** | El endpoint de scope existe pero ningún componente del cliente lo consume. El usuario no puede ver ni modificar qué custom tools tiene cada entidad. | `apps/client` — inexistente |
-| **No hay `GET /api/agents/scope/tools`** | El cliente no puede consultar la configuración actual de scope para mostrarla en UI. | `routes/agents.ts` |
-| **Custom tools no se persisten en metadata de sesión** | A diferencia de las built-in tools (que van a `metadata.json` vía `sessionMetadataStore`), las custom tools no dejan rastro en la metadata de sesión. | `tool-activation-engine.ts:66` |
-| **`ToolScopeTarget` no está en shared** | El tipo está definido localmente en `custom-tools/schemas.ts`, no en `packages/shared`. | `apps/server/src/core/custom-tools/schemas.ts:244-248` |
-| **Scope config no soporta `agentTools` sustractivo** | `agentTools[agentId]` es `string[]` — solo adición. Para desactivar una tool heredada de global/project se necesita `{ add: string[], remove: string[] }`. | `scope-config-manager.ts:26` |
+| Gap                                                    | Impacto                                                                                                                                                    | Ubicación                                              |
+| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| **Scoping solo aditivo**                               | `resolveToolsForAgent()` hace unión pura de global + project + agent. Si una tool está en global, no se puede quitar de un agente específico.              | `scope-config-manager.ts:290-313`                      |
+| **No hay broadcast WS en cambio de scope**             | Cuando se llama a `PATCH /api/agents/scope/tools`, las sesiones activas no se enteran del cambio.                                                          | `routes/agents.ts:162`                                 |
+| **No hay UI para asignar tools por entidad**           | El endpoint de scope existe pero ningún componente del cliente lo consume. El usuario no puede ver ni modificar qué custom tools tiene cada entidad.       | `apps/client` — inexistente                            |
+| **No hay `GET /api/agents/scope/tools`**               | El cliente no puede consultar la configuración actual de scope para mostrarla en UI.                                                                       | `routes/agents.ts`                                     |
+| **Custom tools no se persisten en metadata de sesión** | A diferencia de las built-in tools (que van a `metadata.json` vía `sessionMetadataStore`), las custom tools no dejan rastro en la metadata de sesión.      | `tool-activation-engine.ts:66`                         |
+| **`ToolScopeTarget` no está en shared**                | El tipo está definido localmente en `custom-tools/schemas.ts`, no en `packages/shared`.                                                                    | `apps/server/src/core/custom-tools/schemas.ts:244-248` |
+| **Scope config no soporta `agentTools` sustractivo**   | `agentTools[agentId]` es `string[]` — solo adición. Para desactivar una tool heredada de global/project se necesita `{ add: string[], remove: string[] }`. | `scope-config-manager.ts:26`                           |
 
 ---
 
@@ -51,14 +51,20 @@ export interface ScopeConfig {
     agents: string[];
     tools: string[];
   };
-  projects: Record<string, {
-    agents: string[];
-    tools: string[];
-  }>;
-  agentTools: Record<string, {
-    add: string[];
-    remove: string[];
-  }>;
+  projects: Record<
+    string,
+    {
+      agents: string[];
+      tools: string[];
+    }
+  >;
+  agentTools: Record<
+    string,
+    {
+      add: string[];
+      remove: string[];
+    }
+  >;
 }
 ```
 
@@ -238,6 +244,7 @@ GET /api/agents/scope/tools?entityType=global
 Query params opcionales. Si no se pasan, devuelve la configuración global + lista de todas las entities configuradas.
 
 Handler:
+
 1. Cargar `scopeConfigManager.load(username)`.
 2. Si `entityType=global`: devolver `global.tools`.
 3. Si `entityType=project`: devolver `projects[id].tools` y `global.tools` (para que el UI sepa qué se hereda).
@@ -301,12 +308,12 @@ Componente reutilizable (inspirado en `EntitySkillsEditor` del Plan 15):
 
 #### 4.3 Integrar en paneles existentes
 
-| Panel | Dónde insertarlo | Archivo |
-|---|---|---|
-| Global Settings | Nueva sección en `GeneralTab` o tab dedicado "Custom Tools" | `apps/client/src/pages/settings/` |
-| Agent Settings | Modal de agente (después de Skills) | `apps/client/src/pages/agents/` |
-| Project Settings | `ProjectSettingsModal` | `apps/client/src/pages/projects/` |
-| Team Settings | `TeamDetailPage` (si aplica para tools) | `apps/client/src/pages/teams/` |
+| Panel            | Dónde insertarlo                                            | Archivo                           |
+| ---------------- | ----------------------------------------------------------- | --------------------------------- |
+| Global Settings  | Nueva sección en `GeneralTab` o tab dedicado "Custom Tools" | `apps/client/src/pages/settings/` |
+| Agent Settings   | Modal de agente (después de Skills)                         | `apps/client/src/pages/agents/`   |
+| Project Settings | `ProjectSettingsModal`                                      | `apps/client/src/pages/projects/` |
+| Team Settings    | `TeamDetailPage` (si aplica para tools)                     | `apps/client/src/pages/teams/`    |
 
 ---
 
@@ -338,13 +345,13 @@ pnpm build
 
 ## Orden de Ejecución
 
-| # | Fase | Esfuerzo | Depende de |
-|---|---|---|---|
-| 1 | **Fase 1** — Tipos compartidos + scoping sustractivo | Mediano | — |
-| 2 | **Fase 2** — Broadcast + metadata | Chico | Fase 1 |
-| 3 | **Fase 3** — Endpoints API | Mediano | Fase 1 |
-| 4 | **Fase 4** — UI | Grande | Fase 3 |
-| 5 | **Fase 5** — Verificación | Chico | Fase 4 |
+| #   | Fase                                                 | Esfuerzo | Depende de |
+| --- | ---------------------------------------------------- | -------- | ---------- |
+| 1   | **Fase 1** — Tipos compartidos + scoping sustractivo | Mediano  | —          |
+| 2   | **Fase 2** — Broadcast + metadata                    | Chico    | Fase 1     |
+| 3   | **Fase 3** — Endpoints API                           | Mediano  | Fase 1     |
+| 4   | **Fase 4** — UI                                      | Grande   | Fase 3     |
+| 5   | **Fase 5** — Verificación                            | Chico    | Fase 4     |
 
 ---
 
@@ -352,31 +359,31 @@ pnpm build
 
 ### Backend
 
-| Archivo | Cambio |
-|---|---|
-| `packages/shared/src/schemas.ts` | Agregar `ToolScopeTargetSchema`, `EntityToolsScopeResponseSchema`, `AgentToolsConfigSchema` |
-| `apps/server/src/core/scope/scope-config-manager.ts` | Cambiar `agentTools` a `{ add, remove }`, reescribir `resolveToolsForAgent()`, migración de formato viejo |
-| `apps/server/src/core/custom-tools/schemas.ts` | Remover `ToolScopeTarget` local, importar de shared |
-| `apps/server/src/routes/agents.ts` | Agregar `GET /scope/tools`, broadcast WS en `PATCH /scope/tools`, actualizar schema de `PATCH` |
-| `apps/server/src/core/session/tool-activation-engine.ts` | Explicitar inclusión de custom tool names en active tools |
-| `apps/server/src/routes/custom-tools.ts` | Nuevo archivo: `GET /api/custom-tools` |
+| Archivo                                                  | Cambio                                                                                                    |
+| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `packages/shared/src/schemas.ts`                         | Agregar `ToolScopeTargetSchema`, `EntityToolsScopeResponseSchema`, `AgentToolsConfigSchema`               |
+| `apps/server/src/core/scope/scope-config-manager.ts`     | Cambiar `agentTools` a `{ add, remove }`, reescribir `resolveToolsForAgent()`, migración de formato viejo |
+| `apps/server/src/core/custom-tools/schemas.ts`           | Remover `ToolScopeTarget` local, importar de shared                                                       |
+| `apps/server/src/routes/agents.ts`                       | Agregar `GET /scope/tools`, broadcast WS en `PATCH /scope/tools`, actualizar schema de `PATCH`            |
+| `apps/server/src/core/session/tool-activation-engine.ts` | Explicitar inclusión de custom tool names en active tools                                                 |
+| `apps/server/src/routes/custom-tools.ts`                 | Nuevo archivo: `GET /api/custom-tools`                                                                    |
 
 ### Cliente
 
-| Archivo | Cambio |
-|---|---|
-| `apps/client/src/hooks/useEntityCustomTools.ts` | Nuevo hook |
-| `apps/client/src/components/settings/EntityCustomToolsEditor.tsx` | Nuevo componente |
-| `apps/client/src/pages/settings/GeneralTab.tsx` | Integrar editor |
-| `apps/client/src/pages/agents/` | Integrar en modal de agente |
-| `apps/client/src/pages/projects/` | Integrar en modal de proyecto |
+| Archivo                                                           | Cambio                        |
+| ----------------------------------------------------------------- | ----------------------------- |
+| `apps/client/src/hooks/useEntityCustomTools.ts`                   | Nuevo hook                    |
+| `apps/client/src/components/settings/EntityCustomToolsEditor.tsx` | Nuevo componente              |
+| `apps/client/src/pages/settings/GeneralTab.tsx`                   | Integrar editor               |
+| `apps/client/src/pages/agents/`                                   | Integrar en modal de agente   |
+| `apps/client/src/pages/projects/`                                 | Integrar en modal de proyecto |
 
 ### Tests
 
-| Archivo | Cambio |
-|---|---|
-| `apps/server/src/__tests__/scope-config-manager.test.ts` | Nuevo: `resolveToolsForAgent()` add/remove |
-| `apps/server/src/__tests__/custom-tools-pipeline.test.ts` | Extender: integración con scope |
+| Archivo                                                   | Cambio                                     |
+| --------------------------------------------------------- | ------------------------------------------ |
+| `apps/server/src/__tests__/scope-config-manager.test.ts`  | Nuevo: `resolveToolsForAgent()` add/remove |
+| `apps/server/src/__tests__/custom-tools-pipeline.test.ts` | Extender: integración con scope            |
 
 ---
 

@@ -1,5 +1,13 @@
 // SPDX-License-Identifier: MIT
-import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  renameSync,
+  unlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { join } from "node:path";
 import {
   type AgentScopeTarget,
@@ -285,7 +293,9 @@ export class ScopeConfigManager {
         writeFileSync(path, JSON.stringify(config, null, 2), "utf8");
         try {
           unlinkSync(tmp);
-        } catch { /* noop */ }
+        } catch {
+          /* noop */
+        }
       }
     } catch (err) {
       console.error(`[ScopeConfigManager] Failed to persist config for ${username}:`, err);
@@ -431,7 +441,6 @@ export class ScopeConfigManager {
       this.persist(username, config);
     });
   }
-
 
   async removeProjectScope(username: string, projectId: string): Promise<void> {
     await this.withLock(username, async () => {

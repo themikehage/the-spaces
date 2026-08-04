@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { File } from "lucide-react";
 import { useLiterals } from "@/lib";
+import { File } from "lucide-react";
 import { literals as u } from "./GrepResult.literals";
 import { openInWorkspace } from "./workspace";
 

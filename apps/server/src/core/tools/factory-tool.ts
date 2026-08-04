@@ -294,7 +294,9 @@ async function handleProjects(
     try {
       const { broadcastToUser } = await import("../../ws/handler");
       broadcastToUser(username, { type: "project_updated", project: { id: proj.id, ...proj } });
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
 
     return ok(`Assignment updated for project "${id}"`, {
       entity: "projects",
@@ -349,7 +351,9 @@ async function handleProjects(
     try {
       const { broadcastToUser } = await import("../../ws/handler");
       broadcastToUser(username, { type: "project_updated", project: { id: proj.id, ...proj } });
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
 
     return ok(`Member "${memberName}" updated on project "${id}"`, {
       entity: "projects",
@@ -506,7 +510,11 @@ async function handleProviders(
   return err(`Unknown action: ${action}`);
 }
 
-function getTargetSkillsDir(username: string, parentSessionId?: string, scopeParam?: string): string {
+function getTargetSkillsDir(
+  username: string,
+  parentSessionId?: string,
+  scopeParam?: string,
+): string {
   if (scopeParam === "global") {
     return getWorkspaceSkillsDir(username);
   }
@@ -660,7 +668,9 @@ async function handleTeams(action: string, id: string | undefined, params: any, 
       for (const session of sessions.filter((item) => item.teamId === id)) {
         await sessionManager.destroySession(username, session.id).catch(() => {});
       }
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
 
     const deleted = teamStore.deleteTeam(username, id);
     if (!deleted) return err(`Failed to delete team "${id}"`);

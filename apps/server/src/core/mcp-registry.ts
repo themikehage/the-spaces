@@ -193,7 +193,9 @@ export class McpRegistry {
     if (existsSync(path)) {
       try {
         config = JSON.parse(readFileSync(path, "utf-8")) as McpConfig;
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
     } else if (existsSync(oldPath)) {
       try {
         const oldConfig = JSON.parse(readFileSync(oldPath, "utf-8"));
@@ -201,7 +203,9 @@ export class McpRegistry {
           config = oldConfig as McpConfig;
           this.saveConfig(username, config);
         }
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
     }
 
     if (!config) {

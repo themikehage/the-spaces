@@ -5,7 +5,15 @@ import { useSessions } from "@/contexts/SessionsContext";
 import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
 import { useLiterals } from "@/lib";
 import { apiFetch } from "@/lib/api";
-import { ArrowRight, ArrowUpDown, BookOpen, Calendar, ChevronRight, FolderPlus, Settings } from "lucide-react";
+import {
+  ArrowRight,
+  ArrowUpDown,
+  BookOpen,
+  Calendar,
+  ChevronRight,
+  FolderPlus,
+  Settings,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { literals as u } from "./SessionSidebar.literals";
 

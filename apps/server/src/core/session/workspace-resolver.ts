@@ -136,7 +136,9 @@ export function resolveSubagentSessionDir(username: string, sessionId: string): 
             return candidateDir;
           }
         }
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
     }
   }
   return null;
@@ -265,7 +267,9 @@ export function resolveSessionAllowedWriteDir(username: string, sessionId: strin
       if (membership?.type === "project") {
         resolvedProjectId = membership.id;
       }
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
   }
 
   if (resolvedProjectId) {

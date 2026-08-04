@@ -330,7 +330,9 @@ filesRouter.get("/workspace-projects", async (c) => {
             createdAt = proj.createdAt || null;
             avatarUrl = proj.avatarUrl || null;
             status = proj.status || "planning";
-          } catch { /* noop */ }
+          } catch {
+            /* noop */
+          }
         } else {
           try {
             createdAt = new Date().toISOString();
@@ -350,7 +352,9 @@ filesRouter.get("/workspace-projects", async (c) => {
               ),
               "utf-8",
             );
-          } catch { /* noop */ }
+          } catch {
+            /* noop */
+          }
         }
         const stat = statSync(entryPath);
         projects.push({
@@ -596,7 +600,9 @@ filesRouter.post("/workspace-projects/:id/avatar", async (c) => {
         unlinkSync(join(projectPath, f));
       }
     }
-  } catch { /* noop */ }
+  } catch {
+    /* noop */
+  }
 
   const ext = file.name.split(".").pop() || "png";
   const avatarPath = join(projectPath, `avatar.${ext}`);
@@ -632,7 +638,9 @@ filesRouter.delete("/workspace-projects/:id/avatar", async (c) => {
         unlinkSync(join(projectPath, f));
       }
     }
-  } catch { /* noop */ }
+  } catch {
+    /* noop */
+  }
 
   // Update project.json
   const projectJson = JSON.parse(readFileSync(jsonPath, "utf-8"));
@@ -705,7 +713,9 @@ filesRouter.put("/workspace-projects/:id/assignment", async (c) => {
     try {
       const { broadcastToUser } = await import("../ws/handler");
       broadcastToUser(username, { type: "project_updated", project: { id, ...projectJson } });
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
 
     return c.json({ assignment: updatedAssignment });
   } catch (err: any) {
@@ -733,7 +743,9 @@ filesRouter.delete("/workspace-projects/:id/assignment", async (c) => {
     try {
       const { broadcastToUser } = await import("../ws/handler");
       broadcastToUser(username, { type: "project_updated", project: { id, ...projectJson } });
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
 
     return c.json({ ok: true });
   } catch (err: any) {

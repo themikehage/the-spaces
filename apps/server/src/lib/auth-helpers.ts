@@ -142,7 +142,9 @@ export async function resolveUsernameFromCookieHeaderAsync(
       const username = (session.user as any).username;
       if (username) return username;
     }
-  } catch { /* noop */ }
+  } catch {
+    /* noop */
+  }
 
   return resolveUsernameFromCookieHeader(cookieHeader);
 }
@@ -157,7 +159,9 @@ export async function validateSessionFromHeaders(
       const username = (session.user as any).username;
       if (username) return { username };
     }
-  } catch { /* noop */ }
+  } catch {
+    /* noop */
+  }
 
   const cookie = headers.get("cookie") ?? headers.get("Cookie");
   const tokens = getSessionTokensFromCookieHeader(cookie);
@@ -172,7 +176,9 @@ export function getUsername(c: any): string | null {
     if (payload?.username) {
       return payload.username;
     }
-  } catch { /* noop */ }
+  } catch {
+    /* noop */
+  }
 
   const tokensToCheck: string[] = [];
 
@@ -181,16 +187,22 @@ export function getUsername(c: any): string | null {
     if (authHeader?.startsWith("Bearer ")) {
       tokensToCheck.push(extractToken(authHeader.slice(7)));
     }
-  } catch { /* noop */ }
+  } catch {
+    /* noop */
+  }
 
   let cookie: string | null | undefined;
   try {
     cookie = c.req.header("Cookie") ?? c.req.header("cookie");
-  } catch { /* noop */ }
+  } catch {
+    /* noop */
+  }
   if (!cookie) {
     try {
       cookie = c.req.raw?.headers?.get?.("Cookie") ?? c.req.raw?.headers?.get?.("cookie");
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
   }
   if (cookie) {
     tokensToCheck.push(...getSessionTokensFromCookieHeader(cookie));
@@ -204,7 +216,9 @@ export async function getUsernameAsync(c: any): Promise<string | null> {
   try {
     const sync = getUsername(c);
     if (sync) return sync;
-  } catch { /* noop */ }
+  } catch {
+    /* noop */
+  }
 
   try {
     const { auth } = await import("../auth/index");
@@ -213,7 +227,9 @@ export async function getUsernameAsync(c: any): Promise<string | null> {
       const username = (session.user as any).username;
       if (username) return username;
     }
-  } catch { /* noop */ }
+  } catch {
+    /* noop */
+  }
 
   return null;
 }

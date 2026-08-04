@@ -271,8 +271,7 @@ export function ChatInput({
 
   const resolvedEntityType: EntityType =
     customEntityType || (activeAgentId ? "agent" : activeProjectName ? "project" : "global");
-  const resolvedEntityId: string =
-    customEntityId || activeAgentId || activeProjectName || "global";
+  const resolvedEntityId: string = customEntityId || activeAgentId || activeProjectName || "global";
   const { addToast } = useToast();
   const [input, setInput] = useState("");
   const [activeTools, setActiveTools] = useState<string[]>(DEFAULT_TOOLS);
@@ -498,7 +497,9 @@ export function ChatInput({
         },
         body: JSON.stringify({ tools, executionMode: nextMode || executionMode }),
       });
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
   };
 
   // Focus tracking

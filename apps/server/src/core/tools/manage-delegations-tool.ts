@@ -231,7 +231,9 @@ Use 'delegate' to delegate to a specific target.`,
               try {
                 const token = getOrCreateToolSessionToken(username, parentSessionId);
                 if (token) secrets.push(token);
-              } catch { /* noop */ }
+              } catch {
+                /* noop */
+              }
             }
             return filterSecretsFromOutput(output, secrets);
           },
@@ -376,7 +378,9 @@ Use 'delegate' to delegate to a specific target.`,
                 JSON.stringify(metadata, null, 2),
                 "utf-8",
               );
-            } catch (e) { /* noop */ }
+            } catch (e) {
+              /* noop */
+            }
 
             await handleDelegationCompletion({
               username,
@@ -466,7 +470,9 @@ Use 'delegate' to delegate to a specific target.`,
                   if (parentSession?.model) {
                     resolvedModel = parentSession.model;
                   }
-                } catch { /* noop */ }
+                } catch {
+                  /* noop */
+                }
               }
 
               if (args.model) {
@@ -544,7 +550,9 @@ Use 'delegate' to delegate to a specific target.`,
                   if (parentSession?.model) {
                     resolvedModel = parentSession.model;
                   }
-                } catch { /* noop */ }
+                } catch {
+                  /* noop */
+                }
               }
 
               if (args.model) {

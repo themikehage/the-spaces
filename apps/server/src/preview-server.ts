@@ -162,7 +162,9 @@ export async function handleRequest(req: Request): Promise<Response> {
           refUsername = decodeURIComponent(refParts[0]);
           refProject = decodeURIComponent(refParts[1]);
         }
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
     }
     if (!refUsername || !refProject) {
       return new Response("Not Found", { status: 404 });

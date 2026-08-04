@@ -3,8 +3,8 @@ import { useToast } from "@/contexts/ToastContext";
 import { toSafeString } from "@/lib/safe-string";
 import { wsClient } from "@/lib/ws-client";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
 import { AlertTriangle, Check, ChevronDown, Info, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { RichMarkdown } from "../RichMarkdown";
 
 interface Props {

@@ -29,7 +29,9 @@ export function subscribeSessionEvents({
     if (meta?.name) {
       cachedSessionName = meta.name;
     }
-  } catch { /* noop */ }
+  } catch {
+    /* noop */
+  }
 
   const globalLogUnsub = session.subscribe((evt: any) => {
     const ev = evt as any;
@@ -45,7 +47,9 @@ export function subscribeSessionEvents({
         metadataStore.saveSessionMetadata(username, sessionId, {
           updatedAt: new Date().toISOString(),
         });
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
     }
 
     if (evt.type === "agent_start") {
@@ -55,7 +59,9 @@ export function subscribeSessionEvents({
         if (meta?.name) {
           cachedSessionName = meta.name;
         }
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
 
       eventBroker.publishEvent(username, {
         sourceType: "session",

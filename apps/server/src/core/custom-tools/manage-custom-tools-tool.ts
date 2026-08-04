@@ -83,9 +83,25 @@ export function createManageCustomToolsTool(options: ManageCustomToolsOptions) {
             } catch (err) {
               if (err instanceof ZodError) {
                 const VALID_UI_TYPES = [
-                  "badge", "card", "card-list", "table", "metric", "code", "html",
-                  "section", "video", "audio", "pdf", "tabs", "markdown", "progress",
-                  "accordion", "diff", "steps", "stats", "timeline",
+                  "badge",
+                  "card",
+                  "card-list",
+                  "table",
+                  "metric",
+                  "code",
+                  "html",
+                  "section",
+                  "video",
+                  "audio",
+                  "pdf",
+                  "tabs",
+                  "markdown",
+                  "progress",
+                  "accordion",
+                  "diff",
+                  "steps",
+                  "stats",
+                  "timeline",
                 ].join(", ");
 
                 const issues = err.issues
@@ -96,7 +112,9 @@ export function createManageCustomToolsTool(options: ManageCustomToolsOptions) {
                     }
                     const isRootUiTypeIssue =
                       issue.code === "invalid_union_discriminator" ||
-                      (issue.path.length === 1 && issue.path[0] === "ui" && issue.code === "invalid_union");
+                      (issue.path.length === 1 &&
+                        issue.path[0] === "ui" &&
+                        issue.code === "invalid_union");
                     if (isRootUiTypeIssue) {
                       msg += ` — Valid UI types are: ${VALID_UI_TYPES}`;
                     }

@@ -2,11 +2,22 @@ import eslint from "@eslint/js";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
+  {
+    ignores: [
+      "**/dist/**",
+      "**/build/**",
+      "**/node_modules/**",
+      "**/local/**",
+      "**/.turbo/**",
+      "**/public/assets/**",
+      "**/public/*.js",
+      "**/vendor/**",
+      "**/out/**",
+      "out/**",
+    ],
+  },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
-  {
-    ignores: ["**/dist/**", "**/build/**", "**/node_modules/**", "**/local/**", "**/.turbo/**", "**/public/assets/**", "**/public/*.js", "**/vendor/**"],
-  },
   {
     files: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.mjs"],
     rules: {

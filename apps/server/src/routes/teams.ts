@@ -486,7 +486,9 @@ teamsRouter.post("/:id/avatar", async (c) => {
         unlinkSync(join(teamDir, f));
       }
     }
-  } catch { /* noop */ }
+  } catch {
+    /* noop */
+  }
 
   const ext = file.name.split(".").pop() || "png";
   const avatarPath = join(teamDir, `avatar.${ext}`);
@@ -515,7 +517,9 @@ teamsRouter.delete("/:id/avatar", async (c) => {
           unlinkSync(join(teamDir, f));
         }
       }
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
   }
 
   teamStore.updateTeam(username, id, { avatarUrl: "" });

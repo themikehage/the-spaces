@@ -167,7 +167,9 @@ export class McpClient {
           console.warn(`[MCP Server ${this.name} stderr] ${errText}`);
         }
       }
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
   }
 
   private async readSseStream(body: ReadableStream<Uint8Array> | null): Promise<void> {
@@ -321,7 +323,9 @@ export class McpClient {
       try {
         stdin.write(payload + "\n");
         stdin.flush();
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
     }
   }
 

@@ -40,7 +40,9 @@ export class SessionMetadataStore {
     if (existsSync(metadataPath)) {
       try {
         metadata = JSON.parse(readFileSync(metadataPath, "utf-8"));
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
     }
     Object.assign(metadata, data);
     writeFileSync(metadataPath, JSON.stringify(metadata, null, 2), "utf-8");
@@ -55,7 +57,9 @@ export class SessionMetadataStore {
     if (existsSync(metadataPath)) {
       try {
         return JSON.parse(readFileSync(metadataPath, "utf-8"));
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
     }
     return null;
   }
@@ -66,7 +70,9 @@ export class SessionMetadataStore {
     if (existsSync(metadataPath)) {
       try {
         metadata = JSON.parse(readFileSync(metadataPath, "utf-8"));
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
     }
     metadata.tools = tools;
     this.saveSessionMetadata(username, sessionId, metadata);
@@ -82,7 +88,9 @@ export class SessionMetadataStore {
           if (teamType === "Negotiation") {
             return ["read", "grep", "find", "ls"];
           }
-        } catch { /* noop */ }
+        } catch {
+          /* noop */
+        }
       }
       return [...AVAILABLE_TOOLS];
     };
@@ -128,7 +136,9 @@ export class SessionMetadataStore {
           if (teamType === "Negotiation") {
             return "readonly";
           }
-        } catch { /* noop */ }
+        } catch {
+          /* noop */
+        }
       }
     }
     return undefined;

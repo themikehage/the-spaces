@@ -83,7 +83,9 @@ export class SessionToolFactory {
           try {
             const token = getOrCreateToolSessionToken(username, sessionId);
             if (token) secrets.push(token);
-          } catch { /* noop */ }
+          } catch {
+            /* noop */
+          }
         }
         return filterSecretsFromOutput(output, secrets);
       },

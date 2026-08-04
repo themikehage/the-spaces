@@ -91,21 +91,26 @@ export function EntityCustomToolsEditor({ entityType, entityId = "", title }: Pr
           <Wrench className="w-6 h-6 text-muted-foreground mx-auto mb-2 opacity-50" />
           <p className="text-xs font-semibold text-foreground">No custom tools registered</p>
           <p className="text-[11px] text-muted-foreground mt-1 max-w-xs mx-auto">
-            Create custom tools in chat using <code className="bg-muted px-1 py-0.5 rounded text-[10px]">manage_custom_tools</code>.
+            Create custom tools in chat using{" "}
+            <code className="bg-muted px-1 py-0.5 rounded text-[10px]">manage_custom_tools</code>.
           </p>
         </div>
       ) : (
         <div className="space-y-1.5 max-h-60 overflow-y-auto pr-1">
           {availableTools.map((tool) => {
             let isActive = false;
-            let sourceBadge: { label: string; variant: "global" | "team" | "project" | "agent" | "removed" | "none" } = {
+            let sourceBadge: {
+              label: string;
+              variant: "global" | "team" | "project" | "agent" | "removed" | "none";
+            } = {
               label: "",
               variant: "none",
             };
 
             if (entityType !== "agent") {
               isActive = toolsList.includes(tool.name);
-              const isGlobalInherited = entityType !== "global" && (scopeConfig?.global || []).includes(tool.name);
+              const isGlobalInherited =
+                entityType !== "global" && (scopeConfig?.global || []).includes(tool.name);
               if (isGlobalInherited) {
                 sourceBadge = { label: "Global", variant: "global" };
               }
@@ -175,8 +180,8 @@ export function EntityCustomToolsEditor({ entityType, entityId = "", title }: Pr
                             sourceBadge.variant === "removed"
                               ? "bg-error/15 text-error border border-error/20"
                               : sourceBadge.variant === "agent"
-                              ? "bg-primary/15 text-primary border border-primary/20"
-                              : "bg-accent/15 text-accent border border-accent/20"
+                                ? "bg-primary/15 text-primary border border-primary/20"
+                                : "bg-accent/15 text-accent border border-accent/20"
                           }`}
                         >
                           {sourceBadge.label}

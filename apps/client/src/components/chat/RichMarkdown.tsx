@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
+import { Folder } from "lucide-react";
 import { useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import remarkGfm from "remark-gfm";
-import { Folder } from "lucide-react";
 
 interface Props {
   content: string;

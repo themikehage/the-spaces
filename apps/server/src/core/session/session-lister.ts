@@ -74,7 +74,9 @@ export class SessionLister {
             try {
               const metaContent = await readFile(metadataPath, "utf-8");
               metadata = JSON.parse(metaContent);
-            } catch { /* noop */ }
+            } catch {
+              /* noop */
+            }
           }
 
           let messageCount = typeof metadata.messageCount === "number" ? metadata.messageCount : -1;
@@ -96,9 +98,13 @@ export class SessionLister {
                       messageCount++;
                     }
                   }
-                } catch { /* noop */ }
+                } catch {
+                  /* noop */
+                }
               }
-            } catch { /* noop */ }
+            } catch {
+              /* noop */
+            }
           }
 
           const status = deps.isSessionActive(sessionId);
@@ -162,7 +168,9 @@ export class SessionLister {
                     archived: false,
                   });
                 }
-              } catch { /* noop */ }
+              } catch {
+                /* noop */
+              }
             }
           }
         }
@@ -202,7 +210,9 @@ export class SessionLister {
                         archived: false,
                       });
                     }
-                  } catch { /* noop */ }
+                  } catch {
+                    /* noop */
+                  }
                 }
               }
             }

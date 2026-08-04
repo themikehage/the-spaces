@@ -33,7 +33,9 @@ function readPreviewState(username: string, projectName: string): PreviewState {
   if (indexHtmlExists) {
     try {
       lastBuildAt = statSync(indexPath).mtimeMs;
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
   }
 
   const config = loadPreviewConfig(username, projectName);
@@ -98,7 +100,9 @@ function startPollingFallback(username: string, projectName: string) {
       } else {
         notifyStatus(username, projectName, "idle");
       }
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
   }, 2000);
 }
 
@@ -144,7 +148,9 @@ export function removeWatcher(username: string, projectName: string) {
     if (entry.watcher) {
       try {
         entry.watcher.close();
-      } catch { /* noop */ }
+      } catch {
+        /* noop */
+      }
     }
     watchers.delete(key);
   }
