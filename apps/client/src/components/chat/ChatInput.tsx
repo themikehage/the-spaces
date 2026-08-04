@@ -47,7 +47,7 @@ interface Props {
   activeChannelId?: string;
 }
 
-export function ChatInput({ onSend, onAbort, streaming, disabled }: Props) {
+export function ChatInput({ onSend, onAbort, streaming, disabled, sessionId }: Props) {
   const [text, setText] = useState("");
   const [attachments, setAttachments] = useState<File[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -100,6 +100,7 @@ export function ChatInput({ onSend, onAbort, streaming, disabled }: Props) {
       />
 
       <ChatToolbar
+        sessionId={sessionId}
         streaming={streaming}
         disabled={disabled || (!text.trim() && attachments.length === 0)}
         onSend={handleSend}

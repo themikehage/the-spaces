@@ -44,12 +44,16 @@ export function registerEngineWsRoute(
 
       return {
         onOpen(_evt, ws) {
-          const url = new URL(c.req.url);
-          const sessionId = url.searchParams.get("sessionId");
-          if (sessionId) {
-            currentSessionId = sessionId;
-            const agent = appContext.createSessionAgent(sessionId);
-            unsub = subscribeAllEvents(agent.events, ws);
+          try {
+            const url = new URL(c.req.url, "http://localhost");
+            const sessionId = url.searchParams.get("sessionId");
+            if (sessionId) {
+              currentSessionId = sessionId;
+              const agent = appContext.createSessionAgent(sessionId);
+              unsub = subscribeAllEvents(agent.events, ws);
+            }
+          } catch (err) {
+            console.error("[Engine WS] Error in onOpen:", err);
           }
         },
         async onMessage(evt, ws) {
@@ -59,6 +63,11 @@ export function registerEngineWsRoute(
                 ? evt.data
                 : new TextDecoder().decode(evt.data as ArrayBuffer);
             const msg = JSON.parse(rawData);
+
+            if (msg.type === "ping") {
+              ws.send(JSON.stringify({ type: "pong" }));
+              return;
+            }
 
             const targetSessionId = msg.sessionId || currentSessionId;
             if (!targetSessionId) {

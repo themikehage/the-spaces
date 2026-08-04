@@ -57,13 +57,13 @@ export class AuthStorage {
   }
 
   hasAuth(provider: string): boolean {
-    if (this.data[provider]) return true;
+    if (this.data[provider] || (provider === "opencode-go" && this.data["opencode"])) return true;
     const envKey = this.getEnvKey(provider);
     return !!envKey && !!process.env[envKey];
   }
 
   getAuthStatus(provider: string): AuthStatus {
-    if (this.data[provider]) {
+    if (this.data[provider] || (provider === "opencode-go" && this.data["opencode"])) {
       return { configured: true, source: "stored" };
     }
     const envKey = this.getEnvKey(provider);
@@ -74,7 +74,9 @@ export class AuthStorage {
   }
 
   getApiKey(provider: string): string | undefined {
-    return this.data[provider] ?? this.getEnvApiKey(provider);
+    const stored =
+      this.data[provider] ?? (provider === "opencode-go" ? this.data["opencode"] : undefined);
+    return stored ?? this.getEnvApiKey(provider);
   }
 
   set(provider: string, credential: string | { type: string; key: string }): void {
@@ -85,6 +87,7 @@ export class AuthStorage {
 
   remove(provider: string): void {
     delete this.data[provider];
+    if (provider === "opencode-go") delete this.data["opencode"];
     this.save();
   }
 
@@ -96,8 +99,15 @@ export class AuthStorage {
     const envMap: Record<string, string> = {
       qwen: "DASHSCOPE_API_KEY",
       opencode: "OPENCODE_API_KEY",
+      "opencode-go": "OPENCODE_API_KEY",
       openai: "OPENAI_API_KEY",
       anthropic: "ANTHROPIC_API_KEY",
+      google: "GEMINI_API_KEY",
+      xai: "XAI_API_KEY",
+      deepseek: "DEEPSEEK_API_KEY",
+      groq: "GROQ_API_KEY",
+      mistral: "MISTRAL_API_KEY",
+      openrouter: "OPENROUTER_API_KEY",
     };
     return envMap[provider];
   }

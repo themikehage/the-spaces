@@ -5,8 +5,8 @@ import { useEntityConfig } from "@/hooks/useEntityConfig";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { apiFetch } from "@/lib/api";
 import { buildCreateSessionBody, getSessionName, getSessionPath } from "@/lib/session-utils";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ChatInput, processAttachments } from "./ChatInput";
 import { MessageList } from "./MessageList";
 import { WelcomeChatInput } from "./WelcomeChatInput";
@@ -28,9 +28,11 @@ export function ChatArea({
   activeTeam = null,
 }: Props) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { addToast } = useToast();
   const { connected } = useWebSocket(sessionId);
   const { messages, streaming, error, send, abort } = useChat(sessionId);
+  const initialMessageSentRef = useRef(false);
 
   const entityType = activeTeam
     ? "team"
@@ -60,6 +62,16 @@ export function ChatArea({
         setWelcomeExecutionMode(resolvedConfig.executionMode as any);
     }
   }, [resolvedConfig, hasUserModifiedWelcome]);
+
+  useEffect(() => {
+    if (!sessionId || !connected || initialMessageSentRef.current) return;
+    const state = location.state as { initialMessage?: string } | null;
+    if (state?.initialMessage) {
+      initialMessageSentRef.current = true;
+      send(state.initialMessage);
+      window.history.replaceState({}, "");
+    }
+  }, [sessionId, connected, send, location.state]);
 
   const createSessionAndSend = async (messageText: string, attachments?: File[]) => {
     const sessionName = getSessionName({ activeTeam, activeAgent, activeProjectName });
@@ -136,6 +148,7 @@ export function ChatArea({
       </div>
       <div className="p-4 border-t border-surface-200 dark:border-surface-800 bg-surface-0 dark:bg-surface-950">
         <ChatInput
+          sessionId={sessionId}
           onSend={handleSend}
           onAbort={abort}
           streaming={streaming}

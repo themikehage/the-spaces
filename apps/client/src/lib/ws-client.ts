@@ -154,6 +154,8 @@ export class WsClient {
       if (Date.now() - this.lastPong > 45000) {
         console.warn("[WsClient] No response from server in 45s, reconnecting...");
         this.ws?.close();
+      } else if (this.isConnected()) {
+        this.send({ type: "ping" });
       }
     }, 15000);
   }
@@ -189,10 +191,9 @@ export class WsClient {
 
       ws.onmessage = (event) => {
         try {
+          this.lastPong = Date.now();
           const data = JSON.parse(event.data as string) as WsInMessage;
-          if (data.type === "ping") {
-            this.lastPong = Date.now();
-            this.send({ type: "pong" as any });
+          if (data.type === "ping" || data.type === "pong") {
             return;
           }
           if (data.type === "entity-updated") {

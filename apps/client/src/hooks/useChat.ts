@@ -30,7 +30,7 @@ export function useChat(sessionId: string | null): UseChatResult {
     }
 
     let isMounted = true;
-    apiFetch<MessageRecord[]>(`/sessions/${sessionId}/messages`)
+    apiFetch<MessageRecord[]>(`/api/sessions/${sessionId}/messages`)
       .then((records) => {
         if (!isMounted) return;
         const history: AgentMessage[] = (records || []).map((r) => ({

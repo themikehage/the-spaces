@@ -109,6 +109,8 @@
 - [x] Implementar Plan 19 — Remoción de Legacy (Unificar Duplicaciones): Se unificaron event buses, tool registries, session stores y prompt builders redundantes.
 - [x] Implementar Plan 20 — Remoción de Legacy (Limpiar Cliente): Se unificó `apiFetch` (`lib/api.ts`) y `WsClient` (`lib/ws-client.ts`), eliminaron componentes huérfanos v2 y la ruta `/v2`, y redujeron los componentes core de chat y layout a < 300 líneas.
 - [x] Implementar Plan 22 — Remoción de Legacy Final: Se eliminó `SessionManager` (god object de 337 líneas), se migraron 73 imports de `shared` a `@spaces/core`, se eliminaron los 15 singletons restantes wired en `AppContext`, se eliminó físicamente `packages/shared`, se corrigieron referencias obsoletas en `about.md` y se confirmó la compilación completa de monorepo (`pnpm build` y `pnpm typecheck` limpios en 11 paquetes).
+- [x] Arreglar bugs de chat post-migración: `useChat.ts` usaba `/sessions/:id/messages` sin prefijo `/api` (404 silencioso), y `ChatArea.tsx` navegaba con `initialMessage` en `location.state` que nunca se consumía (primer mensaje se perdía).
+- [ ] Implementar Plan 23 — Migrar Lógica del Server a Paquetes (`plans/23-move-logic-to-packages.md`): ~15K líneas de `apps/server/src/` pertenecen a los paquetes. 9 fases: Core Ports → Tools → Providers → Engine → Memory → Sandbox → Teams/Schedules → SDK → Cleanup.
 
 ## Criterio de cierre del sprint
 

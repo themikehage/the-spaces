@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { Paperclip, Send, Square } from "lucide-react";
 import { useRef, type ChangeEvent } from "react";
+import { ModelSelector } from "./ModelSelector";
 
 interface Props {
   streaming?: boolean;
@@ -8,9 +9,10 @@ interface Props {
   onSend: () => void;
   onAbort?: () => void;
   onAttachFiles?: (files: File[]) => void;
+  sessionId?: string | null;
 }
 
-export function ChatToolbar({ streaming, disabled, onSend, onAbort, onAttachFiles }: Props) {
+export function ChatToolbar({ streaming, disabled, onSend, onAbort, onAttachFiles, sessionId }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -21,7 +23,7 @@ export function ChatToolbar({ streaming, disabled, onSend, onAbort, onAttachFile
 
   return (
     <div className="flex items-center justify-between pt-2 border-t border-surface-200/50 dark:border-surface-800/50">
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1.5">
         <input
           type="file"
           ref={fileInputRef}
@@ -37,6 +39,8 @@ export function ChatToolbar({ streaming, disabled, onSend, onAbort, onAttachFile
         >
           <Paperclip className="w-4 h-4" />
         </button>
+
+        <ModelSelector sessionId={sessionId ?? null} disabled={disabled} compact={true} />
       </div>
 
       <div className="flex items-center gap-2">

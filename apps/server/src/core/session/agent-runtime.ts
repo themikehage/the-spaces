@@ -213,11 +213,17 @@ export async function createAgentRuntime(
   const { authStorage, modelRegistry } = userConfigManager.getUserContext(username);
   modelRegistry.refresh();
 
+  const sessionModel =
+    metadata?.model ||
+    (metadata?.provider && metadata?.modelId ? `${metadata.provider}/${metadata.modelId}` : undefined);
+
   const modelResolver = new DefaultModelResolver(modelRegistry);
   const resolvedModel = modelResolver.resolve({
+    sessionModel,
     userDefaultModel: userConfigManager.getUserDefaultModel(username) ?? undefined,
     workspaceConfigModel: entityConfig.defaultModel,
   });
+
 
   let resourceLoader = config.resourceLoader;
   if (!resourceLoader) {

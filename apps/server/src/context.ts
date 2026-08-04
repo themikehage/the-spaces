@@ -114,8 +114,39 @@ export async function createAppContext(): Promise<AppContext> {
   const createSessionAgent = (sessionId: string): IAgentRuntime => {
     let agent = agentCache.get(sessionId);
     if (!agent) {
+      const username = "default";
+      const metadata = sessionMetadataStore.getSessionMetadata(username, sessionId);
+      const sessionModelStr =
+        metadata?.model ||
+        (metadata?.provider && metadata?.modelId
+          ? `${metadata.provider}/${metadata.modelId}`
+          : undefined);
+
+      const { modelRegistry } = userConfigManager.getUserContext(username);
+      modelRegistry.refresh();
+
+      let resolvedModel = sessionModelStr
+        ? modelRegistry
+          .getAvailable()
+          .find(
+            (m) => m.id === sessionModelStr || `${m.provider}/${m.id}` === sessionModelStr,
+          )
+        : undefined;
+
+      if (!resolvedModel && metadata?.provider && metadata?.modelId) {
+        resolvedModel = modelRegistry.find(metadata.provider, metadata.modelId);
+      }
+
+      const activeProvider = resolvedModel
+        ? new OpenAICompatibleProvider({
+          baseUrl: resolvedModel.baseUrl,
+          apiKey: resolvedModel.apiKey,
+          model: resolvedModel.id,
+        })
+        : modelProvider;
+
       agent = createAgent(sessionId, {
-        modelProvider,
+        modelProvider: activeProvider,
         sessionStore,
         toolRegistry,
       });
@@ -126,7 +157,7 @@ export async function createAppContext(): Promise<AppContext> {
 
   const dispose = async (): Promise<void> => {
     for (const [, agent] of agentCache) {
-      await agent.dispose().catch(() => {});
+      await agent.dispose().catch(() => { });
     }
     agentCache.clear();
   };

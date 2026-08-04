@@ -4,10 +4,14 @@ import { loadProviderModels } from "./provider-persistence";
 
 export function registerOpenCodeGoProvider(registry: ModelRegistry, username?: string) {
   const persisted = username ? loadProviderModels(username, "opencode-go") : null;
+  const baseUrl =
+    process.env.OPENCODE_BASE_URL ||
+    process.env.OPENCODE_API_BASE ||
+    "https://opencode.ai/zen/go/v1";
 
   registry.registerProvider("opencode-go", {
     name: "OpenCode Go",
-    baseUrl: "https://opencode.ai/zen/go/v1",
+    baseUrl,
     apiKey: "$OPENCODE_API_KEY",
     api: "openai-completions",
     dynamic: true,
