@@ -6,6 +6,7 @@ import type { IAgentRuntime } from "../core/ports/agent-runtime.port";
 import type { IEventBus } from "../core/ports/event-bus.port";
 import type { Hook, IHookRunner } from "../core/ports/hook.port";
 import type { IPromptBuilder } from "../core/ports/prompt-builder.port";
+import type { ITool } from "../core/ports/tool.port";
 import { ToolRegistry } from "../core/tool-registry";
 import type { AuthStorage } from "./auth-storage.ts";
 import { CompactionManager } from "./compaction-manager";
@@ -112,15 +113,15 @@ export class AgentSession implements IAgentRuntime {
   }
 
   get activeTools(): AgentTool[] {
-    return this.toolRegistry.getActiveTools();
+    return this.toolRegistry.toAgentTools(this.sessionId);
   }
-  set activeTools(tools: AgentTool[]) {
-    this.toolRegistry.setActiveTools(tools);
+  set activeTools(tools: (AgentTool | ITool)[]) {
+    this.toolRegistry.setActiveTools(tools as any);
   }
 
   get allToolsMap(): Map<string, AgentTool> {
     const map = new Map<string, AgentTool>();
-    for (const tool of this.toolRegistry.getAllTools()) {
+    for (const tool of this.toolRegistry.toAgentTools(this.sessionId)) {
       map.set(tool.name, tool);
     }
     return map;
@@ -272,7 +273,7 @@ export class AgentSession implements IAgentRuntime {
       const activeNames = [...prevActiveNames, ...newNames];
       const active = activeNames
         .map((name) => this.toolRegistry.getTool(name))
-        .filter(Boolean) as AgentTool[];
+        .filter(Boolean) as ITool[];
       if (active.length > 0) {
         this.activeTools = active;
       } else {
@@ -366,7 +367,7 @@ export class AgentSession implements IAgentRuntime {
         systemPrompt,
         model: modelObj as any,
         thinkingLevel: this.thinkingLevel as any,
-        tools: this.activeTools,
+        tools: this.toolRegistry.toAgentTools(this.sessionId),
         messages: initialMessages,
       },
       convertToLlm,
@@ -513,14 +514,14 @@ export class AgentSession implements IAgentRuntime {
   }
 
   setActiveToolsByName(names: string[]): void {
-    const list: AgentTool[] = [];
+    const list: ITool[] = [];
     for (const name of names) {
       const tool = this.toolRegistry.getTool(name);
       if (tool) list.push(tool);
     }
-    this.activeTools = list;
+    this.activeTools = list as any;
     if (this.agent) {
-      (this.agent.state as any).tools = list;
+      (this.agent.state as any).tools = this.toolRegistry.toAgentTools(this.sessionId);
     }
   }
 

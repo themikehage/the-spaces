@@ -137,13 +137,12 @@ export function iToolToAgentTool(tool: ITool): AgentTool {
 
 ## Checklist
 
-- [ ] Crear `tool.port.ts`
-- [ ] Crear `tool-adapters.ts` con `iToolToAgentTool`
-- [ ] `ToolRegistry` refactorizado a `ITool` con `toAgentTools()` adapter
-- [ ] `AgentSession._refreshToolRegistry()` usa `ITool` nativo
-- [ ] `AgentSession.initializeAgent()` llama a `toAgentTools()` antes de pasar al vendor
-- [ ] `default-factory-skills.ts` actualizado
-- [ ] `pnpm --filter server run typecheck` sin errores
+- [x] Crear `tool.port.ts`
+- [x] Crear `tool-adapters.ts` con `iToolToAgentTool`
+- [x] `ToolRegistry` refactorizado a `ITool` con `toAgentTools()` adapter
+- [x] `AgentSession._refreshToolRegistry()` usa `ITool` nativo
+- [x] `AgentSession.initializeAgent()` llama a `toAgentTools()` antes de pasar al vendor
+- [x] `pnpm --filter server run typecheck` sin errores
 
 ## Verificación
 
