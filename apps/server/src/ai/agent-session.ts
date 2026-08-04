@@ -1,8 +1,10 @@
 import type { BaseTool } from "shared";
 import { TypedEventEmitter } from "../core/event-bus";
+import { HookRunner } from "../core/hook-runner";
 import { NavigationController } from "../core/navigation-controller";
 import type { IAgentRuntime } from "../core/ports/agent-runtime.port";
 import type { IEventBus } from "../core/ports/event-bus.port";
+import type { Hook, IHookRunner } from "../core/ports/hook.port";
 import type { IPromptBuilder } from "../core/ports/prompt-builder.port";
 import { ToolRegistry } from "../core/tool-registry";
 import type { AuthStorage } from "./auth-storage.ts";
@@ -97,8 +99,17 @@ export class AgentSession implements IAgentRuntime {
   private promptBuilder!: IPromptBuilder;
   private compactionManager!: CompactionManager;
   private navigationController!: NavigationController;
+  private hookRunner: IHookRunner = new HookRunner();
   private activeSkillPrompts: string[] = [];
   private abortController: AbortController | null = null;
+
+  registerHook(hook: Hook): void {
+    this.hookRunner.register(hook);
+  }
+
+  unregisterHook(hookId: string): void {
+    this.hookRunner.unregister(hookId);
+  }
 
   get activeTools(): AgentTool[] {
     return this.toolRegistry.getActiveTools();
@@ -157,6 +168,17 @@ export class AgentSession implements IAgentRuntime {
     this.beforeToolCall = options.beforeToolCall;
     this.afterToolCall = options.afterToolCall;
     this.delegationRegistry = options.delegationRegistry;
+
+    if (options.beforeToolCall || options.afterToolCall) {
+      this.hookRunner.register({
+        id: "options-legacy-hook",
+        priority: 100,
+        beforeToolCall: options.beforeToolCall,
+        afterToolCall: options.afterToolCall
+          ? (ctx, sig) => options.afterToolCall!(ctx) as any
+          : undefined,
+      });
+    }
 
     this.promptBuilder = new PromptBuilder(this.resourceLoader);
     this.compactionManager = new CompactionManager(this.sessionStore, this.modelRegistry);
@@ -356,7 +378,8 @@ export class AgentSession implements IAgentRuntime {
         } as any);
         return result.ok ? result.apiKey : undefined;
       },
-      beforeToolCall: this.beforeToolCall,
+      beforeToolCall: (ctx, signal) => this.hookRunner.runBeforeToolCall(ctx, signal),
+      afterToolCall: (ctx) => this.hookRunner.runAfterToolCall(ctx as any),
       prepareNextTurn: async () => {
         try {
           const skills = this.resourceLoader.getSkills().skills;

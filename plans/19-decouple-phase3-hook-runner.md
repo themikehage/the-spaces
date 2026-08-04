@@ -127,12 +127,12 @@ Para cada callback existente que se pasa desde fuera, crear un `Hook` inline o e
 
 ## Checklist
 
-- [ ] Crear `hook.port.ts`
-- [ ] Crear `hook-runner.ts` con `HookRunner implements IHookRunner`
-- [ ] `AgentSession` usa `IHookRunner` internamente
-- [ ] `AgentSession.registerHook(hook)` expuesto públicamente
-- [ ] `session-manager.ts` actualizado para usar hooks en lugar de callbacks
-- [ ] `pnpm --filter server run typecheck` sin errores
+- [x] Crear `hook.port.ts`
+- [x] Crear `hook-runner.ts` con `HookRunner implements IHookRunner`
+- [x] `AgentSession` usa `IHookRunner` internamente
+- [x] `AgentSession.registerHook(hook)` expuesto públicamente
+- [x] `session-manager.ts` actualizado para usar hooks en lugar de callbacks
+- [x] `pnpm --filter server run typecheck` sin errores
 
 ## Verificación
 
