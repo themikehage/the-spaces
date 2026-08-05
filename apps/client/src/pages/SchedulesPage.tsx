@@ -4,7 +4,7 @@ import { ScheduleRunHistory } from "@/components/schedules/ScheduleRunHistory";
 import { useAgents } from "@/hooks/useAgents";
 import { useSchedules } from "@/hooks/useSchedules";
 import { useTeams } from "@/hooks/useTeams";
-import { apiFetch } from "@/lib/api";
+import { projectsService } from "@/lib/api/projects.service";
 import { Calendar, Clock, Loader2, Play, Plus, Power, Trash2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import type { CreateScheduleJob, ScheduleJob } from "shared";
@@ -30,15 +30,12 @@ export const SchedulesPage: React.FC<Props> = ({ projectId }) => {
   useEffect(() => {
     async function fetchProjects() {
       try {
-        const res = await apiFetch("/api/workspace-projects");
-        if (res.ok) {
-          const data = await res.json();
-          const items = (data.projects || []).map((p: any) => ({
-            id: p.id || p.name,
-            name: p.name,
-          }));
-          setProjects(items);
-        }
+        const data = await projectsService.fetchProjects();
+        const items = ((data as any).projects || data || []).map((p: any) => ({
+          id: p.id || p.name,
+          name: p.name,
+        }));
+        setProjects(items);
       } catch {
         /* noop */
       }

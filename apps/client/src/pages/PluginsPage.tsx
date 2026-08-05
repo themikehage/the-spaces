@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: MIT
 import { useLiterals } from "@/lib";
-import { apiFetch } from "@/lib/api";
+import { envService } from "@/lib/api/env.service";
+import { settingsService } from "@/lib/api/settings.service";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -27,26 +27,18 @@ export function PluginsPage() {
       setLoading(true);
       setError("");
 
-      const [resSettings, resEnv] = await Promise.all([
-        apiFetch("/api/settings"),
-        apiFetch("/api/env"),
+      const [settingsData, envData] = await Promise.all([
+        settingsService.fetchSettings(),
+        envService.fetchEnvVars(),
       ]);
-
-      if (!resSettings.ok || !resEnv.ok) {
-        throw new Error(l.fetchError);
-      }
-
-      const settingsData = await resSettings.json();
-      const envData = await resEnv.json();
 
       setMemoryEnabled(settingsData.memoryEnabled ?? false);
       setMemoryAutoStore(settingsData.memoryAutoStore ?? false);
 
-      const envList = (envData.env ?? []) as Array<{ key: string }>;
-      const exaKeyExists = envList.some((e) => e.key === "EXA_API_KEY");
+      const envList = ((envData as any).env ?? envData ?? []) as Array<{ key: string }>;
+      const exaKeyExists = Array.isArray(envList) && envList.some((e) => e.key === "EXA_API_KEY");
       setHasExaKey(exaKeyExists);
 
-      // Leemos de localStorage si el usuario tiene exa habilitado globalmente
       const exaGlobal = localStorage.getItem("exa-search-global-active") === "true";
       setExaGlobalActive(exaGlobal);
     } catch (err: unknown) {
@@ -70,19 +62,10 @@ export function PluginsPage() {
     setError("");
 
     try {
-      const res = await apiFetch("/api/settings", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updates),
-      });
-
-      if (!res.ok) {
-        throw new Error(l.saveError);
-      }
-
-      const data = await res.json();
-      setMemoryEnabled(data.settings.memoryEnabled ?? false);
-      setMemoryAutoStore(data.settings.memoryAutoStore ?? false);
+      const data = await settingsService.updateSettings(updates);
+      const s = data.settings || data;
+      setMemoryEnabled(s.memoryEnabled ?? false);
+      setMemoryAutoStore(s.memoryAutoStore ?? false);
 
       setSuccessMsg(l.saveSuccess);
       setTimeout(() => setSuccessMsg(""), 3000);

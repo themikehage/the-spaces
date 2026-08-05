@@ -8,7 +8,11 @@ async function fetchProjects(): Promise<any[]> {
   return data.projects || data;
 }
 
-async function createProject(data: { name: string; description?: string; color?: string }): Promise<any> {
+async function createProject(data: {
+  name: string;
+  description?: string;
+  color?: string;
+}): Promise<any> {
   const res = await apiFetch("/api/workspace-projects", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

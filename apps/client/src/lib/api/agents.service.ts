@@ -99,6 +99,37 @@ async function promptAgent(id: string, message: string): Promise<string> {
   return "";
 }
 
+async function fetchBlueprints(): Promise<any[]> {
+  const res = await apiFetch("/api/gallery/blueprints");
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  return data.blueprints || data;
+}
+
+async function installBlueprint(bpId: string): Promise<any> {
+  const res = await apiFetch(`/api/gallery/blueprints/${bpId}/install`, {
+    method: "POST",
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Failed to install blueprint" }));
+    throw new Error(err.error || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+async function fetchAgentExecutions(agentId: string): Promise<any[]> {
+  const res = await apiFetch(`/api/agents/${agentId}/executions`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  return data.executions || data;
+}
+
+async function fetchAgentExecutionDetail(agentId: string, execId: string): Promise<any> {
+  const res = await apiFetch(`/api/agents/${agentId}/executions/${execId}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
 export const agentsService = {
   fetchAgents,
   fetchAgent,
@@ -108,4 +139,8 @@ export const agentsService = {
   uploadAgentAvatar,
   deleteAgentAvatar,
   promptAgent,
+  fetchBlueprints,
+  installBlueprint,
+  fetchAgentExecutions,
+  fetchAgentExecutionDetail,
 };

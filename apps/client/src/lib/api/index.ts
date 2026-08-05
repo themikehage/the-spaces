@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 export * from "./agents.service";
+export * from "./attention.service";
 export * from "./auth.service";
 export * from "./config.service";
 export * from "./custom-tools.service";

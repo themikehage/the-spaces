@@ -128,10 +128,7 @@ async function sendTeamMessage(
   }
 }
 
-async function abortTeamDispatch(
-  teamId: string,
-  sessionId?: string | null,
-): Promise<void> {
+async function abortTeamDispatch(teamId: string, sessionId?: string | null): Promise<void> {
   const res = await apiFetch(`/api/teams/${teamId}/abort`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

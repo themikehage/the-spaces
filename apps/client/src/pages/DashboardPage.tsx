@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/Button";
 import { useSessions, type SessionItem } from "@/contexts/SessionsContext";
 import { useToast } from "@/contexts/ToastContext";
 import { useLiterals } from "@/lib";
-import { apiFetch } from "@/lib/api";
 import { AnimatePresence } from "framer-motion";
 import { Info, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -76,24 +75,15 @@ export function DashboardPage({ onNavigate, onSelectProject }: Props) {
       setLoading(true);
       setError(null);
 
-      const [reposRes, agentsRes, teamsRes] = await Promise.all([
-        apiFetch("/api/workspace-projects"),
-        apiFetch("/api/agents"),
-        apiFetch("/api/teams"),
+      const [reposData, agentsData, teamsData] = await Promise.all([
+        projectsService.fetchProjects().catch(() => []),
+        agentsService.fetchAgents().catch(() => []),
+        teamsService.fetchTeams().catch(() => []),
       ]);
 
-      if (reposRes.ok) {
-        const data = await reposRes.json();
-        setRepos(data.projects || data.repos || []);
-      }
-      if (agentsRes.ok) {
-        const data = await agentsRes.json();
-        setAgents(data.agents || []);
-      }
-      if (teamsRes.ok) {
-        const data = await teamsRes.json();
-        setTeams(data.teams || data || []);
-      }
+      setRepos((reposData as any)?.projects || (reposData as any)?.repos || reposData || []);
+      setAgents((agentsData as any)?.agents || agentsData || []);
+      setTeams((teamsData as any)?.teams || teamsData || []);
     } catch (err: any) {
       setError(err.message || l.loadError);
     } finally {
@@ -106,27 +96,22 @@ export function DashboardPage({ onNavigate, onSelectProject }: Props) {
   }, [fetchData]);
 
   useEffect(() => {
-    const handleUpdate = () => {
-      fetchData();
-    };
+    const handleUpdate = () => fetchData();
     window.addEventListener("entity-updated", handleUpdate);
     return () => window.removeEventListener("entity-updated", handleUpdate);
   }, [fetchData]);
 
-  const handleDeleteRepo = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!deleteRepo || confirmDeleteName !== deleteRepo.name) return;
+  const handleDelete = (repo: RepoItem) => {
+    setDeleteRepo(repo);
+    setConfirmDeleteName("");
+  };
 
+  const confirmDelete = async () => {
+    if (!deleteRepo) return;
     setDeleting(true);
     const id = deleteRepo.id || deleteRepo.name;
     try {
-      const res = await apiFetch(`/api/workspace-projects/${id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: l.deleteError }));
-        throw new Error(err.error || "Failed to delete project");
-      }
+      await projectsService.deleteProject(id);
       await fetchData();
       window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "project" } }));
       setDeleteRepo(null);
@@ -150,44 +135,20 @@ export function DashboardPage({ onNavigate, onSelectProject }: Props) {
   }) => {
     if (!infoProject) return;
     const id = infoProject.id || infoProject.name;
-    const res = await apiFetch(`/api/workspace-projects/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updates),
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({ error: "Failed to update project" }));
-      throw new Error(err.error || "Failed to update project");
-    }
+    await projectsService.updateProject(id, updates);
     await fetchData();
     window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "project" } }));
   };
 
   const handleUploadProjectAvatar = useCallback(async (id: string, file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    const res = await apiFetch(`/api/workspace-projects/${id}/avatar`, {
-      method: "POST",
-      body: formData,
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || "Failed to upload avatar");
-    }
-    const data = await res.json();
+    const url = await projectsService.uploadProjectAvatar(id, file);
     await fetchData();
     window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "project" } }));
-    return data.avatarUrl;
+    return url;
   }, []);
 
   const handleDeleteProjectAvatar = useCallback(async (id: string) => {
-    const res = await apiFetch(`/api/workspace-projects/${id}/avatar`, {
-      method: "DELETE",
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || "Failed to delete avatar");
-    }
+    await projectsService.deleteProjectAvatar(id);
     await fetchData();
     window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "project" } }));
   }, []);
@@ -200,19 +161,6 @@ export function DashboardPage({ onNavigate, onSelectProject }: Props) {
     setSubmitError(null);
 
     try {
-      const res = await apiFetch("/api/workspace-projects", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: projectName.trim(),
-          cloneUrl: cloneUrl.trim() || undefined,
-          avatarUrl: avatarUrl.trim() || undefined,
-        }),
-      });
-
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || l.createError);
       }
 
       await fetchData();

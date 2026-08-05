@@ -2,7 +2,7 @@
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useSessions, type KanbanColumn, type SessionItem } from "@/contexts/SessionsContext";
 import { useLiterals } from "@/lib";
-import { apiFetch } from "@/lib/api";
+import { sessionsService } from "@/lib/api/sessions.service";
 import { Archive, RotateCcw, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { literals as u } from "./SessionsKanbanPage.literals";
@@ -146,11 +146,8 @@ export function SessionsKanbanPage({ onNavigate }: Props) {
   const fetchArchived = useCallback(async () => {
     setLoadingArchived(true);
     try {
-      const res = await apiFetch("/api/sessions?archived=true");
-      if (res.ok) {
-        const data = await res.json();
-        setArchivedSessions(data.sessions ?? []);
-      }
+      const data = await sessionsService.fetchSessions({ archived: true });
+      setArchivedSessions(data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -212,8 +209,11 @@ export function SessionsKanbanPage({ onNavigate }: Props) {
   };
 
   const handleArchive = async (id: string, isCurrentlyArchived?: boolean) => {
-    const action = isCurrentlyArchived ? "unarchive" : "archive";
-    await apiFetch(`/api/sessions/${id}/${action}`, { method: "POST" });
+    if (isCurrentlyArchived) {
+      await sessionsService.unarchiveSession(id);
+    } else {
+      await sessionsService.archiveSession(id);
+    }
     window.dispatchEvent(new CustomEvent("entity-updated"));
     refetch();
     if (viewArchived) fetchArchived();
@@ -225,7 +225,7 @@ export function SessionsKanbanPage({ onNavigate }: Props) {
 
   const confirmDelete = async () => {
     if (!deleteTarget) return;
-    await apiFetch(`/api/sessions/${deleteTarget}`, { method: "DELETE" });
+    await sessionsService.deleteSession(deleteTarget);
     setDeleteTarget(null);
     window.dispatchEvent(new CustomEvent("entity-updated"));
     refetch();
@@ -240,12 +240,8 @@ export function SessionsKanbanPage({ onNavigate }: Props) {
     executeBatch(action);
   };
 
-  const executeBatch = async (action: string) => {
-    await apiFetch("/api/sessions/batch", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action, sessionIds: selectedIds }),
-    });
+  const executeBatch = async (action: "archive" | "unarchive" | "delete") => {
+    await sessionsService.batchSessionAction(action, selectedIds);
     setSelectedIds([]);
     setBatchDelete(false);
     window.dispatchEvent(new CustomEvent("entity-updated"));

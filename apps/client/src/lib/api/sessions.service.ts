@@ -67,7 +67,10 @@ async function deleteSession(id: string): Promise<void> {
   if (!res.ok) throw new Error(`Failed to delete session: ${res.statusText}`);
 }
 
-async function batchSessionAction(action: "archive" | "unarchive" | "delete", ids: string[]): Promise<void> {
+async function batchSessionAction(
+  action: "archive" | "unarchive" | "delete",
+  ids: string[],
+): Promise<void> {
   const res = await apiFetch("/api/sessions/batch", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

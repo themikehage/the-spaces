@@ -39,10 +39,7 @@ async function createScheduleJob(data: CreateScheduleJob): Promise<ScheduleJob> 
   return res.json();
 }
 
-async function updateScheduleJob(
-  jobId: string,
-  data: UpdateScheduleJob,
-): Promise<ScheduleJob> {
+async function updateScheduleJob(jobId: string, data: UpdateScheduleJob): Promise<ScheduleJob> {
   const res = await apiFetch(`/api/schedules/${jobId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },

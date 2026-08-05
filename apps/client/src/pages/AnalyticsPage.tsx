@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: MIT
 import { Dropdown } from "@/components/ui/Dropdown";
 import { useLiterals } from "@/lib";
-import { apiFetch } from "@/lib/api";
+import { agentsService } from "@/lib/api/agents.service";
+import { projectsService } from "@/lib/api/projects.service";
+import { sessionsService } from "@/lib/api/sessions.service";
+import { teamsService } from "@/lib/api/teams.service";
 import {
   AlertCircle,
   Calendar,
@@ -79,28 +82,21 @@ export function AnalyticsPage() {
   useEffect(() => {
     async function loadFilters() {
       try {
-        const [projRes, agentRes, teamRes] = await Promise.all([
-          apiFetch("/api/workspace-projects"),
-          apiFetch("/api/agents"),
-          apiFetch("/api/teams"),
+        const [projData, agentData, teamData] = await Promise.all([
+          projectsService.fetchProjects().catch(() => []),
+          agentsService.fetchAgents().catch(() => []),
+          teamsService.fetchTeams().catch(() => []),
         ]);
 
-        if (projRes.ok) {
-          const d = await projRes.json();
-          const items = (d.projects || d.repos || []).map((x: any) => ({
+        const items = ((projData as any).projects || (projData as any).repos || projData || []).map(
+          (x: any) => ({
             id: x.name,
             name: x.name,
-          }));
-          setProjects(items);
-        }
-        if (agentRes.ok) {
-          const d = await agentRes.json();
-          setAgents(d.agents || []);
-        }
-        if (teamRes.ok) {
-          const d = await teamRes.json();
-          setTeams(d.teams || []);
-        }
+          }),
+        );
+        setProjects(items);
+        setAgents((agentData as any).agents || agentData || []);
+        setTeams((teamData as any).teams || teamData || []);
       } catch (err) {
         console.error("Failed to load analytics filters:", err);
       }
@@ -121,11 +117,8 @@ export function AnalyticsPage() {
         if (selectedAgent) params.append("agentId", selectedAgent);
         if (selectedTeam) params.append("teamId", selectedTeam);
 
-        const res = await apiFetch(`/api/sessions/analytics?${params.toString()}`);
-        if (res.ok) {
-          const d = await res.json();
-          setData(d);
-        }
+        const analyticsData = await sessionsService.fetchSessionAnalytics(params.toString());
+        setData(analyticsData);
       } catch (err) {
         console.error("Failed to load analytics data:", err);
       } finally {

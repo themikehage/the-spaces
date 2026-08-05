@@ -2,13 +2,19 @@
 import { apiFetch } from "@/lib/api";
 import type { EntityConfigType, EntityType } from "shared";
 
-async function fetchEntityConfig(entityType: EntityType, entityId: string): Promise<EntityConfigType> {
+async function fetchEntityConfig(
+  entityType: EntityType,
+  entityId: string,
+): Promise<EntityConfigType> {
   const res = await apiFetch(`/api/config/${entityType}/${encodeURIComponent(entityId)}`);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
 
-async function fetchResolvedConfig(entityType: EntityType, entityId: string): Promise<EntityConfigType> {
+async function fetchResolvedConfig(
+  entityType: EntityType,
+  entityId: string,
+): Promise<EntityConfigType> {
   const res = await apiFetch(`/api/config/${entityType}/${encodeURIComponent(entityId)}/resolved`);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();

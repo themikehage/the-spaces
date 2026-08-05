@@ -1,9 +1,5 @@
 // SPDX-License-Identifier: MIT
-import {
-  sessionsService,
-  type SessionItem,
-  type SessionStatus,
-} from "@/lib/api/sessions.service";
+import { sessionsService, type SessionItem, type SessionStatus } from "@/lib/api/sessions.service";
 import { wsClient } from "@/lib/ws-client";
 import {
   createContext,

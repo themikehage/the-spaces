@@ -9,7 +9,8 @@ import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/contexts/ToastContext";
 import { useAgents } from "@/hooks/useAgents";
 import { useLiterals } from "@/lib";
-import { apiFetch } from "@/lib/api";
+import { agentsService } from "@/lib/api/agents.service";
+import { teamsService } from "@/lib/api/teams.service";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   AlertCircle,
@@ -458,10 +459,8 @@ export function AgentsPage({ onSelectAgent }: AgentsPageProps) {
     setLoadingBlueprints(true);
     setBlueprintsError(null);
     try {
-      const res = await apiFetch("/api/gallery/blueprints");
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setBlueprints(data.blueprints || []);
+      const data = await agentsService.fetchBlueprints();
+      setBlueprints((data as any).blueprints || data || []);
     } catch (err: any) {
       setBlueprintsError(err.message || "Failed to load blueprints");
     } finally {
@@ -471,11 +470,8 @@ export function AgentsPage({ onSelectAgent }: AgentsPageProps) {
 
   const fetchTeams = useCallback(async () => {
     try {
-      const res = await apiFetch("/api/teams");
-      if (res.ok) {
-        const data = await res.json();
-        setTeams(data.teams || []);
-      }
+      const data = await teamsService.fetchTeams();
+      setTeams((data as any).teams || data || []);
     } catch (e) {
       console.error("Failed to fetch teams:", e);
     }
@@ -492,11 +488,7 @@ export function AgentsPage({ onSelectAgent }: AgentsPageProps) {
     async (bpId: string) => {
       setInstallingId(bpId);
       try {
-        const res = await apiFetch(`/api/gallery/blueprints/${bpId}/install`, {
-          method: "POST",
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed to install");
+        const data = await agentsService.installBlueprint(bpId);
 
         addToast(
           "success",
@@ -887,10 +879,8 @@ function ExecutionsModal({
       setLoading(true);
       setError(null);
       try {
-        const res = await apiFetch(`/api/agents/${agent.id}/executions`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        setExecutions(data.executions || []);
+        const data = await agentsService.fetchAgentExecutions(agent.id);
+        setExecutions((data as any).executions || data || []);
       } catch (err: any) {
         setError(err.message || l.loadExecError);
       } finally {
@@ -903,9 +893,7 @@ function ExecutionsModal({
   const loadDetail = async (execId: string) => {
     setLoadingDetail(true);
     try {
-      const res = await apiFetch(`/api/agents/${agent.id}/executions/${execId}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
+      const data = await agentsService.fetchAgentExecutionDetail(agent.id, execId);
       setExecDetail(data);
     } catch (err: any) {
       console.error(err);
