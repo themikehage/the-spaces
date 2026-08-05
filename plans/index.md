@@ -23,6 +23,7 @@
 | 22  | [22-frontend-api-service-layer.md](./22-frontend-api-service-layer.md)                                   | 📋 Planificado    | Hito 1: Capa de Servicios de API del Cliente — encapsular toda llamada HTTP en servicios de dominio      |
 | 23  | [23-frontend-component-decomposition.md](./23-frontend-component-decomposition.md)                       | 📋 Planificado    | Hito 2: Descomposición de Componentes — reducir todo componente a ≤500 líneas                            |
 | 24  | [24-frontend-deduplication.md](./24-frontend-deduplication.md)                                           | 📋 Planificado    | Hito 3: Eliminación de Duplicaciones — modales, event bus, localStorage, formularios, keyboard shortcuts |
+| 25  | [25-agentic-workflow-system/README.md](./25-agentic-workflow-system/README.md)                           | 📋 Planificado    | Agentic Workflow System: outputs tipados, custom tool "agent", WorkflowEngine + DAG, team workflows, observabilidad |
 
 ## Referencia
 
