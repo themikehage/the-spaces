@@ -3,7 +3,7 @@ import { SystemPromptViewer } from "@/components/prompts/SystemPromptViewer";
 import { AvatarUploadField } from "@/components/shared/AvatarUploadField";
 import { Button } from "@/components/ui/Button";
 import { useLiterals } from "@/lib";
-import { apiFetch } from "@/lib/api";
+import { settingsService } from "@/lib/api/settings.service";
 import { DEFAULT_AVATAR_PREFIX, isDefaultAvatar } from "@/lib/defaultAvatars";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
@@ -31,16 +31,13 @@ export function GlobalAgentSettingsModal({ onClose, onSaveSuccess }: Props) {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const res = await apiFetch("/api/settings");
-        if (res.ok) {
-          const data = await res.json();
-          setFactoryName(data.factoryName || "Spaces");
-          setFactorySystemPrompt(data.factorySystemPrompt || "");
-          const avUrl = data.factoryAvatarUrl || null;
-          setAvatarPreview(avUrl);
-          if (isDefaultAvatar(avUrl)) {
-            setSelectedDefaultAvatar(avUrl.slice(DEFAULT_AVATAR_PREFIX.length));
-          }
+        const data = await settingsService.fetchSettings();
+        setFactoryName(data.factoryName || "Spaces");
+        setFactorySystemPrompt(data.factorySystemPrompt || "");
+        const avUrl = data.factoryAvatarUrl || null;
+        setAvatarPreview(avUrl);
+        if (isDefaultAvatar(avUrl)) {
+          setSelectedDefaultAvatar(avUrl.slice(DEFAULT_AVATAR_PREFIX.length));
         }
       } catch (err) {
         console.error("Failed to load settings:", err);
@@ -80,38 +77,16 @@ export function GlobalAgentSettingsModal({ onClose, onSaveSuccess }: Props) {
           ? avatarPreview
           : null;
 
-      // Save general settings
-      const res = await apiFetch("/api/settings", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          factoryName: factoryName.trim(),
-          factorySystemPrompt: factorySystemPrompt.trim(),
-          factoryAvatarUrl: resolvedAvatarUrl,
-        }),
+      await settingsService.updateSettings({
+        factoryName: factoryName.trim(),
+        factorySystemPrompt: factorySystemPrompt.trim(),
+        factoryAvatarUrl: resolvedAvatarUrl,
       });
 
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || l.saveError);
-      }
-
-      // Handle avatar file upload if selected
       if (avatarFile) {
-        const formData = new FormData();
-        formData.append("file", avatarFile);
-        const avatarRes = await apiFetch("/api/settings/avatar", {
-          method: "POST",
-          body: formData,
-        });
-        if (!avatarRes.ok) {
-          throw new Error("Failed to upload global agent avatar");
-        }
+        await settingsService.uploadFactoryAvatar(avatarFile);
       } else if (!selectedDefaultAvatar && avatarPreview === null) {
-        // Delete avatar if cleared
-        await apiFetch("/api/settings/avatar", {
-          method: "DELETE",
-        });
+        await settingsService.deleteFactoryAvatar();
       }
 
       // Dispatch event to refresh layout & sidebars

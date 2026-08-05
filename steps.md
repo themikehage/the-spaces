@@ -116,11 +116,11 @@
   - [x] Fase 3: Crear `lib/api/sessions.service.ts`, `lib/api/auth.service.ts` y migrar `SessionsContext`, `useSessionResolver`, `AuthContext`
   - [x] Fase 4: Crear `lib/api/projects.service.ts`, `lib/api/env.service.ts`, `lib/api/settings.service.ts`, `lib/api/mcp.service.ts`, `lib/api/workspace.service.ts` y barrel export en `lib/api/index.ts`
   - [x] Auditoría final: `pnpm --filter client run typecheck` y `pnpm build` pasan limpiamente con 0 errores.
-- [ ] Implementar Hito 2 — Descomposición de Componentes (`plans/23-frontend-component-decomposition.md`):
-  - [ ] Fase 1: Descomponer GeneralTab (1193→≤500), ToolCallRow (1117→≤500), ChatArea (927→≤500), MessageList (852→≤500), MainLayout (802→≤500)
-  - [ ] Fase 2: Descomponer ChatInput (660→≤500), SessionSidebar (541→≤500), ProjectFloorPanel (520→≤500)
-  - [ ] Fase 3: Auditar y reducir componentes en 400-500 líneas
-  - [ ] Fase 4: Descomponer AgentsPage (1149→≤600), DashboardPage (735→≤600), MCPMarketplacePage (700→≤600), AnalyticsPage (519→≤500)
+- [x] Implementar Hito 2 — Descomposición de Componentes (`plans/23-frontend-component-decomposition.md`):
+  - [x] Fase 1: Descomponer GeneralTab (1193→101), ToolCallRow (1117→211), ChatArea (927→108), MessageList (852→124), MainLayout (802→359)
+  - [x] Fase 2: Descomponer ChatInput (660→312), SessionSidebar (541→306), ProjectFloorPanel (520→≤500)
+  - [x] Fase 3: Auditar y reducir componentes en 400-500 líneas
+  - [x] Fase 4: Descomponer AgentsPage (1149→328), DashboardPage (735→333), MCPMarketplacePage (700→334), AnalyticsPage (519→330)
 - [ ] Implementar Hito 3 — Eliminación de Duplicaciones (`plans/24-frontend-deduplication.md`):
   - [ ] Fase 1: Sistema de modales unificado (Dialog, FormDialog) y migración de 9 modales
   - [ ] Fase 2: Hook genérico `useAvatarUpload` y evaluación de `useEntityCrud`

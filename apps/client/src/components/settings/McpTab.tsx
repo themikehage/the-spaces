@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { useLiterals } from "@/lib";
-import { apiFetch } from "@/lib/api";
+import { mcpService } from "@/lib/api/mcp.service";
 import { useCallback, useEffect, useState } from "react";
 import { literals as u } from "./McpTab.literals";
 
@@ -24,9 +24,7 @@ export function McpTab() {
 
   const fetchMcpConfig = useCallback(async () => {
     try {
-      const res = await apiFetch("/api/mcp");
-      if (!res.ok) throw new Error("Failed to load MCP configuration");
-      const data = await res.json();
+      const data = await mcpService.fetchMcpConfig();
       setMcpConfig(data);
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : "Failed to load MCP configuration";
@@ -44,16 +42,8 @@ export function McpTab() {
     setMcpSaving(true);
     setMcpError("");
     try {
-      const res = await apiFetch("/api/mcp", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedConfig),
-      });
-      if (!res.ok) throw new Error("Failed to save MCP configuration");
-      const data = await res.json();
-      setMcpConfig(data.config);
+      const data = await mcpService.saveMcpConfig(updatedConfig);
+      setMcpConfig(data.config || data);
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : "Failed to save MCP configuration";
       setMcpError(errMsg);

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { useLiterals } from "@/lib";
-import { apiFetch } from "@/lib/api";
+import { skillsService } from "@/lib/api/skills.service";
 import { ArrowRight, BookOpen, Plus, Sliders, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ModelSelector } from "./ModelSelector";
@@ -78,12 +78,11 @@ export function WelcomeChatInput({
   useEffect(() => {
     if (onSkillsChange) {
       setSkillsLoading(true);
-      apiFetch("/api/skills")
-        .then((res) => (res.ok ? res.json() : null))
+      skillsService
+        .fetchSkills()
         .then((data) => {
-          if (data && Array.isArray(data.skills)) {
-            setAllSkills(data.skills);
-          }
+          const list = (data as any).skills || data || [];
+          setAllSkills(list);
         })
         .catch((e) => console.error("Failed to load skills in WelcomeChatInput:", e))
         .finally(() => setSkillsLoading(false));

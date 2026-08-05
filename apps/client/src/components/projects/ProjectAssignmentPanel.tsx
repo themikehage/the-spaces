@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: MIT
 import { Button } from "@/components/ui/Button";
 import { Dropdown } from "@/components/ui/Dropdown";
-import { apiFetch } from "@/lib/api";
+import { agentsService } from "@/lib/api/agents.service";
+import { projectsService } from "@/lib/api/projects.service";
 import { X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -49,23 +49,19 @@ export function ProjectAssignmentPanel({ projectId }: Props) {
       setError(null);
       try {
         const [agentsRes, assignRes] = await Promise.all([
-          apiFetch("/api/agents")
-            .then((r) => r.json())
-            .catch(() => ({ agents: [] })),
-          apiFetch(`/api/workspace-projects/${projectId}/assignment`)
-            .then((r) => r.json())
-            .catch(() => ({ assignment: null })),
+          agentsService.fetchAgents().catch(() => []),
+          projectsService.fetchProjectAssignment(projectId).catch(() => ({ assignment: null })),
         ]);
 
         if (!active) return;
 
-        if (agentsRes && Array.isArray(agentsRes.agents)) {
-          setAvailableAgents(agentsRes.agents);
-        }
+        const agentsList = (agentsRes as any).agents || agentsRes || [];
+        setAvailableAgents(agentsList);
 
-        if (assignRes && assignRes.assignment) {
-          setLeaderId(assignRes.assignment.leaderId || null);
-          setMembers(assignRes.assignment.members || []);
+        const assignmentData = (assignRes as any).assignment || assignRes;
+        if (assignmentData) {
+          setLeaderId(assignmentData.leaderId || null);
+          setMembers(assignmentData.members || []);
         } else {
           setLeaderId(null);
           setMembers([]);
@@ -89,23 +85,15 @@ export function ProjectAssignmentPanel({ projectId }: Props) {
     setSuccess(false);
 
     try {
-      const res = await apiFetch(`/api/workspace-projects/${projectId}/assignment`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          leaderId,
-          members,
-        }),
+      const data = await projectsService.updateProjectAssignment(projectId, {
+        leaderId,
+        members,
       });
 
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to save assignment");
-      }
-
-      if (data.assignment) {
-        setLeaderId(data.assignment.leaderId || null);
-        setMembers(data.assignment.members || []);
+      const updatedAssign = data.assignment || data;
+      if (updatedAssign) {
+        setLeaderId(updatedAssign.leaderId || null);
+        setMembers(updatedAssign.members || []);
       }
       setSuccess(true);
       setTimeout(() => setSuccess(false), 2500);

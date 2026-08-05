@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { Button } from "@/components/ui/Button";
 import { useLiterals } from "@/lib";
-import { apiFetch } from "@/lib/api";
+import { envService } from "@/lib/api/env.service";
 import { useState } from "react";
 import { literals as u } from "./EnvVarsTab.literals";
 
@@ -49,17 +49,7 @@ export function EnvVarsTab({
     setSavingEnv(true);
     setEnvError("");
     try {
-      const res = await apiFetch("/api/env", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ key: formattedKey, value: newEnvVal }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message || "Failed to save environment variable");
-      }
+      await envService.saveEnvVar(formattedKey, newEnvVal);
       setNewEnvKey("");
       setNewEnvVal("");
       setIsAddingEnv(false);
@@ -75,10 +65,7 @@ export function EnvVarsTab({
   const handleDeleteEnvVar = async (key: string) => {
     setEnvError("");
     try {
-      const res = await apiFetch(`/api/env/${key}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) throw new Error("Failed to delete environment variable");
+      await envService.deleteEnvVar(key);
       await fetchEnvVars();
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : "Error deleting environment variable";
@@ -113,12 +100,10 @@ export function EnvVarsTab({
     setLocalEnvLoading(true);
     setEnvError("");
     try {
-      const res = await apiFetch(`/api/env/reveal/${key}`);
-      if (!res.ok) throw new Error("Failed to reveal secret");
-      const data = await res.json();
+      const value = await envService.revealEnvVar(key);
       setRevealedVars((prev) => ({
         ...prev,
-        [key]: data.value,
+        [key]: value,
       }));
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : "Error revealing secret";
@@ -160,18 +145,7 @@ export function EnvVarsTab({
         variables[key] = value;
       }
 
-      const res = await apiFetch("/api/env", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ variables }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message || "Failed to update environment variables");
-      }
+      await envService.saveBulkEnvVars(variables);
 
       await fetchEnvVars();
       setIsDevView(false);

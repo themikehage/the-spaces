@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
-import { apiFetch } from "@/lib/api";
+import { workspaceService } from "@/lib/api/workspace.service";
 import { Folder, RefreshCw, UserPlus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FileInfo } from "shared";
@@ -55,7 +55,7 @@ export function WorkspacePanel({
       setLoading(true);
       setError(null);
       try {
-        const res = await apiFetch(getWorkspaceUrl(path), {});
+        const res = await workspaceService.fetchWorkspaceUrl(getWorkspaceUrl(path), {});
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
           throw new Error(data.error || `HTTP ${res.status}`);
@@ -127,7 +127,7 @@ export function WorkspacePanel({
       setLoading(true);
       setError(null);
       try {
-        const res = await apiFetch(getWorkspaceUrl(file.path), {});
+        const res = await workspaceService.fetchWorkspaceUrl(getWorkspaceUrl(file.path), {});
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
           throw new Error(data.error || `HTTP ${res.status}`);
@@ -183,7 +183,7 @@ export function WorkspacePanel({
   // Save modified text file content
   const handleSaveFile = useCallback(
     async (path: string, content: string) => {
-      const res = await apiFetch(getWorkspaceUrl(path), {
+      const res = await workspaceService.fetchWorkspaceUrl(getWorkspaceUrl(path), {
         method: "PUT",
 
         body: JSON.stringify({ type: "file", content }),
@@ -203,7 +203,7 @@ export function WorkspacePanel({
     async (parentPath: string, name: string, type: "file" | "folder") => {
       const fullPath = parentPath ? `${parentPath}/${name}` : name;
       try {
-        const res = await apiFetch(getWorkspaceUrl(fullPath), {
+        const res = await workspaceService.fetchWorkspaceUrl(getWorkspaceUrl(fullPath), {
           method: "PUT",
 
           body: JSON.stringify({ type }),
@@ -231,7 +231,7 @@ export function WorkspacePanel({
   const handleRename = useCallback(
     async (oldPath: string, newPath: string) => {
       try {
-        const res = await apiFetch(getWorkspaceUrl(oldPath), {
+        const res = await workspaceService.fetchWorkspaceUrl(getWorkspaceUrl(oldPath), {
           method: "PATCH",
 
           body: JSON.stringify({ newPath }),
@@ -265,7 +265,7 @@ export function WorkspacePanel({
     if (!pendingDeletePath) return;
     setDeleting(true);
     try {
-      const res = await apiFetch(getWorkspaceUrl(pendingDeletePath), {
+      const res = await workspaceService.fetchWorkspaceUrl(getWorkspaceUrl(pendingDeletePath), {
         method: "DELETE",
       });
       if (!res.ok) {

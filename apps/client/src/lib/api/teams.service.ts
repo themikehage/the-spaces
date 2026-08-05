@@ -181,6 +181,16 @@ async function fetchTeamAnalytics(teamId: string): Promise<any> {
   return res.json();
 }
 
+async function updateTeamContext(teamId: string, context: any): Promise<Team> {
+  const res = await apiFetch(`/api/teams/${teamId}/context`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ context }),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
 export const teamsService = {
   fetchTeams,
   fetchTeamsByProject,
@@ -198,4 +208,5 @@ export const teamsService = {
   updateTeamMember,
   removeTeamMember,
   fetchTeamAnalytics,
+  updateTeamContext,
 };

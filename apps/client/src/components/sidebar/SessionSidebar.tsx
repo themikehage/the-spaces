@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { AgentAvatar } from "@/components/shared/AgentAvatar";
-import { EntityAvatar } from "@/components/shared/EntityAvatar";
-import { useSessions } from "@/contexts/SessionsContext";
-import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
-import { useLiterals } from "@/lib";
-import { apiFetch } from "@/lib/api";
+import { useSessionList } from "@/hooks/useSessionList";
 import {
   ArrowRight,
   ArrowUpDown,
@@ -14,27 +10,8 @@ import {
   FolderPlus,
   Settings,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { literals as u } from "./SessionSidebar.literals";
-
-// --- Component ---
-
-interface RepoItem {
-  id?: string;
-  name: string;
-  path: string;
-  lastModified: string;
-  avatarUrl?: string;
-}
-
-interface AgentItem {
-  id: string;
-  name: string;
-  role: string;
-  status: string;
-  createdAt: string;
-  avatarUrl?: string;
-}
+import { useMemo } from "react";
+import { AgentListItem, ProjectListItem, TeamListItem } from "./SessionListItem";
 
 interface Props {
   currentPage?: string;
@@ -49,92 +26,12 @@ export function SessionSidebar({
   isMobile = false,
   onCloseSidebar,
 }: Props) {
-  const workspace = useWorkspaceContext();
-  const {
-    activeProjectId: activeProjectName,
-    activeAgent,
-    activeTeam,
-    selectProject: onSelectProject,
-    selectAgent: onSelectAgent,
-    selectTeam: onSelectTeam,
-  } = workspace;
-
-  const l = useLiterals(u);
-  const [repos, setRepos] = useState<RepoItem[]>([]);
-  const [agents, setAgents] = useState<AgentItem[]>([]);
-  const [teams, setTeams] = useState<any[]>([]);
-  const [loadingRepos, setLoadingRepos] = useState(true);
-  const [loadingAgents, setLoadingAgents] = useState(true);
-  const [loadingTeams, setLoadingTeams] = useState(true);
-  const { getAgentKanbanStatus } = useSessions();
-
-  const [isOpenRepos, setIsOpenRepos] = useState(true);
-  const [isOpenAgents, setIsOpenAgents] = useState(true);
-  const [isOpenTeams, setIsOpenTeams] = useState(true);
-
-  const fetchRepos = useCallback(async () => {
-    try {
-      const res = await apiFetch("/api/workspace-projects");
-      if (res.ok) {
-        const data = await res.json();
-        setRepos(data.projects || data.repos || []);
-      }
-    } catch (err) {
-      console.error("Failed to fetch repositories:", err);
-    } finally {
-      setLoadingRepos(false);
-    }
-  }, []);
-
-  const fetchAgents = useCallback(async () => {
-    try {
-      const res = await apiFetch("/api/agents");
-      if (res.ok) {
-        const data = await res.json();
-        setAgents(data.agents || []);
-      }
-    } catch (err) {
-      console.error("Failed to fetch agents:", err);
-    } finally {
-      setLoadingAgents(false);
-    }
-  }, []);
-
-  const fetchTeams = useCallback(async () => {
-    try {
-      const res = await apiFetch("/api/teams");
-      if (res.ok) {
-        const data = await res.json();
-        setTeams(data.teams || []);
-      }
-    } catch (err) {
-      console.error("Failed to fetch teams:", err);
-    } finally {
-      setLoadingTeams(false);
-    }
-  }, []);
-
-  const isGlobal = !activeAgent && !activeProjectName && !activeTeam;
-  const isSessionView =
-    currentPage === "chat" || currentPage === "workspace" || currentPage === "preview";
-
-  const itemClass = useCallback(
-    (isActive: boolean) => {
-      if (isMobile) {
-        return `w-full flex items-center gap-3 px-4 py-3 h-12 rounded-lg text-base truncate transition-colors text-left cursor-pointer ${
-          isActive
-            ? "bg-card-hover text-foreground font-semibold border-l-4 border-primary rounded-l-none pl-3"
-            : "text-muted-foreground hover:bg-card/50 hover:text-foreground"
-        }`;
-      }
-      return `w-full flex items-center gap-2 px-3 py-1 rounded-lg text-xs truncate transition-colors text-left cursor-pointer ${
-        isActive
-          ? "bg-card-hover text-foreground font-medium border-l-2 border-primary rounded-l-none pl-2"
-          : "text-muted-foreground hover:bg-card/50 hover:text-foreground"
-      }`;
-    },
-    [isMobile],
-  );
+  const state = useSessionList({
+    currentPage,
+    onNavigate,
+    isMobile,
+    onCloseSidebar,
+  });
 
   const accordionHeaderClass = isMobile
     ? "group/title flex items-center px-4 py-3 h-12 text-sm uppercase tracking-wider font-semibold text-muted-foreground"
@@ -145,117 +42,11 @@ export function SessionSidebar({
 
   const chevronSize = isMobile ? 20 : 16;
 
-  const factoryButtonClass = `${
-    isMobile
-      ? "w-full flex items-center gap-3 px-4 py-3 h-12 rounded-lg text-base font-semibold transition-all cursor-pointer"
-      : "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer"
-  } ${
-    isGlobal
-      ? "bg-card text-primary border border-primary/30"
-      : "bg-card/40 text-muted-foreground hover:bg-card hover:text-primary border border-transparent hover:border-primary/20"
-  }`;
-
-  const adminItemClass = useCallback(
-    (isActive: boolean) => {
-      if (isMobile) {
-        return `w-full flex items-center gap-3 px-4 py-3 h-12 rounded-lg text-base transition-colors cursor-pointer text-left ${
-          isActive
-            ? "bg-card text-foreground font-semibold border-l-4 border-primary rounded-l-none pl-3"
-            : "text-muted-foreground hover:bg-card/50 hover:text-foreground"
-        }`;
-      }
-      return `w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-colors cursor-pointer text-left ${
-        isActive
-          ? "bg-card text-foreground font-medium"
-          : "text-muted-foreground hover:bg-card/50 hover:text-foreground"
-      }`;
-    },
-    [isMobile],
-  );
-
-  const [globalSettings, setGlobalSettings] = useState<{
-    factoryName?: string;
-    factoryAvatarUrl?: string | null;
-  } | null>(null);
-
-  const fetchGlobalSettings = useCallback(async () => {
-    try {
-      const res = await apiFetch("/api/settings");
-      if (res.ok) {
-        const data = await res.json();
-        setGlobalSettings(data);
-      }
-    } catch (err) {
-      console.error("Failed to fetch settings in sidebar:", err);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchRepos();
-    fetchAgents();
-    fetchTeams();
-    fetchGlobalSettings();
-  }, [fetchRepos, fetchAgents, fetchTeams, fetchGlobalSettings]);
-
-  useEffect(() => {
-    const handleUpdate = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      const type = customEvent.detail?.type;
-      if (type === "project") {
-        fetchRepos();
-      } else if (type === "agent") {
-        fetchAgents();
-      } else if (type === "team") {
-        fetchTeams();
-      } else if (type === "settings") {
-        fetchGlobalSettings();
-      } else if (type !== "experiment") {
-        fetchRepos();
-        fetchAgents();
-        fetchTeams();
-        fetchGlobalSettings();
-      }
-    };
-    window.addEventListener("entity-updated", handleUpdate);
-    return () => window.removeEventListener("entity-updated", handleUpdate);
-  }, [fetchRepos, fetchAgents, fetchTeams, fetchGlobalSettings]);
-
-  const handleGoFactory = useCallback(() => {
-    if (onSelectProject) onSelectProject(null, null);
-    if (onSelectAgent) onSelectAgent(null);
-    if (onSelectTeam) onSelectTeam(null);
-    if (onNavigate) onNavigate("/");
-    onCloseSidebar?.();
-  }, [onSelectProject, onSelectAgent, onSelectTeam, onNavigate, onCloseSidebar]);
-
-  const handleSelectRepoClick = useCallback(
-    (projectId: string, projectName: string) => {
-      if (onSelectProject) onSelectProject(projectId, projectName);
-      onCloseSidebar?.();
-    },
-    [onSelectProject, onCloseSidebar],
-  );
-
-  const handleSelectAgentClick = useCallback(
-    (agent: { id: string; name: string; avatarUrl?: string }) => {
-      if (onSelectAgent) onSelectAgent(agent);
-      onCloseSidebar?.();
-    },
-    [onSelectAgent, onCloseSidebar],
-  );
-
-  const handleSelectTeamClick = useCallback(
-    (team: { id: string; name: string; avatarUrl?: string }) => {
-      if (onSelectTeam) onSelectTeam(team);
-      onCloseSidebar?.();
-    },
-    [onSelectTeam, onCloseSidebar],
-  );
   const adminItems = useMemo(
     () => [
       {
         id: "skills",
-        label: l.navSkills,
+        label: state.l.navSkills,
         path: "/skills",
         icon: <BookOpen size={14} />,
       },
@@ -267,18 +58,18 @@ export function SessionSidebar({
       },
       {
         id: "settings",
-        label: l.navSettings,
+        label: state.l.navSettings,
         path: "/settings",
         icon: <Settings size={14} />,
       },
       {
         id: "plugins",
-        label: l.navPlugins || "Plugins",
+        label: state.l.navPlugins || "Plugins",
         path: "/plugins",
         icon: <ArrowUpDown size={14} />,
       },
     ],
-    [l.navSkills, l.navSettings, l.navPlugins],
+    [state.l.navSkills, state.l.navSettings, state.l.navPlugins],
   );
 
   return (
@@ -291,18 +82,22 @@ export function SessionSidebar({
             : "p-3 border-b border-border flex-shrink-0"
         }
       >
-        <button onClick={handleGoFactory} className={factoryButtonClass} title={l.globalWorkspace}>
-          {globalSettings?.factoryAvatarUrl ? (
+        <button
+          onClick={state.handleGoFactory}
+          className={state.factoryButtonClass}
+          title={state.l.globalWorkspace}
+        >
+          {state.globalSettings?.factoryAvatarUrl ? (
             <AgentAvatar
-              name={globalSettings.factoryName || "Spaces"}
-              avatarUrl={globalSettings.factoryAvatarUrl}
+              name={state.globalSettings.factoryName || "Spaces"}
+              avatarUrl={state.globalSettings.factoryAvatarUrl}
               size={isMobile ? "sm" : "xs"}
               className="flex-shrink-0 rounded-full"
             />
           ) : (
             <FolderPlus size={isMobile ? 20 : 14} className="flex-shrink-0" />
           )}
-          <span>{globalSettings?.factoryName || "Spaces"}</span>
+          <span>{state.globalSettings?.factoryName || "Spaces"}</span>
         </button>
       </div>
 
@@ -316,10 +111,13 @@ export function SessionSidebar({
       >
         {/* Repos Accordion */}
         <div className="flex flex-col">
-          <div className={accordionHeaderClass} onClick={() => setIsOpenRepos((prev) => !prev)}>
+          <div
+            className={accordionHeaderClass}
+            onClick={() => state.setIsOpenRepos((prev) => !prev)}
+          >
             <ChevronRight
               size={chevronSize}
-              className={`transform transition-transform ${isOpenRepos ? "rotate-90" : ""}`}
+              className={`transform transition-transform ${state.isOpenRepos ? "rotate-90" : ""}`}
             />
             <button
               onClick={(e) => {
@@ -327,10 +125,10 @@ export function SessionSidebar({
                 onCloseSidebar?.();
                 onNavigate?.("/projects");
               }}
-              className={`${accordionButtonClass}`}
+              className={accordionButtonClass}
             >
               <span className="ml-2">
-                {l.sectionProjects} ({repos.length})
+                {state.l.sectionProjects} ({state.repos.length})
               </span>
               <ArrowRight
                 size={isMobile ? 20 : 12}
@@ -339,32 +137,31 @@ export function SessionSidebar({
             </button>
           </div>
 
-          {isOpenRepos && (
+          {state.isOpenRepos && (
             <div className={isMobile ? "px-3 mt-1 space-y-1.5" : "px-2 mt-1 space-y-0.5"}>
-              {loadingRepos ? (
+              {state.loadingRepos ? (
                 <div className="text-xs text-muted-foreground px-3 py-1 animate-pulse">
-                  {l.loading}
+                  {state.l.loading}
                 </div>
-              ) : repos.length === 0 ? (
-                <div className="text-xs text-muted-foreground px-3 py-1">{l.noProjects}</div>
+              ) : state.repos.length === 0 ? (
+                <div className="text-xs text-muted-foreground px-3 py-1">{state.l.noProjects}</div>
               ) : (
-                repos.map((repo) => {
-                  const isActive = isSessionView && activeProjectName === repo.id && !activeAgent;
+                state.repos.map((repo) => {
+                  const isActive =
+                    state.isSessionView &&
+                    state.activeProjectName === repo.id &&
+                    !state.activeAgent;
                   return (
-                    <button
+                    <ProjectListItem
                       key={repo.id || repo.name}
-                      onClick={() => handleSelectRepoClick(repo.id || repo.name, repo.name)}
-                      className={itemClass(isActive)}
-                    >
-                      <EntityAvatar
-                        name={repo.name}
-                        avatarUrl={repo.avatarUrl}
-                        size={isMobile ? "sm" : "xs"}
-                        type="project"
-                        className="flex-shrink-0"
-                      />
-                      <span className="truncate">{repo.name}</span>
-                    </button>
+                      id={repo.id || repo.name}
+                      name={repo.name}
+                      avatarUrl={repo.avatarUrl}
+                      isActive={isActive}
+                      isMobile={isMobile}
+                      itemClass={state.itemClass}
+                      onClick={(id, name) => state.handleSelectRepoClick(id, name)}
+                    />
                   );
                 })
               )}
@@ -374,10 +171,13 @@ export function SessionSidebar({
 
         {/* Agents Accordion */}
         <div className="flex flex-col">
-          <div className={accordionHeaderClass} onClick={() => setIsOpenAgents((prev) => !prev)}>
+          <div
+            className={accordionHeaderClass}
+            onClick={() => state.setIsOpenAgents((prev) => !prev)}
+          >
             <ChevronRight
               size={chevronSize}
-              className={`transform transition-transform ${isOpenAgents ? "rotate-90" : ""}`}
+              className={`transform transition-transform ${state.isOpenAgents ? "rotate-90" : ""}`}
             />
             <button
               onClick={(e) => {
@@ -385,10 +185,10 @@ export function SessionSidebar({
                 onCloseSidebar?.();
                 onNavigate?.("/agents");
               }}
-              className={`${accordionButtonClass}`}
+              className={accordionButtonClass}
             >
               <span className="ml-2">
-                {l.sectionAgents} ({agents.length})
+                {state.l.sectionAgents} ({state.agents.length})
               </span>
               <ArrowRight
                 size={isMobile ? 20 : 12}
@@ -397,48 +197,36 @@ export function SessionSidebar({
             </button>
           </div>
 
-          {isOpenAgents && (
+          {state.isOpenAgents && (
             <div className={isMobile ? "px-3 mt-1 space-y-1.5" : "px-2 mt-1 space-y-0.5"}>
-              {loadingAgents ? (
+              {state.loadingAgents ? (
                 <div className="text-xs text-muted-foreground px-3 py-1 animate-pulse">
-                  {l.loading}
+                  {state.l.loading}
                 </div>
-              ) : agents.length === 0 ? (
-                <div className="text-xs text-muted-foreground px-3 py-1">{l.noAgents}</div>
+              ) : state.agents.length === 0 ? (
+                <div className="text-xs text-muted-foreground px-3 py-1">{state.l.noAgents}</div>
               ) : (
-                agents.map((agent) => {
-                  const isActive = isSessionView && activeAgent?.id === agent.id;
-                  const agentKanbanStatus = getAgentKanbanStatus(agent.id);
-                  const statusDot =
+                state.agents.map((agent) => {
+                  const isActive = state.isSessionView && state.activeAgent?.id === agent.id;
+                  const agentKanbanStatus = state.getAgentKanbanStatus(agent.id);
+                  const kanbanStatus =
                     agentKanbanStatus === "working"
-                      ? "bg-success shadow-[0_0_6px_rgba(74,222,128,0.6)]"
+                      ? "working"
                       : agentKanbanStatus === "idle"
-                        ? "bg-text-secondary/30"
-                        : "bg-text-secondary/10";
+                        ? "idle"
+                        : "other";
                   return (
-                    <button
+                    <AgentListItem
                       key={agent.id}
-                      onClick={() =>
-                        handleSelectAgentClick({
-                          id: agent.id,
-                          name: agent.name,
-                          avatarUrl: agent.avatarUrl,
-                        })
-                      }
-                      className={itemClass(isActive)}
-                    >
-                      <span className="relative flex-shrink-0">
-                        <AgentAvatar
-                          name={agent.name}
-                          avatarUrl={agent.avatarUrl}
-                          size={isMobile ? "sm" : "xs"}
-                        />
-                        <span
-                          className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border-2 border-background ${statusDot}`}
-                        />
-                      </span>
-                      <span className="truncate">{agent.name}</span>
-                    </button>
+                      id={agent.id}
+                      name={agent.name}
+                      avatarUrl={agent.avatarUrl}
+                      isActive={isActive}
+                      isMobile={isMobile}
+                      kanbanStatus={kanbanStatus}
+                      itemClass={state.itemClass}
+                      onClick={state.handleSelectAgentClick}
+                    />
                   );
                 })
               )}
@@ -448,10 +236,13 @@ export function SessionSidebar({
 
         {/* Teams Accordion */}
         <div className="flex flex-col">
-          <div className={accordionHeaderClass} onClick={() => setIsOpenTeams((prev) => !prev)}>
+          <div
+            className={accordionHeaderClass}
+            onClick={() => state.setIsOpenTeams((prev) => !prev)}
+          >
             <ChevronRight
               size={chevronSize}
-              className={`transform transition-transform ${isOpenTeams ? "rotate-90" : ""}`}
+              className={`transform transition-transform ${state.isOpenTeams ? "rotate-90" : ""}`}
             />
             <button
               onClick={(e) => {
@@ -459,10 +250,10 @@ export function SessionSidebar({
                 onCloseSidebar?.();
                 onNavigate?.("/teams");
               }}
-              className={`${accordionButtonClass}`}
+              className={accordionButtonClass}
             >
               <span className="ml-2">
-                {l.sectionTeams} ({teams.length})
+                {state.l.sectionTeams} ({state.teams.length})
               </span>
               <ArrowRight
                 size={isMobile ? 20 : 12}
@@ -471,38 +262,28 @@ export function SessionSidebar({
             </button>
           </div>
 
-          {isOpenTeams && (
+          {state.isOpenTeams && (
             <div className={isMobile ? "px-3 mt-1 space-y-1.5" : "px-2 mt-1 space-y-0.5"}>
-              {loadingTeams ? (
+              {state.loadingTeams ? (
                 <div className="text-xs text-muted-foreground px-3 py-1 animate-pulse">
-                  {l.loading}
+                  {state.l.loading}
                 </div>
-              ) : teams.length === 0 ? (
-                <div className="text-xs text-muted-foreground px-3 py-1">{l.noTeams}</div>
+              ) : state.teams.length === 0 ? (
+                <div className="text-xs text-muted-foreground px-3 py-1">{state.l.noTeams}</div>
               ) : (
-                teams.map((team) => {
-                  const isActive = isSessionView && activeTeam?.id === team.id;
+                state.teams.map((team) => {
+                  const isActive = state.isSessionView && state.activeTeam?.id === team.id;
                   return (
-                    <button
+                    <TeamListItem
                       key={team.id}
-                      onClick={() =>
-                        handleSelectTeamClick({
-                          id: team.id,
-                          name: team.name,
-                          avatarUrl: team.avatarUrl,
-                        })
-                      }
-                      className={itemClass(isActive)}
-                    >
-                      <EntityAvatar
-                        name={team.name}
-                        avatarUrl={team.avatarUrl}
-                        size={isMobile ? "sm" : "xs"}
-                        type="team"
-                        className="flex-shrink-0"
-                      />
-                      <span className="truncate">{team.name}</span>
-                    </button>
+                      id={team.id}
+                      name={team.name}
+                      avatarUrl={team.avatarUrl}
+                      isActive={isActive}
+                      isMobile={isMobile}
+                      itemClass={state.itemClass}
+                      onClick={state.handleSelectTeamClick}
+                    />
                   );
                 })
               )}
@@ -523,7 +304,7 @@ export function SessionSidebar({
               <button
                 key={item.id}
                 onClick={() => onNavigate && onNavigate(item.path)}
-                className={adminItemClass(isActive)}
+                className={state.adminItemClass(isActive)}
               >
                 <span
                   className={`${isActive ? "text-primary" : "text-muted-foreground"} w-4 flex justify-center flex-shrink-0`}

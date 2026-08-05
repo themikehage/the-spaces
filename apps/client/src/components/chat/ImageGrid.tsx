@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { useAuth } from "@/contexts/AuthContext";
-import { apiFetch } from "@/lib/api";
+import { workspaceService } from "@/lib/api/workspace.service";
 import { resolveFileUrl } from "@/lib/file-urls";
 import { Download, ExternalLink, Image, Minus, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -105,7 +105,7 @@ export function ImageGrid({
     async (resolvedUrl: string, filename?: string) => {
       setDownloading(resolvedUrl);
       try {
-        const res = await apiFetch(resolvedUrl, {
+        const res = await workspaceService.fetchWorkspaceUrl(resolvedUrl, {
           headers:
             resolvedUrl.startsWith("/api/") && token ? { Authorization: `Bearer ${token}` } : {},
         });
@@ -142,7 +142,7 @@ export function ImageGrid({
 
   const openImageInNewTab = async (resolvedUrl: string) => {
     try {
-      const res = await apiFetch(resolvedUrl, {
+      const res = await workspaceService.fetchWorkspaceUrl(resolvedUrl, {
         headers:
           resolvedUrl.startsWith("/api/") && token ? { Authorization: `Bearer ${token}` } : {},
       });

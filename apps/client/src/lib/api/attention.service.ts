@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { apiFetch } from "@/lib/api";
-import type { AttentionItem, ResolveAttention } from "shared";
 import { normalizeAttentionItem } from "@/lib/attention/normalize";
+import type { AttentionItem, ResolveAttention } from "shared";
 
 async function fetchPendingAttention(): Promise<AttentionItem[]> {
   const res = await apiFetch("/api/approvals");

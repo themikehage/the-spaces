@@ -2,7 +2,8 @@
 import { EntityAvatar } from "@/components/shared/EntityAvatar";
 import { Button } from "@/components/ui/Button";
 import { useAttention } from "@/hooks/useAttention";
-import { apiFetch } from "@/lib/api";
+import { projectsService } from "@/lib/api/projects.service";
+import { sessionsService } from "@/lib/api/sessions.service";
 import { attentionStore } from "@/lib/attention/attention-store";
 import { wsClient } from "@/lib/ws-client";
 import { AlertTriangle, Check, HelpCircle, Play, Send, Shield, Users, X } from "lucide-react";
@@ -51,46 +52,35 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
     try {
       setError(null);
       // Fetch project details
-      const projRes = await apiFetch("/api/workspace-projects");
-      if (projRes.ok) {
-        const data = await projRes.json();
-        const found = data.projects?.find((p: any) => p.id === projectId);
-        if (found) setProject(found);
-      }
+      const [projData, assignData, agentsData, sessionsData] = await Promise.all([
+        projectsService.fetchProjects().catch(() => []),
+        projectsService.fetchProjectAssignment(projectId).catch(() => null),
+        projectsService.fetchProjectAgents(projectId).catch(() => []),
+        sessionsService.fetchSessions({ projectId }).catch(() => []),
+      ]);
 
-      // Fetch project assignment
-      const assignRes = await apiFetch(`/api/workspace-projects/${projectId}/assignment`).catch(
-        () => null,
+      const matchedProj = ((projData as any).projects || projData || []).find(
+        (p: any) => p.id === projectId || p.name === projectId,
       );
-      if (assignRes && assignRes.ok) {
-        const assignData = await assignRes.json();
-        setAssignment(assignData.assignment || null);
-      }
+      setProject(matchedProj || null);
+      setAssignment(assignData);
+      setAgents((agentsData as any).agents || agentsData || []);
+      setSessions(sessionsData);
 
-      // Fetch project agents
-      const agentsRes = await apiFetch(`/api/workspace-projects/${projectId}/agents`);
-      if (agentsRes.ok) {
-        const data = await agentsRes.json();
-        setAgents(data.agents || []);
-      }
-
-      // Fetch sessions filtered by project
-      const sessionsRes = await apiFetch(`/api/sessions?projectId=${projectId}`);
-      if (sessionsRes.ok) {
-        const data = await sessionsRes.json();
-        setSessions(data.sessions || []);
-
-        // Load autonomy level for active sessions
-        for (const s of data.sessions || []) {
-          const toolsRes = await apiFetch(`/api/sessions/${s.id}/tools`);
-          if (toolsRes.ok) {
-            const toolsData = await toolsRes.json();
-            if (toolsData.autonomyLevel) {
-              setAutonomyMap((prev) => ({ ...prev, [s.id]: toolsData.autonomyLevel }));
+      const map: Record<string, "auto" | "propose" | "suggest"> = {};
+      await Promise.all(
+        sessionsData.map(async (s: any) => {
+          try {
+            const tools = await sessionsService.fetchSessionTools(s.id);
+            if (tools.autonomyLevel) {
+              map[s.id] = tools.autonomyLevel;
             }
+          } catch {
+            // ignore
           }
-        }
-      }
+        }),
+      );
+      setAutonomyMap(map);
     } catch (err: any) {
       setError(err.message || "Failed to load floor data");
     } finally {
@@ -122,20 +112,9 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
   const updateProjectStatus = async (status: "planning" | "running" | "review" | "done") => {
     if (!projectId || !project) return;
     try {
-      const res = await apiFetch(`/api/workspace-projects/${projectId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
-      });
-      if (res.ok) {
-        const updated = await res.json();
-        setProject(updated);
-        // Force refresh
-        await fetchProjectData();
-      } else {
-        const err = await res.json();
-        alert(err.error || "Failed to update project status");
-      }
+      const updated = await projectsService.updateProject(projectId, { status });
+      setProject(updated);
+      await fetchProjectData();
     } catch (err: any) {
       alert(err.message || "Failed to update project status");
     }
@@ -145,18 +124,12 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
     if (!projectId) return;
     try {
       setStartingAgent(agent.id);
-      const res = await apiFetch("/api/sessions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: `${agent.name} Workspace`,
-          agentId: agent.id,
-          projectId: projectId,
-        }),
+      await sessionsService.createSession({
+        name: `${agent.name} Workspace`,
+        agentId: agent.id,
+        projectId: projectId,
       });
-      if (res.ok) {
-        await fetchProjectData();
-      }
+      await fetchProjectData();
     } catch (err) {
       console.error("Failed to start agent:", err);
     } finally {
@@ -166,23 +139,12 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
 
   const changeAutonomyLevel = async (sessionId: string, level: "auto" | "propose" | "suggest") => {
     try {
-      // Get current tools first to avoid resetting them
-      const toolsRes = await apiFetch(`/api/sessions/${sessionId}/tools`);
-      if (toolsRes.ok) {
-        const toolsData = await toolsRes.json();
-        const res = await apiFetch(`/api/sessions/${sessionId}/tools`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            tools: toolsData.tools || [],
-            executionMode: toolsData.executionMode || "standard",
-            autonomyLevel: level,
-          }),
-        });
-        if (res.ok) {
-          setAutonomyMap((prev) => ({ ...prev, [sessionId]: level }));
-        }
-      }
+      const toolsData = await sessionsService.fetchSessionTools(sessionId);
+      await sessionsService.updateSessionTools(
+        sessionId,
+        (toolsData as any).tools || toolsData || [],
+      );
+      setAutonomyMap((prev) => ({ ...prev, [sessionId]: level }));
     } catch (err) {
       console.error("Failed to change autonomy level:", err);
     }
@@ -197,15 +159,9 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
     if (!msg) return;
 
     try {
-      const res = await apiFetch(`/api/sessions/${sessionId}/prompt`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: msg }),
-      });
-      if (res.ok) {
-        setSteerMessages((prev) => ({ ...prev, [sessionId]: "" }));
-        await fetchProjectData();
-      }
+      await sessionsService.sendSessionPrompt(sessionId, msg);
+      setSteerMessages((prev) => ({ ...prev, [sessionId]: "" }));
+      await fetchProjectData();
     } catch (err) {
       console.error("Failed to send steer message:", err);
     }

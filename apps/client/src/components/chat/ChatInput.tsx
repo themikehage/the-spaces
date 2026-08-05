@@ -1,43 +1,16 @@
 // SPDX-License-Identifier: MIT
-import { useToast } from "@/contexts/ToastContext";
-import { useLiterals, type ContextUsage } from "@/lib";
-import { apiFetch } from "@/lib/api";
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useChatInputForm } from "@/hooks/useChatInputForm";
+import type { ContextUsage } from "@/lib";
+import { workspaceService } from "@/lib/api/workspace.service";
 import type { EntityType } from "shared";
 import { AutocompletePopover } from "./AutocompletePopover";
-import { literals as u } from "./ChatInput.literals";
+import { ChatInputAttachments } from "./ChatInputAttachments";
 import { InputCard } from "./InputCard";
 import { InputToolbar } from "./InputToolbar";
-import type { SkillInfo } from "./SkillsSelector";
-
-const DEFAULT_TOOLS = [
-  "read",
-  "write",
-  "edit",
-  "bash",
-  "grep",
-  "find",
-  "ls",
-  "request_approval",
-  "ask_question",
-  "render_images",
-  "render_chart",
-  "render_html",
-  "refresh_ui",
-  "spawn_subagent",
-  "delegate_task",
-];
 
 export interface MentionTarget {
   id: string;
   name: string;
-}
-
-interface Attachment {
-  id: string;
-  file: File;
-  type: "image" | "document";
-  previewUrl?: string;
 }
 
 interface AttachmentScope {
@@ -168,7 +141,7 @@ export async function processAttachments(
       if (scope.activeChannelId) params.append("channelId", scope.activeChannelId);
       const url = `/api/workspace/assets/uploads${params.toString() ? `?${params.toString()}` : ""}`;
 
-      const res = await apiFetch(url, {
+      const res = await workspaceService.fetchWorkspaceUrl(url, {
         method: "POST",
         body: formData,
       });
@@ -196,7 +169,7 @@ export async function processAttachments(
       if (scope.activeChannelId) params.append("channelId", scope.activeChannelId);
       const url = `/api/workspace/assets/uploads${params.toString() ? `?${params.toString()}` : ""}`;
 
-      const res = await apiFetch(url, {
+      const res = await workspaceService.fetchWorkspaceUrl(url, {
         method: "POST",
         body: formData,
       });
@@ -267,390 +240,92 @@ export function ChatInput({
   entityType: customEntityType,
   entityId: customEntityId,
 }: Props) {
-  const l = useLiterals(u);
-
-  const resolvedEntityType: EntityType =
-    customEntityType || (activeAgentId ? "agent" : activeProjectName ? "project" : "global");
-  const resolvedEntityId: string = customEntityId || activeAgentId || activeProjectName || "global";
-  const { addToast } = useToast();
-  const [input, setInput] = useState("");
-  const [activeTools, setActiveTools] = useState<string[]>(DEFAULT_TOOLS);
-  const [executionMode, setExecutionMode] = useState<
-    "readonly" | "standard" | "autonomous" | undefined
-  >(undefined);
-  const [toolStatus, setToolStatus] = useState<Record<string, "available" | "missing_key">>({});
-  const [skills, setSkills] = useState<SkillInfo[]>([]);
-  const [skillsLoading, setSkillsLoading] = useState(false);
-  const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const [focused, setFocused] = useState(false);
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const localTextareaRef = useRef<HTMLTextAreaElement>(null);
-  const textareaRef = externalTextareaRef || localTextareaRef;
-
-  // Autocomplete state
-  const [autocompleteMode, setAutocompleteMode] = useState<"skill" | "mention" | null>(null);
-  const [autocompleteSearch, setAutocompleteSearch] = useState("");
-  const [autocompleteSelectedIndex, setAutocompleteSelectedIndex] = useState(0);
-
-  const filteredMentions = mentionTargets.filter((t) =>
-    t.name.toLowerCase().includes(autocompleteSearch.toLowerCase()),
-  );
-
-  const filteredSkills = skills.filter((s) =>
-    s.name.toLowerCase().includes(autocompleteSearch.toLowerCase()),
-  );
-
-  const filteredItems =
-    autocompleteMode === "mention"
-      ? filteredMentions.map((t) => ({ id: t.id, name: t.name }))
-      : filteredSkills.map((s) => ({ id: s.name, name: s.name, description: s.description }));
-
-  const checkAutocomplete = (text: string, cursorPosition: number) => {
-    const textBeforeCursor = text.slice(0, cursorPosition);
-
-    if (mentionTargets.length > 0) {
-      const mentionMatch = textBeforeCursor.match(/(?:^|\s)@(\S*)$/);
-      if (mentionMatch) {
-        setAutocompleteSearch(mentionMatch[1]);
-        setAutocompleteMode("mention");
-        setAutocompleteSelectedIndex(0);
-        return;
-      }
-    }
-
-    const lastWordMatch = textBeforeCursor.match(/(\/\S*)$/);
-    if (lastWordMatch) {
-      const triggerWord = lastWordMatch[1];
-      setAutocompleteSearch(triggerWord.slice(1));
-      setAutocompleteMode("skill");
-      setAutocompleteSelectedIndex(0);
-    } else {
-      setAutocompleteMode(null);
-    }
-  };
-
-  const insertMention = (targetName: string) => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-    const cursorPosition = textarea.selectionStart;
-    const textBeforeCursor = input.slice(0, cursorPosition);
-    const textAfterCursor = input.slice(cursorPosition);
-    const replaced = textBeforeCursor.replace(
-      /(?:^|(\s))@\S*$/,
-      (_, space) => `${space ?? ""}@${targetName} `,
-    );
-    const newVal = replaced + textAfterCursor;
-    setInput(newVal);
-    setAutocompleteMode(null);
-    const newCursorPos = replaced.length;
-    setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(newCursorPos, newCursorPos);
-    }, 0);
-  };
-
-  const insertSkillReference = (skillName: string) => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-    const cursorPosition = textarea.selectionStart;
-    const textBeforeCursor = input.slice(0, cursorPosition);
-    const textAfterCursor = input.slice(cursorPosition);
-
-    // Check if there is an active slash command prefix being typed at the cursor
-    const hasSlashMatch = textBeforeCursor.match(/(\/\S*)$/);
-    let textBeforeCursorReplaced;
-    if (hasSlashMatch) {
-      textBeforeCursorReplaced = textBeforeCursor.replace(/(\/\S*)$/, `/${skillName} `);
-    } else {
-      // If there's no slash command suffix, append it with a leading space if needed
-      const needsSpace = textBeforeCursor.length > 0 && !textBeforeCursor.endsWith(" ");
-      textBeforeCursorReplaced = `${textBeforeCursor}${needsSpace ? " " : ""}/${skillName} `;
-    }
-    const newVal = textBeforeCursorReplaced + textAfterCursor;
-    setInput(newVal);
-    setAutocompleteMode(null);
-    const newCursorPos = textBeforeCursorReplaced.length;
-    setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(newCursorPos, newCursorPos);
-    }, 0);
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return;
-    const files = Array.from(e.target.files);
-    const newAttachments = files.map((file) => {
-      const isImg = file.type.startsWith("image/");
-      return {
-        id: Math.random().toString(36).substring(2, 9),
-        file,
-        type: isImg ? ("image" as const) : ("document" as const),
-        previewUrl: isImg ? URL.createObjectURL(file) : undefined,
-      };
-    });
-    setAttachments((prev) => [...prev, ...newAttachments]);
-    e.target.value = "";
-  };
-
-  const removeAttachment = (id: string) => {
-    setAttachments((prev) => {
-      const target = prev.find((a) => a.id === id);
-      if (target?.previewUrl) {
-        URL.revokeObjectURL(target.previewUrl);
-      }
-      return prev.filter((a) => a.id !== id);
-    });
-  };
-
-  const handleSend = async (option?: "steer" | "follow_up") => {
-    if ((!input.trim() && attachments.length === 0) || runnerActive) return;
-
-    try {
-      const files = attachments.map((a) => a.file);
-      const result = await processAttachments(files, {
-        activeProjectName,
-        activeAgentId,
-        activeChannelId,
-      });
-
-      const finalMessage = input + result.extraText;
-      onSend(
-        finalMessage,
-        option,
-        activeTools,
-        result.images.length > 0 ? result.images : undefined,
-      );
-
-      attachments.forEach((a) => {
-        if (a.previewUrl) URL.revokeObjectURL(a.previewUrl);
-      });
-      setAttachments([]);
-      setInput("");
-      setAutocompleteMode(null);
-    } catch (err) {
-      addToast("error", err instanceof Error ? err.message : String(err));
-    }
-  };
-
-  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (autocompleteMode && filteredItems.length > 0) {
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        setAutocompleteSelectedIndex((prev) => (prev + 1) % filteredItems.length);
-        return;
-      }
-      if (e.key === "ArrowUp") {
-        e.preventDefault();
-        setAutocompleteSelectedIndex(
-          (prev) => (prev - 1 + filteredItems.length) % filteredItems.length,
-        );
-        return;
-      }
-      if (e.key === "Enter" || e.key === "Tab") {
-        e.preventDefault();
-        const selectedItem = filteredItems[autocompleteSelectedIndex];
-        if (autocompleteMode === "mention") {
-          insertMention(selectedItem.name);
-        } else {
-          insertSkillReference(selectedItem.name);
-        }
-        return;
-      }
-      if (e.key === "Escape") {
-        e.preventDefault();
-        setAutocompleteMode(null);
-        return;
-      }
-    }
-
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      if (streaming) {
-        handleSend("steer");
-      } else {
-        handleSend();
-      }
-    } else if (e.key === "Enter" && e.altKey) {
-      e.preventDefault();
-      if (streaming) {
-        handleSend("follow_up");
-      }
-    }
-  };
-
-  const handleToolsChange = async (
-    tools: string[],
-    nextMode?: "readonly" | "standard" | "autonomous",
-  ) => {
-    setActiveTools(tools);
-    if (nextMode) {
-      setExecutionMode(nextMode);
-    }
-    onToolsChange?.(tools);
-    if (!sessionId) return;
-    try {
-      await apiFetch(`/api/sessions/${sessionId}/tools`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ tools, executionMode: nextMode || executionMode }),
-      });
-    } catch {
-      /* noop */
-    }
-  };
-
-  // Focus tracking
-  useEffect(() => {
-    const handleFocus = () => setFocused(true);
-    const handleBlur = () => setFocused(false);
-
-    const el = textareaRef.current;
-    if (el) {
-      el.addEventListener("focus", handleFocus);
-      el.addEventListener("blur", handleBlur);
-    }
-    return () => {
-      if (el) {
-        el.removeEventListener("focus", handleFocus);
-        el.removeEventListener("blur", handleBlur);
-      }
-    };
-  }, []);
-
-  // Fetch tools
-  useEffect(() => {
-    if (!sessionId) {
-      setActiveTools(DEFAULT_TOOLS);
-      setExecutionMode(undefined);
-      return;
-    }
-    const fetchTools = async () => {
-      try {
-        const res = await apiFetch(`/api/sessions/${sessionId}/tools`);
-        if (res.ok) {
-          const data = await res.json();
-          setActiveTools(data.tools ?? DEFAULT_TOOLS);
-          setToolStatus(data.toolStatus ?? {});
-          setExecutionMode(data.executionMode);
-        }
-      } catch {
-        setActiveTools(DEFAULT_TOOLS);
-        setExecutionMode(undefined);
-      }
-    };
-    fetchTools();
-  }, [sessionId]);
-
-  // Fetch skills
-  const fetchSessionSkills = useCallback(async () => {
-    if (!sessionId) {
-      setSkills([]);
-      return;
-    }
-    setSkillsLoading(true);
-    try {
-      const res = await apiFetch(`/api/sessions/${sessionId}/skills`);
-      if (res.ok) {
-        const data = await res.json();
-        setSkills(data.skills ?? []);
-      }
-    } catch (err) {
-      console.error("Error loading session skills:", err);
-    } finally {
-      setSkillsLoading(false);
-    }
-  }, [sessionId]);
-
-  useEffect(() => {
-    fetchSessionSkills();
-  }, [fetchSessionSkills]);
-
-  useEffect(() => {
-    const handleUpdate = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      if (customEvent.detail?.type === "skill" || !customEvent.detail?.type) {
-        fetchSessionSkills();
-      }
-    };
-    window.addEventListener("entity-updated", handleUpdate);
-    return () => window.removeEventListener("entity-updated", handleUpdate);
-  }, [fetchSessionSkills]);
-
-  const placeholderText = runnerActive
-    ? l.placeholderRunnerActive
-    : streaming
-      ? l.placeholderSteer
-      : l.placeholderSend;
+  const form = useChatInputForm({
+    onSend,
+    onAbort,
+    streaming,
+    sessionId,
+    onToolsChange,
+    runnerActive,
+    mentionTargets,
+    activeProjectName,
+    activeAgentId,
+    activeChannelId,
+    externalTextareaRef,
+    disabled,
+    customEntityType,
+    customEntityId,
+  });
 
   return (
     <div className="relative p-3 sm:p-4">
       <div className="relative max-w-3xl mx-auto">
-        {/* AutocompleteDropdown */}
         <AutocompletePopover
-          mode={autocompleteMode}
-          items={filteredItems}
-          selectedIndex={autocompleteSelectedIndex}
+          mode={form.autocompleteMode}
+          items={form.filteredItems}
+          selectedIndex={form.autocompleteSelectedIndex}
           onSelect={(item) => {
-            if (autocompleteMode === "mention") {
-              insertMention(item.name);
+            if (form.autocompleteMode === "mention") {
+              form.insertMention(item.name);
             } else {
-              insertSkillReference(item.name);
+              form.insertSkillReference(item.name);
             }
           }}
-          onClose={() => setAutocompleteMode(null)}
-          textareaRef={textareaRef}
+          onClose={() => form.setAutocompleteMode(null)}
+          textareaRef={form.textareaRef}
         />
 
-        {/* Floating Input Card */}
+        <ChatInputAttachments
+          attachments={form.attachments}
+          onRemoveAttachment={form.removeAttachment}
+        />
+
         <InputCard
           streaming={streaming}
-          disabled={runnerActive || disabled}
-          focused={focused}
-          attachments={attachments}
-          onRemoveAttachment={removeAttachment}
-          input={input}
+          disabled={form.disabled}
+          focused={form.focused}
+          attachments={form.attachments}
+          onRemoveAttachment={form.removeAttachment}
+          input={form.input}
           onInputChange={(val) => {
-            setInput(val);
-            const textarea = textareaRef.current;
+            form.setInput(val);
+            const textarea = form.textareaRef.current;
             if (textarea) {
-              checkAutocomplete(val, textarea.selectionStart);
+              form.checkAutocomplete(val, textarea.selectionStart);
             }
           }}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholderText}
-          textareaRef={textareaRef}
+          onKeyDown={form.handleKeyDown}
+          placeholder={form.placeholderText}
+          textareaRef={form.textareaRef}
           toolbar={
             <InputToolbar
               sessionId={sessionId}
               streaming={streaming}
-              disabled={runnerActive || disabled}
-              activeTools={activeTools}
-              onToolsChange={handleToolsChange}
-              skills={skills}
-              skillsLoading={skillsLoading}
+              disabled={form.disabled}
+              activeTools={form.activeTools}
+              onToolsChange={form.handleToolsChange}
+              skills={form.skills}
+              skillsLoading={form.skillsLoading}
               onSelectSkill={(skillName) => {
-                insertSkillReference(skillName);
+                form.insertSkillReference(skillName);
               }}
-              onFileClick={() => fileInputRef.current?.click()}
-              toolStatus={toolStatus}
-              onSend={() => handleSend()}
+              onFileClick={() => form.fileInputRef.current?.click()}
+              toolStatus={form.toolStatus}
+              onSend={() => form.handleSendAction()}
               onStop={onAbort}
               contextUsage={contextUsage}
               onCompact={onCompact}
               compacting={compacting}
-              executionMode={executionMode}
-              entityType={resolvedEntityType}
-              entityId={resolvedEntityId}
+              executionMode={form.executionMode}
+              entityType={form.resolvedEntityType}
+              entityId={form.resolvedEntityId}
             />
           }
         />
         <input
           type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
+          ref={form.fileInputRef}
+          onChange={form.handleFileChange}
           multiple
           className="hidden"
         />

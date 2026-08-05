@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { useLiterals } from "@/lib";
-import { apiFetch } from "@/lib/api";
+import { workspaceService } from "@/lib/api/workspace.service";
 import { Check, Download, ExternalLink, File, Maximize } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import type { FileInfo } from "shared";
@@ -158,7 +158,9 @@ export function WorkspaceFileEditor({
         if (activeChannelId) params.append("channelId", activeChannelId);
         if (activeTeamId) params.append("teamId", activeTeamId);
         const contextQuery = params.toString() ? `&${params.toString()}` : "";
-        const res = await apiFetch(`/api/workspace/${file.path}?raw=true${contextQuery}`);
+        const res = await workspaceService.fetchWorkspaceUrl(
+          `/api/workspace/${file.path}?raw=true${contextQuery}`,
+        );
         if (!res.ok) return;
         const blob = await res.blob();
         if (active) {
@@ -210,7 +212,9 @@ export function WorkspaceFileEditor({
         if (activeChannelId) params.append("channelId", activeChannelId);
         if (activeTeamId) params.append("teamId", activeTeamId);
         const contextQuery = params.toString() ? `&${params.toString()}` : "";
-        const res = await apiFetch(`/api/workspace/${file.path}?raw=true${contextQuery}`);
+        const res = await workspaceService.fetchWorkspaceUrl(
+          `/api/workspace/${file.path}?raw=true${contextQuery}`,
+        );
         if (!res.ok) throw new Error("Failed to load raw file");
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
@@ -230,7 +234,9 @@ export function WorkspaceFileEditor({
       if (activeChannelId) params.append("channelId", activeChannelId);
       if (activeTeamId) params.append("teamId", activeTeamId);
       const contextQuery = params.toString() ? `&${params.toString()}` : "";
-      const res = await apiFetch(`/api/workspace/${file.path}?download=true${contextQuery}`);
+      const res = await workspaceService.fetchWorkspaceUrl(
+        `/api/workspace/${file.path}?download=true${contextQuery}`,
+      );
       if (!res.ok) throw new Error("Failed to download");
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);

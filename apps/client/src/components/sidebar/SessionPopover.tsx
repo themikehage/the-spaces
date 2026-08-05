@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { useSessions, type SessionStatus } from "@/contexts/SessionsContext";
 import { useLiterals } from "@/lib";
-import { apiFetch } from "@/lib/api";
+import { sessionsService } from "@/lib/api/sessions.service";
 import {
   buildCreateSessionBody,
   getSessionContextPredicate,
@@ -65,10 +65,8 @@ export function SessionPopover({
 
   const fetchSessions = useCallback(async () => {
     try {
-      const res = await apiFetch(`/api/sessions?archived=${showArchived}`);
-      if (!res.ok) return;
-      const data = await res.json();
-      const mapped = (data.sessions ?? []).map((s: SessionItem) => ({
+      const data = await sessionsService.fetchSessions({ archived: showArchived });
+      const mapped = (data ?? []).map((s: SessionItem) => ({
         ...s,
         status: sessionStatuses[s.id] || s.status,
       }));
@@ -81,7 +79,7 @@ export function SessionPopover({
   const archiveSession = useCallback(
     async (e: React.MouseEvent, id: string) => {
       e.stopPropagation();
-      await apiFetch(`/api/sessions/${id}/archive`, { method: "POST" });
+      await sessionsService.archiveSession(id);
       window.dispatchEvent(new CustomEvent("entity-updated"));
       fetchSessions();
     },
@@ -91,7 +89,7 @@ export function SessionPopover({
   const unarchiveSession = useCallback(
     async (e: React.MouseEvent, id: string) => {
       e.stopPropagation();
-      await apiFetch(`/api/sessions/${id}/unarchive`, { method: "POST" });
+      await sessionsService.unarchiveSession(id);
       window.dispatchEvent(new CustomEvent("entity-updated"));
       fetchSessions();
     },
@@ -142,21 +140,12 @@ export function SessionPopover({
         filteredSessions.length,
       );
 
-      const res = await apiFetch("/api/sessions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(
-          buildCreateSessionBody(sessionName, {
-            activeTeam,
-            activeAgent,
-            activeProjectName,
-          }),
-        ),
+      const body = buildCreateSessionBody(sessionName, {
+        activeTeam,
+        activeAgent,
+        activeProjectName,
       });
-      if (!res.ok) return;
-      const session = await res.json();
+      const session = await sessionsService.createSession(body);
       const updated = [{ ...session, status: "active" as SessionStatus }, ...sessions];
       setSessions(updated);
       onNewSession(session.id);
@@ -170,9 +159,7 @@ export function SessionPopover({
 
   const deleteSession = useCallback(
     async (id: string) => {
-      await apiFetch(`/api/sessions/${id}`, {
-        method: "DELETE",
-      });
+      await sessionsService.deleteSession(id);
 
       const remaining = sessions.filter((s) => s.id !== id);
       setSessions(remaining);

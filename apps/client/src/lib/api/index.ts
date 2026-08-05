@@ -7,6 +7,7 @@ export * from "./custom-tools.service";
 export * from "./env.service";
 export * from "./mcp.service";
 export * from "./projects.service";
+export * from "./providers.service";
 export * from "./schedules.service";
 export * from "./sessions.service";
 export * from "./settings.service";

@@ -3,7 +3,7 @@ import { SystemPromptViewer } from "@/components/prompts/SystemPromptViewer";
 import { AvatarUploadField } from "@/components/shared/AvatarUploadField";
 import { Button } from "@/components/ui/Button";
 import { useLiterals } from "@/lib";
-import { apiFetch } from "@/lib/api";
+import { agentsService } from "@/lib/api/agents.service";
 import { DEFAULT_AVATAR_PREFIX, isDefaultAvatar } from "@/lib/defaultAvatars";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
@@ -46,22 +46,20 @@ export function RegisterModal({
     if (agent) {
       const fetchDetail = async () => {
         try {
-          const res = await apiFetch(`/api/agents/${agent.id}`);
-          if (res.ok) {
-            const data = await res.json();
-            if (data.definition) {
-              setForm({
-                ...data.definition,
-                serialTools:
-                  data.definition.serialTools && data.definition.serialTools.length > 0
-                    ? data.definition.serialTools
-                    : ["request_approval", "ask_question"],
-              });
-              const avUrl = data.definition.avatarUrl || null;
-              setAvatarPreview(avUrl);
-              if (isDefaultAvatar(avUrl)) {
-                setSelectedDefaultAvatar(avUrl!.slice(DEFAULT_AVATAR_PREFIX.length));
-              }
+          const data = await agentsService.fetchAgent(agent.id);
+          const def = (data as any).definition || data;
+          if (def) {
+            setForm({
+              ...def,
+              serialTools:
+                def.serialTools && def.serialTools.length > 0
+                  ? def.serialTools
+                  : ["request_approval", "ask_question"],
+            });
+            const avUrl = def.avatarUrl || null;
+            setAvatarPreview(avUrl);
+            if (isDefaultAvatar(avUrl)) {
+              setSelectedDefaultAvatar(avUrl!.slice(DEFAULT_AVATAR_PREFIX.length));
             }
           }
         } catch (err) {

@@ -1,5 +1,4 @@
-// SPDX-License-Identifier: MIT
-import { apiFetch } from "@/lib/api";
+import { sessionsService } from "@/lib/api/sessions.service";
 import { buildCreateSessionBody, getSessionPath as resolveSessionPath } from "@/lib/session-utils";
 import { useCallback, useState } from "react";
 
@@ -66,19 +65,12 @@ export function useSessionActions({
   const handleQuickCreate = useCallback(async () => {
     setQuickCreating(true);
     try {
-      const res = await apiFetch("/api/sessions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(
-          buildCreateSessionBody("Nueva sesion", {
-            activeProjectName: activeProjectId,
-            activeAgent,
-            activeTeam,
-          }),
-        ),
+      const body = buildCreateSessionBody("Nueva sesion", {
+        activeProjectName: activeProjectId,
+        activeAgent,
+        activeTeam,
       });
-      if (!res.ok) return;
-      const session = await res.json();
+      const session = await sessionsService.createSession(body);
       onNavigate(getSessionPath(session.id));
       setSidebarOpen?.(false);
     } catch {

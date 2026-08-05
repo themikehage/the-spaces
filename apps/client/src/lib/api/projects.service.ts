@@ -63,6 +63,32 @@ async function deleteProjectAvatar(id: string): Promise<void> {
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
 }
 
+async function fetchProjectAssignment(projectId: string): Promise<any> {
+  const res = await apiFetch(`/api/workspace-projects/${projectId}/assignment`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+async function updateProjectAssignment(projectId: string, data: any): Promise<any> {
+  const res = await apiFetch(`/api/workspace-projects/${projectId}/assignment`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Failed to update assignment" }));
+    throw new Error(err.error || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+async function fetchProjectAgents(projectId: string): Promise<any[]> {
+  const res = await apiFetch(`/api/workspace-projects/${projectId}/agents`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  return data.agents || data;
+}
+
 export const projectsService = {
   fetchProjects,
   createProject,
@@ -70,4 +96,7 @@ export const projectsService = {
   deleteProject,
   uploadProjectAvatar,
   deleteProjectAvatar,
+  fetchProjectAssignment,
+  updateProjectAssignment,
+  fetchProjectAgents,
 };

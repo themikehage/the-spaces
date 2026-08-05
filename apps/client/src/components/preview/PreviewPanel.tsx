@@ -1,9 +1,9 @@
-// SPDX-License-Identifier: MIT
 import { Button } from "@/components/ui/Button";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLiterals } from "@/lib";
-import { apiFetch } from "@/lib/api";
+import { settingsService } from "@/lib/api/settings.service";
+import { workspaceService } from "@/lib/api/workspace.service";
 import { wsClient } from "@/lib/ws-client";
 import { ExternalLink, Folder, Play, RefreshCw, Settings, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -30,8 +30,8 @@ function usePreviewStatus(projectName: string) {
   const [previewBaseUrl, setPreviewBaseUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    apiFetch("/api/settings")
-      .then((r) => r.json())
+    settingsService
+      .fetchSettings()
       .then((data) => {
         if (data.previewBaseUrl) setPreviewBaseUrl(data.previewBaseUrl);
       })
@@ -40,8 +40,8 @@ function usePreviewStatus(projectName: string) {
 
   useEffect(() => {
     if (!projectName) return;
-    apiFetch(`/api/preview/state?project=${encodeURIComponent(projectName)}`)
-      .then((r) => r.json())
+    workspaceService
+      .fetchPreviewState(projectName)
       .then((data) => setState(data))
       .catch(() => {});
   }, [projectName]);
@@ -49,8 +49,7 @@ function usePreviewStatus(projectName: string) {
   const fetchConfig = useCallback(async () => {
     if (!projectName) return null;
     try {
-      const r = await apiFetch(`/api/preview/config?project=${encodeURIComponent(projectName)}`);
-      return await r.json();
+      return await workspaceService.fetchPreviewConfig(projectName);
     } catch {
       return null;
     }
@@ -148,13 +147,7 @@ export function PreviewPanel({ activeProjectName }: Props) {
     if (!projectName) return;
     setSaving(true);
     try {
-      await apiFetch(`/api/preview/config?project=${encodeURIComponent(projectName)}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(configForm),
-      });
+      await workspaceService.updatePreviewConfig(projectName, configForm);
       setConfigOpen(false);
       setBuildLogs([]);
     } finally {
@@ -167,9 +160,7 @@ export function PreviewPanel({ activeProjectName }: Props) {
     setBuildLogs([]);
     setLogOpen(true);
     try {
-      await apiFetch(`/api/preview/build?project=${encodeURIComponent(projectName)}`, {
-        method: "POST",
-      });
+      await workspaceService.buildPreview(projectName);
     } catch {
       /* noop */
     }

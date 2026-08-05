@@ -1,7 +1,6 @@
-// SPDX-License-Identifier: MIT
 import { Dropdown } from "@/components/ui/Dropdown";
 import { useLiterals } from "@/lib";
-import { apiFetch } from "@/lib/api";
+import { settingsService } from "@/lib/api/settings.service";
 import { literals as u } from "@/pages/LogsConsolePage.literals";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { GlobalLogEvent } from "shared";
@@ -46,11 +45,8 @@ export function SessionConsoleView() {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const res = await apiFetch("/api/logs");
-        if (res.ok) {
-          const data = await res.json();
-          setLogs(groupConsecutiveDeltas(data.logs || []));
-        }
+        const data = await settingsService.fetchLogs();
+        setLogs(groupConsecutiveDeltas((data as any).logs || data || []));
       } catch (err) {
         console.error("Failed to load logs history:", err);
       } finally {

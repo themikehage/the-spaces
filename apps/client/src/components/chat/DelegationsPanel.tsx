@@ -1,7 +1,6 @@
-// SPDX-License-Identifier: MIT
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { useLiterals } from "@/lib";
-import { apiFetch } from "@/lib/api";
+import { sessionsService } from "@/lib/api/sessions.service";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, CheckCircle, Users, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -48,14 +47,10 @@ export function DelegationsPanel({
       if (!sessionId) return;
       setAbortingCallId(toolCallId);
       try {
-        const res = await apiFetch(`/api/sessions/${sessionId}/delegations/${toolCallId}/abort`, {
-          method: "POST",
-        });
-        if (res.ok) {
-          setDelegations((prev) =>
-            prev.map((d) => (d.toolCallId === toolCallId ? { ...d, status: "blocked" } : d)),
-          );
-        }
+        await sessionsService.abortSessionDelegation(sessionId, toolCallId);
+        setDelegations((prev) =>
+          prev.map((d) => (d.toolCallId === toolCallId ? { ...d, status: "blocked" } : d)),
+        );
       } catch (err) {
         console.error("Failed to abort delegation:", err);
       } finally {
@@ -69,11 +64,8 @@ export function DelegationsPanel({
     if (!sessionId) return;
     setLoading(true);
     try {
-      const res = await apiFetch(`/api/sessions/${sessionId}/delegations`);
-      if (res.ok) {
-        const data = await res.json();
-        setDelegations(data.delegations ?? []);
-      }
+      const data = await sessionsService.fetchSessionDelegations(sessionId);
+      setDelegations(data);
     } catch (e) {
       console.error("Failed to fetch delegations in panel:", e);
     } finally {

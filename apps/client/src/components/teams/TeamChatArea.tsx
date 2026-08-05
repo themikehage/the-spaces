@@ -4,7 +4,8 @@ import type { MentionTarget } from "@/components/chat/ChatInput";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { EntityAvatar } from "@/components/shared/EntityAvatar";
 import { useTeam } from "@/hooks/useTeam";
-import { apiFetch } from "@/lib/api";
+import { agentsService } from "@/lib/api/agents.service";
+import { teamsService } from "@/lib/api/teams.service";
 import { getSessionPath } from "@/lib/session-utils";
 import { List, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -34,11 +35,7 @@ export function TeamChatArea({ activeTeam, sessionId, variantMode = false }: Pro
   const [registeredAgents, setRegisteredAgents] = useState<AgentInfo[]>([]);
 
   const handleSaveContext = async (context: TeamContextItem[]) => {
-    await apiFetch(`/api/teams/${activeTeam.id}/context`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ context }),
-    });
+    await teamsService.updateTeamContext(activeTeam.id, context);
     await fetchTeam();
   };
 
@@ -52,18 +49,14 @@ export function TeamChatArea({ activeTeam, sessionId, variantMode = false }: Pro
 
   const loadTeamDetails = useCallback(async () => {
     try {
-      const [tRes, agRes] = await Promise.all([
-        apiFetch(`/api/teams/${activeTeam.id}`),
-        apiFetch("/api/agents"),
+      const [tData, agData] = await Promise.all([
+        teamsService.fetchTeam(activeTeam.id),
+        agentsService.fetchAgents(),
       ]);
-      if (tRes.ok) {
-        const data = await tRes.json();
-        setTeamMembers(data.members || []);
+      if (tData) {
+        setTeamMembers((tData as any).members || []);
       }
-      if (agRes.ok) {
-        const data = await agRes.json();
-        setRegisteredAgents(data.agents || []);
-      }
+      setRegisteredAgents((agData as any).agents || agData || []);
     } catch {
       /* noop */
     }
@@ -85,29 +78,19 @@ export function TeamChatArea({ activeTeam, sessionId, variantMode = false }: Pro
   }, [loadTeamDetails, fetchTeam]);
 
   const handleAddMember = async (data: TeamMember) => {
-    await apiFetch(`/api/teams/${activeTeam.id}/members`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
+    await teamsService.addTeamMember(activeTeam.id, data);
     await loadTeamDetails();
     await fetchTeam();
   };
 
   const handleUpdateMember = async (agentId: string, data: Partial<TeamMember>) => {
-    await apiFetch(`/api/teams/${activeTeam.id}/members/${agentId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
+    await teamsService.updateTeamMember(activeTeam.id, agentId, data);
     await loadTeamDetails();
     await fetchTeam();
   };
 
   const handleRemoveMember = async (agentId: string) => {
-    await apiFetch(`/api/teams/${activeTeam.id}/members/${agentId}`, {
-      method: "DELETE",
-    });
+    await teamsService.removeTeamMember(activeTeam.id, agentId);
     await loadTeamDetails();
     await fetchTeam();
   };

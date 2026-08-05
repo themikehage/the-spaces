@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { useLiterals } from "@/lib";
-import { apiFetch } from "@/lib/api";
+import { providersService } from "@/lib/api/providers.service";
+import { sessionsService } from "@/lib/api/sessions.service";
 import { ChevronDown, ChevronLeft, ChevronRight, Plus, Table } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -32,7 +33,8 @@ const STORAGE_KEY = "crewfy-selected-model";
 const RECENT_MODELS_KEY = "crewfy-recent-models";
 
 function parseModelString(modelId: string): SelectedModel | null {
-  const idx = modelId.indexOf("/");
+  if (!modelId) return null;
+  const idx = modelId.includes(":") ? modelId.indexOf(":") : modelId.indexOf("/");
   if (idx === -1) return null;
   return {
     provider: modelId.slice(0, idx),
@@ -82,23 +84,12 @@ export function ModelSelector({
 
   const applyModelToSession = useCallback(async (model: SelectedModel, sid: string) => {
     try {
-      const res = await apiFetch(`/api/sessions/${sid}/model`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          provider: model.provider,
-          modelId: model.modelId,
-          thinkingLevel: "medium",
-        }),
+      await sessionsService.updateSessionModel(sid, {
+        provider: model.provider,
+        modelId: model.modelId,
+        thinkingLevel: "medium",
       });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setError(data.error ?? "Failed to set model");
-      } else {
-        setError(null);
-      }
+      setError(null);
     } catch {
       setError("Failed to set model");
     }
@@ -116,10 +107,10 @@ export function ModelSelector({
   }, [controlled, value]);
 
   useEffect(() => {
-    apiFetch("/api/providers")
-      .then((res) => res.json())
+    providersService
+      .fetchProviders()
       .then((data) => {
-        const configured = (data.providers ?? [])
+        const configured = (data ?? [])
           .filter((p: ProviderInfo) => p.authStatus.configured)
           .sort((a: ProviderInfo, b: ProviderInfo) => a.name.localeCompare(b.name));
         setProviders(configured);
@@ -146,9 +137,6 @@ export function ModelSelector({
           setSelected(fallbackSelection);
           localStorage.setItem(STORAGE_KEY, JSON.stringify(fallbackSelection));
           setError(null);
-          if (sessionId) {
-            applyModelToSession(fallbackSelection, sessionId);
-          }
         }
       }
     } else {
@@ -163,17 +151,9 @@ export function ModelSelector({
         setSelected(fallbackSelection);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(fallbackSelection));
         setError(null);
-        if (sessionId) {
-          applyModelToSession(fallbackSelection, sessionId);
-        }
       }
     }
-  }, [providers, selected, sessionId, applyModelToSession]);
-
-  useEffect(() => {
-    if (!sessionId || !selectedRef.current) return;
-    applyModelToSession(selectedRef.current, sessionId);
-  }, [sessionId, applyModelToSession]);
+  }, [providers, selected]);
 
   const handleSelectModel = useCallback(
     async (provider: string, modelId: string, modelName: string) => {
@@ -190,15 +170,16 @@ export function ModelSelector({
         return updated;
       });
 
+      if (sessionId) {
+        applyModelToSession(newSelection, sessionId);
+      }
+
       if (controlled) {
         onChange(`${provider}/${modelId}`);
         return;
       }
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newSelection));
-
-      if (!sessionId) return;
-      await applyModelToSession(newSelection, sessionId);
     },
     [controlled, onChange, sessionId, applyModelToSession],
   );

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { RichMarkdown } from "@/components/chat/RichMarkdown";
-import { apiFetch } from "@/lib/api";
+import { settingsService } from "@/lib/api/settings.service";
 import { Check, Copy, Loader2, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { PromptPreviewResponse } from "shared";
@@ -34,8 +34,8 @@ export function SystemPromptViewer({
 
   useEffect(() => {
     let isMounted = true;
-    apiFetch("/api/settings")
-      .then((res) => (res.ok ? res.json() : null))
+    settingsService
+      .fetchSettings()
       .then((data) => {
         if (isMounted && data) {
           setShowPreviewsSetting(!!data.showPromptPreviews);
@@ -53,21 +53,13 @@ export function SystemPromptViewer({
     setLoading(true);
     setError(null);
     try {
-      const res = await apiFetch("/api/prompts/preview", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          entityType,
-          agentId,
-          projectId,
-          teamId,
-          subagentId,
-        }),
+      const data = await settingsService.previewSystemPrompt({
+        entityType,
+        agentId,
+        projectId,
+        teamId,
+        subagentId,
       });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to fetch prompt preview");
-      }
       setPreviewData(data);
     } catch (err: any) {
       setError(err.message || String(err));

@@ -1,6 +1,5 @@
-// SPDX-License-Identifier: MIT
 import { useLiterals } from "@/lib";
-import { apiFetch } from "@/lib/api";
+import { providersService } from "@/lib/api/providers.service";
 import { Info, RefreshCw, Search, X } from "lucide-react";
 import { Fragment, useCallback, useEffect, useState } from "react";
 import { literals as u } from "./ProvidersTab.literals";
@@ -35,10 +34,8 @@ export function ProvidersTab() {
 
   const fetchProviders = useCallback(async () => {
     try {
-      const res = await apiFetch("/api/providers");
-      if (!res.ok) throw new Error("Failed to load providers");
-      const data = await res.json();
-      const sorted = (data.providers ?? []).sort((a: ProviderInfo, b: ProviderInfo) => {
+      const data = await providersService.fetchProviders();
+      const sorted = (data ?? []).sort((a: ProviderInfo, b: ProviderInfo) => {
         if (a.authStatus.configured && !b.authStatus.configured) return -1;
         if (!a.authStatus.configured && b.authStatus.configured) return 1;
         return a.name.localeCompare(b.name);
@@ -56,22 +53,15 @@ export function ProvidersTab() {
     setRefreshing((prev) => ({ ...prev, [providerId]: true }));
     setError("");
     try {
-      const res = await apiFetch(`/api/providers/${providerId}/refresh`, {
-        method: "POST",
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Failed to refresh models");
-      }
+      await providersService.refreshProviderModels(providerId);
       await fetchProviders();
       if (infoProvider?.id === providerId) {
-        const modelsRes = await apiFetch(`/api/providers/${providerId}/models`);
-        if (modelsRes.ok) {
-          const modelsData = await modelsRes.json();
-          setInfoProvider((prev) =>
-            prev ? { ...prev, models: modelsData.models ?? prev.models } : prev,
-          );
-        }
+        const modelsData = await providersService.fetchProviderModels(providerId);
+        setInfoProvider((prev) =>
+          prev
+            ? { ...prev, models: (modelsData as any).models || modelsData || prev.models }
+            : prev,
+        );
       }
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : "Error refreshing models";
@@ -85,11 +75,11 @@ export function ProvidersTab() {
     setInfoProvider(provider);
     setInfoLoading(true);
     try {
-      const res = await apiFetch(`/api/providers/${provider.id}/models`);
-      if (res.ok) {
-        const data = await res.json();
-        setInfoProvider({ ...provider, models: data.models ?? provider.models });
-      }
+      const modelsData = await providersService.fetchProviderModels(provider.id);
+      setInfoProvider({
+        ...provider,
+        models: (modelsData as any).models || modelsData || provider.models,
+      });
     } catch {
       /* noop */
     } finally {
@@ -106,14 +96,7 @@ export function ProvidersTab() {
     setSaving(true);
     setError("");
     try {
-      const res = await apiFetch(`/api/providers/${selectedProvider}/key`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ apiKey }),
-      });
-      if (!res.ok) throw new Error("Failed to save API key");
+      await providersService.saveProviderKey(selectedProvider, apiKey);
       setApiKey("");
       setSelectedProvider(null);
       await fetchProviders();
@@ -128,10 +111,7 @@ export function ProvidersTab() {
   const handleRemoveKey = async (providerId: string) => {
     setError("");
     try {
-      const res = await apiFetch(`/api/providers/${providerId}/key`, {
-        method: "DELETE",
-      });
-      if (!res.ok) throw new Error("Failed to remove API key");
+      await providersService.deleteProviderKey(providerId);
       await fetchProviders();
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : "Error removing key";

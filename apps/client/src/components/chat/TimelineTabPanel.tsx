@@ -1,7 +1,6 @@
-// SPDX-License-Identifier: MIT
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { useLiterals } from "@/lib";
-import { apiFetch } from "@/lib/api";
+import { sessionsService } from "@/lib/api/sessions.service";
 import { Clock } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { SessionTimeline } from "./SessionTimeline";
@@ -34,12 +33,9 @@ export function TimelineTabPanel({ sessionId }: Props) {
         setLoading(true);
       }
       try {
-        const res = await apiFetch(`/api/sessions/${sessionId}/messages`);
-        if (res.ok) {
-          const data = await res.json();
-          setMessages(data.messages ?? []);
-          setSessionMetadata(data.metadata ?? null);
-        }
+        const data = await sessionsService.fetchSessionMessages(sessionId);
+        setMessages((data as any).messages || data || []);
+        setSessionMetadata((data as any).metadata ?? null);
       } catch (e) {
         console.error("Failed to load messages for timeline panel:", e);
       } finally {

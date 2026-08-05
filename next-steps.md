@@ -1,3 +1,5 @@
 - abstraer al 100% la interfaz de las custom tools y poder asignar especificas por agente, proyecto o team
 - Poder crear agentes que existan unicamente dentro de un team y que no sean agentes que existan globalmente. Esto hay que analizarlo muy bien para implementarlo muy bien, desacoplado, extensible y sin regresiones
+- Implementar la funcionalidad de poder configurar un modelo por omision para cada provedor y un proveedor por omision, esto se usara para cuando se cree un nuevo agente o un nuevo equipo o proyecto, de esta forma no tendremos que configurar un modelo y un proveedor cada vez que creemos un nuevo agente o un nuevo equipo o proyecto
+- Implementar la funcionalidad de reutilizar mensajes envidados con las flechas arriba y abajo del declado como en cursor
 - Empezar a crear mi galeria de equipos que puedan resolver problemas concretos

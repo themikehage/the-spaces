@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { Button } from "@/components/ui/Button";
-import { apiFetch } from "@/lib/api";
+import { workspaceService } from "@/lib/api/workspace.service";
 import { Download, LoaderCircle } from "lucide-react";
 import { useState } from "react";
 import { resolveImageUrl } from "../ImageGrid";
@@ -105,7 +105,7 @@ export function ShareFileCard({
     setDownloading(true);
     try {
       const token = "";
-      const res = await apiFetch(fullDownloadUrl, {
+      const res = await workspaceService.fetchWorkspaceUrl(fullDownloadUrl, {
         headers: token ? {} : {},
       });
       if (!res.ok) throw new Error("Download failed");

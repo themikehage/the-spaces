@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { useAuth } from "@/contexts/AuthContext";
-import { apiFetch } from "@/lib/api";
+import { workspaceService } from "@/lib/api/workspace.service";
 import { resolveFileUrl } from "@/lib/file-urls";
 import { ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -131,9 +131,11 @@ export function HtmlFileFetcher({
     setLoading(true);
     setError(null);
 
-    apiFetch(resolvedUrl, {
-      headers: resolvedUrl.startsWith("/api/") && token ? { Authorization: `Bearer ${token}` } : {},
-    })
+    workspaceService
+      .fetchWorkspaceUrl(resolvedUrl, {
+        headers:
+          resolvedUrl.startsWith("/api/") && token ? { Authorization: `Bearer ${token}` } : {},
+      })
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.text();
