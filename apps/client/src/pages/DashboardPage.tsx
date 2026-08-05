@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/Button";
 import { useSessions, type SessionItem } from "@/contexts/SessionsContext";
 import { useToast } from "@/contexts/ToastContext";
 import { useLiterals } from "@/lib";
+import { agentsService } from "@/lib/api/agents.service";
+import { projectsService } from "@/lib/api/projects.service";
+import { teamsService } from "@/lib/api/teams.service";
 import { AnimatePresence } from "framer-motion";
 import { Info, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -101,12 +104,13 @@ export function DashboardPage({ onNavigate, onSelectProject }: Props) {
     return () => window.removeEventListener("entity-updated", handleUpdate);
   }, [fetchData]);
 
-  const handleDelete = (repo: RepoItem) => {
+  const handleDeleteRepo = (repo: RepoItem) => {
     setDeleteRepo(repo);
     setConfirmDeleteName("");
   };
 
-  const confirmDelete = async () => {
+  const handleDeleteRepoSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!deleteRepo) return;
     setDeleting(true);
     const id = deleteRepo.id || deleteRepo.name;
@@ -625,7 +629,7 @@ export function DashboardPage({ onNavigate, onSelectProject }: Props) {
             <p className="text-xs text-text-secondary mb-4 leading-relaxed font-body">
               {l.deleteDescription}
             </p>
-            <form onSubmit={handleDeleteRepo} className="space-y-4">
+            <form onSubmit={handleDeleteRepoSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
                   {l.confirmLabel.replace("{name}", deleteRepo.name)}
