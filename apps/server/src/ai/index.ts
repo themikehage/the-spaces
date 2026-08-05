@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Classes
+export { AgentRuntime, type AgentEngineAdapter, type AgentRuntimeDeps } from "./agent-runtime";
 export { AgentSession, createAgentSession } from "./agent-session";
 export { AuthStorage } from "./auth-storage";
 export { ModelProviderAdapter } from "./model-provider-adapter";
