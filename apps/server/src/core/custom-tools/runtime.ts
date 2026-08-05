@@ -44,7 +44,7 @@ export function createCustomToolRuntime(
           const nextStack = [...currentStack, definition.name];
 
           return pipelineExecutionStack.run(nextStack, async () => {
-            const { sessionManager } = await import("../session-manager");
+            const { sessionManager } = await import("../session/session-manager");
             const activeSession = sessionManager.getSession(context.username, context.sessionId);
             if (!activeSession) {
               return {

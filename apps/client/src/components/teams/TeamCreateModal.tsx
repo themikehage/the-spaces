@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: MIT
 import { AgentAvatar } from "@/components/shared/AgentAvatar";
 import { AvatarUploadField } from "@/components/shared/AvatarUploadField";
-import { Button } from "@/components/ui/Button";
 import { Dropdown } from "@/components/ui/Dropdown";
+import { FormDialog } from "@/components/ui/FormDialog";
 import { useLiterals } from "@/lib";
 import { DEFAULT_AVATAR_PREFIX } from "@/lib/defaultAvatars";
-import { motion } from "framer-motion";
-import { X } from "lucide-react";
 import { useState } from "react";
 import type { CreateTeam, TeamMember } from "shared";
 import { literals as u } from "./TeamCreateModal.literals";
@@ -74,8 +72,7 @@ export function TeamCreateModal({
     setError(null);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     if (!name.trim()) return;
     if (!leaderAgentId) {
       setError(l.selectLeaderPlaceholder);
@@ -116,140 +113,110 @@ export function TeamCreateModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 8 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 8 }}
-        transition={{ duration: 0.18 }}
-        className="relative w-full max-w-md bg-card border border-input rounded-2xl shadow-2xl overflow-hidden z-10 max-h-[85vh] flex flex-col"
-      >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-input flex-shrink-0">
-          <div>
-            <h2 className="text-sm font-semibold text-foreground">{l.createTitle}</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">{l.createSubtitle}</p>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-card-hover transition-colors cursor-pointer"
-          >
-            <X size={14} />
-          </button>
+    <FormDialog
+      open
+      onClose={onClose}
+      title={l.createTitle}
+      description={l.createSubtitle}
+      onSubmit={handleSubmit}
+      submitLabel={submitting ? l.creating : l.createTeam}
+      cancelLabel={l.cancel}
+      isSubmitting={submitting}
+      size="md"
+    >
+      <div className="space-y-4">
+        <AvatarUploadField
+          preview={avatarPreview}
+          selectedDefault={selectedDefaultAvatar}
+          onFileChange={handleAvatarChange}
+          onSelectDefault={handleSelectDefaultAvatar}
+          onClear={handleClearAvatar}
+          entityName={name}
+          avatarType="entity"
+          entityAvatarEntityType="team"
+        />
+
+        <div>
+          <label className="text-xs font-medium text-muted-foreground block mb-1">
+            {l.teamNameLabel}
+          </label>
+          <input
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={l.teamNamePlaceholder}
+            className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
+          />
         </div>
 
-        <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4 overflow-y-auto flex-1">
-          <AvatarUploadField
-            preview={avatarPreview}
-            selectedDefault={selectedDefaultAvatar}
-            onFileChange={handleAvatarChange}
-            onSelectDefault={handleSelectDefaultAvatar}
-            onClear={handleClearAvatar}
-            entityName={name}
-            avatarType="entity"
-            entityAvatarEntityType="team"
+        <div>
+          <label className="text-xs font-medium text-muted-foreground block mb-1">
+            {l.descriptionLabel}
+          </label>
+          <input
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder={l.descriptionPlaceholder}
+            className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
           />
+        </div>
 
-          <div>
-            <label className="text-xs font-medium text-muted-foreground block mb-1">
-              {l.teamNameLabel}
-            </label>
-            <input
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={l.teamNamePlaceholder}
-              className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
+        <div>
+          <label className="text-xs font-medium text-muted-foreground block mb-1">
+            {l.leaderLabel}
+          </label>
+          {registeredAgents.length === 0 ? (
+            <p className="text-xs text-destructive">{l.noAgentsError}</p>
+          ) : (
+            <Dropdown<string>
+              value={leaderAgentId}
+              onChange={handleLeaderChange}
+              options={leaderOptions}
+              placeholder={l.selectLeaderPlaceholder}
+              matchWidth
             />
-          </div>
+          )}
+        </div>
 
+        {leaderAgentId && nonLeaderAgents.length > 0 && (
           <div>
             <label className="text-xs font-medium text-muted-foreground block mb-1">
-              {l.descriptionLabel}
+              {l.membersLabel}
             </label>
-            <input
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder={l.descriptionPlaceholder}
-              className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
-            />
-          </div>
-
-          <div>
-            <label className="text-xs font-medium text-muted-foreground block mb-1">
-              {l.leaderLabel}
-            </label>
-            {registeredAgents.length === 0 ? (
-              <p className="text-xs text-destructive">{l.noAgentsError}</p>
-            ) : (
-              <Dropdown<string>
-                value={leaderAgentId}
-                onChange={handleLeaderChange}
-                options={leaderOptions}
-                placeholder={l.selectLeaderPlaceholder}
-                matchWidth
-              />
-            )}
-          </div>
-
-          {leaderAgentId && nonLeaderAgents.length > 0 && (
-            <div>
-              <label className="text-xs font-medium text-muted-foreground block mb-1">
-                {l.membersLabel}
-              </label>
-              <div className="space-y-1 max-h-[140px] overflow-y-auto border border-input rounded-lg p-1.5 bg-background/50">
-                {nonLeaderAgents.map((agent: any) => {
-                  const isSelected = selectedMemberIds.includes(agent.id);
-                  return (
-                    <label
-                      key={agent.id}
-                      className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-xs cursor-pointer transition-colors ${
-                        isSelected
-                          ? "bg-primary/10 text-foreground"
-                          : "text-muted-foreground hover:bg-card-hover"
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleMember(agent.id)}
-                        className="rounded border-input text-primary focus:ring-primary accent-primary"
-                      />
-                      <AgentAvatar name={agent.name} avatarUrl={agent.avatarUrl} size="xs" />
-                      <span className="font-medium">{agent.name}</span>
-                      <span className="text-muted-foreground ml-auto">{agent.id}</span>
-                    </label>
-                  );
-                })}
-              </div>
+            <div className="space-y-1 max-h-[140px] overflow-y-auto border border-input rounded-lg p-1.5 bg-background/50">
+              {nonLeaderAgents.map((agent: any) => {
+                const isSelected = selectedMemberIds.includes(agent.id);
+                return (
+                  <label
+                    key={agent.id}
+                    className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-xs cursor-pointer transition-colors ${
+                      isSelected
+                        ? "bg-primary/10 text-foreground"
+                        : "text-muted-foreground hover:bg-card-hover"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleMember(agent.id)}
+                      className="rounded border-input text-primary focus:ring-primary accent-primary"
+                    />
+                    <AgentAvatar name={agent.name} avatarUrl={agent.avatarUrl} size="xs" />
+                    <span className="font-medium">{agent.name}</span>
+                    <span className="text-muted-foreground ml-auto">{agent.id}</span>
+                  </label>
+                );
+              })}
             </div>
-          )}
-
-          {error && (
-            <div className="bg-destructive/10 border border-error/30 text-destructive text-xs px-3 py-2 rounded-lg">
-              {error}
-            </div>
-          )}
-
-          <div className="flex gap-2 pt-2 border-t border-input bg-card flex-shrink-0">
-            <Button
-              variant="outline"
-              type="button"
-              onClick={onClose}
-              className="flex-1 cursor-pointer"
-            >
-              {l.cancel}
-            </Button>
-            <Button
-              type="submit"
-              disabled={submitting || !name.trim() || !leaderAgentId}
-              className="flex-1 cursor-pointer"
-            >
-              {submitting ? l.creating : l.createTeam}
-            </Button>
           </div>
-        </form>
-      </motion.div>
-    </div>
+        )}
+
+        {error && (
+          <div className="bg-destructive/10 border border-error/30 text-destructive text-xs px-3 py-2 rounded-lg">
+            {error}
+          </div>
+        )}
+      </div>
+    </FormDialog>
   );
 }

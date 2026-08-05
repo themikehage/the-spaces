@@ -9,10 +9,10 @@ import {
   getWorkspaceDir,
   SessionPrefix,
 } from "shared";
-import { loadSkills } from "../../ai";
+import { loadSkills } from "..";
 import type { EntityConfig } from "../config";
 import { CUSTOM_TOOL_INSTRUCTIONS } from "../custom-tools";
-import { DEFAULT_AGENTS_MD } from "../default-factory-skills";
+import { DEFAULT_AGENTS_MD } from "../prompts/default-factory-skills";
 import { promptComposer } from "../prompts/composer";
 import { buildProjectContextPrompt } from "../prompts/project-context";
 import { assemblePromptAppends } from "../prompts/prompt-assembly";
@@ -24,7 +24,7 @@ import {
   SUBAGENT_DELEGATION_INSTRUCTIONS,
   TASK_DELEGATION_INSTRUCTIONS,
 } from "../prompts/system-instructions";
-import { TaskStateManager } from "../tools/task-state-manager";
+import { TaskStateManager } from "../tools/extensions/task-state-manager";
 import { sessionMetadataStore } from "./metadata-store";
 import { userConfig } from "./user-config";
 import { resolveProjectDir } from "./workspace-resolver";
@@ -95,7 +95,7 @@ export class SessionPromptBuilder {
           const projectJsonPath = join(projectDir, "project.json");
           if (existsSync(projectJsonPath)) {
             const projectMeta = JSON.parse(readFileSync(projectJsonPath, "utf-8"));
-            const { getPreviewState } = await import("../preview-watcher");
+            const { getPreviewState } = await import("../preview/preview-watcher");
             const previewState = getPreviewState(username, projectMeta.name);
             const previewUrl = `/api/preview/${encodeURIComponent(username)}/${encodeURIComponent(projectMeta.name)}/index.html`;
 
@@ -388,7 +388,7 @@ export class SessionPromptBuilder {
           const projectJsonPath = join(projectDir, "project.json");
           if (existsSync(projectJsonPath)) {
             const projectMeta = JSON.parse(readFileSync(projectJsonPath, "utf-8"));
-            const { getPreviewState } = await import("../preview-watcher");
+            const { getPreviewState } = await import("../preview/preview-watcher");
             const previewState = getPreviewState(username, projectMeta.name);
             const previewUrl = `/api/preview/${encodeURIComponent(username)}/${encodeURIComponent(projectMeta.name)}/index.html`;
 

@@ -7,7 +7,7 @@ import { join, relative } from "node:path";
 import { getUserDir } from "shared";
 import { agentRegistry } from "../agents";
 import { safeExtractZip } from "../core/backup/safe-zip-extract";
-import { sessionManager } from "../core/session-manager";
+import { sessionManager } from "../core/session/session-manager";
 import { authMiddleware, getAuthPayload } from "../middleware/auth";
 
 export const backupRouter = new Hono();

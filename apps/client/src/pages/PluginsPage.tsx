@@ -1,6 +1,7 @@
 import { useLiterals } from "@/lib";
 import { envService } from "@/lib/api/env.service";
 import { settingsService } from "@/lib/api/settings.service";
+import { storage } from "@/lib/storage";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -39,7 +40,7 @@ export function PluginsPage() {
       const exaKeyExists = Array.isArray(envList) && envList.some((e) => e.key === "EXA_API_KEY");
       setHasExaKey(exaKeyExists);
 
-      const exaGlobal = localStorage.getItem("exa-search-global-active") === "true";
+      const exaGlobal = storage.get("exaSearchActive") === "true";
       setExaGlobalActive(exaGlobal);
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : l.fetchError;
@@ -79,7 +80,7 @@ export function PluginsPage() {
 
   const handleToggleExaGlobal = (val: boolean) => {
     setExaGlobalActive(val);
-    localStorage.setItem("exa-search-global-active", String(val));
+    storage.set("exaSearchActive", String(val));
     setSuccessMsg(l.saveSuccess);
     setTimeout(() => setSuccessMsg(""), 3000);
   };

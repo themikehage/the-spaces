@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { type TeamMessage, SessionPrefix, getTeamWorkspaceDir } from "shared";
 import { agentRegistry } from "../../agents";
-import { sessionManager } from "../../core/session-manager";
+import { sessionManager } from "../../core/session/session-manager";
 import { teamStore } from "../team-store";
 
 type BroadcastFn = (teamId: string, data: any) => void;
@@ -222,7 +222,7 @@ export class OrchestrationRunner {
       session.abort().catch(() => {});
     }
 
-    import("../../core/delegation-registry")
+    import("../../core/delegation/delegation-registry")
       .then(({ delegationRegistry }) => {
         delegationRegistry.abortAllRecursive(ownerSessionId);
       })

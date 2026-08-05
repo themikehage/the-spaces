@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { Modal } from "@/components/ui/Modal";
+import { Dialog } from "@/components/ui/Dialog";
 import { ProjectAssignmentPanel } from "./ProjectAssignmentPanel";
 
 interface Props {
@@ -10,14 +10,13 @@ interface Props {
 
 export function ProjectAssignmentModal({ projectId, projectName, onClose }: Props) {
   return (
-    <Modal
+    <Dialog
       open
       onClose={onClose}
       title={`Equipo del Proyecto ${projectName ? `(${projectName})` : ""}`}
+      size="lg"
     >
-      <div className="p-5">
-        <ProjectAssignmentPanel projectId={projectId} />
-      </div>
-    </Modal>
+      <ProjectAssignmentPanel projectId={projectId} />
+    </Dialog>
   );
 }

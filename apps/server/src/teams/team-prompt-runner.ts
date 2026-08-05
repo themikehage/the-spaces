@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 import { type Team, type TeamMember, type TeamMessage } from "shared";
 import { agentRegistry } from "../agents";
-import { resolveModelWithFallback } from "../core/agent-utils";
-import { sessionManager } from "../core/session-manager";
+import { resolveModelWithFallback } from "../core/session/agent-utils";
+import { sessionManager } from "../core/session/session-manager";
 import { teamStore } from "./team-store";
 
-import { streamSimple } from "../ai/vendor/ai/src/compat.ts";
+import { streamSimple } from "../vendor/ai/src/compat.ts";
 import { buildAgentPrompt } from "../core/multi-agent/agent-prompt-runner";
 import { parseMentions } from "../core/multi-agent/mention-parser";
 import { enforceDiffFormat, parseAgentResponse } from "../core/multi-agent/response-parser";

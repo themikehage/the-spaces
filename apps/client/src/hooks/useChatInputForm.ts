@@ -5,6 +5,7 @@ import type { SkillInfo } from "@/components/chat/SkillsSelector";
 import { useToast } from "@/contexts/ToastContext";
 import { useLiterals } from "@/lib";
 import { sessionsService } from "@/lib/api/sessions.service";
+import { EntityEventBus } from "@/lib/event-bus";
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
 import type { EntityType } from "shared";
 
@@ -357,14 +358,11 @@ export function useChatInputForm({
   }, [fetchSessionSkills]);
 
   useEffect(() => {
-    const handleUpdate = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      if (customEvent.detail?.type === "skill" || !customEvent.detail?.type) {
+    return EntityEventBus.subscribe((detail) => {
+      if (detail?.type === "skill" || !detail?.type) {
         fetchSessionSkills();
       }
-    };
-    window.addEventListener("entity-updated", handleUpdate);
-    return () => window.removeEventListener("entity-updated", handleUpdate);
+    });
   }, [fetchSessionSkills]);
 
   const placeholderText = runnerActive

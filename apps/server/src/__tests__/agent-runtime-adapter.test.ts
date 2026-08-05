@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 import { describe, expect, it } from "bun:test";
-import { AgentRuntime, type AgentEngineAdapter } from "../ai/agent-runtime";
-import type { AgentSessionEvent } from "../ai/agent-session";
-import type { AgentMessage } from "../ai/vendor/agent/src/types.ts";
-import { ToolExecutor } from "../core/tool-executor";
-import { ToolRegistry } from "../core/tool-registry";
+import { AgentRuntime, type AgentEngineAdapter } from "../core/session/agent-runtime-adapter";
+import type { AgentSessionEvent } from "../core/session/agent-session";
+import type { AgentMessage } from "../vendor/agent/src/types.ts";
+import { ToolExecutor } from "../core/infra/tool-executor";
+import { ToolRegistry } from "../core/infra/tool-registry";
 
 const createMockMessage = (text: string): AgentMessage =>
   ({

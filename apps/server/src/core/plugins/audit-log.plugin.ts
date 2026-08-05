@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { BasePlugin, type ToolCallContext, type ToolResult } from "shared";
-import { recordToolCallAudit } from "../audit-log";
+import { recordToolCallAudit } from "../stores/audit-log";
 
 export interface AuditLogPluginConfig {
   username: string;

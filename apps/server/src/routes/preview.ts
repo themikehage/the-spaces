@@ -4,9 +4,9 @@ import { existsSync } from "node:fs";
 import { extname, join, normalize, resolve, sep } from "node:path";
 import { getProjectWorkspaceDir } from "shared";
 import { sessionMiddleware } from "../auth/middleware";
-import { abortBuild, runBuild } from "../core/preview-builder";
-import { loadPreviewConfig, savePreviewConfig } from "../core/preview-config";
-import { getPreviewState } from "../core/preview-watcher";
+import { abortBuild, runBuild } from "../core/preview/preview-builder";
+import { loadPreviewConfig, savePreviewConfig } from "../core/preview/preview-config";
+import { getPreviewState } from "../core/preview/preview-watcher";
 import { resolveProjectDir } from "../core/session/workspace-resolver";
 import { getUsername } from "../lib/auth-helpers";
 

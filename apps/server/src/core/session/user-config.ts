@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { getAuthPath, getCredentialsPath, getEnvPath, getSettingsPath, getUserDir } from "shared";
-import { AuthStorage, ModelRegistry } from "../../ai";
+import { AuthStorage, ModelRegistry } from "..";
 import { auth } from "../../auth/index";
 import { decryptEnv, encryptEnv } from "../../lib/env-crypto";
 import { registerDeepSeekProvider } from "../providers/deepseek-provider";

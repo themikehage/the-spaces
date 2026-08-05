@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import type { AgentSessionEvent } from "../../ai/agent-session";
-import type { ContextUsageResult } from "../../ai/context-estimator";
+import type { AgentSessionEvent } from "../session/agent-session";
+import type { ContextUsageResult } from "../session/context-estimator";
 import type { IEventBus } from "./event-bus.port";
 
 export interface IAgentRuntime {

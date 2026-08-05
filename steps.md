@@ -121,13 +121,14 @@
   - [x] Fase 2: Descomponer ChatInput (660→312), SessionSidebar (541→306), ProjectFloorPanel (520→≤500)
   - [x] Fase 3: Auditar y reducir componentes en 400-500 líneas
   - [x] Fase 4: Descomponer AgentsPage (1149→328), DashboardPage (735→333), MCPMarketplacePage (700→334), AnalyticsPage (519→330)
-- [ ] Implementar Hito 3 — Eliminación de Duplicaciones (`plans/24-frontend-deduplication.md`):
-  - [ ] Fase 1: Sistema de modales unificado (Dialog, FormDialog) y migración de 9 modales
-  - [ ] Fase 2: Hook genérico `useAvatarUpload` y evaluación de `useEntityCrud`
-  - [ ] Fase 3: EventBus centralizado (`EntityEventBus`) tipado
-  - [ ] Fase 4: Servicio de localStorage tipado (`storage`) + `useLocalStorage`
-  - [ ] Fase 5: Primitivas de formulario reutilizables (FormField, FormSection)
-  - [ ] Fase 6: Hooks de keyboard shortcuts (`useEscapeKey`, `useClickOutside`)
+- [x] Implementar Hito 3 — Eliminación de Duplicaciones (`plans/24-frontend-deduplication.md`):
+  - [x] Fase 1: Sistema de modales unificado (`Dialog`, `FormDialog`) y migración de los 9 modales
+  - [x] Fase 2: Hook de upload/delete de avatar (`useAvatarUpload`)
+  - [x] Fase 3: EventBus centralizado (`EntityEventBus`) tipado para `entity-updated` (30 emisores + 9 listeners migrados)
+  - [x] Fase 4: Servicio de `localStorage` tipado (`storage`) + hook reactivo `useLocalStorage`
+  - [x] Fase 5: Primitivas de formulario reutilizables (`FormField`, `FormSection`)
+  - [x] Fase 6: Hooks de eventos (`useEscapeKey`, `useClickOutside`)
+  - [x] Verificación: `pnpm --filter client run typecheck` y `pnpm --filter client run build` exitosos con 0 errores.
 
 ## Criterio de cierre del sprint
 

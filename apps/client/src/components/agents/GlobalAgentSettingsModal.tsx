@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 import { SystemPromptViewer } from "@/components/prompts/SystemPromptViewer";
 import { AvatarUploadField } from "@/components/shared/AvatarUploadField";
-import { Button } from "@/components/ui/Button";
+import { FormDialog } from "@/components/ui/FormDialog";
+import { TabsNav } from "@/components/ui/TabsNav";
 import { useLiterals } from "@/lib";
 import { settingsService } from "@/lib/api/settings.service";
 import { DEFAULT_AVATAR_PREFIX, isDefaultAvatar } from "@/lib/defaultAvatars";
-import { motion } from "framer-motion";
-import { X } from "lucide-react";
+import { EntityEventBus } from "@/lib/event-bus";
 import { useEffect, useState } from "react";
 import { literals as u } from "./GlobalAgentSettingsModal.literals";
 
@@ -65,17 +65,19 @@ export function GlobalAgentSettingsModal({ onClose, onSaveSuccess }: Props) {
     setAvatarPreview(null);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
+    if (!factoryName.trim()) return;
+
     setError(null);
     setSaving(true);
 
     try {
-      const resolvedAvatarUrl = selectedDefaultAvatar
-        ? DEFAULT_AVATAR_PREFIX + selectedDefaultAvatar
-        : avatarPreview && !avatarPreview.startsWith("blob:") && !isDefaultAvatar(avatarPreview)
-          ? avatarPreview
-          : null;
+      let resolvedAvatarUrl: string | undefined = undefined;
+      if (selectedDefaultAvatar) {
+        resolvedAvatarUrl = DEFAULT_AVATAR_PREFIX + selectedDefaultAvatar;
+      } else if (avatarPreview && !avatarPreview.startsWith("blob:")) {
+        resolvedAvatarUrl = avatarPreview;
+      }
 
       await settingsService.updateSettings({
         factoryName: factoryName.trim(),
@@ -89,8 +91,7 @@ export function GlobalAgentSettingsModal({ onClose, onSaveSuccess }: Props) {
         await settingsService.deleteFactoryAvatar();
       }
 
-      // Dispatch event to refresh layout & sidebars
-      window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "settings" } }));
+      EntityEventBus.emit({ type: "settings" });
 
       if (onSaveSuccess) onSaveSuccess();
       onClose();
@@ -101,120 +102,84 @@ export function GlobalAgentSettingsModal({ onClose, onSaveSuccess }: Props) {
     }
   };
 
+  const tabs = [
+    { id: "general", label: "General" },
+    { id: "prompts", label: "Inspect Prompt" },
+  ];
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 8 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 8 }}
-        transition={{ duration: 0.18 }}
-        className="relative w-full max-w-[540px] bg-card border border-input rounded-2xl shadow-2xl flex flex-col overflow-hidden max-h-[85vh]"
-      >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-input flex-shrink-0">
+    <FormDialog
+      open
+      onClose={onClose}
+      title={l.title}
+      description={l.subtitle}
+      onSubmit={handleSubmit}
+      submitLabel={saving ? l.saving : l.save}
+      cancelLabel="Cancel"
+      isSubmitting={saving}
+      size="lg"
+      footerExtra={
+        <div className="w-48">
+          <TabsNav
+            tabs={tabs}
+            activeTab={activeTab}
+            onChange={(tab) => setActiveTab(tab as "general" | "prompts")}
+          />
+        </div>
+      }
+    >
+      {activeTab === "general" ? (
+        <div className="space-y-4">
+          <AvatarUploadField
+            preview={avatarPreview}
+            selectedDefault={selectedDefaultAvatar}
+            onFileChange={handleAvatarChange}
+            onSelectDefault={handleSelectDefaultAvatar}
+            onClear={handleClearAvatar}
+            entityName={factoryName}
+            avatarType="agent"
+          />
+
           <div>
-            <h3 className="font-bold text-foreground text-sm">{l.title}</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">{l.subtitle}</p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1 rounded-lg text-text-secondary hover:text-foreground hover:bg-surface-hover transition-colors cursor-pointer"
-          >
-            <X size={14} />
-          </button>
-        </div>
-
-        {/* Modal Navigation Tabs */}
-        <div className="flex border-b border-input bg-bg/50 px-5 gap-4">
-          <button
-            type="button"
-            onClick={() => setActiveTab("general")}
-            className={`py-2.5 text-xs font-semibold border-b-2 transition-colors cursor-pointer ${
-              activeTab === "general"
-                ? "border-primary text-primary font-bold"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            General
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("prompts")}
-            className={`py-2.5 text-xs font-semibold border-b-2 transition-colors cursor-pointer ${
-              activeTab === "prompts"
-                ? "border-primary text-primary font-bold"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Prompts
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-5">
-          {activeTab === "general" ? (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <AvatarUploadField
-                preview={avatarPreview}
-                selectedDefault={selectedDefaultAvatar}
-                onFileChange={handleAvatarChange}
-                onSelectDefault={handleSelectDefaultAvatar}
-                onClear={handleClearAvatar}
-                entityName={factoryName}
-                avatarType="agent"
-              />
-
-              <div>
-                <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1">
-                  {l.factoryNameLabel}
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={factoryName}
-                  onChange={(e) => setFactoryName(e.target.value)}
-                  placeholder={l.factoryNamePlaceholder}
-                  className="w-full px-3 py-1.5 bg-bg border border-input rounded-xl text-sm text-foreground focus:outline-none focus:border-accent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1">
-                  {l.factorySystemPromptLabel}
-                </label>
-                <textarea
-                  value={factorySystemPrompt}
-                  onChange={(e) => setFactorySystemPrompt(e.target.value)}
-                  placeholder={l.factorySystemPromptPlaceholder}
-                  rows={6}
-                  className="w-full px-3 py-2 bg-bg border border-input rounded-xl text-sm text-foreground focus:outline-none focus:border-accent font-mono resize-none"
-                />
-              </div>
-
-              {error && (
-                <div className="p-3 bg-error/10 border border-error/20 text-error rounded-xl text-xs font-semibold">
-                  {error}
-                </div>
-              )}
-
-              <div className="flex justify-end gap-3 pt-3 border-t border-input">
-                <Button variant="outline" type="button" onClick={onClose}>
-                  {l.cancel}
-                </Button>
-                <Button type="submit" disabled={saving}>
-                  {saving ? l.saving : l.save}
-                </Button>
-              </div>
-            </form>
-          ) : (
-            <SystemPromptViewer
-              entityType="global"
-              title="Global System Prompt Inspector"
-              embedded
+            <label className="text-xs font-medium text-muted-foreground block mb-1">
+              {l.factoryNameLabel}
+            </label>
+            <input
+              type="text"
+              required
+              value={factoryName}
+              onChange={(e) => setFactoryName(e.target.value)}
+              placeholder={l.factoryNamePlaceholder}
+              className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
             />
+          </div>
+
+          <div>
+            <label className="text-xs font-medium text-muted-foreground block mb-1">
+              {l.factorySystemPromptLabel}
+            </label>
+            <textarea
+              value={factorySystemPrompt}
+              onChange={(e) => setFactorySystemPrompt(e.target.value)}
+              rows={6}
+              placeholder={l.factorySystemPromptPlaceholder}
+              className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 resize-none font-mono text-xs leading-relaxed"
+            />
+          </div>
+
+          {error && (
+            <div className="bg-destructive/10 border border-error/30 text-destructive text-xs px-3 py-2 rounded-lg">
+              {error}
+            </div>
           )}
         </div>
-      </motion.div>
-    </div>
+      ) : (
+        <SystemPromptViewer
+          entityType="global"
+          title={`Global Assistant Prompt Inspector (${factoryName})`}
+          embedded
+        />
+      )}
+    </FormDialog>
   );
 }

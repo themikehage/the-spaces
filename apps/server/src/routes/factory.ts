@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { Hono } from "hono";
-import { FACTORY_CONTRACTS } from "../core/tools/factory-contracts";
+import { FACTORY_CONTRACTS } from "../core/tools/extensions/factory-contracts";
 import { authMiddleware } from "../middleware/auth";
 
 export const factoryRouter = new Hono();

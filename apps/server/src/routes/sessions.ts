@@ -13,12 +13,12 @@ import {
   getExecutionMessagesPath,
 } from "shared";
 import { z } from "zod";
-import { sessionManager } from "../core/session-manager";
+import { sessionManager } from "../core/session/session-manager";
 import { authMiddleware, getAuthPayload } from "../middleware/auth";
 
 import { getAgentWorkspaceDir, getProjectWorkspaceDir, getTeamWorkspaceDir } from "shared";
 import { agentRegistry } from "../agents";
-import { delegationRegistry } from "../core/delegation-registry";
+import { delegationRegistry } from "../core/delegation/delegation-registry";
 import { broadcastToSession } from "../ws/handler";
 
 const STORAGE_KEY = "spaces-sessions";

@@ -2,10 +2,10 @@
 import { SystemPromptViewer } from "@/components/prompts/SystemPromptViewer";
 import { AvatarUploadField } from "@/components/shared/AvatarUploadField";
 import { Button } from "@/components/ui/Button";
+import { FormDialog } from "@/components/ui/FormDialog";
+import { TabsNav } from "@/components/ui/TabsNav";
 import { useLiterals } from "@/lib";
 import { DEFAULT_AVATAR_PREFIX, isDefaultAvatar } from "@/lib/defaultAvatars";
-import { motion } from "framer-motion";
-import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Team } from "shared";
 import { literals as u } from "./TeamSettingsModal.literals";
@@ -65,6 +65,10 @@ export function TeamSettingsModal({
   useEffect(() => {
     setName(team.name);
     setDescription(team.description || "");
+    setShowThinking(team.showThinking ?? false);
+    setShowTools(team.showTools ?? false);
+    setStreamingEnabled(team.streamingEnabled ?? true);
+
     setAvatarPreview(team.avatarUrl || null);
     if (team.avatarUrl && isDefaultAvatar(team.avatarUrl)) {
       setSelectedDefaultAvatar(team.avatarUrl.slice(DEFAULT_AVATAR_PREFIX.length));
@@ -91,34 +95,35 @@ export function TeamSettingsModal({
     setAvatarPreview(null);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
+    if (!name.trim()) return;
+
     setError(null);
     setSaving(true);
 
     try {
-      const resolvedAvatarUrl = selectedDefaultAvatar
-        ? DEFAULT_AVATAR_PREFIX + selectedDefaultAvatar
-        : avatarPreview && !avatarPreview.startsWith("blob:") && !isDefaultAvatar(avatarPreview)
-          ? avatarPreview
-          : "";
+      let resolvedAvatarUrl: string | undefined = team.avatarUrl;
+
+      if (selectedDefaultAvatar) {
+        resolvedAvatarUrl = DEFAULT_AVATAR_PREFIX + selectedDefaultAvatar;
+      } else if (avatarPreview && !avatarPreview.startsWith("blob:")) {
+        resolvedAvatarUrl = avatarPreview;
+      } else if (avatarFile === null && avatarPreview === null && onDeleteAvatar) {
+        await onDeleteAvatar(team.id);
+        resolvedAvatarUrl = undefined;
+      }
 
       await onSave({
         name: name.trim(),
         description: description.trim() || undefined,
-        avatarUrl: resolvedAvatarUrl,
-        maxRounds: team.maxRounds,
         showThinking,
         showTools,
         streamingEnabled,
+        avatarUrl: resolvedAvatarUrl,
       });
 
       if (avatarFile && onUploadAvatar) {
         await onUploadAvatar(team.id, avatarFile);
-      }
-
-      if (!avatarFile && !selectedDefaultAvatar && avatarPreview === null && onDeleteAvatar) {
-        await onDeleteAvatar(team.id);
       }
 
       onClose();
@@ -132,223 +137,174 @@ export function TeamSettingsModal({
   const handleDelete = async (e: React.FormEvent) => {
     e.preventDefault();
     if (confirmDeleteName !== team.name || !onDeleteTeam) return;
-    setError(null);
-    setDeleting(true);
 
+    setDeleting(true);
     try {
       await onDeleteTeam(team.id);
       onClose();
     } catch (err: any) {
-      setError(err.message || "Failed to delete team");
-    } finally {
+      setError(err.message || l.updateError);
       setDeleting(false);
     }
   };
 
+  const tabs = [
+    { id: "general", label: "General" },
+    { id: "prompts", label: "Inspect Prompt" },
+  ];
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 8 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 8 }}
-        transition={{ duration: 0.18 }}
-        className="relative w-full max-w-[540px] bg-card border border-input rounded-2xl shadow-2xl flex flex-col overflow-hidden max-h-[85vh]"
-      >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-input flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-foreground text-sm">{l.title}</h3>
-            <span className="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-accent/15 text-accent border border-accent/25">
-              {teamType}
-            </span>
+    <FormDialog
+      open
+      onClose={onClose}
+      title={l.title}
+      description={l.teamTypeImmutable}
+      onSubmit={handleSubmit}
+      submitLabel={saving ? l.saving : l.save}
+      cancelLabel={l.cancel}
+      isSubmitting={saving}
+      size="xl"
+      footerExtra={
+        <div className="w-48">
+          <TabsNav
+            tabs={tabs}
+            activeTab={activeTab}
+            onChange={(tab) => setActiveTab(tab as "general" | "prompts")}
+          />
+        </div>
+      }
+    >
+      {activeTab === "general" ? (
+        <div className="space-y-4">
+          <AvatarUploadField
+            preview={avatarPreview}
+            selectedDefault={selectedDefaultAvatar}
+            onFileChange={handleAvatarChange}
+            onSelectDefault={handleSelectDefaultAvatar}
+            onClear={handleClearAvatar}
+            entityName={name}
+            avatarType="entity"
+            entityAvatarEntityType="team"
+          />
+
+          <div>
+            <label className="text-xs font-medium text-muted-foreground block mb-1">{l.name}</label>
+            <input
+              type="text"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
+            />
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-muted-foreground hover:text-foreground p-1 rounded-lg hover:bg-card-hover transition-colors cursor-pointer"
-          >
-            <X size={14} />
-          </button>
-        </div>
 
-        {/* Modal Navigation Tabs */}
-        <div className="flex border-b border-input bg-bg/50 px-5 gap-4 flex-shrink-0">
-          <button
-            type="button"
-            onClick={() => setActiveTab("general")}
-            className={`py-2.5 text-xs font-semibold border-b-2 transition-colors cursor-pointer ${
-              activeTab === "general"
-                ? "border-primary text-primary font-bold"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            General
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("prompts")}
-            className={`py-2.5 text-xs font-semibold border-b-2 transition-colors cursor-pointer ${
-              activeTab === "prompts"
-                ? "border-primary text-primary font-bold"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Prompts
-          </button>
-        </div>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground block mb-1">
+              {l.description}
+            </label>
+            <input
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
+            />
+          </div>
 
-        <div className="flex-1 overflow-y-auto p-5 text-xs">
+          <div>
+            <label className="text-xs font-medium text-muted-foreground block mb-1">
+              {l.teamType}
+            </label>
+            <input
+              type="text"
+              disabled
+              value={teamType}
+              className="w-full bg-background/50 border border-input rounded-lg px-3 py-2 text-sm text-muted-foreground focus:outline-none"
+            />
+          </div>
+
+          <div className="pt-2 border-t border-input space-y-3">
+            <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider">
+              Chat Options
+            </h4>
+
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showThinking}
+                onChange={(e) => setShowThinking(e.target.checked)}
+                className="rounded border-input text-primary focus:ring-primary accent-primary"
+              />
+              <span className="text-xs text-foreground font-medium">{l.showThinking}</span>
+            </label>
+
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showTools}
+                onChange={(e) => setShowTools(e.target.checked)}
+                className="rounded border-input text-primary focus:ring-primary accent-primary"
+              />
+              <span className="text-xs text-foreground font-medium">{l.showTools}</span>
+            </label>
+
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={streamingEnabled}
+                onChange={(e) => setStreamingEnabled(e.target.checked)}
+                className="rounded border-input text-primary focus:ring-primary accent-primary"
+              />
+              <span className="text-xs text-foreground font-medium">{l.streamingEnabled}</span>
+            </label>
+          </div>
+
           {error && (
-            <div className="p-3 bg-destructive/10 border border-error/20 text-destructive rounded-lg mb-4">
+            <div className="p-3 bg-error/10 border border-error/20 text-error rounded-xl text-xs font-semibold">
               {error}
             </div>
           )}
 
-          {activeTab === "general" ? (
-            <div className="space-y-5">
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <AvatarUploadField
-                  preview={avatarPreview}
-                  selectedDefault={selectedDefaultAvatar}
-                  onFileChange={handleAvatarChange}
-                  onSelectDefault={handleSelectDefaultAvatar}
-                  onClear={handleClearAvatar}
-                  entityName={name}
-                  avatarType="entity"
-                  entityAvatarEntityType="team"
-                />
-
+          {onDeleteTeam && (
+            <div className="pt-4 mt-4 border-t border-error/20 space-y-3">
+              <h4 className="text-xs font-bold text-error uppercase tracking-wider">
+                {l.deleteTeam}
+              </h4>
+              <p className="text-[11px] text-text-secondary leading-relaxed font-body">
+                {l.deleteTeamDescription}
+              </p>
+              <div className="space-y-3">
                 <div>
-                  <label className="block text-muted-foreground font-medium mb-1">{l.name}</label>
+                  <label className="block text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1">
+                    {l.deleteConfirmLabel.replace("{name}", team.name)}
+                  </label>
                   <input
                     type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                    className="w-full px-3 py-2 bg-background border border-input rounded-lg text-foreground outline-none focus:border-primary"
+                    value={confirmDeleteName}
+                    onChange={(e) => setConfirmDeleteName(e.target.value)}
+                    className="w-full px-3 py-1.5 bg-bg border border-error/30 rounded-xl text-sm text-foreground focus:outline-none focus:border-error"
                   />
                 </div>
-
-                <div>
-                  <label className="block text-muted-foreground font-medium mb-1">
-                    {l.description}
-                  </label>
-                  <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    rows={3}
-                    className="w-full px-3 py-2 bg-background border border-input rounded-lg text-foreground outline-none focus:border-primary resize-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-muted-foreground font-medium mb-2">
-                    {l.teamType}
-                  </label>
-                  <div className="p-3 rounded-xl border border-input bg-background">
-                    <span className="font-semibold text-xs text-foreground">{teamType}</span>
-                    <p className="text-[10px] leading-tight text-muted-foreground mt-1">
-                      {l.orchestrationDesc}
-                    </p>
-                    <p className="text-[10px] leading-tight text-muted-foreground mt-2">
-                      {l.teamTypeImmutable}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2.5 pt-2 border-t border-input/40">
-                  <label className="flex items-center gap-2.5 text-muted-foreground font-medium cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={showThinking}
-                      onChange={(e) => setShowThinking(e.target.checked)}
-                      className="w-4 h-4 accent-accent rounded border-input bg-background cursor-pointer"
-                    />
-                    <span>{l.showThinking}</span>
-                  </label>
-
-                  <label className="flex items-center gap-2.5 text-muted-foreground font-medium cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={showTools}
-                      onChange={(e) => setShowTools(e.target.checked)}
-                      className="w-4 h-4 accent-accent rounded border-input bg-background cursor-pointer"
-                    />
-                    <span>{l.showTools}</span>
-                  </label>
-
-                  <label className="flex items-center gap-2.5 text-muted-foreground font-medium cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={streamingEnabled}
-                      onChange={(e) => setStreamingEnabled(e.target.checked)}
-                      className="w-4 h-4 accent-accent rounded border-input bg-background cursor-pointer"
-                    />
-                    <span>{l.streamingEnabled}</span>
-                  </label>
-                </div>
-
-                <div className="flex justify-end gap-2 pt-4 border-t border-input bg-card flex-shrink-0">
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="px-4 py-2 bg-card border border-input text-muted-foreground hover:text-foreground rounded-lg transition-colors cursor-pointer"
-                  >
-                    {l.cancel}
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="px-4 py-2 bg-primary text-background font-semibold rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity cursor-pointer"
-                  >
-                    {saving ? l.saving : l.save}
-                  </button>
-                </div>
-              </form>
-
-              {onDeleteTeam && (
-                <div className="pt-4 border-t border-error/20 space-y-3">
-                  <h4 className="text-xs font-bold text-error uppercase tracking-wider">
-                    {l.deleteTeam}
-                  </h4>
-                  <p className="text-[11px] text-text-secondary leading-relaxed font-body">
-                    {l.deleteTeamDescription}
-                  </p>
-                  <form onSubmit={handleDelete} className="space-y-3">
-                    <div>
-                      <label className="block text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1">
-                        {l.deleteConfirmLabel.replace("{name}", team.name)}
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={confirmDeleteName}
-                        onChange={(e) => setConfirmDeleteName(e.target.value)}
-                        className="w-full px-3 py-1.5 bg-bg border border-error/30 rounded-xl text-sm text-foreground focus:outline-none focus:border-error"
-                      />
-                    </div>
-                    <Button
-                      variant="destructive"
-                      type="submit"
-                      className="w-full"
-                      disabled={confirmDeleteName !== team.name || deleting}
-                    >
-                      {deleting ? l.deleting : l.deleteButton}
-                    </Button>
-                  </form>
-                </div>
-              )}
+                <Button
+                  variant="destructive"
+                  type="button"
+                  onClick={handleDelete}
+                  className="w-full"
+                  disabled={confirmDeleteName !== team.name || deleting}
+                >
+                  {deleting ? l.deleting : l.deleteButton}
+                </Button>
+              </div>
             </div>
-          ) : (
-            <SystemPromptViewer
-              entityType="team"
-              teamId={team.id}
-              title={`Team System Prompt Inspector (${name})`}
-              embedded
-            />
           )}
         </div>
-      </motion.div>
-    </div>
+      ) : (
+        <SystemPromptViewer
+          entityType="team"
+          teamId={team.id}
+          title={`Team System Prompt Inspector (${name})`}
+          embedded
+        />
+      )}
+    </FormDialog>
   );
 }

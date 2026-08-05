@@ -2,7 +2,7 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { McpConfigSchema, McpServerConfigSchema, getWorkspaceDir } from "shared";
-import { MCP_CATALOG, mcpRegistry } from "../core/mcp-registry.js";
+import { MCP_CATALOG, mcpRegistry } from "../core/mcp/mcp-registry.js";
 import { getUsername } from "../lib/auth-helpers.js";
 import { authMiddleware } from "../middleware/auth.js";
 

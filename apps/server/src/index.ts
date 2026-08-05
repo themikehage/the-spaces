@@ -12,7 +12,7 @@ import { memoryRegistry } from "./core/memory/registry";
 import { globalErrorHandler } from "./core/middleware/error-handler";
 import { requestIdMiddleware } from "./core/middleware/request-id";
 import { scheduleRunner } from "./core/schedules/index";
-import { createServerContext } from "./core/server-context";
+import { createServerContext } from "./core/infra/server-context";
 import { sessionMetadataStore } from "./core/session/metadata-store";
 import { handleRequest as previewRequest, startPreviewServer } from "./preview-server";
 import { agentsRouter } from "./routes/agents";
@@ -153,7 +153,7 @@ try {
     const userDirs = readdirSync(usersBase, { withFileTypes: true })
       .filter((ent) => ent.isDirectory())
       .map((ent) => ent.name);
-    const { sessionManager } = await import("./core/session-manager");
+    const { sessionManager } = await import("./core/session/session-manager");
     for (const username of userDirs) {
       sessionManager.autoCleanupSessions(username).catch((err) => {
         console.error(`[Auto Cleanup] Failed for user ${username}:`, err);

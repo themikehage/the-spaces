@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { ModelRegistry } from "../../ai";
+import { ModelRegistry } from "..";
 import { loadProviderModels } from "./provider-persistence";
 
 export function registerQwenProvider(registry: ModelRegistry, username?: string) {

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import type { AgentSession } from "../../ai";
-import { mcpRegistry } from "../mcp-registry";
+import type { AgentSession } from "..";
+import { mcpRegistry } from "../mcp/mcp-registry";
 
 /**
  * Internal helper to attach MCP tools dynamically to an active session.

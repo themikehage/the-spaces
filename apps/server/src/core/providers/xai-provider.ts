@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { ModelRegistry } from "../../ai";
+import { ModelRegistry } from "..";
 
 export function registerXAIProvider(registry: ModelRegistry) {
   registry.registerProvider("xai", {

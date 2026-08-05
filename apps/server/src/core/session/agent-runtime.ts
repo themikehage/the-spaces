@@ -3,10 +3,10 @@ import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { SessionPrefix, type AgentDefinition, type BaseTool } from "shared";
 import { agentRegistry } from "../../agents";
-import { createAgentSession, DefaultResourceLoader, type AgentSession } from "../../ai";
-import type { AvailableModel } from "../../ai/model-registry";
+import { createAgentSession, DefaultResourceLoader, type AgentSession } from "..";
+import type { AvailableModel } from "../model/model-registry";
 import { cascadeConfigLoader } from "../config";
-import { mcpRegistry } from "../mcp-registry";
+import { mcpRegistry } from "../mcp/mcp-registry";
 import { memoryRegistry } from "../memory/registry";
 import { buildSubagentRules, evaluateSubagentRules } from "../sandbox";
 import { createAfterToolCallHook } from "./after-tool-call-hook";
@@ -266,7 +266,7 @@ export async function createAgentRuntime(
   pluginManager.register(new AuditLogPlugin({ sessionId, username }));
   pluginManager.register(new MemoryEnricherPlugin({ memory }));
 
-  const { JsonlSessionStore } = await import("../../ai");
+  const { JsonlSessionStore } = await import("..");
   const sessionStore = JsonlSessionStore.create(sessionDir, sessionDir);
 
   const { session } = await createAgentSession({

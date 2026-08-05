@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { useLiterals } from "@/lib";
 import { projectsService } from "@/lib/api/projects.service";
+import { EntityEventBus } from "@/lib/event-bus";
 import { Settings2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { literals as l } from "./DashboardPage.literals";
@@ -56,9 +57,7 @@ export function ProjectsPage({ onNavigate: _onNavigate, onSelectProject }: Props
   }, [fetchRepos]);
 
   useEffect(() => {
-    const handleUpdate = () => fetchRepos();
-    window.addEventListener("entity-updated", handleUpdate);
-    return () => window.removeEventListener("entity-updated", handleUpdate);
+    return EntityEventBus.subscribe(() => fetchRepos());
   }, [fetchRepos]);
 
   const handleCreateRepo = async (data: {
@@ -68,7 +67,7 @@ export function ProjectsPage({ onNavigate: _onNavigate, onSelectProject }: Props
   }) => {
     const createdProject = await projectsService.createProject(data);
     await fetchRepos();
-    window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "project" } }));
+    EntityEventBus.emit({ type: "project" });
 
     return createdProject;
   };
@@ -76,7 +75,7 @@ export function ProjectsPage({ onNavigate: _onNavigate, onSelectProject }: Props
   const handleUploadAvatar = async (id: string, file: File) => {
     const avatarUrl = await projectsService.uploadProjectAvatar(id, file);
     await fetchRepos();
-    window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "project" } }));
+    EntityEventBus.emit({ type: "project" });
     return avatarUrl;
   };
 

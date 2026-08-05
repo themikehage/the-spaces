@@ -4,6 +4,7 @@ import { GeneralTab } from "@/components/settings/GeneralTab";
 import { ProvidersTab } from "@/components/settings/ProvidersTab";
 import { useLiterals } from "@/lib";
 import { envService } from "@/lib/api/env.service";
+import { storage } from "@/lib/storage";
 import { MCPMarketplacePage } from "@/pages/MCPMarketplacePage";
 import { useCallback, useEffect, useState } from "react";
 import { literals as u } from "./SettingsPage.literals";
@@ -16,7 +17,7 @@ interface EnvVar {
 export function SettingsPage() {
   const l = useLiterals(u);
   const [activeTab, setActiveTab] = useState<"general" | "providers" | "env" | "mcp">(() => {
-    return (localStorage.getItem("settings-active-tab") as any) || "general";
+    return (storage.get("settingsActiveTab") as any) || "general";
   });
   const [envVars, setEnvVars] = useState<EnvVar[]>([]);
   const [envLoading, setEnvLoading] = useState(true);
@@ -40,7 +41,7 @@ export function SettingsPage() {
 
   const handleTabChange = (tabId: "general" | "providers" | "env" | "mcp") => {
     setActiveTab(tabId);
-    localStorage.setItem("settings-active-tab", tabId);
+    storage.set("settingsActiveTab", tabId);
   };
 
   const tabs = [

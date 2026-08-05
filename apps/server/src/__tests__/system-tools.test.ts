@@ -18,9 +18,9 @@ import {
   LsTool,
   ReadTool,
   WriteTool,
-} from "../ai/tools";
-import { ToolExecutor } from "../core/tool-executor";
-import { ToolRegistry } from "../core/tool-registry";
+} from "../core/tools";
+import { ToolExecutor } from "../core/infra/tool-executor";
+import { ToolRegistry } from "../core/infra/tool-registry";
 
 describe("Modular System Tools (ITool)", () => {
   it("should implement ITool contract properties and parameters", () => {

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { useAuth } from "@/contexts/AuthContext";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
 import { workspaceService } from "@/lib/api/workspace.service";
 import { resolveFileUrl } from "@/lib/file-urls";
 import { Download, ExternalLink, Image, Minus, X } from "lucide-react";
@@ -92,14 +93,7 @@ export function ImageGrid({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const { token } = useAuth();
 
-  useEffect(() => {
-    if (!previewUrl) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setPreviewUrl(null);
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [previewUrl]);
+  useEscapeKey(() => setPreviewUrl(null), Boolean(previewUrl));
 
   const downloadImage = useCallback(
     async (resolvedUrl: string, filename?: string) => {

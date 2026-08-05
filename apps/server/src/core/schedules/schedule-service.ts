@@ -5,7 +5,7 @@ import {
   type ScheduleRun,
   type UpdateScheduleJob,
 } from "shared";
-import { sessionManager } from "../session-manager";
+import { sessionManager } from "../session/session-manager";
 import { createUserSession } from "../session/create-user-session";
 import {
   deleteJob as dbDeleteJob,

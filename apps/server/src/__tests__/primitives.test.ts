@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { describe, expect, it } from "bun:test";
-import { getLastAssistantText, parseEnvelope } from "../core/agent-utils";
+import { getLastAssistantText, parseEnvelope } from "../core/session/agent-utils";
 
 describe("Agent Utilities - Envelope Parser", () => {
   it("should parse a valid envelope with custom keys", () => {

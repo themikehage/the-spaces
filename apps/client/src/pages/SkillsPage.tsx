@@ -5,6 +5,7 @@ import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useToast } from "@/contexts/ToastContext";
 import { useLiterals } from "@/lib";
 import { skillsService } from "@/lib/api/skills.service";
+import { EntityEventBus } from "@/lib/event-bus";
 import { BookOpen, ChevronLeft, RefreshCw, Search } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { literals as u } from "./SkillsPage.literals";
@@ -36,7 +37,7 @@ export function SkillsPage() {
     setResetting(true);
     try {
       await skillsService.resetSkills();
-      window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "skill" } }));
+      EntityEventBus.emit({ type: "skill" });
       addToast("success", l.resetSuccess);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -72,14 +73,11 @@ export function SkillsPage() {
   }, [fetchSkills]);
 
   useEffect(() => {
-    const handleUpdate = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      if (customEvent.detail?.type === "skill" || !customEvent.detail?.type) {
+    return EntityEventBus.subscribe((detail) => {
+      if (detail?.type === "skill" || !detail?.type) {
         fetchSkills();
       }
-    };
-    window.addEventListener("entity-updated", handleUpdate);
-    return () => window.removeEventListener("entity-updated", handleUpdate);
+    });
   }, [fetchSkills]);
 
   const filteredSkills = skills.filter(

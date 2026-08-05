@@ -7,6 +7,7 @@ import { agentsService } from "@/lib/api/agents.service";
 import { projectsService } from "@/lib/api/projects.service";
 import { settingsService } from "@/lib/api/settings.service";
 import { teamsService } from "@/lib/api/teams.service";
+import { EntityEventBus } from "@/lib/event-bus";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 export interface RepoItem {
@@ -117,9 +118,8 @@ export function useSessionList({
   }, [fetchRepos, fetchAgents, fetchTeams, fetchGlobalSettings]);
 
   useEffect(() => {
-    const handleUpdate = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      const type = customEvent.detail?.type;
+    return EntityEventBus.subscribe((detail) => {
+      const type = detail?.type;
       if (type === "project") {
         fetchRepos();
       } else if (type === "agent") {
@@ -128,15 +128,13 @@ export function useSessionList({
         fetchTeams();
       } else if (type === "settings") {
         fetchGlobalSettings();
-      } else if (type !== "experiment") {
+      } else if (type !== "custom-tool") {
         fetchRepos();
         fetchAgents();
         fetchTeams();
         fetchGlobalSettings();
       }
-    };
-    window.addEventListener("entity-updated", handleUpdate);
-    return () => window.removeEventListener("entity-updated", handleUpdate);
+    });
   }, [fetchRepos, fetchAgents, fetchTeams, fetchGlobalSettings]);
 
   const isGlobal = !activeAgent && !activeProjectName && !activeTeam;

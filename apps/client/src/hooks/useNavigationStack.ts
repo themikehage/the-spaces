@@ -1,48 +1,49 @@
 // SPDX-License-Identifier: MIT
+import { storage } from "@/lib/storage";
 import { useCallback, useEffect, useState } from "react";
 
 export interface NavigationStackItem {
-  type: "home" | "context" | "admin";
-  contextType?: "project" | "agent" | "channel" | "team";
-  contextId?: string;
-  contextName?: string;
-  page?: string;
-  path?: string;
+  type:
+    | "home"
+    | "sessions"
+    | "chat"
+    | "settings"
+    | "skills"
+    | "logs"
+    | "plugins"
+    | "admin"
+    | (string & {});
+  page: string;
+  path: string;
+  projectId?: string;
+  projectName?: string;
+  agentId?: string;
+  agentName?: string;
+  teamId?: string;
+  teamName?: string;
+  sessionId?: string;
+  sessionTitle?: string;
 }
 
 export interface UseNavigationStackReturn {
   stack: NavigationStackItem[];
   current: NavigationStackItem | null;
+  canGoBack: boolean;
   push: (item: NavigationStackItem) => void;
   pop: () => NavigationStackItem | null;
-  canGoBack: boolean;
   clear: () => void;
 }
 
-const STORAGE_KEY = "nav-stack-mobile";
-
 export function useNavigationStack(): UseNavigationStackReturn {
   const [stack, setStack] = useState<NavigationStackItem[]>(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
-        }
-      }
-    } catch (e) {
-      console.error("Failed to load navigation stack from localStorage:", e);
-    }
-    return [{ type: "home", page: "home", path: "/" }];
+    const stored = storage.getJSON<NavigationStackItem[]>("navStackMobile");
+    return Array.isArray(stored) && stored.length > 0
+      ? stored
+      : [{ type: "home", page: "home", path: "/" }];
   });
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(stack));
-    } catch (e) {
-      console.error("Failed to save navigation stack to localStorage:", e);
-    }
+    storage.setJSON("navStackMobile", stack);
   }, [stack]);
 
   const current = stack[stack.length - 1] || null;
@@ -50,24 +51,11 @@ export function useNavigationStack(): UseNavigationStackReturn {
 
   const push = useCallback((item: NavigationStackItem) => {
     setStack((prev) => {
-      const newStack = [...prev];
-      const top = newStack[newStack.length - 1];
-      if (top) {
-        if (top.type === item.type && top.page === item.page && top.path === item.path) {
-          return prev;
-        }
-        if (
-          top.type === "context" &&
-          item.type === "context" &&
-          top.contextId === item.contextId &&
-          top.contextType === item.contextType &&
-          top.path !== item.path
-        ) {
-          newStack[newStack.length - 1] = item;
-          return newStack;
-        }
+      const top = prev[prev.length - 1];
+      if (top && top.type === item.type && top.page === item.page && top.path === item.path) {
+        return prev;
       }
-      return [...newStack, item];
+      return [...prev, item];
     });
   }, []);
 

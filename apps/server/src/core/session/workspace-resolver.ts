@@ -13,7 +13,7 @@ import {
   getWorkspaceSkillsDir,
   SessionPrefix,
 } from "shared";
-import { DEFAULT_AGENTS_MD, DEFAULT_FACTORY_SKILLS } from "../default-factory-skills";
+import { DEFAULT_AGENTS_MD, DEFAULT_FACTORY_SKILLS } from "../prompts/default-factory-skills";
 import { scopeConfigManager } from "../scope";
 import { sessionMetadataStore } from "./metadata-store";
 import { userConfigManager } from "./user-config";

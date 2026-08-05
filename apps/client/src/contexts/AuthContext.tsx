@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { authService, type User } from "@/lib/api/auth.service";
+import { storage } from "@/lib/storage";
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 
 export type { User };
@@ -24,14 +25,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [needsSetup, setNeedsSetup] = useState(false);
 
   const clearAppState = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("active-project");
-    localStorage.removeItem("active-project-id");
-    localStorage.removeItem("active-project-name");
-    localStorage.removeItem("active-agent");
-    localStorage.removeItem("active-channel");
-    localStorage.removeItem("has-context");
-    localStorage.removeItem("crewfy-selected-model");
+    storage.remove("token");
+    storage.remove("activeProject");
+    storage.remove("activeProjectId");
+    storage.remove("activeProjectName");
+    storage.remove("activeAgent");
+    storage.remove("activeChannel");
+    storage.remove("hasContext");
+    storage.remove("selectedModel");
   };
 
   useEffect(() => {

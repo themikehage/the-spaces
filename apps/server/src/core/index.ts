@@ -13,14 +13,48 @@ export * from "./ports/tool-executor.port";
 export * from "./ports/tool.port";
 export * from "./ports/workspace-config.port";
 
-export { TypedEventEmitter } from "./event-bus";
-export { HookRunner } from "./hook-runner";
-export { PermissionEngine } from "./permission-engine";
+export { TypedEventEmitter } from "./infra/event-bus";
+export { HookRunner } from "./infra/hook-runner";
+export { PermissionEngine } from "./infra/permission-engine";
 export {
   createServerContext,
   type ServerContext,
   type ServerContextOptions,
-} from "./server-context";
-export { ServerSpacesHost, serverSpacesHost } from "./spaces-host";
-export { ToolExecutor } from "./tool-executor";
-export { ToolRegistry } from "./tool-registry";
+} from "./infra/server-context";
+export { ServerSpacesHost, serverSpacesHost } from "./infra/spaces-host";
+export { ToolExecutor } from "./infra/tool-executor";
+export { ToolRegistry } from "./infra/tool-registry";
+
+export { AgentRuntime, type AgentEngineAdapter, type AgentRuntimeDeps } from "./session/agent-runtime-adapter";
+export { AgentSession, createAgentSession } from "./session/agent-session";
+export { AuthStorage } from "./session/auth-storage";
+export { ModelProviderAdapter } from "./model/model-provider-adapter";
+export { ModelRegistry } from "./model/model-registry";
+export { DefaultResourceLoader } from "./session/resource-loader";
+export { JsonlSessionStore } from "./stores/session-persistence";
+export { SessionStoreAdapter } from "./stores/session-store-adapter";
+
+export { BashTool, createBashTool, createBashToolDefinition } from "./tools/base/bash.tool";
+export { loadSkills } from "./session/load-skills";
+export {
+  EditTool,
+  FindTool,
+  GrepTool,
+  LsTool,
+  ReadTool,
+  WriteTool,
+  createEditTool,
+  createEditToolDefinition,
+  createFindTool,
+  createFindToolDefinition,
+  createGrepTool,
+  createGrepToolDefinition,
+  createLsTool,
+  createLsToolDefinition,
+  createReadTool,
+  createReadToolDefinition,
+  createWriteTool,
+  createWriteToolDefinition,
+} from "./tools";
+
+export type { AgentSessionEvent } from "./session/agent-session";

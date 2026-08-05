@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+import { EntityEventBus } from "@/lib/event-bus";
 import { buildContextPath } from "@/router/paths";
 import {
   createContext,
@@ -243,9 +244,8 @@ function useWorkspaceContextState(): WorkspaceContextValue {
   }, [routeContext, pathname, state.activeProjectId, state.activeAgent?.id, state.activeTeam?.id]);
 
   useEffect(() => {
-    const handleUpdate = (e: Event) => {
-      const detail = (e as CustomEvent)?.detail;
-      if (detail?.type === "project" && state.activeProjectId) {
+    return EntityEventBus.subscribe(() => {
+      if (state.activeProjectId) {
         const storedName = localStorage.getItem("active-project-name");
         if (storedName && storedName !== state.activeProjectFriendlyName) {
           dispatch({
@@ -254,9 +254,7 @@ function useWorkspaceContextState(): WorkspaceContextValue {
           });
         }
       }
-    };
-    window.addEventListener("entity-updated", handleUpdate);
-    return () => window.removeEventListener("entity-updated", handleUpdate);
+    });
   }, [state.activeProjectId, state.activeProjectFriendlyName]);
 
   const navigateIfNeeded = useCallback(

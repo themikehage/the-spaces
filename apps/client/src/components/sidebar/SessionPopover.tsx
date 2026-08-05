@@ -2,6 +2,7 @@
 import { useSessions, type SessionStatus } from "@/contexts/SessionsContext";
 import { useLiterals } from "@/lib";
 import { sessionsService } from "@/lib/api/sessions.service";
+import { EntityEventBus } from "@/lib/event-bus";
 import {
   buildCreateSessionBody,
   getSessionContextPredicate,
@@ -80,7 +81,7 @@ export function SessionPopover({
     async (e: React.MouseEvent, id: string) => {
       e.stopPropagation();
       await sessionsService.archiveSession(id);
-      window.dispatchEvent(new CustomEvent("entity-updated"));
+      EntityEventBus.emit({ type: "session" });
       fetchSessions();
     },
     [fetchSessions],
@@ -90,7 +91,7 @@ export function SessionPopover({
     async (e: React.MouseEvent, id: string) => {
       e.stopPropagation();
       await sessionsService.unarchiveSession(id);
-      window.dispatchEvent(new CustomEvent("entity-updated"));
+      EntityEventBus.emit({ type: "session" });
       fetchSessions();
     },
     [fetchSessions],

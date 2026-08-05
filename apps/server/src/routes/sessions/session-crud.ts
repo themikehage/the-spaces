@@ -2,7 +2,7 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { CreateSessionSchema } from "shared";
-import { sessionManager } from "../../core/session-manager";
+import { sessionManager } from "../../core/session/session-manager";
 import { authMiddleware, getAuthPayload } from "../../middleware/auth";
 
 import { createUserSession, SessionDomainError } from "../../core/session/create-user-session";

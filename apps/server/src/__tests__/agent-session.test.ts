@@ -2,9 +2,9 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
 import { existsSync, mkdirSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
-import { AgentSession } from "../ai/agent-session";
-import { AuthStorage } from "../ai/auth-storage";
-import { JsonlSessionStore } from "../ai/session-persistence";
+import { AgentSession } from "../core/session/agent-session";
+import { AuthStorage } from "../core/session/auth-storage";
+import { JsonlSessionStore } from "../core/stores/session-persistence";
 
 const TMP_TEST_DIR = join(import.meta.dirname, "../../tmp-tests");
 const TEST_SESSION_FILE = join(TMP_TEST_DIR, "test-session.jsonl");

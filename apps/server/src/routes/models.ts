@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 import { Hono } from "hono";
-import { sessionManager } from "../core/session-manager";
+import { sessionManager } from "../core/session/session-manager";
 import { authMiddleware, getAuthPayload } from "../middleware/auth";
 
-import { IMAGE_MODELS } from "../ai/vendor/ai/src/image-models.generated.ts";
+import { IMAGE_MODELS } from "../vendor/ai/src/image-models.generated.ts";
 
 export const modelsRouter = new Hono();
 

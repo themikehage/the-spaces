@@ -6,6 +6,7 @@ import { EntityAvatar } from "@/components/shared/EntityAvatar";
 import { useTeam } from "@/hooks/useTeam";
 import { agentsService } from "@/lib/api/agents.service";
 import { teamsService } from "@/lib/api/teams.service";
+import { EntityEventBus } from "@/lib/event-bus";
 import { getSessionPath } from "@/lib/session-utils";
 import { List, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -64,17 +65,12 @@ export function TeamChatArea({ activeTeam, sessionId, variantMode = false }: Pro
 
   useEffect(() => {
     loadTeamDetails();
-
-    const handleEntityUpdate = (e: Event) => {
-      const detail = (e as CustomEvent)?.detail;
+    return EntityEventBus.subscribe((detail) => {
       if (detail?.type === "team") {
         loadTeamDetails();
         fetchTeam();
       }
-    };
-
-    window.addEventListener("entity-updated", handleEntityUpdate);
-    return () => window.removeEventListener("entity-updated", handleEntityUpdate);
+    });
   }, [loadTeamDetails, fetchTeam]);
 
   const handleAddMember = async (data: TeamMember) => {

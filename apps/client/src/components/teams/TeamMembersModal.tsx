@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { AgentAvatar } from "@/components/shared/AgentAvatar";
+import { Dialog } from "@/components/ui/Dialog";
 import { Dropdown } from "@/components/ui/Dropdown";
-import { Modal } from "@/components/ui/Modal";
 import { useLiterals } from "@/lib";
 import { useState } from "react";
 import type { AgentInfo, TeamMember, TeamRole } from "shared";
@@ -96,7 +96,7 @@ export function TeamMembersModal({
   const hasLeader = members.some((m) => m.role === "lead");
 
   return (
-    <Modal open onClose={onClose} title={`Miembros de #${teamName}`}>
+    <Dialog open onClose={onClose} title={`Miembros de #${teamName}`} size="lg">
       <div className="p-5 space-y-4">
         {/* Members Table */}
         <div className="overflow-x-auto">
@@ -183,7 +183,7 @@ export function TeamMembersModal({
           />
         </div>
       </div>
-    </Modal>
+    </Dialog>
   );
 }
 
@@ -322,7 +322,7 @@ export function AddTeamMemberModal({
   }));
 
   return (
-    <Modal open onClose={onClose} title={literals.addAgent}>
+    <Dialog open onClose={onClose} title={literals.addAgent}>
       <form onSubmit={handleSubmit} className="p-5 space-y-4">
         {candidates.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-4">{literals.noAgents}</p>
@@ -407,6 +407,6 @@ export function AddTeamMemberModal({
           </>
         )}
       </form>
-    </Modal>
+    </Dialog>
   );
 }

@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: MIT
+import { storage } from "@/lib/storage";
 import { createContext, useCallback, useEffect, useState, type ReactNode } from "react";
 import type { LiteralsContextValue, SupportedLocale } from "./types";
 
-const LOCALE_STORAGE_KEY = "locale";
-
 function detectLocale(): SupportedLocale {
   try {
-    const stored = localStorage.getItem(LOCALE_STORAGE_KEY);
+    const stored = storage.get("locale");
     if (stored === "en" || stored === "es") return stored;
     const browser = navigator.language?.startsWith("es") ? "es" : "en";
-    localStorage.setItem(LOCALE_STORAGE_KEY, browser);
+    storage.set("locale", browser);
     return browser;
   } catch {
     return "en";
@@ -26,11 +25,7 @@ export function LiteralsProvider({ children }: { children: ReactNode }) {
 
   const setLocale = useCallback((l: SupportedLocale) => {
     setLocaleState(l);
-    try {
-      localStorage.setItem(LOCALE_STORAGE_KEY, l);
-    } catch {
-      /* noop */
-    }
+    storage.set("locale", l);
   }, []);
 
   useEffect(() => {

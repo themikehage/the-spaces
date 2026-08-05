@@ -11,11 +11,11 @@ import {
 import { join } from "node:path";
 import { getGlobalAgentsMdPath, getUserDir, getWorkspaceDir } from "shared";
 import { getAppConfig } from "../config/app-config";
-import { applyCacheHeaders } from "../core/cache-headers";
-import { sessionManager } from "../core/session-manager";
-import { runImageGenModel } from "../core/tools/image-gen-tool";
-import { runVideoGenModel } from "../core/tools/video-gen-tool";
-import { runVisionModel } from "../core/tools/vision-tool";
+import { applyCacheHeaders } from "../core/middleware/cache-headers";
+import { sessionManager } from "../core/session/session-manager";
+import { runImageGenModel } from "../core/tools/extensions/image-gen.tool";
+import { runVideoGenModel } from "../core/tools/extensions/video-gen.tool";
+import { runVisionModel } from "../core/tools/extensions/vision.tool";
 import { getUsername } from "../lib/auth-helpers";
 import { authMiddleware, getAuthPayload } from "../middleware/auth";
 

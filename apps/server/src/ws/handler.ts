@@ -5,7 +5,7 @@ import { setEventBroadcaster } from "../lib/event-broker";
 import { setTeamBroadcastHandler } from "../teams";
 import { startHeartbeat, wsRegistry } from "./registry";
 
-import { delegationRegistry } from "../core/delegation-registry";
+import { delegationRegistry } from "../core/delegation/delegation-registry";
 
 setAgentStopCallback((_agentId) => {});
 
@@ -96,7 +96,7 @@ export function broadcastToTeam(teamId: string, data: any): void {
 setTeamBroadcastHandler(broadcastToTeam);
 setEventBroadcaster(broadcastToUser);
 
-import { setWsHandlerBridge } from "../core/agent-utils";
+import { setWsHandlerBridge } from "../core/session/agent-utils";
 setWsHandlerBridge(registerTeamInterceptor, broadcastToSession);
 
 // Legacy compatibility shims - these are now handled by factory

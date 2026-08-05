@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import type { AvailableModel } from "../../ai/model-registry";
+import type { AvailableModel } from "../model/model-registry";
 
 export interface ModelResolutionContext {
   sessionModel?: string;

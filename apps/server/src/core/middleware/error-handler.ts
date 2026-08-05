@@ -1,5 +1,5 @@
 import type { Context } from "hono";
-import { AppError } from "../errors";
+import { AppError } from "../infra/errors";
 
 export const globalErrorHandler = (err: Error, c: Context) => {
   const requestId = c.get("requestId") || "unknown";

@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: MIT
+import { useEscapeKey } from "@/hooks/useEscapeKey";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
-import { type FC, type ReactNode, useCallback, useEffect } from "react";
+import type { FC, ReactNode } from "react";
+
+export type ModalSize = "sm" | "md" | "lg" | "xl" | "full";
 
 interface Props {
   open: boolean;
@@ -9,22 +12,30 @@ interface Props {
   title?: string;
   children: ReactNode;
   footer?: ReactNode;
+  size?: ModalSize;
+  className?: string;
 }
 
-export const Modal: FC<Props> = ({ open, onClose, title, children, footer }) => {
-  const handleEscape = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !e.defaultPrevented) onClose();
-    },
-    [onClose],
-  );
+const SIZE_CLASSES: Record<ModalSize, string> = {
+  sm: "max-w-sm",
+  md: "max-w-lg",
+  lg: "max-w-2xl",
+  xl: "max-w-4xl",
+  full: "max-w-6xl",
+};
 
-  useEffect(() => {
-    if (open) {
-      document.addEventListener("keydown", handleEscape);
-      return () => document.removeEventListener("keydown", handleEscape);
-    }
-  }, [open, handleEscape]);
+export const Modal: FC<Props> = ({
+  open,
+  onClose,
+  title,
+  children,
+  footer,
+  size = "md",
+  className = "",
+}) => {
+  useEscapeKey(onClose, open);
+
+  const maxWidthClass = SIZE_CLASSES[size] || SIZE_CLASSES.md;
 
   return (
     <AnimatePresence>
@@ -45,7 +56,7 @@ export const Modal: FC<Props> = ({ open, onClose, title, children, footer }) => 
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="relative bg-card border border-input rounded-xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-2xl overflow-hidden"
+            className={`relative bg-card border border-input rounded-xl w-full ${maxWidthClass} max-h-[85vh] flex flex-col shadow-2xl overflow-hidden ${className}`}
             onClick={(e) => e.stopPropagation()}
           >
             {title && (

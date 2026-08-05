@@ -8,9 +8,9 @@ import {
   createLsToolDefinition,
   createReadToolDefinition,
   createWriteToolDefinition,
-} from "../../ai";
-import { createExaSearchTool } from "../../core/tools/exa-search-tool";
-import { createWebFetchTool } from "../../core/tools/web-fetch";
+} from "../../core";
+import { createExaSearchTool } from "../../core/tools/extensions/exa-search.tool";
+import { createWebFetchTool } from "../../core/tools/extensions/web-fetch";
 
 export function createBashTool(workspaceDir: string): BaseTool {
   return legacyToolToBaseTool(createBashToolDefinition(workspaceDir));

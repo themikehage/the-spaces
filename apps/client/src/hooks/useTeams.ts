@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MIT
+import { useAvatarUpload } from "@/hooks/useAvatarUpload";
 import { teamsService } from "@/lib/api/teams.service";
+import { EntityEventBus } from "@/lib/event-bus";
 import { useCallback, useEffect, useState } from "react";
 import type { CreateTeam, Team, UpdateTeam } from "shared";
 
@@ -29,7 +31,7 @@ export function useTeams() {
     async (data: CreateTeam): Promise<Team> => {
       const team = await teamsService.createTeam(data);
       await fetchTeams();
-      window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "team" } }));
+      EntityEventBus.emit({ type: "team" });
       return team;
     },
     [fetchTeams],
@@ -39,7 +41,7 @@ export function useTeams() {
     async (id: string, updates: UpdateTeam): Promise<Team> => {
       const team = await teamsService.updateTeam(id, updates);
       await fetchTeams();
-      window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "team" } }));
+      EntityEventBus.emit({ type: "team" });
       return team;
     },
     [fetchTeams],
@@ -49,27 +51,16 @@ export function useTeams() {
     async (id: string): Promise<void> => {
       await teamsService.deleteTeam(id);
       await fetchTeams();
-      window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "team" } }));
+      EntityEventBus.emit({ type: "team" });
     },
     [fetchTeams],
   );
 
-  const uploadTeamAvatar = useCallback(
-    async (id: string, file: File): Promise<string> => {
-      const url = await teamsService.uploadTeamAvatar(id, file);
-      await fetchTeams();
-      return url;
-    },
-    [fetchTeams],
-  );
-
-  const deleteTeamAvatar = useCallback(
-    async (id: string): Promise<void> => {
-      await teamsService.deleteTeamAvatar(id);
-      await fetchTeams();
-    },
-    [fetchTeams],
-  );
+  const { uploadAvatar: uploadTeamAvatar, deleteAvatar: deleteTeamAvatar } = useAvatarUpload({
+    uploadFn: teamsService.uploadTeamAvatar,
+    deleteFn: teamsService.deleteTeamAvatar,
+    onSuccess: fetchTeams,
+  });
 
   return {
     teams,

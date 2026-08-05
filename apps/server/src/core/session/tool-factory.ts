@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { getTeamWorkspaceDir, legacyToolToBaseTool, type BaseTool } from "shared";
-import type { DefaultResourceLoader } from "../../ai";
+import type { DefaultResourceLoader } from "..";
 import {
   createBashToolDefinition,
   createEditToolDefinition,
@@ -9,12 +9,12 @@ import {
   createLsToolDefinition,
   createReadToolDefinition,
   createWriteToolDefinition,
-} from "../../ai";
-import type { AuthStorage } from "../../ai/auth-storage";
-import type { ModelRegistry } from "../../ai/model-registry";
+} from "..";
+import type { AuthStorage } from "./auth-storage";
+import type { ModelRegistry } from "../model/model-registry";
 import { getOrCreateToolSessionToken } from "../../auth/ephemeral-tool-session";
 import { teamStore } from "../../teams/team-store";
-import { filterSecretsFromOutput } from "../bash-output-filter";
+import { filterSecretsFromOutput } from "../sandbox/bash-output-filter";
 import {
   createCustomToolRuntime,
   createManageCustomToolsTool,
@@ -23,11 +23,11 @@ import {
 import { createMemoryTools } from "../memory/memory-tools";
 import type { MemoryProvider } from "../memory/types";
 import { scopeConfigManager } from "../scope";
-import { createExaSearchTool } from "../tools/exa-search-tool";
-import { createFactoryTool } from "../tools/factory-tool";
-import { createPreviewTools } from "../tools/preview-tools";
-import { createUiTools } from "../tools/ui-tools";
-import { createWebFetchTool } from "../tools/web-fetch";
+import { createExaSearchTool } from "../tools/extensions/exa-search.tool";
+import { createFactoryTool } from "../tools/extensions/factory.tool";
+import { createPreviewTools } from "../tools/extensions/preview.tool";
+import { createUiTools } from "../tools/extensions/ui.tool";
+import { createWebFetchTool } from "../tools/extensions/web-fetch";
 import { userConfigManager } from "./user-config";
 
 export interface CreateSessionToolsParams {

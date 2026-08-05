@@ -10,8 +10,8 @@ import {
   getWorkspaceDir,
   getWorkspaceSkillsDir,
 } from "shared";
-import { loadSkills } from "../ai/load-skills";
-import { getResolvedSkillPaths } from "../core/session-manager";
+import { loadSkills } from "../core/session/load-skills";
+import { getResolvedSkillPaths } from "../core/session/session-manager";
 import { authMiddleware, getAuthPayload } from "../middleware/auth";
 
 export const skillsRouter = new Hono();
@@ -68,7 +68,7 @@ skillsRouter.get("/", async (c) => {
 skillsRouter.post("/reset", async (c) => {
   const { username } = getAuthPayload(c);
   try {
-    const { DEFAULT_FACTORY_SKILLS } = await import("../core/default-factory-skills");
+    const { DEFAULT_FACTORY_SKILLS } = await import("../core/prompts/default-factory-skills");
     const skillsBaseDir = getWorkspaceSkillsDir(username);
 
     const OBSOLETE_SKILLS = [

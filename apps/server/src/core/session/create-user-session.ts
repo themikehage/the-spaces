@@ -2,7 +2,7 @@
 import { getTeamWorkspaceDir } from "shared";
 import { agentRegistry } from "../../agents";
 import { teamStore } from "../../teams/team-store";
-import { sessionManager } from "../session-manager";
+import { sessionManager } from "./session-manager";
 import { resolveCanonicalProjectId } from "./workspace-resolver";
 
 export class SessionDomainError extends Error {

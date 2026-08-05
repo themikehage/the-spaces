@@ -3,6 +3,7 @@ import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useSessions, type KanbanColumn, type SessionItem } from "@/contexts/SessionsContext";
 import { useLiterals } from "@/lib";
 import { sessionsService } from "@/lib/api/sessions.service";
+import { EntityEventBus } from "@/lib/event-bus";
 import { Archive, RotateCcw, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { literals as u } from "./SessionsKanbanPage.literals";
@@ -214,7 +215,7 @@ export function SessionsKanbanPage({ onNavigate }: Props) {
     } else {
       await sessionsService.archiveSession(id);
     }
-    window.dispatchEvent(new CustomEvent("entity-updated"));
+    EntityEventBus.emit({ type: "session" });
     refetch();
     if (viewArchived) fetchArchived();
   };
@@ -227,7 +228,7 @@ export function SessionsKanbanPage({ onNavigate }: Props) {
     if (!deleteTarget) return;
     await sessionsService.deleteSession(deleteTarget);
     setDeleteTarget(null);
-    window.dispatchEvent(new CustomEvent("entity-updated"));
+    EntityEventBus.emit({ type: "session" });
     refetch();
     if (viewArchived) fetchArchived();
   };
@@ -244,7 +245,7 @@ export function SessionsKanbanPage({ onNavigate }: Props) {
     await sessionsService.batchSessionAction(action, selectedIds);
     setSelectedIds([]);
     setBatchDelete(false);
-    window.dispatchEvent(new CustomEvent("entity-updated"));
+    EntityEventBus.emit({ type: "session" });
     refetch();
     if (viewArchived) fetchArchived();
   };

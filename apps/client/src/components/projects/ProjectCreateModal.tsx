@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: MIT
 import { AvatarUploadField } from "@/components/shared/AvatarUploadField";
-import { Button } from "@/components/ui/Button";
+import { FormDialog } from "@/components/ui/FormDialog";
 import { useLiterals } from "@/lib";
 import { DEFAULT_AVATAR_PREFIX } from "@/lib/defaultAvatars";
-import { motion } from "framer-motion";
-import { X } from "lucide-react";
 import { useState } from "react";
 import { literals as u } from "./ProjectCreateModal.literals";
 
@@ -44,8 +42,7 @@ export function ProjectCreateModal({ onClose, onSubmit, onUploadAvatar }: Projec
     setAvatarPreview(null);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     if (!name.trim()) return;
 
     setError(null);
@@ -78,83 +75,62 @@ export function ProjectCreateModal({ onClose, onSubmit, onUploadAvatar }: Projec
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 8 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 8 }}
-        transition={{ duration: 0.18 }}
-        className="relative w-full max-w-md bg-card border border-input rounded-2xl shadow-2xl overflow-hidden"
-      >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-input">
-          <div>
-            <h2 className="text-sm font-semibold text-foreground">{l.title}</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">{l.subtitle}</p>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-card-hover transition-colors cursor-pointer"
-          >
-            <X size={14} />
-          </button>
+    <FormDialog
+      open
+      onClose={onClose}
+      title={l.title}
+      description={l.subtitle}
+      onSubmit={handleSubmit}
+      submitLabel={submitting ? l.creating : l.create}
+      cancelLabel={l.cancel}
+      isSubmitting={submitting}
+      size="sm"
+    >
+      <div className="space-y-4">
+        <AvatarUploadField
+          preview={avatarPreview}
+          selectedDefault={selectedDefaultAvatar}
+          onFileChange={handleAvatarChange}
+          onSelectDefault={handleSelectDefaultAvatar}
+          onClear={handleClearAvatar}
+          entityName={name}
+          avatarType="entity"
+          entityAvatarEntityType="project"
+        />
+
+        <div>
+          <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
+            {l.projectNameLabel}
+          </label>
+          <input
+            type="text"
+            required
+            placeholder={l.projectNamePlaceholder}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full px-3 py-2 bg-bg border border-input rounded-xl text-sm text-foreground focus:outline-none focus:border-accent"
+          />
         </div>
 
-        <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4 max-h-[70vh] overflow-y-auto">
-          <AvatarUploadField
-            preview={avatarPreview}
-            selectedDefault={selectedDefaultAvatar}
-            onFileChange={handleAvatarChange}
-            onSelectDefault={handleSelectDefaultAvatar}
-            onClear={handleClearAvatar}
-            entityName={name}
-            avatarType="entity"
-            entityAvatarEntityType="project"
+        <div>
+          <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
+            {l.cloneUrlLabel}
+          </label>
+          <input
+            type="text"
+            placeholder={l.cloneUrlPlaceholder}
+            value={cloneUrl}
+            onChange={(e) => setCloneUrl(e.target.value)}
+            className="w-full px-3 py-2 bg-bg border border-input rounded-xl text-sm text-foreground focus:outline-none focus:border-accent"
           />
+        </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
-              {l.projectNameLabel}
-            </label>
-            <input
-              type="text"
-              required
-              placeholder={l.projectNamePlaceholder}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 bg-bg border border-input rounded-xl text-sm text-foreground focus:outline-none focus:border-accent"
-            />
+        {error && (
+          <div className="bg-destructive/10 border border-error/30 text-destructive text-xs px-3 py-2 rounded-lg">
+            {error}
           </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
-              {l.cloneUrlLabel}
-            </label>
-            <input
-              type="text"
-              placeholder={l.cloneUrlPlaceholder}
-              value={cloneUrl}
-              onChange={(e) => setCloneUrl(e.target.value)}
-              className="w-full px-3 py-2 bg-bg border border-input rounded-xl text-sm text-foreground focus:outline-none focus:border-accent"
-            />
-          </div>
-
-          {error && (
-            <div className="bg-destructive/10 border border-error/30 text-destructive text-xs px-3 py-2 rounded-lg">
-              {error}
-            </div>
-          )}
-
-          <div className="flex gap-2 pt-2">
-            <Button variant="outline" type="button" onClick={onClose} className="flex-1">
-              {l.cancel}
-            </Button>
-            <Button type="submit" disabled={submitting} className="flex-1">
-              {submitting ? l.creating : l.create}
-            </Button>
-          </div>
-        </form>
-      </motion.div>
-    </div>
+        )}
+      </div>
+    </FormDialog>
   );
 }

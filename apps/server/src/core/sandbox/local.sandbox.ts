@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { isRestrictedPath } from "../../ai/restricted-paths";
+import { isRestrictedPath } from "./restricted-paths";
 import type { ISandbox, SandboxOptions, SandboxResult } from "../ports/sandbox.port";
 
 export class LocalSandbox implements ISandbox {

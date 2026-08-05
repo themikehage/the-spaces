@@ -5,6 +5,7 @@ import { useLiterals } from "@/lib";
 import { agentsService } from "@/lib/api/agents.service";
 import { projectsService } from "@/lib/api/projects.service";
 import { teamsService } from "@/lib/api/teams.service";
+import { EntityEventBus } from "@/lib/event-bus";
 import { literals as dashboardLiterals } from "@/pages/DashboardPage.literals";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -92,9 +93,7 @@ export function useDashboardData({ onNavigate }: UseDashboardDataParams) {
   }, [fetchData]);
 
   useEffect(() => {
-    const handleUpdate = () => fetchData();
-    window.addEventListener("entity-updated", handleUpdate);
-    return () => window.removeEventListener("entity-updated", handleUpdate);
+    return EntityEventBus.subscribe(() => fetchData());
   }, [fetchData]);
 
   const handleDeleteRepo = (repo: RepoItem) => {
@@ -110,7 +109,7 @@ export function useDashboardData({ onNavigate }: UseDashboardDataParams) {
     try {
       await projectsService.deleteProject(id);
       await fetchData();
-      window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "project" } }));
+      EntityEventBus.emit({ type: "project" });
       setDeleteRepo(null);
       setConfirmDeleteName("");
     } catch (err: unknown) {
@@ -134,14 +133,14 @@ export function useDashboardData({ onNavigate }: UseDashboardDataParams) {
     const id = infoProject.id || infoProject.name;
     await projectsService.updateProject(id, updates);
     await fetchData();
-    window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "project" } }));
+    EntityEventBus.emit({ type: "project" });
   };
 
   const handleUploadProjectAvatar = useCallback(
     async (id: string, file: File) => {
       const url = await projectsService.uploadProjectAvatar(id, file);
       await fetchData();
-      window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "project" } }));
+      EntityEventBus.emit({ type: "project" });
       return url;
     },
     [fetchData],
@@ -151,7 +150,7 @@ export function useDashboardData({ onNavigate }: UseDashboardDataParams) {
     async (id: string) => {
       await projectsService.deleteProjectAvatar(id);
       await fetchData();
-      window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "project" } }));
+      EntityEventBus.emit({ type: "project" });
     },
     [fetchData],
   );
@@ -171,7 +170,7 @@ export function useDashboardData({ onNavigate }: UseDashboardDataParams) {
       });
 
       await fetchData();
-      window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "project" } }));
+      EntityEventBus.emit({ type: "project" });
       setShowModal(false);
       setRepoName("");
       setCloneUrl("");

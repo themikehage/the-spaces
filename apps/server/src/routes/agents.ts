@@ -13,10 +13,10 @@ import {
 } from "shared";
 import { z } from "zod";
 import { agentRegistry } from "../agents";
-import { applyCacheHeaders } from "../core/cache-headers";
+import { applyCacheHeaders } from "../core/middleware/cache-headers";
 import { scopeConfigManager } from "../core/scope";
 
-import { sessionManager } from "../core/session-manager";
+import { sessionManager } from "../core/session/session-manager";
 import { getUsername } from "../lib/auth-helpers";
 import { authMiddleware } from "../middleware/auth";
 

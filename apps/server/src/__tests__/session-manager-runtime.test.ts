@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { describe, expect, it } from "bun:test";
-import { SessionManager } from "../core/session-manager";
+import { SessionManager } from "../core/session/session-manager";
 
 describe("SessionManager - IAgentRuntime Integration", () => {
   it("should create and return an IAgentRuntime instance from getOrCreateSession", async () => {

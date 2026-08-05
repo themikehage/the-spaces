@@ -3,8 +3,8 @@ import { describe, expect, it } from "bun:test";
 import type { IHookRunner } from "../core/ports/hook.port";
 import type { IPermissionEngine } from "../core/ports/permission.port";
 import type { ITool, ToolContext } from "../core/ports/tool.port";
-import { ToolExecutor } from "../core/tool-executor";
-import { ToolRegistry } from "../core/tool-registry";
+import { ToolExecutor } from "../core/infra/tool-executor";
+import { ToolRegistry } from "../core/infra/tool-registry";
 
 class MockTool implements ITool {
   constructor(

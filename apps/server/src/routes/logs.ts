@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { Hono } from "hono";
-import { getToolCallLogs } from "../core/audit-log";
+import { getToolCallLogs } from "../core/stores/audit-log";
 import { observabilityService } from "../core/observability/observability-service";
 import { eventBroker } from "../lib/event-broker";
 import { authMiddleware, getAuthPayload } from "../middleware/auth";

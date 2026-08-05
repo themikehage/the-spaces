@@ -4,6 +4,7 @@ import { useAgents } from "@/hooks/useAgents";
 import { useLiterals } from "@/lib";
 import { agentsService } from "@/lib/api/agents.service";
 import { teamsService } from "@/lib/api/teams.service";
+import { EntityEventBus, type EntityEventType } from "@/lib/event-bus";
 import { literals as u } from "@/pages/AgentsPage.literals";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { AgentDefinition } from "shared";
@@ -83,7 +84,7 @@ export function useAgentsPageState() {
 
         await fetchAgents();
         await fetchTeams();
-        window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: data.type } }));
+        EntityEventBus.emit({ type: data.type as EntityEventType });
       } catch (err: any) {
         console.error(err);
         addToast("error", err.message || l.installError);

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { teamsService } from "@/lib/api/teams.service";
+import { EntityEventBus } from "@/lib/event-bus";
 import { wsClient } from "@/lib/ws-client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Team, TeamMember, TeamMessage, UpdateTeam } from "shared";
@@ -245,7 +246,7 @@ export function useTeam(teamId: string | null, sessionId?: string | null) {
       if (!teamId) return;
       const updated = await teamsService.updateTeam(teamId, data);
       setTeam(updated);
-      window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "team" } }));
+      EntityEventBus.emit({ type: "team" });
     },
     [teamId],
   );

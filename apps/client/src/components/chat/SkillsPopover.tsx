@@ -1,6 +1,7 @@
 import { RichMarkdown } from "@/components/chat/RichMarkdown";
 import { Modal } from "@/components/ui/Modal";
 import { useEntitySkills, type SkillInfo } from "@/hooks/useEntitySkills";
+import { EntityEventBus } from "@/lib/event-bus";
 import { useLiterals } from "@/lib";
 import { Check } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -78,7 +79,7 @@ export function SkillsPopover({
   const handleToggleSkillItem = async (skillName: string) => {
     if (useEntityHook) {
       await entitySkills.toggleSkill(skillName);
-      window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "skill" } }));
+      EntityEventBus.emit({ type: "skill" });
     } else if (externalToggleSkill) {
       externalToggleSkill(skillName);
     }

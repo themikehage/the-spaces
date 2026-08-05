@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import type { AgentSessionEvent } from "../../ai/agent-session";
+import type { AgentSessionEvent } from "../session/agent-session";
 
 export type AgentEventTypeKey = AgentSessionEvent["type"];
 

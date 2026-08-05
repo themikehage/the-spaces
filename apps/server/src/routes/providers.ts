@@ -3,7 +3,7 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { SetApiKeySchema } from "shared";
 import { clearProviderModels, saveProviderModels } from "../core/providers/provider-persistence";
-import { sessionManager } from "../core/session-manager";
+import { sessionManager } from "../core/session/session-manager";
 import { authMiddleware, getAuthPayload } from "../middleware/auth";
 
 export const providersRouter = new Hono();

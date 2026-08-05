@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 import { beforeAll, describe, expect, test } from "bun:test";
 import { agentRegistry } from "../agents";
-import { sessionManager } from "../core/session-manager";
-import { createManageDelegationsTool } from "../core/tools/manage-delegations-tool";
+import { sessionManager } from "../core/session/session-manager";
+import { createManageDelegationsTool } from "../core/tools/extensions/manage-delegations.tool";
 
 describe("delegate_task Tool Team Integration Tests", () => {
   const username = "test_team_delegator";

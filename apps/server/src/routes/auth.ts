@@ -12,7 +12,7 @@ import {
   InternalError,
   NotFoundError,
   UnauthorizedError,
-} from "../core/errors";
+} from "../core/infra/errors";
 
 export const authRouter = new Hono();
 

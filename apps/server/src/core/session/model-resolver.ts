@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import type { AvailableModel, ModelRegistry } from "../../ai/model-registry";
+import type { AvailableModel, ModelRegistry } from "../model/model-registry";
 import type { ModelResolutionContext, ModelResolver } from "../ports/model-resolver";
 
 export class DefaultModelResolver implements ModelResolver {

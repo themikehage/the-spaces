@@ -10,6 +10,7 @@ import { useLiterals } from "@/lib";
 import { projectsService } from "@/lib/api/projects.service";
 import { settingsService } from "@/lib/api/settings.service";
 import { teamsService } from "@/lib/api/teams.service";
+import { EntityEventBus } from "@/lib/event-bus";
 import { getSessionPath } from "@/lib/session-utils";
 import { wsClient, type ConnectionState } from "@/lib/ws-client";
 import type { RoutePage } from "@/router/useRoutePage";
@@ -126,20 +127,20 @@ export function useMainLayoutState({
       if (!activeProjectId) return;
       await projectsService.updateProject(activeProjectId, updates);
       localStorage.setItem("active-project-name", updates.name);
-      window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "project" } }));
+      EntityEventBus.emit({ type: "project" });
     },
     [activeProjectId],
   );
 
   const handleUploadProjectAvatar = useCallback(async (id: string, file: File) => {
     const avatarUrl = await projectsService.uploadProjectAvatar(id, file);
-    window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "project" } }));
+    EntityEventBus.emit({ type: "project" });
     return avatarUrl;
   }, []);
 
   const handleDeleteProjectAvatar = useCallback(async (id: string) => {
     await projectsService.deleteProjectAvatar(id);
-    window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "project" } }));
+    EntityEventBus.emit({ type: "project" });
   }, []);
 
   const handleDeleteProject = useCallback(
@@ -147,7 +148,7 @@ export function useMainLayoutState({
       await projectsService.deleteProject(id);
       onSelectProject(null, null);
       onNavigate("/projects");
-      window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "project" } }));
+      EntityEventBus.emit({ type: "project" });
     },
     [onSelectProject, onNavigate],
   );
@@ -156,20 +157,20 @@ export function useMainLayoutState({
     async (updates: any) => {
       if (!activeTeam?.id) return;
       await teamsService.updateTeam(activeTeam.id, updates);
-      window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "team" } }));
+      EntityEventBus.emit({ type: "team" });
     },
     [activeTeam?.id],
   );
 
   const handleUploadTeamAvatar = useCallback(async (id: string, file: File) => {
     const avatarUrl = await teamsService.uploadTeamAvatar(id, file);
-    window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "team" } }));
+    EntityEventBus.emit({ type: "team" });
     return avatarUrl;
   }, []);
 
   const handleDeleteTeamAvatar = useCallback(async (id: string) => {
     await teamsService.deleteTeamAvatar(id);
-    window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "team" } }));
+    EntityEventBus.emit({ type: "team" });
   }, []);
 
   const handleDeleteTeam = useCallback(
@@ -177,7 +178,7 @@ export function useMainLayoutState({
       await teamsService.deleteTeam(id);
       onSelectTeam(null);
       onNavigate("/teams");
-      window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "team" } }));
+      EntityEventBus.emit({ type: "team" });
     },
     [onSelectTeam, onNavigate],
   );
@@ -234,41 +235,37 @@ export function useMainLayoutState({
   }, [activeTeam?.id]);
 
   useEffect(() => {
-    const handleUpdate = async (e: Event) => {
-      const detail = (e as CustomEvent)?.detail;
+    return EntityEventBus.subscribe((detail) => {
       const type = detail?.type;
-
       if (type === "project" && activeProjectId) {
-        try {
-          const projects = await projectsService.fetchProjects();
-          const proj = projects.find((p: any) => p.id === activeProjectId);
-          if (proj) {
-            setActiveProjectData(proj);
-            localStorage.setItem("active-project-name", proj.name);
-          }
-        } catch (err) {
-          console.error("Error refreshing active project data:", err);
-        }
+        projectsService
+          .fetchProjects()
+          .then((projects: any[]) => {
+            const proj = projects.find((p: any) => p.id === activeProjectId);
+            if (proj) {
+              setActiveProjectData(proj);
+              localStorage.setItem("active-project-name", proj.name);
+            }
+          })
+          .catch((err) => console.error("Error refreshing active project data:", err));
       }
 
       if (type === "team" && activeTeam?.id) {
-        try {
-          const teams = await teamsService.fetchTeams();
-          const team = teams.find((t: any) => t.id === activeTeam.id);
-          if (team) {
-            setActiveTeamData(team);
-          }
-        } catch (err) {
-          console.error("Error refreshing active team data:", err);
-        }
+        teamsService
+          .fetchTeams()
+          .then((teams: any[]) => {
+            const team = teams.find((t: any) => t.id === activeTeam.id);
+            if (team) {
+              setActiveTeamData(team);
+            }
+          })
+          .catch((err) => console.error("Error refreshing active team data:", err));
       }
 
       if (type === "settings") {
         fetchGlobalSettings();
       }
-    };
-    window.addEventListener("entity-updated", handleUpdate);
-    return () => window.removeEventListener("entity-updated", handleUpdate);
+    });
   }, [activeProjectId, activeTeam?.id, fetchGlobalSettings]);
 
   const isHome = isMobile && !activeProjectId && !activeAgent && !activeTeam && page === "chat";

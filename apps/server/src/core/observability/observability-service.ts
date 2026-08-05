@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { getToolCallLogs } from "../audit-log";
+import { getToolCallLogs } from "../stores/audit-log";
 
 export interface ToolMetric {
   toolName: string;

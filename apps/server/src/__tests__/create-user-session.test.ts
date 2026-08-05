@@ -4,7 +4,7 @@ import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { getProjectsDir, getTeamWorkspaceDir, getUserDir } from "shared";
 import { agentRegistry } from "../agents";
-import { sessionManager } from "../core/session-manager";
+import { sessionManager } from "../core/session/session-manager";
 import {
   createUserSession,
   LeaderNotRegisteredError,

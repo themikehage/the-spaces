@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { describe, expect, it } from "bun:test";
 import { approvalManager } from "../core/approvals/approval-manager";
-import { uiApprovalRegistry } from "../core/ui-approval-registry";
+import { uiApprovalRegistry } from "../core/approvals/ui-approval-registry";
 
 describe("routes/approvals", () => {
   it("should format approvals with correct kind discriminators", () => {

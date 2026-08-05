@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MIT
+import { useAvatarUpload } from "@/hooks/useAvatarUpload";
 import { agentsService } from "@/lib/api/agents.service";
+import { EntityEventBus } from "@/lib/event-bus";
 import { useCallback, useEffect, useState } from "react";
 import type { AgentDefinition, AgentInfo } from "shared";
 
@@ -29,7 +31,7 @@ export function useAgents() {
     async (definition: AgentDefinition): Promise<AgentInfo> => {
       const agent = await agentsService.registerAgent(definition);
       await fetchAgents();
-      window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "agent" } }));
+      EntityEventBus.emit({ type: "agent" });
       return agent;
     },
     [fetchAgents],
@@ -39,7 +41,7 @@ export function useAgents() {
     async (id: string): Promise<void> => {
       await agentsService.stopAgent(id);
       await fetchAgents();
-      window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "agent" } }));
+      EntityEventBus.emit({ type: "agent" });
     },
     [fetchAgents],
   );
@@ -52,28 +54,17 @@ export function useAgents() {
     async (id: string, updates: Partial<Omit<AgentDefinition, "id">>): Promise<AgentInfo> => {
       const agent = await agentsService.updateAgent(id, updates);
       await fetchAgents();
-      window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "agent" } }));
+      EntityEventBus.emit({ type: "agent" });
       return agent;
     },
     [fetchAgents],
   );
 
-  const uploadAvatar = useCallback(
-    async (id: string, file: File): Promise<string> => {
-      const url = await agentsService.uploadAgentAvatar(id, file);
-      await fetchAgents();
-      return url;
-    },
-    [fetchAgents],
-  );
-
-  const deleteAvatar = useCallback(
-    async (id: string): Promise<void> => {
-      await agentsService.deleteAgentAvatar(id);
-      await fetchAgents();
-    },
-    [fetchAgents],
-  );
+  const { uploadAvatar, deleteAvatar } = useAvatarUpload({
+    uploadFn: agentsService.uploadAgentAvatar,
+    deleteFn: agentsService.deleteAgentAvatar,
+    onSuccess: fetchAgents,
+  });
 
   return {
     agents,

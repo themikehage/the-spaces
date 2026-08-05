@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { ZodError } from "zod";
-import { sessionManager } from "../session-manager";
+import { sessionManager } from "../session/session-manager";
 import { createCustomToolRuntime } from "./runtime";
 import { type CustomToolDefinition, CustomToolDefinitionSchema } from "./schemas";
 import { customToolStorage } from "./storage";

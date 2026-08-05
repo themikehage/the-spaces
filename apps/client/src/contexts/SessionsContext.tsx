@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { sessionsService, type SessionItem, type SessionStatus } from "@/lib/api/sessions.service";
+import { EntityEventBus } from "@/lib/event-bus";
 import { wsClient } from "@/lib/ws-client";
 import {
   createContext,
@@ -80,12 +81,10 @@ export function SessionsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const handleUpdate = () => {
+    return EntityEventBus.subscribe(() => {
       fetchSessions();
       fetchStatuses();
-    };
-    window.addEventListener("entity-updated", handleUpdate);
-    return () => window.removeEventListener("entity-updated", handleUpdate);
+    });
   }, [fetchSessions, fetchStatuses]);
 
   useEffect(() => {

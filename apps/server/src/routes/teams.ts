@@ -13,8 +13,8 @@ import {
 } from "shared";
 import { z } from "zod";
 import { agentRegistry } from "../agents";
-import { applyCacheHeaders } from "../core/cache-headers";
-import { sessionManager } from "../core/session-manager";
+import { applyCacheHeaders } from "../core/middleware/cache-headers";
+import { sessionManager } from "../core/session/session-manager";
 import { getUsername } from "../lib/auth-helpers";
 import { authMiddleware } from "../middleware/auth";
 import { teamOrchestrator, teamStore } from "../teams";
@@ -429,7 +429,7 @@ teamsRouter.post(
       if (session) {
         await session.abort().catch(() => {});
       }
-      const { delegationRegistry } = await import("../core/delegation-registry");
+      const { delegationRegistry } = await import("../core/delegation/delegation-registry");
       delegationRegistry.abortAllRecursive(ownerSessionId);
     } else {
       teamOrchestrator.abortDispatch(username, id, body?.sessionId);

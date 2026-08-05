@@ -3,7 +3,7 @@ import { describe, expect, it } from "bun:test";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { loadSkills } from "../ai/load-skills";
+import { loadSkills } from "../core/session/load-skills";
 import { getResolvedSkillPaths } from "../core/session/workspace-resolver";
 
 describe("Skills Deduplication & Path Resolution", () => {

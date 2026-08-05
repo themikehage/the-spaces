@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { type AgentSession } from "../../ai";
+import { type AgentSession } from "..";
 import { type PipelineStep } from "./schemas";
 
 export interface PipelineContext {
