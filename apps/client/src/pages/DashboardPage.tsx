@@ -161,7 +161,11 @@ export function DashboardPage({ onNavigate, onSelectProject }: Props) {
     setSubmitError(null);
 
     try {
-      }
+      await projectsService.createProject({
+        name: projectName.trim(),
+        cloneUrl: cloneUrl.trim() || undefined,
+        avatarUrl: avatarUrl.trim() || undefined,
+      });
 
       await fetchData();
       window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "project" } }));
