@@ -1,10 +1,38 @@
 // SPDX-License-Identifier: MIT
-import type {
-  AfterToolCallContext,
-  AfterToolCallResult,
-  BeforeToolCallContext,
-  BeforeToolCallResult,
-} from "../../ai/vendor/agent/src/types";
+
+export interface BeforeToolCallResult {
+  block?: boolean;
+  reason?: string;
+}
+
+export interface AfterToolCallResult {
+  content?: unknown[];
+  details?: unknown;
+  isError?: boolean;
+  terminate?: boolean;
+}
+
+export interface BeforeToolCallContext {
+  toolCallId?: string;
+  toolName?: string;
+  args: unknown;
+  assistantMessage?: unknown;
+  toolCall?: unknown;
+  context?: unknown;
+  [key: string]: unknown;
+}
+
+export interface AfterToolCallContext {
+  toolCallId?: string;
+  toolName?: string;
+  args: unknown;
+  result: unknown;
+  isError?: boolean;
+  assistantMessage?: unknown;
+  toolCall?: unknown;
+  context?: unknown;
+  [key: string]: unknown;
+}
 
 export interface Hook {
   id: string;
@@ -31,4 +59,5 @@ export interface IHookRunner {
     ctx: AfterToolCallContext,
     signal?: AbortSignal,
   ): Promise<AfterToolCallResult | undefined>;
+  runOnError(error: Error): Promise<void>;
 }

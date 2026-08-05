@@ -15,11 +15,18 @@ export interface ITool {
   execute(toolCallId: string, params: any, ctx?: ToolContext): Promise<any>;
 }
 
+export interface LLMToolDefinition {
+  name: string;
+  description: string;
+  parameters?: Record<string, unknown>;
+}
+
 export interface IToolRegistry {
   register(tool: ITool): void;
   get(name: string): ITool | undefined;
   list(): ITool[];
   getActive(): ITool[];
   setActive(tools: ITool[]): void;
+  toLLMFormat(): LLMToolDefinition[];
   clear(): void;
 }

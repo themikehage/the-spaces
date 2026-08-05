@@ -4,8 +4,9 @@ import type {
   AfterToolCallResult,
   BeforeToolCallContext,
   BeforeToolCallResult,
-} from "../ai/vendor/agent/src/types";
-import type { Hook, IHookRunner } from "./ports/hook.port";
+  Hook,
+  IHookRunner,
+} from "./ports/hook.port";
 
 export class HookRunner implements IHookRunner {
   private hooks: Hook[] = [];
@@ -45,5 +46,12 @@ export class HookRunner implements IHookRunner {
       }
     }
     return result;
+  }
+
+  async runOnError(error: Error): Promise<void> {
+    for (const hook of this.hooks) {
+      if (!hook.onError) continue;
+      await hook.onError(error);
+    }
   }
 }

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import type { AgentTool } from "../ai/vendor/agent/src/types.ts";
-import type { ITool, IToolRegistry } from "./ports/tool.port";
+import type { ITool, IToolRegistry, LLMToolDefinition } from "./ports/tool.port";
 import { iToolToAgentTool } from "./tool-adapters";
 
 export class ToolRegistry implements IToolRegistry {
@@ -65,6 +65,15 @@ export class ToolRegistry implements IToolRegistry {
     }
   }
 
+  toLLMFormat(): LLMToolDefinition[] {
+    return this.activeTools.map((tool) => ({
+      name: tool.name,
+      description: tool.description,
+      parameters: tool.parameters,
+    }));
+  }
+
+  // TODO: remove when agent-loop migrates off vendor
   toAgentTools(sessionId: string = ""): AgentTool[] {
     return this.activeTools.map((tool) => iToolToAgentTool(tool, sessionId));
   }

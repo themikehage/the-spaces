@@ -2,9 +2,11 @@
 // Classes
 export { AgentSession, createAgentSession } from "./agent-session";
 export { AuthStorage } from "./auth-storage";
+export { ModelProviderAdapter } from "./model-provider-adapter";
 export { ModelRegistry } from "./model-registry";
 export { DefaultResourceLoader } from "./resource-loader";
 export { JsonlSessionStore } from "./session-persistence";
+export { SessionStoreAdapter } from "./session-store-adapter";
 
 // Functions
 export { createBashToolDefinition } from "./bash-tool";

@@ -1,3 +1,5 @@
+import { PermissionEngine } from "../core/permission-engine";
+import type { IPermissionEngine } from "../core/ports/permission.port";
 import type { BaseTool } from "shared";
 import { TypedEventEmitter } from "../core/event-bus";
 import { HookRunner } from "../core/hook-runner";
@@ -15,6 +17,8 @@ import { convertToLlm } from "./messages";
 import type { AvailableModel, ModelRegistry } from "./model-registry";
 import { PromptBuilder } from "./prompt-builder";
 import type { DefaultResourceLoader } from "./resource-loader";
+import { handleAgentEvent as processAgentEvent } from "./session-event-handler";
+import { calculateSessionStats } from "./session-stats-calculator";
 import type { JsonlSessionStore } from "./session-persistence";
 import { Agent } from "./vendor/agent/src/agent.ts";
 import { formatSkillsForSystemPrompt } from "./vendor/agent/src/harness/system-prompt.ts";
@@ -26,7 +30,7 @@ import type {
 } from "./vendor/agent/src/types.ts";
 import { streamSimple } from "./vendor/ai/src/compat.ts";
 
-export interface CreateAgentSessionOptions {
+export interface AgentSessionDeps {
   cwd: string;
   sessionStore?: JsonlSessionStore;
   sessionManager?: JsonlSessionStore;
@@ -40,7 +44,11 @@ export interface CreateAgentSessionOptions {
   ) => Promise<BeforeToolCallResult | undefined>;
   afterToolCall?: (context: any) => Promise<void> | void;
   delegationRegistry?: any;
+  permissionEngine?: IPermissionEngine;
+  hookRunner?: IHookRunner;
 }
+
+export type CreateAgentSessionOptions = AgentSessionDeps;
 
 export type AgentSessionEvent =
   | { type: "agent_start" }
@@ -100,7 +108,8 @@ export class AgentSession implements IAgentRuntime {
   private promptBuilder!: IPromptBuilder;
   private compactionManager!: CompactionManager;
   private navigationController!: NavigationController;
-  private hookRunner: IHookRunner = new HookRunner();
+  private hookRunner: IHookRunner;
+  public permissionEngine: IPermissionEngine;
   private activeSkillPrompts: string[] = [];
   private abortController: AbortController | null = null;
 
@@ -158,7 +167,7 @@ export class AgentSession implements IAgentRuntime {
     this.agent.followUp(resultMessage);
   }
 
-  constructor(options: CreateAgentSessionOptions) {
+  constructor(options: AgentSessionDeps) {
     this.cwd = options.cwd;
     this.sessionStore = (options.sessionStore ?? options.sessionManager)!;
     this.authStorage = options.authStorage;
@@ -169,12 +178,32 @@ export class AgentSession implements IAgentRuntime {
     this.beforeToolCall = options.beforeToolCall;
     this.afterToolCall = options.afterToolCall;
     this.delegationRegistry = options.delegationRegistry;
+    this.hookRunner = options.hookRunner ?? new HookRunner();
+    this.permissionEngine = options.permissionEngine ?? new PermissionEngine();
+
+    this.hookRunner.register({
+      id: "permission-engine-hook",
+      priority: 0,
+      beforeToolCall: async (ctx) => {
+        const evalResult = await this.permissionEngine.evaluate({
+          sessionId: this.sessionId,
+          toolName: (ctx.toolCall as any)?.name ?? ctx.toolName ?? "",
+          args: ctx.args,
+        });
+        if (!evalResult.allowed) {
+          return { block: true, reason: evalResult.reason ?? "Blocked by permission engine" };
+        }
+        return undefined;
+      },
+    });
 
     if (options.beforeToolCall || options.afterToolCall) {
       this.hookRunner.register({
         id: "options-legacy-hook",
         priority: 100,
-        beforeToolCall: options.beforeToolCall,
+        beforeToolCall: options.beforeToolCall
+          ? (ctx, sig) => options.beforeToolCall!(ctx as any, sig) as any
+          : undefined,
         afterToolCall: options.afterToolCall
           ? (ctx, sig) => options.afterToolCall!(ctx) as any
           : undefined,
@@ -379,8 +408,9 @@ export class AgentSession implements IAgentRuntime {
         } as any);
         return result.ok ? result.apiKey : undefined;
       },
-      beforeToolCall: (ctx, signal) => this.hookRunner.runBeforeToolCall(ctx, signal),
-      afterToolCall: (ctx) => this.hookRunner.runAfterToolCall(ctx as any),
+      beforeToolCall: (ctx, signal) => this.hookRunner.runBeforeToolCall(ctx as any, signal),
+      afterToolCall: async (ctx, signal) =>
+        (await this.hookRunner.runAfterToolCall(ctx as any, signal)) as any,
       prepareNextTurn: async () => {
         try {
           const skills = this.resourceLoader.getSkills().skills;
@@ -419,98 +449,7 @@ export class AgentSession implements IAgentRuntime {
   }
 
   private async handleAgentEvent(evt: any) {
-    if (evt.type === "agent_start") {
-      this.emit({ type: "agent_start" });
-    } else if (evt.type === "agent_end") {
-      for (const msg of evt.messages || []) {
-        if (msg.role === "assistant" && msg.usage) {
-          if (!msg.usage.cost) {
-            msg.usage.cost = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 };
-          } else {
-            const cost = msg.usage.cost;
-            cost.input = cost.input ?? 0;
-            cost.output = cost.output ?? 0;
-            cost.cacheRead = cost.cacheRead ?? 0;
-            cost.cacheWrite = cost.cacheWrite ?? 0;
-            cost.total = cost.total ?? 0;
-          }
-        }
-      }
-      this.emit({ type: "agent_end", messages: evt.messages, willRetry: false });
-    } else if (evt.type === "message_start") {
-      this.emit({
-        type: "message_start",
-        message: evt.message,
-      });
-    } else if (evt.type === "message_end") {
-      if (evt.message) {
-        this.sessionManager.appendMessage(evt.message);
-        if (evt.message.role === "assistant" && evt.message.stopReason === "error") {
-          console.warn(
-            `[AgentSession API Error] Session ${this.sessionManager.getSessionId()}:`,
-            evt.message.errorMessage || "API error response",
-          );
-          this.emit({
-            type: "agent_error",
-            error: evt.message.errorMessage || "API error response",
-          });
-        }
-      }
-      this.emit({
-        type: "message_end",
-        message: evt.message,
-      });
-    } else if (evt.type === "message_update") {
-      if (
-        evt.assistantMessageEvent?.type === "text_delta" ||
-        evt.assistantMessageEvent?.type === "thinking_delta"
-      ) {
-        this.emit({
-          type: "message_update",
-          assistantMessageEvent: evt.assistantMessageEvent,
-          message: evt.message,
-        });
-      }
-    } else if (evt.type === "tool_execution_start") {
-      this.emit({
-        type: "tool_execution_start",
-        toolName: evt.toolName,
-        args: evt.args,
-        toolCallId: evt.toolCallId,
-        toolCall: {
-          id: evt.toolCallId,
-          name: evt.toolName,
-          arguments: evt.args,
-        },
-      });
-    } else if (evt.type === "tool_execution_end") {
-      this.emit({
-        type: "tool_execution_end",
-        toolName: evt.toolName,
-        result: evt.result,
-        isError: evt.isError,
-        toolCallId: evt.toolCallId,
-        toolCall: {
-          id: evt.toolCallId,
-          name: evt.toolName,
-        },
-      });
-    } else if (evt.type === "tool_execution_update") {
-      this.emit({
-        type: "tool_execution_update",
-        toolCallId: evt.toolCallId,
-        toolName: evt.toolName,
-        partialResult: evt.partialResult,
-      });
-    } else if (evt.type === "turn_end") {
-      if (evt.message && evt.message.role === "assistant" && evt.message.errorMessage) {
-        console.warn(
-          `[AgentSession API Error] Session ${this.sessionManager.getSessionId()}:`,
-          evt.message.errorMessage,
-        );
-        this.emit({ type: "agent_error", error: evt.message.errorMessage });
-      }
-    }
+    processAgentEvent(evt, this.sessionManager, (event) => this.emit(event));
   }
 
   setActiveToolsByName(names: string[]): void {
@@ -808,53 +747,10 @@ export class AgentSession implements IAgentRuntime {
   }
 
   getSessionStats() {
-    const entries = this.sessionManager.getEntries();
-    let userMessages = 0;
-    let assistantMessages = 0;
-    let toolCalls = 0;
-    let toolResults = 0;
-    let tokensIn = 0;
-    let tokensOut = 0;
-
-    for (const entry of entries) {
-      if (entry.type === "message") {
-        if (entry.message.role === "user") userMessages++;
-        if (entry.message.role === "assistant") {
-          assistantMessages++;
-          const tc =
-            (entry.message.content as any)?.filter((c: any) => c.type === "toolCall") || [];
-          toolCalls += tc.length;
-        }
-        if (entry.message.role === "toolResult") toolResults++;
-      }
-    }
-
-    const messages = this.agent?.state?.messages || [];
-    for (const m of messages) {
-      const usage = (m as any).usage;
-      if (usage) {
-        tokensIn += usage.input || usage.promptTokens || usage.prompt_tokens || 0;
-        tokensOut += usage.output || usage.completionTokens || usage.completion_tokens || 0;
-      }
-    }
-
-    return {
-      sessionFile: this.sessionManager.getSessionFile(),
-      sessionId: this.sessionManager.getSessionId(),
-      userMessages,
-      assistantMessages,
-      toolCalls,
-      toolResults,
-      totalMessages: entries.length,
-      tokens: {
-        input: tokensIn,
-        output: tokensOut,
-        cacheRead: 0,
-        cacheWrite: 0,
-        total: tokensIn + tokensOut,
-      },
-      cost: 0,
-    };
+    return calculateSessionStats(
+      this.sessionManager,
+      this.agent?.state?.messages || [],
+    );
   }
 
   async dispose(): Promise<void> {
