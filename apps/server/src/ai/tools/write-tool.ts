@@ -1,53 +1,15 @@
 // SPDX-License-Identifier: MIT
-import { mkdir, writeFile } from "node:fs/promises";
-import { dirname } from "node:path";
-import { resolveSafePath } from "./path-safety";
+import { createWriteTool, WriteTool } from "./write.tool";
+
+export { createWriteTool, WriteTool };
 
 export function createWriteToolDefinition(cwd: string, allowedDirs?: string[]) {
+  const tool = createWriteTool(cwd, allowedDirs);
   return {
-    name: "write",
-    description:
-      "Write content to a file. Creates the file if it doesn't exist, and overwrites it if it does. Automatically creates parent directories.",
-    schema: {
-      type: "object",
-      properties: {
-        path: { type: "string", description: "Path to the file to write (relative or absolute)" },
-        content: { type: "string", description: "Content to write to the file" },
-      },
-      required: ["path", "content"],
-    },
-    execute: async (toolCallId: string, args: any, signal?: AbortSignal) => {
-      const { path: filePath, content } = args;
-
-      if (signal?.aborted) {
-        throw new Error("Operation aborted");
-      }
-
-      const absolutePath = resolveSafePath(cwd, filePath, allowedDirs);
-      const parentDir = dirname(absolutePath);
-
-      // Create parent directories recursively
-      await mkdir(parentDir, { recursive: true });
-
-      if (signal?.aborted) {
-        throw new Error("Operation aborted");
-      }
-
-      // Write content to the file
-      await writeFile(absolutePath, content, "utf-8");
-
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Successfully wrote ${Buffer.byteLength(content, "utf-8")} bytes to ${filePath}`,
-          },
-        ],
-        details: {
-          path: filePath,
-          bytesWritten: Buffer.byteLength(content, "utf-8"),
-        },
-      };
-    },
+    name: tool.name,
+    description: tool.description,
+    schema: tool.parameters,
+    execute: (toolCallId: string, args: any, signal?: AbortSignal) =>
+      tool.execute(toolCallId, args, { toolCallId, signal }),
   };
 }

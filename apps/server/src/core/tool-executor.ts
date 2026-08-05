@@ -28,7 +28,9 @@ export class ToolExecutor implements IToolExecutor {
         args: call.args,
       });
       if (!evalResult.allowed) {
-        throw new Error(`Tool execution blocked: ${evalResult.reason ?? "Denied by permission engine"}`);
+        throw new Error(
+          `Tool execution blocked: ${evalResult.reason ?? "Denied by permission engine"}`,
+        );
       }
     }
 
@@ -43,7 +45,9 @@ export class ToolExecutor implements IToolExecutor {
         ctx?.signal,
       );
       if (beforeResult?.block) {
-        throw new Error(`Tool execution blocked by hook: ${beforeResult.reason ?? "Blocked by hook"}`);
+        throw new Error(
+          `Tool execution blocked by hook: ${beforeResult.reason ?? "Blocked by hook"}`,
+        );
       }
     }
 

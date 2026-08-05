@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-import type { AgentSession } from "../../ai";
 import { eventBroker } from "../../lib/event-broker";
+import type { IAgentRuntime } from "../ports/agent-runtime.port";
 
 export interface SubscribeSessionEventsParams {
-  session: AgentSession;
+  session: IAgentRuntime;
   username: string;
   sessionId: string;
   metadataStore: {
@@ -33,7 +33,7 @@ export function subscribeSessionEvents({
     /* noop */
   }
 
-  const globalLogUnsub = session.subscribe((evt: any) => {
+  const globalLogUnsub = session.on((evt: any) => {
     const ev = evt as any;
 
     if (

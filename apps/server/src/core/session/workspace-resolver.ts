@@ -22,7 +22,7 @@ export function getResolvedSkillPaths(cwd: string, username?: string): string[] 
   const paths: string[] = [];
 
   if (username) {
-    const factorySkillsDir = getWorkspaceSkillsDir(username);
+    const factorySkillsDir = resolve(getWorkspaceSkillsDir(username));
     if (existsSync(factorySkillsDir) && !paths.includes(factorySkillsDir)) {
       paths.push(factorySkillsDir);
     }
@@ -48,8 +48,9 @@ export function getResolvedSkillPaths(cwd: string, username?: string): string[] 
     resolve(workspaceRoot, "pi/.agents/skills"),
   ];
   for (const candidate of localCandidates) {
-    if (existsSync(candidate) && !paths.includes(candidate)) {
-      paths.push(candidate);
+    const resolvedCandidate = resolve(candidate);
+    if (existsSync(resolvedCandidate) && !paths.includes(resolvedCandidate)) {
+      paths.push(resolvedCandidate);
     }
   }
   return paths;

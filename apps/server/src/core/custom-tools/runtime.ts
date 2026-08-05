@@ -54,7 +54,7 @@ export function createCustomToolRuntime(
             }
             const runContext = {
               ...context,
-              session: activeSession,
+              session: activeSession as any,
             };
             const result = await executePipeline(
               executeDef.steps,

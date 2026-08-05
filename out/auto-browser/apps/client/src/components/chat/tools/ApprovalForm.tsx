@@ -1,0 +1,216 @@
+// SPDX-License-Identifier: MIT
+import { toSafeString } from "../../../lib/safe-string";
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { AlertTriangle, Check, ChevronDown, Info, X } from "lucide-react";
+import { RichMarkdown } from "../RichMarkdown";
+
+interface Props {
+  toolCallId: string;
+  args: {
+    title: string;
+    description: string;
+    severity?: "info" | "warning" | "critical";
+    confirmLabel?: string;
+    cancelLabel?: string;
+    details?: string;
+  };
+  result: {
+    content: Array<{ type: string; text?: string }>;
+    isError: boolean;
+  } | null;
+  sessionId: string | null;
+  onApproval?: (toolCallId: string, action: "confirm" | "cancel") => void;
+}
+
+export function ApprovalForm({ toolCallId, args, result, onApproval }: Props) {
+  const [detailsExpanded, setDetailsExpanded] = useState(false);
+  const [localAction, setLocalAction] = useState<"confirm" | "cancel" | null>(null);
+
+  const {
+    title: rawTitle = "Aprobación",
+    description: rawDescription = "",
+    severity = "warning",
+    confirmLabel: rawConfirmLabel = "Confirmar",
+    cancelLabel: rawCancelLabel = "Cancelar",
+    details: rawDetails,
+  } = args || {};
+
+  const title = toSafeString(rawTitle, "Aprobación");
+  const description = toSafeString(rawDescription);
+  const confirmLabel = toSafeString(rawConfirmLabel, "Confirmar");
+  const cancelLabel = toSafeString(rawCancelLabel, "Cancelar");
+  const details = rawDetails ? toSafeString(rawDetails) : undefined;
+
+  const resolvedStatus = result?.content?.[0]?.text;
+  const isResolved = !!resolvedStatus;
+
+  useEffect(() => {
+    if (isResolved) setLocalAction(null);
+  }, [isResolved]);
+
+  const handleAction = (action: "confirm" | "cancel") => {
+    if (isResolved || localAction !== null) return;
+    setLocalAction(action);
+    onApproval?.(toolCallId, action);
+  };
+
+  const getSeverityStyles = () => {
+    switch (severity) {
+      case "critical":
+        return {
+          borderClass: "border-destructive/25 hover:border-destructive/40",
+          bgClass: "bg-destructive/5",
+          badgeBg: "bg-destructive/10 text-destructive border-destructive/20",
+          pulseColor: "bg-destructive",
+          icon: <AlertTriangle className="w-5 h-5 text-destructive shrink-0" />,
+        };
+      case "info":
+        return {
+          borderClass: "border-primary/25 hover:border-primary/40",
+          bgClass: "bg-primary/5",
+          badgeBg: "bg-primary/10 text-primary border-primary/20",
+          pulseColor: "bg-primary",
+          icon: <Info className="w-5 h-5 text-primary shrink-0" />,
+        };
+      case "warning":
+      default:
+        return {
+          borderClass: "border-amber-500/25 hover:border-amber-500/40",
+          bgClass: "bg-amber-500/5",
+          badgeBg: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+          pulseColor: "bg-amber-500",
+          icon: <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />,
+        };
+    }
+  };
+
+  const { borderClass, bgClass, badgeBg, pulseColor, icon } = getSeverityStyles();
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8, scale: 0.99 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.25, ease: "easeOut" }}
+      className={`relative w-full rounded-xl border ${borderClass} ${bgClass} overflow-hidden font-sans shadow-md my-4 transition-all duration-300`}
+    >
+      <div
+        className={`absolute left-0 top-0 bottom-0 w-1 ${
+          severity === "critical"
+            ? "bg-destructive"
+            : severity === "info"
+              ? "bg-primary"
+              : "bg-amber-500"
+        }`}
+      />
+
+      <div className="flex items-center justify-between gap-3 pl-5 pr-4 py-3 border-b border-border/40 bg-card/90">
+        <div className="flex items-center gap-3 min-w-0">
+          {icon}
+          <div className="flex flex-col min-w-0">
+            <h4 className="text-xs font-bold text-foreground truncate">{title}</h4>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span
+                className={`inline-flex items-center gap-1.5 text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md border ${badgeBg}`}
+              >
+                {!isResolved && (
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span
+                      className={`animate-ping absolute inline-flex h-full w-full rounded-full ${pulseColor} opacity-75`}
+                    ></span>
+                    <span
+                      className={`relative inline-flex rounded-full h-1.5 w-1.5 ${pulseColor}`}
+                    ></span>
+                  </span>
+                )}
+                Aprobación requerida
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {isResolved && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex items-center gap-1.5 shrink-0"
+          >
+            {resolvedStatus === "confirmed" ? (
+              <span className="flex items-center gap-1 text-[11px] font-bold text-green-500 bg-green-500/10 border border-green-500/20 px-2.5 py-1 rounded-full">
+                <Check className="w-3.5 h-3.5 text-green-500 shrink-0" strokeWidth={2.5} />
+                Aprobado
+              </span>
+            ) : (
+              <span className="flex items-center gap-1 text-[11px] font-bold text-destructive bg-destructive/10 border border-destructive/20 px-2.5 py-1 rounded-full">
+                <X className="w-3.5 h-3.5 text-destructive shrink-0" strokeWidth={2.5} />
+                Cancelado
+              </span>
+            )}
+          </motion.div>
+        )}
+      </div>
+
+      <div className="pl-5 pr-4 py-4 space-y-4">
+        <p className="text-xs text-foreground/80 leading-relaxed font-sans">{description}</p>
+
+        {details && (
+          <div className="border border-border/40 rounded-lg overflow-hidden bg-muted/20">
+            <button
+              onClick={() => setDetailsExpanded(!detailsExpanded)}
+              className="w-full flex items-center justify-between px-3 py-2 text-left text-[11px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors select-none cursor-pointer"
+            >
+              <span>Detalles técnicos</span>
+              <ChevronDown
+                size={12}
+                className={`transition-transform duration-200 ${detailsExpanded ? "rotate-180" : ""}`}
+              />
+            </button>
+            <AnimatePresence initial={false}>
+              {detailsExpanded && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                >
+                  <div className="px-3 py-3 border-t border-border/40 bg-muted/40 text-xs text-foreground/75 leading-relaxed overflow-x-auto max-h-60">
+                    <RichMarkdown content={details} />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
+      </div>
+
+      <AnimatePresence>
+        {!isResolved && (
+          <motion.div
+            initial={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="flex items-center justify-end gap-2.5 pl-5 pr-4 py-3 border-t border-border/40 bg-muted/30"
+          >
+            <motion.button
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => handleAction("cancel")}
+              disabled={localAction !== null}
+              className="px-4 py-2 rounded-lg text-xs font-bold border border-border text-foreground hover:bg-muted transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+            >
+              {localAction === "cancel" ? "Cancelando..." : cancelLabel}
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => handleAction("confirm")}
+              disabled={localAction !== null}
+              className="px-4 py-2 rounded-lg text-xs font-bold bg-primary text-primary-foreground hover:opacity-90 transition-all disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed shadow-sm"
+            >
+              {localAction === "confirm" ? "Aprobando..." : confirmLabel}
+            </motion.button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}

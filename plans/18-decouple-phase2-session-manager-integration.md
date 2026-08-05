@@ -1,6 +1,6 @@
 # Hito 2: Integración de AgentRuntime en SessionManager y Reducción de AgentSession
 
-> **Estado:** 🔜 Próximo
+> **Estado:** ✅ Completado
 > **Objetivo:** Conectar `AgentRuntime` como el runtime concreto en `SessionManager` y achicar el God Object `AgentSession` a un delgado adaptador de fachada (~120 líneas).
 
 ---

@@ -2,9 +2,10 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { getSessionDir, getUserDir, SessionPrefix } from "shared";
-import { DefaultResourceLoader, type AgentSession, type AgentSessionEvent } from "../ai";
+import { DefaultResourceLoader, type AgentSessionEvent } from "../ai";
 import { mcpRegistry } from "./mcp-registry";
 import { memoryRegistry } from "./memory/registry";
+import type { IAgentRuntime } from "./ports/agent-runtime.port";
 import { sessionMetadataStore } from "./session/metadata-store";
 import {
   sessionLister,
@@ -19,7 +20,7 @@ import { ensureWorkspaceStructure, getResolvedSkillPaths } from "./session/works
 export { ensureWorkspaceStructure, getResolvedSkillPaths };
 
 interface UserSessionEntry {
-  session: AgentSession;
+  session: IAgentRuntime;
   unsubscribe: () => void;
 }
 
@@ -38,7 +39,7 @@ export interface SessionOverrides {
  */
 export class SessionManager {
   private sessions = new Map<string, UserSessionEntry>();
-  private pendingSessions = new Map<string, Promise<AgentSession>>();
+  private pendingSessions = new Map<string, Promise<IAgentRuntime>>();
 
   readonly userConfig = userConfigManager;
   readonly metadataStore = sessionMetadataStore;
@@ -48,7 +49,7 @@ export class SessionManager {
     return `${username}:${sessionId}`;
   }
 
-  getSession(username: string, sessionId: string): AgentSession | null {
+  getSession(username: string, sessionId: string): IAgentRuntime | null {
     const key = this.getSessionKey(username, sessionId);
     return this.sessions.get(key)?.session ?? null;
   }
@@ -62,7 +63,7 @@ export class SessionManager {
     const entry = this.sessions.get(key);
     if (!entry) return () => {};
 
-    return entry.session.subscribe(listener);
+    return entry.session.on(listener);
   }
 
   subscribeOnce(
@@ -77,7 +78,7 @@ export class SessionManager {
     let called = false;
     let unsubscribe: (() => void) | null = null;
 
-    unsubscribe = entry.session.subscribe((event) => {
+    unsubscribe = entry.session.on((event) => {
       if (!called) {
         called = true;
         unsubscribe?.();
@@ -219,20 +220,10 @@ export class SessionManager {
     projectId?: string,
     agentId?: string,
     overrides?: SessionOverrides,
-  ): Promise<AgentSession> {
+  ): Promise<IAgentRuntime> {
     const key = this.getSessionKey(username, sessionId);
     const existing = this.sessions.get(key);
     if (existing) {
-      if (!existing.session.model) {
-        const context = existing.session.sessionStore.buildSessionContext();
-        if (context.model) {
-          const { modelRegistry } = this.userConfig.getUserContext(username);
-          const found = modelRegistry.find(context.model.provider, context.model.modelId);
-          if (found) {
-            existing.session.model = found;
-          }
-        }
-      }
       return existing.session;
     }
 
@@ -269,7 +260,7 @@ export class SessionManager {
           metadataStore: sessionMetadataStore,
         });
 
-        const unsubscribe = session.subscribe(() => {});
+        const unsubscribe = session.on(() => {});
 
         const entry: UserSessionEntry = {
           session,

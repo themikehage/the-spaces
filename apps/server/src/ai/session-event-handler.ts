@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-export function handleAgentEvent(
-  evt: any,
-  sessionManager: any,
-  emit: (event: any) => void,
-): void {
+export function handleAgentEvent(evt: any, sessionManager: any, emit: (event: any) => void): void {
   if (evt.type === "agent_start") {
     emit({ type: "agent_start" });
   } else if (evt.type === "agent_end") {

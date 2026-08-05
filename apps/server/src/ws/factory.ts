@@ -464,12 +464,12 @@ export function createWsContext(): WsConnectionContext {
             "manage_preview",
           ]);
 
-          const mcpActive = currentActive.filter((tName) => tName.startsWith("mcp_"));
-          const memoryActive = currentActive.filter((tName) => tName.startsWith("memory_"));
-          const exaActive = currentActive.filter((tName) => tName === "exa_search");
-          const webFetchActive = currentActive.filter((tName) => tName === "web_fetch");
+          const mcpActive = currentActive.filter((tName: string) => tName.startsWith("mcp_"));
+          const memoryActive = currentActive.filter((tName: string) => tName.startsWith("memory_"));
+          const exaActive = currentActive.filter((tName: string) => tName === "exa_search");
+          const webFetchActive = currentActive.filter((tName: string) => tName === "web_fetch");
           const customActive = currentActive.filter(
-            (tName) =>
+            (tName: string) =>
               !tName.startsWith("mcp_") &&
               !tName.startsWith("memory_") &&
               !BUILTIN_AND_ALWAYS.has(tName),

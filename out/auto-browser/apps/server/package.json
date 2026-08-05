@@ -1,0 +1,25 @@
+{
+  "name": "@auto-browser/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "build": "bun build src/index.ts --outdir ./dist --target bun",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@auto-browser/core": "workspace:*",
+    "@auto-browser/engine": "workspace:*",
+    "@auto-browser/providers": "workspace:*",
+    "@auto-browser/storage": "workspace:*",
+    "@auto-browser/tools": "workspace:*",
+    "@hono/zod-validator": "^0.9.0",
+    "hono": "^4",
+    "zod": "^3"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.7.2"
+  }
+}

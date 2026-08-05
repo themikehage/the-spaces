@@ -279,10 +279,10 @@ sessionsRouter.post("/:id/prompt", zValidator("json", PromptSchema), async (c) =
     if (execDir) {
       const durationMs = Date.now() - startTime;
       try {
-        const msgs = session.messages;
+        const msgs = session.messages || [];
         writeFileSync(
           join(execDir, "messages.jsonl"),
-          msgs.map((m) => JSON.stringify(m)).join("\n"),
+          msgs.map((m: any) => JSON.stringify(m)).join("\n"),
         );
         writeFileSync(join(execDir, "tool-calls.json"), JSON.stringify(toolCalls, null, 2));
         writeFileSync(join(execDir, "errors.json"), JSON.stringify(errors, null, 2));
@@ -372,10 +372,10 @@ sessionsRouter.post("/:id/prompt/stream", zValidator("json", PromptSchema), asyn
     if (execDir) {
       const durationMs = Date.now() - startTime;
       try {
-        const msgs = session.messages;
+        const msgs = session.messages || [];
         writeFileSync(
           join(execDir, "messages.jsonl"),
-          msgs.map((m) => JSON.stringify(m)).join("\n"),
+          msgs.map((m: any) => JSON.stringify(m)).join("\n"),
         );
         writeFileSync(join(execDir, "tool-calls.json"), JSON.stringify(toolCalls, null, 2));
         writeFileSync(join(execDir, "errors.json"), JSON.stringify(errors, null, 2));
@@ -617,7 +617,7 @@ sessionsRouter.post(
 
     try {
       const result = await session.navigateTree(targetId, { summarize: false });
-      return c.json({ success: true, editorText: result.editorText });
+      return c.json({ success: true, editorText: result?.editorText ?? "" });
     } catch (error) {
       return c.json({ success: false, error: String(error) }, 500);
     }
@@ -785,7 +785,7 @@ sessionsRouter.get("/:id/skills", async (c) => {
     await session.resourceLoader.reload();
     const { skills, diagnostics } = session.resourceLoader.getSkills();
 
-    const skillsWithContent = skills.map((skill) => {
+    const skillsWithContent = (skills as any[]).map((skill: any) => {
       let content = "";
       if (existsSync(skill.filePath)) {
         try {
@@ -846,12 +846,12 @@ sessionsRouter.post("/:id/tools", zValidator("json", ToolPermissionsSchema), asy
     "manage_preview",
   ]);
 
-  const mcpActive = currentActive.filter((tName) => tName.startsWith("mcp_"));
-  const memoryActive = currentActive.filter((tName) => tName.startsWith("memory_"));
-  const exaActive = currentActive.filter((tName) => tName === "exa_search");
-  const webFetchActive = currentActive.filter((tName) => tName === "web_fetch");
+  const mcpActive = currentActive.filter((tName: string) => tName.startsWith("mcp_"));
+  const memoryActive = currentActive.filter((tName: string) => tName.startsWith("memory_"));
+  const exaActive = currentActive.filter((tName: string) => tName === "exa_search");
+  const webFetchActive = currentActive.filter((tName: string) => tName === "web_fetch");
   const customActive = currentActive.filter(
-    (tName) =>
+    (tName: string) =>
       !tName.startsWith("mcp_") && !tName.startsWith("memory_") && !BUILTIN_AND_ALWAYS.has(tName),
   );
 

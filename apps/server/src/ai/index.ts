@@ -9,15 +9,29 @@ export { DefaultResourceLoader } from "./resource-loader";
 export { JsonlSessionStore } from "./session-persistence";
 export { SessionStoreAdapter } from "./session-store-adapter";
 
-// Functions
-export { createBashToolDefinition } from "./bash-tool";
+// Pure ITool Classes & Factories
+export { BashTool, createBashTool, createBashToolDefinition } from "./bash-tool";
 export { loadSkills } from "./load-skills";
-export { createEditToolDefinition } from "./tools/edit-tool";
-export { createFindToolDefinition } from "./tools/find-tool";
-export { createGrepToolDefinition } from "./tools/grep-tool";
-export { createLsToolDefinition } from "./tools/ls-tool";
-export { createReadToolDefinition } from "./tools/read-tool";
-export { createWriteToolDefinition } from "./tools/write-tool";
+export {
+  EditTool,
+  FindTool,
+  GrepTool,
+  LsTool,
+  ReadTool,
+  WriteTool,
+  createEditTool,
+  createEditToolDefinition,
+  createFindTool,
+  createFindToolDefinition,
+  createGrepTool,
+  createGrepToolDefinition,
+  createLsTool,
+  createLsToolDefinition,
+  createReadTool,
+  createReadToolDefinition,
+  createWriteTool,
+  createWriteToolDefinition,
+} from "./tools";
 
 // Types
 export type { AgentSessionEvent } from "./agent-session";

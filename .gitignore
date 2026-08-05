@@ -27,4 +27,5 @@ nul
 # Agent tools local state
 .atl/
 local
-/out
+/outserver-debug.log
+/outserver-debug.log

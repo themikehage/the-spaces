@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 
 export interface Skill {
   name: string;
@@ -67,17 +67,20 @@ function parseSimpleFrontmatter(content: string): {
 export function loadSkills(options: LoadSkillsOptions): { skills: Skill[]; diagnostics: any[] } {
   const skills: Skill[] = [];
   const diagnostics: any[] = [];
+  const seenNames = new Set<string>();
+  const seenFilePaths = new Set<string>();
 
   for (const skillDir of options.skillPaths) {
-    if (!existsSync(skillDir)) continue;
+    const resolvedSkillDir = resolve(skillDir);
+    if (!existsSync(resolvedSkillDir)) continue;
 
     try {
-      const entries = readdirSync(skillDir, { withFileTypes: true });
+      const entries = readdirSync(resolvedSkillDir, { withFileTypes: true });
       for (const entry of entries) {
         if (!entry.isDirectory()) continue;
 
-        const subDir = join(skillDir, entry.name);
-        const skillFilePath = join(subDir, "SKILL.md");
+        const subDir = resolve(join(resolvedSkillDir, entry.name));
+        const skillFilePath = resolve(join(subDir, "SKILL.md"));
 
         if (existsSync(skillFilePath)) {
           try {
@@ -95,6 +98,14 @@ export function loadSkills(options: LoadSkillsOptions): { skills: Skill[]; diagn
               });
               continue;
             }
+
+            const nameKey = name.toLowerCase();
+            const filePathKey = skillFilePath.toLowerCase();
+            if (seenNames.has(nameKey) || seenFilePaths.has(filePathKey)) {
+              continue;
+            }
+            seenNames.add(nameKey);
+            seenFilePaths.add(filePathKey);
 
             skills.push({
               name,

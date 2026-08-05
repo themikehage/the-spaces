@@ -1,12 +1,12 @@
-import { PermissionEngine } from "../core/permission-engine";
-import type { IPermissionEngine } from "../core/ports/permission.port";
 import type { BaseTool } from "shared";
 import { TypedEventEmitter } from "../core/event-bus";
 import { HookRunner } from "../core/hook-runner";
 import { NavigationController } from "../core/navigation-controller";
+import { PermissionEngine } from "../core/permission-engine";
 import type { IAgentRuntime } from "../core/ports/agent-runtime.port";
 import type { IEventBus } from "../core/ports/event-bus.port";
 import type { Hook, IHookRunner } from "../core/ports/hook.port";
+import type { IPermissionEngine } from "../core/ports/permission.port";
 import type { IPromptBuilder } from "../core/ports/prompt-builder.port";
 import type { ITool } from "../core/ports/tool.port";
 import { ToolRegistry } from "../core/tool-registry";
@@ -18,8 +18,8 @@ import type { AvailableModel, ModelRegistry } from "./model-registry";
 import { PromptBuilder } from "./prompt-builder";
 import type { DefaultResourceLoader } from "./resource-loader";
 import { handleAgentEvent as processAgentEvent } from "./session-event-handler";
-import { calculateSessionStats } from "./session-stats-calculator";
 import type { JsonlSessionStore } from "./session-persistence";
+import { calculateSessionStats } from "./session-stats-calculator";
 import { Agent } from "./vendor/agent/src/agent.ts";
 import { formatSkillsForSystemPrompt } from "./vendor/agent/src/harness/system-prompt.ts";
 import type {
@@ -699,11 +699,11 @@ export class AgentSession implements IAgentRuntime {
     }
   }
 
-  steer(messageText: string): void {
+  async steer(messageText: string): Promise<void> {
     this.navigationController.steer(this.agent, messageText);
   }
 
-  followUp(messageText: string): void {
+  async followUp(messageText: string): Promise<void> {
     this.navigationController.followUp(this.agent, messageText);
   }
 
@@ -725,10 +725,7 @@ export class AgentSession implements IAgentRuntime {
     }
   }
 
-  async navigateTree(
-    targetId: string,
-    options?: { summarize?: boolean },
-  ): Promise<{ editorText: string }> {
+  async navigateTree(targetId: string, options?: any): Promise<{ editorText: string }> {
     if (this.isStreaming) {
       throw new Error("Cannot navigate while session is streaming");
     }
@@ -747,10 +744,7 @@ export class AgentSession implements IAgentRuntime {
   }
 
   getSessionStats() {
-    return calculateSessionStats(
-      this.sessionManager,
-      this.agent?.state?.messages || [],
-    );
+    return calculateSessionStats(this.sessionManager, this.agent?.state?.messages || []);
   }
 
   async dispose(): Promise<void> {

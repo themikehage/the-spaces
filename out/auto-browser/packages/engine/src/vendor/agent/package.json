@@ -1,0 +1,7 @@
+{
+  "name": "@vendor/agent",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts"
+}

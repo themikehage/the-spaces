@@ -1,7 +1,4 @@
 // SPDX-License-Identifier: MIT
-import { existsSync, readdirSync } from "node:fs";
-import { join } from "node:path";
-import { getSessionDir, getUserDir } from "shared";
 import type {
   ISessionStore,
   MessageRecord,
@@ -9,56 +6,42 @@ import type {
   SessionListQueryFilters,
   SessionSummary,
 } from "../core/ports/session-store.port";
-import { JsonlSessionStore } from "./session-persistence";
+import { FilesystemSessionStore } from "../core/stores/filesystem-session-store";
 
 export class SessionStoreAdapter implements ISessionStore {
-  create(session: SessionData): Promise<void> {
-    const sessionDir = getSessionDir(session.username, session.id);
-    JsonlSessionStore.create(sessionDir, sessionDir);
-    return Promise.resolve();
+  private innerStore: FilesystemSessionStore;
+
+  constructor(baseSessionsDir?: string) {
+    this.innerStore = new FilesystemSessionStore(baseSessionsDir);
   }
 
-  async appendMessage(sessionId: string, msg: MessageRecord): Promise<void> {
-    return Promise.resolve();
+  async create(session: SessionData): Promise<void> {
+    return this.innerStore.create(session);
+  }
+
+  async appendMessage(sessionId: string, msg: MessageRecord, username?: string): Promise<void> {
+    return this.innerStore.appendMessage(sessionId, msg, username);
   }
 
   async getMessages(
     sessionId: string,
-    opts?: { limit?: number; offset?: number },
+    opts?: { limit?: number; offset?: number; username?: string },
   ): Promise<MessageRecord[]> {
-    return [];
+    return this.innerStore.getMessages(sessionId, opts);
   }
 
   async listUserSessions(
     username: string,
     query?: SessionListQueryFilters,
   ): Promise<SessionSummary[]> {
-    const userDir = getUserDir(username);
-    const sessionsDir = join(userDir, "sessions");
-    if (!existsSync(sessionsDir)) return [];
-
-    const dirs = readdirSync(sessionsDir, { withFileTypes: true })
-      .filter((d) => d.isDirectory())
-      .map((d) => d.name);
-
-    const summaries: SessionSummary[] = [];
-    for (const id of dirs) {
-      summaries.push({
-        id,
-        name: id,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        messageCount: 0,
-      });
-    }
-    return summaries;
+    return this.innerStore.listUserSessions(username, query);
   }
 
-  async delete(sessionId: string): Promise<void> {
-    return Promise.resolve();
+  async delete(sessionId: string, username?: string): Promise<void> {
+    return this.innerStore.delete(sessionId, username);
   }
 
-  async exists(sessionId: string): Promise<boolean> {
-    return true;
+  async exists(sessionId: string, username?: string): Promise<boolean> {
+    return this.innerStore.exists(sessionId, username);
   }
 }

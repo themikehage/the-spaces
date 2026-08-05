@@ -157,12 +157,12 @@ export class ScheduleService {
       this.activeSessions.set(run.id, createdSessionId);
       dbUpdateRun(run.id, { sessionId: createdSessionId });
 
-      const agentSession = await sessionManager.getOrCreateSession(
+      const agentSession = (await sessionManager.getOrCreateSession(
         job.username,
         createdSessionId,
         job.projectId ?? undefined,
         job.agentId ?? undefined,
-      );
+      )) as any;
 
       if (agentSession.modelRegistry) {
         if (job.modelId) {

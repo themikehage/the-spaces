@@ -313,19 +313,23 @@ export async function handleDelegationCompletion(opts: {
         },
       ];
     }
-    parent.addDelegationResult(toolResultMsg);
+    (parent as any).addDelegationResult?.(toolResultMsg);
 
     // If parent is not active streaming, continue execution
     if (!parent.isStreaming) {
       let success = false;
       try {
-        await parent.continue();
+        if (typeof (parent as any).continue === "function") {
+          await (parent as any).continue();
+        }
         success = true;
       } catch (e) {
         console.error("[Delegation Async Return] Parent continue fail, will retry in 1s:", e);
         await new Promise((resolve) => setTimeout(resolve, 1000));
         try {
-          await parent.continue();
+          if (typeof (parent as any).continue === "function") {
+            await (parent as any).continue();
+          }
           success = true;
         } catch (e2) {
           console.error("[Delegation Async Return] Parent continue retry fail:", e2);

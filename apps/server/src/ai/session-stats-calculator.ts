@@ -18,10 +18,7 @@ export interface SessionStats {
   cost: number;
 }
 
-export function calculateSessionStats(
-  sessionManager: any,
-  messages: any[],
-): SessionStats {
+export function calculateSessionStats(sessionManager: any, messages: any[]): SessionStats {
   const entries = sessionManager.getEntries();
   let userMessages = 0;
   let assistantMessages = 0;
@@ -35,8 +32,7 @@ export function calculateSessionStats(
       if (entry.message.role === "user") userMessages++;
       if (entry.message.role === "assistant") {
         assistantMessages++;
-        const tc =
-          (entry.message.content as any)?.filter((c: any) => c.type === "toolCall") || [];
+        const tc = (entry.message.content as any)?.filter((c: any) => c.type === "toolCall") || [];
         toolCalls += tc.length;
       }
       if (entry.message.role === "toolResult") toolResults++;

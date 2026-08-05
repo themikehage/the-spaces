@@ -96,6 +96,8 @@ export async function createAgentRuntime(
     agentDef = agentEntry?.server.definition;
   }
 
+  // TODO(eslint): reconsider the prefer-const suppression after refactoring
+  // eslint-disable-next-line prefer-const
   let { sessionDir, workspaceDir } = resolveSessionWorkspace(
     username,
     sessionId,
@@ -162,8 +164,9 @@ export async function createAgentRuntime(
         resolve(workspaceDir, ".agents", "skills", sk),
       ];
       for (const candidate of candidates) {
-        if (existsSync(candidate) && !skillPaths.includes(candidate)) {
-          skillPaths.push(candidate);
+        const resolvedCandidate = resolve(candidate);
+        if (existsSync(resolvedCandidate) && !skillPaths.includes(resolvedCandidate)) {
+          skillPaths.push(resolvedCandidate);
         }
       }
     }

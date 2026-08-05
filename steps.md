@@ -108,6 +108,27 @@
 - [x] Implementar Hito 4 de Desacoplamiento de Arquitectura (Plan 20): Persistencia Limpia `FilesystemSessionStore` (`ISessionStore`). Implementación completa y thread-safe de la interfaz `ISessionStore` para lectura/escritura JSONL (`messages.jsonl`) y metadatos (`metadata.json`), paginación, filtros de búsqueda, adaptadores e inyección en `AgentRuntime` y suite de pruebas unitarias (`filesystem-session-store.test.ts`).
 - [x] Implementar Hito 5 de Desacoplamiento de Arquitectura (Plan 21): Proveedor de Modelo Unificado `OpenAICompatibleProvider` (`IModelProvider`). Implementación desacoplada y nativa con `fetch` y streaming SSE para endpoints `/v1/chat/completions`, ensamblado de llamadas a herramientas fragmentadas, deltas de razonamiento, adaptador `ModelProviderAdapter`, inyección en `AgentRuntime` y suite de pruebas unitarias (`openai-compatible-provider.test.ts`).
 
+## Siguiente sprint: arquitectura del frontend
+
+- [ ] Implementar Hito 1 — Capa de Servicios de API del Cliente (`plans/22-frontend-api-service-layer.md`):
+  - [ ] Fase 1: Crear `lib/api/agents.ts`, `lib/api/teams.ts` y migrar `useAgents.ts`, `useTeams.ts`, `useTeam.ts`
+  - [ ] Fase 2: Crear `lib/api/config.ts`, `lib/api/skills.ts`, `lib/api/custom-tools.ts` y migrar hooks de entidad
+  - [ ] Fase 3: Crear `lib/api/sessions.ts`, `lib/api/auth.ts` y migrar `SessionsContext`, `AuthContext`
+  - [ ] Fase 4: Crear `lib/api/projects.ts` y migrar hooks/páginas restantes
+  - [ ] Auditoría final: `apiFetch()` solo en `lib/api/` + `AuthContext` + `SessionsContext`
+- [ ] Implementar Hito 2 — Descomposición de Componentes (`plans/23-frontend-component-decomposition.md`):
+  - [ ] Fase 1: Descomponer GeneralTab (1193→≤500), ToolCallRow (1117→≤500), ChatArea (927→≤500), MessageList (852→≤500), MainLayout (802→≤500)
+  - [ ] Fase 2: Descomponer ChatInput (660→≤500), SessionSidebar (541→≤500), ProjectFloorPanel (520→≤500)
+  - [ ] Fase 3: Auditar y reducir componentes en 400-500 líneas
+  - [ ] Fase 4: Descomponer AgentsPage (1149→≤600), DashboardPage (735→≤600), MCPMarketplacePage (700→≤600), AnalyticsPage (519→≤500)
+- [ ] Implementar Hito 3 — Eliminación de Duplicaciones (`plans/24-frontend-deduplication.md`):
+  - [ ] Fase 1: Sistema de modales unificado (Dialog, FormDialog) y migración de 9 modales
+  - [ ] Fase 2: Hook genérico `useAvatarUpload` y evaluación de `useEntityCrud`
+  - [ ] Fase 3: EventBus centralizado (`EntityEventBus`) tipado
+  - [ ] Fase 4: Servicio de localStorage tipado (`storage`) + `useLocalStorage`
+  - [ ] Fase 5: Primitivas de formulario reutilizables (FormField, FormSection)
+  - [ ] Fase 6: Hooks de keyboard shortcuts (`useEscapeKey`, `useClickOutside`)
+
 ## Criterio de cierre del sprint
 
 - La compilación, typecheck, lint y pruebas pasan de forma reproducible.

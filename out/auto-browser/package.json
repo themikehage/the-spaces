@@ -1,0 +1,17 @@
+{
+  "name": "auto-browser",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --filter @auto-browser/server dev && pnpm --filter @auto-browser/client dev",
+    "build": "pnpm --filter @auto-browser/core build && pnpm --filter @auto-browser/engine build && pnpm --filter @auto-browser/tools build && pnpm --filter @auto-browser/providers build && pnpm --filter @auto-browser/storage build && pnpm --filter @auto-browser/server build && pnpm --filter @auto-browser/client build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.2"
+  }
+}

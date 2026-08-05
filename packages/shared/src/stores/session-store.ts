@@ -53,12 +53,12 @@ export interface SessionData {
 
 export interface ISessionStore {
   create(session: SessionData): Promise<void>;
-  appendMessage(sessionId: string, msg: MessageRecord): Promise<void>;
+  appendMessage(sessionId: string, msg: MessageRecord, username?: string): Promise<void>;
   getMessages(
     sessionId: string,
-    opts?: { limit?: number; offset?: number },
+    opts?: { limit?: number; offset?: number; username?: string },
   ): Promise<MessageRecord[]>;
   listUserSessions(username: string, query?: SessionListQueryFilters): Promise<SessionSummary[]>;
-  delete(sessionId: string): Promise<void>;
-  exists(sessionId: string): Promise<boolean>;
+  delete(sessionId: string, username?: string): Promise<void>;
+  exists(sessionId: string, username?: string): Promise<boolean>;
 }

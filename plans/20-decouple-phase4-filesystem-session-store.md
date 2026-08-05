@@ -1,6 +1,6 @@
 # Hito 4: Persistencia Limpia `FilesystemSessionStore` (`ISessionStore`)
 
-> **Estado:** 📋 Planificado
+> **Estado:** ✅ Completado
 > **Objetivo:** Separar la persistencia de mensajes JSONL en disco de las clases de IA, implementando la interfaz `ISessionStore` desacoplada propuesta en `PLAN.md`.
 
 ---

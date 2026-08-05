@@ -11,6 +11,7 @@ export interface SessionOverrides {
 }
 
 export interface ISessionManager {
+  getSession?(username: string, sessionId: string): IAgentRuntime | null;
   getOrCreateSession(
     username: string,
     sessionId: string,

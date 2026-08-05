@@ -135,7 +135,7 @@ export function createManageCustomToolsTool(options: ManageCustomToolsOptions) {
             customToolStorage.upsert(username, parsedTool);
 
             // Dynamically register into the active session if available
-            const session = sessionManager.getSession(username, sessionId);
+            const session = sessionManager.getSession(username, sessionId) as any;
             if (session) {
               const runtime = createCustomToolRuntime(parsedTool, {
                 cwd: session.cwd,
@@ -234,7 +234,7 @@ export function createManageCustomToolsTool(options: ManageCustomToolsOptions) {
             customToolStorage.toggle(username, name, enabled);
 
             // Dynamically sync enabling/disabling in session
-            const session = sessionManager.getSession(username, sessionId);
+            const session = sessionManager.getSession(username, sessionId) as any;
             if (session) {
               const def = customToolStorage.get(username, name);
               let nextTools = (session.customTools || []).filter((t: any) => t.name !== name);
