@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: MIT
-import type { IModelProvider } from "../core/ports/model.port";
+import type {
+  IModelProvider,
+  StreamCompleteOptions,
+  StreamCompleteResult,
+} from "../core/ports/model.port";
 import type { ModelRegistry } from "./model-registry";
+import { OpenAICompatibleProvider } from "./providers/openai-compatible";
 
 export class ModelProviderAdapter implements IModelProvider {
   constructor(private modelRegistry: ModelRegistry) {}
@@ -19,5 +24,15 @@ export class ModelProviderAdapter implements IModelProvider {
     if (!target) return undefined;
     const result = await this.modelRegistry.getApiKeyAndHeaders(target);
     return result.ok ? result.apiKey : undefined;
+  }
+
+  async streamComplete(opts: StreamCompleteOptions): Promise<StreamCompleteResult> {
+    const apiKey = opts.apiKey ?? (await this.getApiKey());
+    const provider = new OpenAICompatibleProvider({
+      apiKey,
+      baseUrl: opts.baseUrl,
+      defaultModelId: opts.modelId,
+    });
+    return provider.streamComplete(opts);
   }
 }

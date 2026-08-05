@@ -1,6 +1,6 @@
 # Hito 5: Proveedor de Modelo Unificado `OpenAICompatibleProvider` (`IModelProvider`)
 
-> **Estado:** 📋 Planificado
+> **Estado:** ✅ Completado
 > **Objetivo:** Implementar un proveedor de modelos de IA universal (`IModelProvider`) desacoplado de `ModelRegistry` que soporte streaming SSE nativo a cualquier API compatible con OpenAI `/v1/chat/completions`.
 
 ---
