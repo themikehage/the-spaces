@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: MIT
-import { apiFetch } from "@/lib/api";
+import { authService, type User } from "@/lib/api/auth.service";
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 
-interface User {
-  username: string;
-}
+export type { User };
 
 interface AuthContextType {
   user: User | null;
@@ -37,15 +35,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    apiFetch("/api/auth/status")
-      .then(async (res) => {
-        if (!res.ok) return;
-        const data = (await res.json()) as {
-          needsSetup: boolean;
-          authenticated: boolean;
-          user?: User;
-          token?: string;
-        };
+    authService
+      .fetchAuthStatus()
+      .then((data) => {
         setNeedsSetup(data.needsSetup);
         if (data.authenticated && data.user) {
           setUser(data.user);
@@ -71,18 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (username: string, password: string) => {
     setLoading(true);
     try {
-      const res = await apiFetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
-
-      if (!res.ok) {
-        const data = (await res.json()) as { error?: string };
-        throw new Error(data.error ?? "Login failed");
-      }
-
-      const data = (await res.json()) as { user: User; token: string | null };
+      const data = await authService.login(username, password);
       setUser(data.user);
       setToken(data.token);
       setNeedsSetup(false);
@@ -94,18 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = useCallback(async (username: string, password: string, email?: string) => {
     setLoading(true);
     try {
-      const res = await apiFetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password, email }),
-      });
-
-      if (!res.ok) {
-        const data = (await res.json()) as { error?: string };
-        throw new Error(data.error ?? "Registration failed");
-      }
-
-      const data = (await res.json()) as { user: User; token: string | null };
+      const data = await authService.register(username, password, email);
       setUser(data.user);
       setToken(data.token);
       setNeedsSetup(false);
@@ -115,23 +85,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    await apiFetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+    await authService.logout();
     setUser(null);
     setToken(null);
     clearAppState();
   }, []);
 
   const changePassword = useCallback(async (currentPassword: string, newPassword: string) => {
-    const res = await apiFetch("/api/auth/password", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ currentPassword, newPassword }),
-    });
-
-    if (!res.ok) {
-      const data = (await res.json()) as { error?: string };
-      throw new Error(data.error ?? "Failed to change password");
-    }
+    await authService.changePassword(currentPassword, newPassword);
   }, []);
 
   return (

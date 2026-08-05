@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: MIT
-import { apiFetch } from "@/lib/api";
+import {
+  sessionsService,
+  type SessionItem,
+  type SessionStatus,
+} from "@/lib/api/sessions.service";
 import { wsClient } from "@/lib/ws-client";
 import {
   createContext,
@@ -11,22 +15,7 @@ import {
   type ReactNode,
 } from "react";
 
-export type SessionStatus = "active" | "streaming" | "task-running" | "sleeping";
-
-export interface SessionItem {
-  id: string;
-  name: string;
-  createdAt: string;
-  updatedAt: string;
-  messageCount: number;
-  status?: SessionStatus;
-  projectId?: string;
-  agentId?: string;
-  teamId?: string;
-  experimentId?: string;
-  isExecution?: boolean;
-  archived?: boolean;
-}
+export type { SessionItem, SessionStatus };
 
 export type KanbanColumn = "idle" | "working" | "done";
 
@@ -61,13 +50,8 @@ export function SessionsProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       setError(null);
-      const res = await apiFetch("/api/sessions");
-      if (!res.ok) {
-        setError("Failed to fetch sessions");
-        return;
-      }
-      const data = await res.json();
-      setSessions(data.sessions ?? []);
+      const data = await sessionsService.fetchSessions();
+      setSessions(data);
     } catch {
       setError("Failed to fetch sessions");
     } finally {
@@ -77,10 +61,8 @@ export function SessionsProvider({ children }: { children: ReactNode }) {
 
   const fetchStatuses = useCallback(async () => {
     try {
-      const res = await apiFetch("/api/sessions/statuses");
-      if (!res.ok) return;
-      const data = await res.json();
-      setStatuses((prev) => ({ ...data.statuses, ...prev }));
+      const data = await sessionsService.fetchSessionStatuses();
+      setStatuses((prev) => ({ ...data, ...prev }));
     } catch {
       /* noop */
     }

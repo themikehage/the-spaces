@@ -1,17 +1,10 @@
 // SPDX-License-Identifier: MIT
-import { apiFetch } from "@/lib/api";
+import { skillsService, type SkillInfo } from "@/lib/api/skills.service";
 import { useCallback, useEffect, useState } from "react";
 import type { EntityType } from "shared";
 import { useEntityConfig } from "./useEntityConfig";
 
-export interface SkillInfo {
-  name: string;
-  description: string;
-  filePath?: string;
-  disableModelInvocation?: boolean;
-  scope?: string;
-  content?: string;
-}
+export type { SkillInfo };
 
 export function useEntitySkills(entityType: EntityType, entityId: string) {
   const {
@@ -33,18 +26,8 @@ export function useEntitySkills(entityType: EntityType, entityId: string) {
     setSkillsLoading(true);
     setSkillsError(null);
     try {
-      const query =
-        entityType && entityId
-          ? `?entityType=${entityType}&entityId=${encodeURIComponent(entityId)}`
-          : "";
-      const res = await apiFetch(`/api/skills${query}`);
-      if (res.ok) {
-        const data = await res.json();
-        setInstalledSkills(data.skills || []);
-      } else {
-        const errData = await res.json().catch(() => ({}));
-        setSkillsError(errData.error || "Failed to load skills");
-      }
+      const skills = await skillsService.fetchSkills(entityType, entityId);
+      setInstalledSkills(skills);
     } catch (e) {
       const message = e instanceof Error ? e.message : "Failed to load skills";
       setSkillsError(message);

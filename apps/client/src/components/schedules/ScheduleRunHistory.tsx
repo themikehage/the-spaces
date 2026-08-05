@@ -113,7 +113,7 @@ export const ScheduleRunHistory: React.FC<Props> = ({ job }) => {
             No runs recorded yet for this schedule job.
           </div>
         ) : (
-          runs.map((run) => {
+          runs.map((run: ScheduleRun) => {
             const isExpanded = expandedRunId === run.id;
             return (
               <div

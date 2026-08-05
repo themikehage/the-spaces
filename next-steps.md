@@ -1,3 +1,3 @@
 - abstraer al 100% la interfaz de las custom tools y poder asignar especificas por agente, proyecto o team
 - Poder crear agentes que existan unicamente dentro de un team y que no sean agentes que existan globalmente. Esto hay que analizarlo muy bien para implementarlo muy bien, desacoplado, extensible y sin regresiones
--
+- Empezar a crear mi galeria de equipos que puedan resolver problemas concretos

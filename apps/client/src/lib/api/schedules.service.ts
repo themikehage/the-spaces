@@ -2,7 +2,7 @@
 import { apiFetch } from "@/lib/api";
 import type { CreateScheduleJob, ScheduleJob, ScheduleRun, UpdateScheduleJob } from "shared";
 
-export async function fetchScheduleJobs(filters?: {
+async function fetchScheduleJobs(filters?: {
   projectId?: string;
   agentId?: string;
   teamId?: string;
@@ -20,13 +20,13 @@ export async function fetchScheduleJobs(filters?: {
   return res.json();
 }
 
-export async function fetchScheduleJob(jobId: string): Promise<ScheduleJob> {
+async function fetchScheduleJob(jobId: string): Promise<ScheduleJob> {
   const res = await apiFetch(`/api/schedules/${jobId}`);
   if (!res.ok) throw new Error(`Failed to fetch schedule job: ${res.statusText}`);
   return res.json();
 }
 
-export async function createScheduleJob(data: CreateScheduleJob): Promise<ScheduleJob> {
+async function createScheduleJob(data: CreateScheduleJob): Promise<ScheduleJob> {
   const res = await apiFetch("/api/schedules", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -39,7 +39,7 @@ export async function createScheduleJob(data: CreateScheduleJob): Promise<Schedu
   return res.json();
 }
 
-export async function updateScheduleJob(
+async function updateScheduleJob(
   jobId: string,
   data: UpdateScheduleJob,
 ): Promise<ScheduleJob> {
@@ -55,14 +55,14 @@ export async function updateScheduleJob(
   return res.json();
 }
 
-export async function deleteScheduleJob(jobId: string): Promise<void> {
+async function deleteScheduleJob(jobId: string): Promise<void> {
   const res = await apiFetch(`/api/schedules/${jobId}`, {
     method: "DELETE",
   });
   if (!res.ok) throw new Error(`Failed to delete schedule job: ${res.statusText}`);
 }
 
-export async function triggerScheduleRun(jobId: string): Promise<ScheduleRun> {
+async function triggerScheduleRun(jobId: string): Promise<ScheduleRun> {
   const res = await apiFetch(`/api/schedules/${jobId}/run`, {
     method: "POST",
   });
@@ -73,13 +73,13 @@ export async function triggerScheduleRun(jobId: string): Promise<ScheduleRun> {
   return res.json();
 }
 
-export async function fetchScheduleRuns(jobId: string): Promise<ScheduleRun[]> {
+async function fetchScheduleRuns(jobId: string): Promise<ScheduleRun[]> {
   const res = await apiFetch(`/api/schedules/${jobId}/runs`);
   if (!res.ok) throw new Error(`Failed to fetch schedule runs: ${res.statusText}`);
   return res.json();
 }
 
-export async function cancelScheduleRun(jobId: string, runId: string): Promise<void> {
+async function cancelScheduleRun(jobId: string, runId: string): Promise<void> {
   const res = await apiFetch(`/api/schedules/${jobId}/runs/${runId}/cancel`, {
     method: "POST",
   });
@@ -88,3 +88,14 @@ export async function cancelScheduleRun(jobId: string, runId: string): Promise<v
     throw new Error(err.error || "Failed to cancel schedule run");
   }
 }
+
+export const schedulesService = {
+  fetchScheduleJobs,
+  fetchScheduleJob,
+  createScheduleJob,
+  updateScheduleJob,
+  deleteScheduleJob,
+  triggerScheduleRun,
+  fetchScheduleRuns,
+  cancelScheduleRun,
+};

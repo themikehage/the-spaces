@@ -1,88 +1,44 @@
-# Plan 17 — Fase 1: `IAgentRuntime` + `IEventBus`
+# Hito 1: Puertos Core, ToolExecutor y AgentRuntime Adapter
 
-> Rama: `feat/decouple-agent-runtime`
-> Riesgo: 🟢 Mínimo — solo agregar interfaces, cero cambios de comportamiento
+> **Estado:** ✅ Completado
+> **Objetivo:** Definir las abstracciones puras en `core/ports/`, implementar la cadena de ejecución `ToolExecutor` y crear la clase `AgentRuntime` como un adaptador desacoplado del motor.
 
-## Objetivo
+---
 
-Hacer que `AgentSession` exponga una interfaz tipada (`IAgentRuntime`) en lugar de ser el tipo concreto que circula por todo el server. Reemplazar el `TypedEventEmitter` ad-hoc por un `IEventBus` tipado con discriminated union de eventos.
+## 1. Alcance Realizado
 
-## Contexto
+1. **Puertos Core Puros (`core/ports/`)**:
+   - `IAgentRuntime`: Contrato estándar para el runtime del agente.
+   - `IToolExecutor` + `ToolCallExecution`: Definición de ejecución desacoplada de herramientas.
+   - `IToolRegistry` + `LLMToolDefinition`: Registro de herramientas con exportación a formato LLM agnóstico.
+   - `IHookRunner`: Cadena de middleware con `beforeToolCall`, `afterToolCall` y `onError`.
+   - `IPermissionEngine`: Evaluador declarativo de políticas.
+   - `IEventBus`: Bus de eventos tipado (`TypedEventEmitter`).
 
-Actualmente el server pasa `AgentSession` (clase concreta de 863 líneas) como dependencia directa en session-manager, routes y ws handlers. No hay contrato en código — solo la implementación.
+2. **Ejecutor de Herramientas (`core/tool-executor.ts`)**:
+   - Orquestación en secuencia: Evaluación de reglas $\rightarrow$ Hook `beforeToolCall` $\rightarrow$ Ejecución de `ITool` $\rightarrow$ Hook `afterToolCall`.
 
-El `TypedEventEmitter` actual no tiene discriminated union de eventos: emite `AgentSessionEvent` pero sin tipado estricto por evento.
+3. **Runtime Adaptador (`ai/agent-runtime.ts`)**:
+   - Implementación de `IAgentRuntime` en 111 líneas (cumpliendo la regla `< 200 líneas`).
+   - Patrón **Adapter / Strategy** con la interfaz inyectable `AgentEngineAdapter`.
 
-## Archivos a crear
+---
 
-### `apps/server/src/core/ports/agent-runtime.port.ts` [NEW]
+## 2. Archivos Creados / Modificados
 
-Interfaz pública del runtime de agente. Todo consumidor del server pasa a depender de esta interfaz, no de `AgentSession`.
+- `apps/server/src/core/ports/agent-runtime.port.ts`
+- `apps/server/src/core/ports/tool-executor.port.ts`
+- `apps/server/src/core/ports/tool.port.ts`
+- `apps/server/src/core/ports/hook.port.ts`
+- `apps/server/src/core/ports/permission.port.ts`
+- `apps/server/src/core/tool-executor.ts`
+- `apps/server/src/core/tool-registry.ts`
+- `apps/server/src/ai/agent-runtime.ts`
+- `apps/server/src/ai/index.ts`
 
-```ts
-import type { AgentSessionEvent } from "../../ai/agent-session";
+---
 
-export interface IAgentRuntime {
-  readonly sessionId: string;
-  readonly cwd: string;
-  readonly isStreaming: boolean;
+## 3. Criterio de Verificación
 
-  prompt(message: string, opts?: { signal?: AbortSignal }): Promise<void>;
-  abort(): Promise<void>;
-  getMessages(): unknown[];
-  getContextUsage(): { used: number; total: number };
-
-  on(handler: (event: AgentSessionEvent) => void): () => void;
-}
-```
-
-### `apps/server/src/core/ports/event-bus.port.ts` [NEW]
-
-`IEventBus` tipado con discriminated union. Compatible con el auto-browser, adaptado a los eventos actuales del server.
-
-```ts
-import type { AgentSessionEvent } from "../../ai/agent-session";
-
-export type AgentEventTypeKey = AgentSessionEvent["type"];
-
-export type AgentEventByType<K extends AgentEventTypeKey> = Extract<AgentSessionEvent, { type: K }>;
-
-export interface IEventBus {
-  emit(event: AgentSessionEvent): void;
-  on<K extends AgentEventTypeKey>(
-    type: K,
-    handler: (event: AgentEventByType<K>) => void,
-  ): () => void;
-  onAny(handler: (event: AgentSessionEvent) => void): () => void;
-  clear(): void;
-}
-```
-
-## Archivos a modificar
-
-### `apps/server/src/ai/agent-session.ts` [MODIFY]
-
-- Agregar `implements IAgentRuntime` a la clase (verificar que ya satisface la interfaz)
-- Cambiar el tipo de `eventBus` de `TypedEventEmitter` a `IEventBus` (sin cambiar la implementación)
-- Agregar método `on(handler)` que delega a `eventBus.onAny(handler)` si no existe
-
-### `apps/server/src/core/event-bus.ts` [MODIFY]
-
-- Hacer que `TypedEventEmitter` implemente `IEventBus`
-- Agregar `on<K>(type, handler)` con filtrado por `event.type`
-
-## Checklist
-
-- [x] Crear `agent-runtime.port.ts`
-- [x] Crear `event-bus.port.ts`
-- [x] `AgentSession implements IAgentRuntime` — typecheck pasa
-- [x] `TypedEventEmitter implements IEventBus` — typecheck pasa
-- [x] `pnpm --filter server run typecheck` sin errores
-
-## Verificación
-
-```bash
-pnpm --filter server run typecheck
-```
-
-Sin cambios de comportamiento en runtime — solo tipos.
+- `pnpm --filter server run typecheck`: **0 errores**.
+- `pnpm build`: **Build de producción exitoso**.

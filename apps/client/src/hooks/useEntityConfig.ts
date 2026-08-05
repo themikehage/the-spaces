@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { apiFetch } from "@/lib/api";
+import { configService } from "@/lib/api/config.service";
 import { useCallback, useEffect, useState } from "react";
 import type { EntityConfigType, EntityType } from "shared";
 
@@ -15,19 +15,13 @@ export function useEntityConfig(entityType: EntityType, entityId: string) {
     setIsLoading(true);
     setError(null);
     try {
-      const [rawRes, resolvedRes] = await Promise.all([
-        apiFetch(`/api/config/${entityType}/${encodeURIComponent(entityId)}`),
-        apiFetch(`/api/config/${entityType}/${encodeURIComponent(entityId)}/resolved`),
+      const [rawData, resolvedData] = await Promise.all([
+        configService.fetchEntityConfig(entityType, entityId).catch(() => null),
+        configService.fetchResolvedConfig(entityType, entityId).catch(() => null),
       ]);
 
-      if (rawRes.ok) {
-        const rawData = await rawRes.json();
-        setConfig(rawData);
-      }
-      if (resolvedRes.ok) {
-        const resolvedData = await resolvedRes.json();
-        setResolvedConfig(resolvedData);
-      }
+      if (rawData) setConfig(rawData);
+      if (resolvedData) setResolvedConfig(resolvedData);
     } catch (e) {
       const message = e instanceof Error ? e.message : "Failed to load entity config";
       setError(message);
@@ -44,17 +38,7 @@ export function useEntityConfig(entityType: EntityType, entityId: string) {
     setIsSaving(true);
     setError(null);
     try {
-      const res = await apiFetch(`/api/config/${entityType}/${encodeURIComponent(entityId)}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newConfig),
-      });
-
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || "Failed to update entity config");
-      }
-
+      await configService.updateEntityConfig(entityType, entityId, newConfig);
       await fetchConfig();
       return true;
     } catch (e) {

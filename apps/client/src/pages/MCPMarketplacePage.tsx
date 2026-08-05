@@ -4,7 +4,7 @@ import { MCPCustomForm } from "@/components/mcp/MCPCustomForm";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useToast } from "@/contexts/ToastContext";
 import { useLiterals } from "@/lib";
-import { apiFetch } from "@/lib/api";
+import { mcpService } from "@/lib/api/mcp.service";
 import { AnimatePresence, motion } from "framer-motion";
 import { Code, Plus } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -43,19 +43,13 @@ export function MCPMarketplacePage() {
     setLoading(true);
     setError("");
     try {
-      const [catalogRes, serversRes] = await Promise.all([
-        apiFetch("/api/mcp/catalog"),
-        apiFetch("/api/mcp/servers"),
+      const [catalogData, serversData] = await Promise.all([
+        mcpService.fetchMcpCatalog(),
+        mcpService.fetchMcpServers(),
       ]);
 
-      if (!catalogRes.ok) throw new Error("Error cargando el catálogo del marketplace");
-      if (!serversRes.ok) throw new Error("Error cargando tus servidores configurados");
-
-      const catalogData = await catalogRes.json();
-      const serversData = await serversRes.json();
-
-      setCatalog(catalogData.catalog || []);
-      setServers(serversData.servers || []);
+      setCatalog((catalogData as any)?.catalog || catalogData || []);
+      setServers((serversData as any)?.servers || serversData || []);
     } catch (err: any) {
       setError(err.message || "Failed to load MCP Marketplace data");
       addToast("error", err.message || "Fallo al inicializar datos de MCP");
@@ -75,11 +69,8 @@ export function MCPMarketplacePage() {
 
     const interval = setInterval(async () => {
       try {
-        const res = await apiFetch("/api/mcp/servers");
-        if (res.ok) {
-          const data = await res.json();
-          setServers(data.servers || []);
-        }
+        const data = await mcpService.fetchMcpServers();
+        setServers((data as any)?.servers || data || []);
       } catch (e) {
         console.error("Failed to pool servers status:", e);
       }
@@ -105,13 +96,8 @@ export function MCPMarketplacePage() {
     if (installingId) return; // Prevent double installs
     setInstallingId(catalogId);
     try {
-      const res = await apiFetch(`/api/mcp/catalog/${catalogId}/install`, {
-        method: "POST",
-      });
-      if (!res.ok) throw new Error("Fallo al instalar el servidor incorporado");
-      const data = await res.json();
+      const data = await mcpService.installMcpCatalogItem(catalogId);
 
-      // Update servers array with the newly installed server
       setServers((prev) => {
         const filtered = prev.filter((s) => s.id !== catalogId);
         return [...filtered, data.server];
@@ -129,22 +115,13 @@ export function MCPMarketplacePage() {
     const srv = servers.find((s) => s.id === serverId);
     if (!srv) return;
 
-    // Optimistic UI update
     setServers((prev) => prev.map((s) => (s.id === serverId ? { ...s, enabled } : s)));
 
     try {
-      const res = await apiFetch(`/api/mcp/servers/${serverId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...srv, enabled }),
-      });
-      if (!res.ok) throw new Error("Error al actualizar estado del servidor");
-      const data = await res.json();
-
+      const data = await mcpService.updateMcpServer(serverId, { ...srv, enabled });
       setServers((prev) => prev.map((s) => (s.id === serverId ? data.server : s)));
       addToast("info", `${srv.name} ha sido ${enabled ? "habilitado" : "deshabilitado"}.`);
     } catch (err: any) {
-      // Revert optimistic update
       setServers((prev) => prev.map((s) => (s.id === serverId ? { ...s, enabled: !enabled } : s)));
       addToast("error", err.message || "Error al actualizar estado");
     }
@@ -153,12 +130,7 @@ export function MCPMarketplacePage() {
   const handleConnect = async (serverId: string) => {
     const srv = servers.find((s) => s.id === serverId);
     try {
-      const res = await apiFetch(`/api/mcp/servers/${serverId}/connect`, {
-        method: "POST",
-      });
-      if (!res.ok) throw new Error("Error al conectar con el servidor");
-      const data = await res.json();
-
+      const data = await mcpService.connectMcpServer(serverId);
       setServers((prev) => prev.map((s) => (s.id === serverId ? data.server : s)));
       addToast("info", `Conectando con ${srv?.name || serverId}...`);
     } catch (err: any) {
@@ -169,12 +141,7 @@ export function MCPMarketplacePage() {
   const handleDisconnect = async (serverId: string) => {
     const srv = servers.find((s) => s.id === serverId);
     try {
-      const res = await apiFetch(`/api/mcp/servers/${serverId}/disconnect`, {
-        method: "POST",
-      });
-      if (!res.ok) throw new Error("Error al desconectar el servidor");
-      const data = await res.json();
-
+      const data = await mcpService.disconnectMcpServer(serverId);
       setServers((prev) => prev.map((s) => (s.id === serverId ? data.server : s)));
       addToast("info", `${srv?.name || serverId} desconectado.`);
     } catch (err: any) {
@@ -186,10 +153,7 @@ export function MCPMarketplacePage() {
     if (!pendingDeleteServerId) return;
     setDeletingServer(true);
     try {
-      const res = await apiFetch(`/api/mcp/servers/${pendingDeleteServerId}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) throw new Error("Error al eliminar el servidor");
+      await mcpService.deleteMcpServer(pendingDeleteServerId);
 
       const srv = servers.find((s) => s.id === pendingDeleteServerId);
       if (srv && srv.isBuiltin) {
@@ -220,13 +184,7 @@ export function MCPMarketplacePage() {
   };
 
   const handleTestConnection = async (config: McpServerConfig) => {
-    const res = await apiFetch("/api/mcp/servers/test-connection", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(config),
-    });
-    if (!res.ok) throw new Error("Connection test failed on server");
-    return await res.json();
+    return await mcpService.testMcpConnection(config);
   };
 
   const handleTestServer = async (server: McpServerConfig) => {
@@ -255,13 +213,7 @@ export function MCPMarketplacePage() {
 
   const handleAddCustom = async (config: McpServerConfig) => {
     try {
-      const res = await apiFetch("/api/mcp/servers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(config),
-      });
-      if (!res.ok) throw new Error("Error al agregar servidor personalizado");
-      const data = await res.json();
+      const data = await mcpService.createMcpServer(config);
       setServers((prev) => [...prev.filter((s) => s.id !== data.server.id), data.server]);
       setIsAddingCustom(false);
       setEditingCustomId(null);
@@ -275,13 +227,7 @@ export function MCPMarketplacePage() {
     const targetId = editingCustomId || config.id;
     if (!targetId) return;
     try {
-      const res = await apiFetch(`/api/mcp/servers/${targetId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...config, id: targetId }),
-      });
-      if (!res.ok) throw new Error("Error al actualizar servidor");
-      const data = await res.json();
+      const data = await mcpService.updateMcpServer(targetId, { ...config, id: targetId });
       setServers((prev) => prev.map((s) => (s.id === targetId ? data.server : s)));
       setEditingCustomId(null);
       addToast("success", `${data.server.name} actualizado.`);
@@ -306,14 +252,8 @@ export function MCPMarketplacePage() {
     if (rawLoaded) return;
     setRawConfigError("");
     try {
-      const res = await apiFetch("/api/mcp");
-      if (res.ok) {
-        const data = await res.json();
-        setRawConfigStr(JSON.stringify(data, null, 2));
-      } else {
-        setRawConfigError("Error al cargar la configuración");
-        setRawConfigStr("{}");
-      }
+      const data = await mcpService.fetchMcpState();
+      setRawConfigStr(JSON.stringify(data, null, 2));
     } catch {
       setRawConfigError("Error al cargar la configuración");
       setRawConfigStr("{}");
@@ -335,18 +275,12 @@ export function MCPMarketplacePage() {
       if (!parsed.mcpServers || typeof parsed.mcpServers !== "object") {
         throw new Error("La configuración debe tener un objeto 'mcpServers'");
       }
-      // Validate each entry has required fields
       for (const [key, val] of Object.entries(parsed.mcpServers)) {
         if (typeof val !== "object" || val === null) {
           throw new Error(`Entrada inválida para el servidor "${key}"`);
         }
       }
-      const res = await apiFetch("/api/mcp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: rawConfigStr,
-      });
-      if (!res.ok) throw new Error("Error al guardar la configuración");
+      await mcpService.updateMcpConfig(parsed);
       addToast("success", "Configuración guardada.");
       setRawLoaded(false);
       fetchData();

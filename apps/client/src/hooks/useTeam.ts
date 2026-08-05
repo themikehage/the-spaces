@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { apiFetch } from "@/lib/api";
+import { teamsService } from "@/lib/api/teams.service";
 import { wsClient } from "@/lib/ws-client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Team, TeamMember, TeamMessage, UpdateTeam } from "shared";
@@ -29,13 +29,7 @@ export function useTeam(teamId: string | null, sessionId?: string | null) {
   const fetchTeam = useCallback(async () => {
     if (!teamId) return;
     try {
-      const res = await apiFetch(`/api/teams/${teamId}`);
-      if (res.status === 404) {
-        setTeam(null);
-        return;
-      }
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
+      const data = await teamsService.fetchTeam(teamId);
       setTeam(data);
     } catch (err: any) {
       setError(err.message || "Failed to load team");
@@ -45,14 +39,8 @@ export function useTeam(teamId: string | null, sessionId?: string | null) {
   const fetchMessages = useCallback(async () => {
     if (!teamId) return;
     try {
-      const url = `/api/teams/${teamId}/messages?limit=100${sessionId ? `&sessionId=${sessionId}` : ""}`;
-      const res = await apiFetch(url);
-      if (res.status === 404) {
-        return;
-      }
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setMessages(data.messages || []);
+      const msgs = await teamsService.fetchTeamMessages(teamId, sessionId);
+      setMessages(msgs);
     } catch (err: any) {
       console.error("Failed to load team messages:", err);
     }
@@ -61,17 +49,10 @@ export function useTeam(teamId: string | null, sessionId?: string | null) {
   const fetchActiveStreamings = useCallback(async () => {
     if (!teamId) return;
     try {
-      const url = `/api/teams/${teamId}/active-streamings${sessionId ? `?sessionId=${sessionId}` : ""}`;
-      const res = await apiFetch(url);
-      if (res.status === 404) {
-        return;
-      }
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-
+      const active = await teamsService.fetchTeamActiveStreamings(teamId, sessionId);
       setStreamingAgents((prev) => {
         const merged = { ...prev };
-        for (const [agentId, serverStream] of Object.entries(data.streamingAgents || {})) {
+        for (const [agentId, serverStream] of Object.entries(active || {})) {
           const s = serverStream as StreamingAgentState;
           if (merged[agentId]) {
             merged[agentId] = {
@@ -213,11 +194,7 @@ export function useTeam(teamId: string | null, sessionId?: string | null) {
         message: content,
       });
       if (!sent) {
-        await apiFetch(`/api/teams/${teamId}/send`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: content, sessionId }),
-        });
+        await teamsService.sendTeamMessage(teamId, content, sessionId);
       }
     },
     [teamId, sessionId],
@@ -232,27 +209,14 @@ export function useTeam(teamId: string | null, sessionId?: string | null) {
       sessionId: sessionId ?? undefined,
     });
     if (!sent) {
-      await apiFetch(`/api/teams/${teamId}/abort`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId }),
-      });
+      await teamsService.abortTeamDispatch(teamId, sessionId);
     }
   }, [teamId, sessionId]);
 
   const addMember = useCallback(
     async (data: TeamMember) => {
       if (!teamId) return;
-      const res = await apiFetch(`/api/teams/${teamId}/members`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: "Failed to add member" }));
-        throw new Error(err.error || `HTTP ${res.status}`);
-      }
-      const updated = await res.json();
+      const updated = await teamsService.addTeamMember(teamId, data);
       setTeam(updated);
     },
     [teamId],
@@ -261,13 +225,7 @@ export function useTeam(teamId: string | null, sessionId?: string | null) {
   const updateMember = useCallback(
     async (agentId: string, data: Partial<TeamMember>) => {
       if (!teamId) return;
-      const res = await apiFetch(`/api/teams/${teamId}/members/${agentId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const updated = await res.json();
+      const updated = await teamsService.updateTeamMember(teamId, agentId, data);
       setTeam(updated);
     },
     [teamId],
@@ -276,11 +234,7 @@ export function useTeam(teamId: string | null, sessionId?: string | null) {
   const removeMember = useCallback(
     async (agentId: string) => {
       if (!teamId) return;
-      const res = await apiFetch(`/api/teams/${teamId}/members/${agentId}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const updated = await res.json();
+      const updated = await teamsService.removeTeamMember(teamId, agentId);
       setTeam(updated);
     },
     [teamId],
@@ -289,13 +243,7 @@ export function useTeam(teamId: string | null, sessionId?: string | null) {
   const updateTeam = useCallback(
     async (data: UpdateTeam) => {
       if (!teamId) return;
-      const res = await apiFetch(`/api/teams/${teamId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const updated = await res.json();
+      const updated = await teamsService.updateTeam(teamId, data);
       setTeam(updated);
       window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "team" } }));
     },

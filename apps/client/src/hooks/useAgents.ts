@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { apiFetch } from "@/lib/api";
+import { agentsService } from "@/lib/api/agents.service";
 import { useCallback, useEffect, useState } from "react";
 import type { AgentDefinition, AgentInfo } from "shared";
 
@@ -12,10 +12,8 @@ export function useAgents() {
     setLoading(true);
     setError(null);
     try {
-      const res = await apiFetch("/api/agents");
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setAgents(data.agents || []);
+      const data = await agentsService.fetchAgents();
+      setAgents(data);
     } catch (err: any) {
       setError(err.message || "Failed to load agents");
     } finally {
@@ -29,18 +27,7 @@ export function useAgents() {
 
   const registerAgent = useCallback(
     async (definition: AgentDefinition): Promise<AgentInfo> => {
-      const res = await apiFetch("/api/agents", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(definition),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: "Unknown error" }));
-        throw new Error(err.error || `HTTP ${res.status}`);
-      }
-      const agent = await res.json();
+      const agent = await agentsService.registerAgent(definition);
       await fetchAgents();
       window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "agent" } }));
       return agent;
@@ -50,12 +37,7 @@ export function useAgents() {
 
   const stopAgent = useCallback(
     async (id: string): Promise<void> => {
-      const res = await apiFetch(`/api/agents/${id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok && res.status !== 404) {
-        throw new Error(`HTTP ${res.status}`);
-      }
+      await agentsService.stopAgent(id);
       await fetchAgents();
       window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "agent" } }));
     },
@@ -63,42 +45,12 @@ export function useAgents() {
   );
 
   const promptAgent = useCallback(async (id: string, message: string): Promise<string> => {
-    const res = await apiFetch(`/api/agents/${id}/prompt`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ message, stream: false }),
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({ error: "Unknown error" }));
-      throw new Error(err.error || `HTTP ${res.status}`);
-    }
-    const data = await res.json();
-    const msgs: any[] = data.messages || [];
-    const last = [...msgs].reverse().find((m: any) => m.role === "assistant");
-    if (!last) return "";
-    if (typeof last.content === "string") return last.content;
-    if (Array.isArray(last.content)) {
-      return last.content.map((c: any) => c.text || "").join("\n");
-    }
-    return "";
+    return agentsService.promptAgent(id, message);
   }, []);
 
   const updateAgent = useCallback(
     async (id: string, updates: Partial<Omit<AgentDefinition, "id">>): Promise<AgentInfo> => {
-      const res = await apiFetch(`/api/agents/${id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updates),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: "Unknown error" }));
-        throw new Error(err.error || `HTTP ${res.status}`);
-      }
-      const agent = await res.json();
+      const agent = await agentsService.updateAgent(id, updates);
       await fetchAgents();
       window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "agent" } }));
       return agent;
@@ -108,32 +60,16 @@ export function useAgents() {
 
   const uploadAvatar = useCallback(
     async (id: string, file: File): Promise<string> => {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await apiFetch(`/api/agents/${id}/avatar`, {
-        method: "POST",
-        body: formData,
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: "Unknown error" }));
-        throw new Error(err.error || `HTTP ${res.status}`);
-      }
-      const data = await res.json();
+      const url = await agentsService.uploadAgentAvatar(id, file);
       await fetchAgents();
-      return data.avatarUrl;
+      return url;
     },
     [fetchAgents],
   );
 
   const deleteAvatar = useCallback(
     async (id: string): Promise<void> => {
-      const res = await apiFetch(`/api/agents/${id}/avatar`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: "Unknown error" }));
-        throw new Error(err.error || `HTTP ${res.status}`);
-      }
+      await agentsService.deleteAgentAvatar(id);
       await fetchAgents();
     },
     [fetchAgents],

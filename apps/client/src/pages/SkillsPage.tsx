@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useToast } from "@/contexts/ToastContext";
 import { useLiterals } from "@/lib";
-import { apiFetch } from "@/lib/api";
+import { skillsService } from "@/lib/api/skills.service";
 import { BookOpen, ChevronLeft, RefreshCw, Search } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { literals as u } from "./SkillsPage.literals";
@@ -35,11 +35,7 @@ export function SkillsPage() {
     setShowResetConfirm(false);
     setResetting(true);
     try {
-      const res = await apiFetch("/api/skills/reset", {
-        method: "POST",
-      });
-      if (!res.ok) throw new Error(l.loadError);
-
+      await skillsService.resetSkills();
       window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "skill" } }));
       addToast("success", l.resetSuccess);
     } catch (err: unknown) {
@@ -48,7 +44,7 @@ export function SkillsPage() {
     } finally {
       setResetting(false);
     }
-  }, [addToast, l.loadError, l.resetSuccess, l.resetErrorPrefix]);
+  }, [addToast, l.resetSuccess, l.resetErrorPrefix]);
 
   const handleResetSkills = useCallback(() => {
     setShowResetConfirm(true);
@@ -56,10 +52,8 @@ export function SkillsPage() {
 
   const fetchSkills = useCallback(async () => {
     try {
-      const res = await apiFetch("/api/skills");
-      if (!res.ok) throw new Error(l.loadError);
-      const data = await res.json();
-      const sorted = (data.skills ?? []).sort((a: SkillInfo, b: SkillInfo) =>
+      const fetched = await skillsService.fetchSkills();
+      const sorted = (fetched as unknown as SkillInfo[]).sort((a: SkillInfo, b: SkillInfo) =>
         a.name.localeCompare(b.name),
       );
       setSkills(sorted);

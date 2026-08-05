@@ -5,7 +5,7 @@ import { EntitySkillsEditor } from "@/components/shared/EntitySkillsEditor";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { useLiterals } from "@/lib";
-import { apiFetch } from "@/lib/api";
+import { projectsService } from "@/lib/api/projects.service";
 import { Settings2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { literals as l } from "./DashboardPage.literals";
@@ -42,11 +42,8 @@ export function ProjectsPage({ onNavigate: _onNavigate, onSelectProject }: Props
     try {
       setLoading(true);
       setError(null);
-      const res = await apiFetch("/api/workspace-projects");
-      if (res.ok) {
-        const data = await res.json();
-        setRepos(data.projects || data.repos || []);
-      }
+      const data = await projectsService.fetchProjects();
+      setRepos((data as any)?.projects || (data as any)?.repos || data || []);
     } catch (err: any) {
       setError(err.message || "Failed to load projects");
     } finally {
@@ -69,16 +66,7 @@ export function ProjectsPage({ onNavigate: _onNavigate, onSelectProject }: Props
     cloneUrl?: string;
     avatarUrl?: string;
   }) => {
-    const res = await apiFetch("/api/workspace-projects", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) {
-      const errData = await res.json();
-      throw new Error(errData.error || literals.createError);
-    }
-    const createdProject = await res.json();
+    const createdProject = await projectsService.createProject(data);
     await fetchRepos();
     window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "project" } }));
 
@@ -86,20 +74,10 @@ export function ProjectsPage({ onNavigate: _onNavigate, onSelectProject }: Props
   };
 
   const handleUploadAvatar = async (id: string, file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    const res = await apiFetch(`/api/workspace-projects/${id}/avatar`, {
-      method: "POST",
-      body: formData,
-    });
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.error || "Failed to upload avatar");
-    }
-    const data = await res.json();
+    const avatarUrl = await projectsService.uploadProjectAvatar(id, file);
     await fetchRepos();
     window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "project" } }));
-    return data.avatarUrl;
+    return avatarUrl;
   };
 
   const formatTime = (updatedAt: string) => {

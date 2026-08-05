@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { apiFetch } from "@/lib/api";
+import { teamsService } from "@/lib/api/teams.service";
 import { useCallback, useEffect, useState } from "react";
 import type { CreateTeam, Team, UpdateTeam } from "shared";
 
@@ -12,10 +12,8 @@ export function useTeams() {
     setLoading(true);
     setError(null);
     try {
-      const res = await apiFetch("/api/teams");
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setTeams(data.teams || []);
+      const data = await teamsService.fetchTeams();
+      setTeams(data);
     } catch (err: any) {
       setError(err.message || "Failed to load teams");
     } finally {
@@ -29,18 +27,7 @@ export function useTeams() {
 
   const createTeam = useCallback(
     async (data: CreateTeam): Promise<Team> => {
-      const res = await apiFetch("/api/teams", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: "Unknown error" }));
-        throw new Error(err.error || `HTTP ${res.status}`);
-      }
-      const team = await res.json();
+      const team = await teamsService.createTeam(data);
       await fetchTeams();
       window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "team" } }));
       return team;
@@ -50,18 +37,7 @@ export function useTeams() {
 
   const updateTeam = useCallback(
     async (id: string, updates: UpdateTeam): Promise<Team> => {
-      const res = await apiFetch(`/api/teams/${id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updates),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: "Unknown error" }));
-        throw new Error(err.error || `HTTP ${res.status}`);
-      }
-      const team = await res.json();
+      const team = await teamsService.updateTeam(id, updates);
       await fetchTeams();
       window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "team" } }));
       return team;
@@ -71,12 +47,7 @@ export function useTeams() {
 
   const deleteTeam = useCallback(
     async (id: string): Promise<void> => {
-      const res = await apiFetch(`/api/teams/${id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok && res.status !== 404) {
-        throw new Error(`HTTP ${res.status}`);
-      }
+      await teamsService.deleteTeam(id);
       await fetchTeams();
       window.dispatchEvent(new CustomEvent("entity-updated", { detail: { type: "team" } }));
     },
@@ -85,32 +56,16 @@ export function useTeams() {
 
   const uploadTeamAvatar = useCallback(
     async (id: string, file: File): Promise<string> => {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await apiFetch(`/api/teams/${id}/avatar`, {
-        method: "POST",
-        body: formData,
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: "Unknown error" }));
-        throw new Error(err.error || `HTTP ${res.status}`);
-      }
-      const data = await res.json();
+      const url = await teamsService.uploadTeamAvatar(id, file);
       await fetchTeams();
-      return data.avatarUrl;
+      return url;
     },
     [fetchTeams],
   );
 
   const deleteTeamAvatar = useCallback(
     async (id: string): Promise<void> => {
-      const res = await apiFetch(`/api/teams/${id}/avatar`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: "Unknown error" }));
-        throw new Error(err.error || `HTTP ${res.status}`);
-      }
+      await teamsService.deleteTeamAvatar(id);
       await fetchTeams();
     },
     [fetchTeams],

@@ -3,7 +3,7 @@ import { EnvVarsTab } from "@/components/settings/EnvVarsTab";
 import { GeneralTab } from "@/components/settings/GeneralTab";
 import { ProvidersTab } from "@/components/settings/ProvidersTab";
 import { useLiterals } from "@/lib";
-import { apiFetch } from "@/lib/api";
+import { envService } from "@/lib/api/env.service";
 import { MCPMarketplacePage } from "@/pages/MCPMarketplacePage";
 import { useCallback, useEffect, useState } from "react";
 import { literals as u } from "./SettingsPage.literals";
@@ -24,10 +24,8 @@ export function SettingsPage() {
 
   const fetchEnvVars = useCallback(async () => {
     try {
-      const res = await apiFetch("/api/env");
-      if (!res.ok) throw new Error("Failed to load environment variables");
-      const data = await res.json();
-      setEnvVars(data.env ?? []);
+      const data = await envService.fetchEnvVars();
+      setEnvVars((data as any).env ?? data ?? []);
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : "Error loading environment variables";
       setEnvError(errMsg);

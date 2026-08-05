@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { apiFetch } from "@/lib/api";
+import { sessionsService } from "@/lib/api/sessions.service";
 import {
   buildCreateSessionBody,
   getSessionContextPredicate,
@@ -60,12 +60,8 @@ export function useSessionResolver({
 
     const resolve = async () => {
       try {
-        const res = await apiFetch("/api/sessions");
-        if (!res.ok || !isCurrentResolution()) return;
-
-        const data = await res.json();
+        const all = await sessionsService.fetchSessions();
         if (!isCurrentResolution()) return;
-        const all = data.sessions ?? [];
 
         const context = {
           activeTeam,
@@ -86,15 +82,12 @@ export function useSessionResolver({
 
         const sessionName = getSessionName(context, filtered.length);
 
-        const createRes = await apiFetch("/api/sessions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(buildCreateSessionBody(sessionName, context)),
-        });
+        const session = await sessionsService.createSession(
+          buildCreateSessionBody(sessionName, context),
+        );
 
-        if (!createRes.ok || !isCurrentResolution()) return;
+        if (!isCurrentResolution()) return;
 
-        const session = await createRes.json();
         if (isCurrentResolution()) {
           setResolvedSessionId(session.id);
           setResolving(false);

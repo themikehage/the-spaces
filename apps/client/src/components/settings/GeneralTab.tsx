@@ -5,6 +5,7 @@ import { Dropdown } from "@/components/ui/Dropdown";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLiterals } from "@/lib";
 import { apiFetch } from "@/lib/api";
+import { settingsService } from "@/lib/api/settings.service";
 import { AlertTriangle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { literals as u } from "./GeneralTab.literals";
@@ -206,9 +207,14 @@ export function GeneralTab() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const settingsRes = await apiFetch("/api/settings");
-        if (settingsRes.ok) {
-          const settingsData = await settingsRes.json();
+        const [settingsData, modelsData, imgModelsData, vidModelsData] = await Promise.all([
+          settingsService.fetchSettings().catch(() => ({})),
+          settingsService.fetchModels().catch(() => []),
+          settingsService.fetchImageModels().catch(() => []),
+          settingsService.fetchVideoModels().catch(() => []),
+        ]);
+
+        if (settingsData) {
           setVisionModel(settingsData.visionModel || "");
           setImageGenModel(settingsData.imageGenModel || "");
           setVideoGenModel(settingsData.videoGenModel || "");
@@ -217,24 +223,11 @@ export function GeneralTab() {
           setShowPromptPreviews(settingsData.showPromptPreviews ?? false);
         }
 
-        const modelsRes = await apiFetch("/api/models");
-        if (modelsRes.ok) {
-          const modelsData = await modelsRes.json();
-          const filtered = (modelsData.models || []).filter((m: any) => m.input?.includes("image"));
-          setVisionModels(filtered);
-        }
-
-        const imgModelsRes = await apiFetch("/api/models/images");
-        if (imgModelsRes.ok) {
-          const imgModelsData = await imgModelsRes.json();
-          setImageGenModels(imgModelsData.models || []);
-        }
-
-        const vidModelsRes = await apiFetch("/api/models/videos");
-        if (vidModelsRes.ok) {
-          const vidModelsData = await vidModelsRes.json();
-          setVideoGenModels(vidModelsData.models || []);
-        }
+        const modelsList = (modelsData as any)?.models || modelsData || [];
+        const filtered = modelsList.filter((m: any) => m.input?.includes("image"));
+        setVisionModels(filtered);
+        setImageGenModels((imgModelsData as any)?.models || imgModelsData || []);
+        setVideoGenModels((vidModelsData as any)?.models || vidModelsData || []);
       } catch (err) {
         console.error("Failed to load settings models:", err);
       } finally {
@@ -247,13 +240,7 @@ export function GeneralTab() {
   const handleUpdateVisionModel = async (model: string) => {
     setVisionModel(model);
     try {
-      await apiFetch("/api/settings", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ visionModel: model }),
-      });
+      await settingsService.updateSettings({ visionModel: model });
     } catch (err) {
       console.error("Failed to update vision model settings:", err);
     }
@@ -262,13 +249,7 @@ export function GeneralTab() {
   const handleUpdateImageGenModel = async (model: string) => {
     setImageGenModel(model);
     try {
-      await apiFetch("/api/settings", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ imageGenModel: model }),
-      });
+      await settingsService.updateSettings({ imageGenModel: model });
     } catch (err) {
       console.error("Failed to update image generation model settings:", err);
     }
@@ -277,13 +258,7 @@ export function GeneralTab() {
   const handleUpdateVideoGenModel = async (model: string) => {
     setVideoGenModel(model);
     try {
-      await apiFetch("/api/settings", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ videoGenModel: model }),
-      });
+      await settingsService.updateSettings({ videoGenModel: model });
     } catch (err) {
       console.error("Failed to update video generation model settings:", err);
     }
@@ -292,13 +267,7 @@ export function GeneralTab() {
   const handleToggleVideoGenEnabled = async (enabled: boolean) => {
     setVideoGenEnabled(enabled);
     try {
-      await apiFetch("/api/settings", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ videoGenEnabled: enabled }),
-      });
+      await settingsService.updateSettings({ videoGenEnabled: enabled });
     } catch (err) {
       console.error("Failed to update video generation toggle:", err);
     }
@@ -378,12 +347,7 @@ export function GeneralTab() {
     setImportError("");
     setImportSuccess("");
     try {
-      const res = await apiFetch(`/api/backup/export?type=${exportType}`);
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || "Failed to download backup");
-      }
-      const blob = await res.blob();
+      const blob = await settingsService.exportBackup(exportType);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -413,19 +377,7 @@ export function GeneralTab() {
     setImportError("");
     setImportSuccess("");
     try {
-      const formData = new FormData();
-      formData.append("file", importFile);
-
-      const res = await apiFetch(`/api/backup/import?mode=${importMode}`, {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to import backup");
-      }
-
+      await settingsService.importBackup(importMode, importFile);
       setImportSuccess(l.backupImported.replace("{mode}", importMode));
       setImportFile(null);
       setShowOverwriteModal(false);

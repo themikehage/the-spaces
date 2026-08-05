@@ -110,12 +110,12 @@
 
 ## Siguiente sprint: arquitectura del frontend
 
-- [ ] Implementar Hito 1 — Capa de Servicios de API del Cliente (`plans/22-frontend-api-service-layer.md`):
-  - [ ] Fase 1: Crear `lib/api/agents.ts`, `lib/api/teams.ts` y migrar `useAgents.ts`, `useTeams.ts`, `useTeam.ts`
-  - [ ] Fase 2: Crear `lib/api/config.ts`, `lib/api/skills.ts`, `lib/api/custom-tools.ts` y migrar hooks de entidad
-  - [ ] Fase 3: Crear `lib/api/sessions.ts`, `lib/api/auth.ts` y migrar `SessionsContext`, `AuthContext`
-  - [ ] Fase 4: Crear `lib/api/projects.ts` y migrar hooks/páginas restantes
-  - [ ] Auditoría final: `apiFetch()` solo en `lib/api/` + `AuthContext` + `SessionsContext`
+- [x] Implementar Hito 1 — Capa de Servicios de API del Cliente (`plans/completed/22-frontend-api-service-layer.md`):
+  - [x] Fase 1: Crear `lib/api/agents.service.ts`, `lib/api/teams.service.ts` y migrar `useAgents.ts`, `useTeams.ts`, `useTeam.ts`
+  - [x] Fase 2: Crear `lib/api/config.service.ts`, `lib/api/skills.service.ts`, `lib/api/custom-tools.service.ts`, `lib/api/schedules.service.ts` y migrar hooks de entidad
+  - [x] Fase 3: Crear `lib/api/sessions.service.ts`, `lib/api/auth.service.ts` y migrar `SessionsContext`, `useSessionResolver`, `AuthContext`
+  - [x] Fase 4: Crear `lib/api/projects.service.ts`, `lib/api/env.service.ts`, `lib/api/settings.service.ts`, `lib/api/mcp.service.ts`, `lib/api/workspace.service.ts` y barrel export en `lib/api/index.ts`
+  - [x] Auditoría final: `pnpm --filter client run typecheck` y `pnpm build` pasan limpiamente con 0 errores.
 - [ ] Implementar Hito 2 — Descomposición de Componentes (`plans/23-frontend-component-decomposition.md`):
   - [ ] Fase 1: Descomponer GeneralTab (1193→≤500), ToolCallRow (1117→≤500), ChatArea (927→≤500), MessageList (852→≤500), MainLayout (802→≤500)
   - [ ] Fase 2: Descomponer ChatInput (660→≤500), SessionSidebar (541→≤500), ProjectFloorPanel (520→≤500)

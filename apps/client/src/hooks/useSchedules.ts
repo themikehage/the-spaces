@@ -1,14 +1,6 @@
 // SPDX-License-Identifier: MIT
-import {
-  cancelScheduleRun,
-  createScheduleJob,
-  deleteScheduleJob,
-  fetchScheduleJobs,
-  fetchScheduleRuns,
-  triggerScheduleRun,
-  updateScheduleJob,
-} from "@/lib/api/schedules";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { schedulesService } from "@/lib/api/schedules.service";
+import { useCallback, useEffect, useState } from "react";
 import type { CreateScheduleJob, ScheduleJob, ScheduleRun, UpdateScheduleJob } from "shared";
 
 export function useSchedules(filters?: { projectId?: string; agentId?: string; teamId?: string }) {
@@ -20,7 +12,7 @@ export function useSchedules(filters?: { projectId?: string; agentId?: string; t
     setLoading(true);
     setError(null);
     try {
-      const data = await fetchScheduleJobs(filters);
+      const data = await schedulesService.fetchScheduleJobs(filters);
       setJobs(data);
     } catch (err: any) {
       setError(err.message || "Failed to load schedules");
@@ -35,7 +27,7 @@ export function useSchedules(filters?: { projectId?: string; agentId?: string; t
 
   const createJob = useCallback(
     async (data: CreateScheduleJob): Promise<ScheduleJob> => {
-      const created = await createScheduleJob(data);
+      const created = await schedulesService.createScheduleJob(data);
       await fetchJobs();
       return created;
     },
@@ -44,7 +36,7 @@ export function useSchedules(filters?: { projectId?: string; agentId?: string; t
 
   const updateJob = useCallback(
     async (jobId: string, data: UpdateScheduleJob): Promise<ScheduleJob> => {
-      const updated = await updateScheduleJob(jobId, data);
+      const updated = await schedulesService.updateScheduleJob(jobId, data);
       await fetchJobs();
       return updated;
     },
@@ -53,7 +45,7 @@ export function useSchedules(filters?: { projectId?: string; agentId?: string; t
 
   const deleteJob = useCallback(
     async (jobId: string): Promise<void> => {
-      await deleteScheduleJob(jobId);
+      await schedulesService.deleteScheduleJob(jobId);
       await fetchJobs();
     },
     [fetchJobs],
@@ -61,9 +53,21 @@ export function useSchedules(filters?: { projectId?: string; agentId?: string; t
 
   const triggerRun = useCallback(
     async (jobId: string): Promise<ScheduleRun> => {
-      const run = await triggerScheduleRun(jobId);
+      const run = await schedulesService.triggerScheduleRun(jobId);
       await fetchJobs();
       return run;
+    },
+    [fetchJobs],
+  );
+
+  const getRuns = useCallback(async (jobId: string): Promise<ScheduleRun[]> => {
+    return schedulesService.fetchScheduleRuns(jobId);
+  }, []);
+
+  const cancelRun = useCallback(
+    async (jobId: string, runId: string): Promise<void> => {
+      await schedulesService.cancelScheduleRun(jobId, runId);
+      await fetchJobs();
     },
     [fetchJobs],
   );
@@ -72,11 +76,13 @@ export function useSchedules(filters?: { projectId?: string; agentId?: string; t
     jobs,
     loading,
     error,
-    refetchJobs: fetchJobs,
+    fetchJobs,
     createJob,
     updateJob,
     deleteJob,
     triggerRun,
+    getRuns,
+    cancelRun,
   };
 }
 
@@ -84,7 +90,6 @@ export function useScheduleRuns(jobId: string | null) {
   const [runs, setRuns] = useState<ScheduleRun[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const pollTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchRuns = useCallback(async () => {
     if (!jobId) {
@@ -94,10 +99,10 @@ export function useScheduleRuns(jobId: string | null) {
     setLoading(true);
     setError(null);
     try {
-      const data = await fetchScheduleRuns(jobId);
+      const data = await schedulesService.fetchScheduleRuns(jobId);
       setRuns(data);
     } catch (err: any) {
-      setError(err.message || "Failed to load runs");
+      setError(err.message || "Failed to load schedule runs");
     } finally {
       setLoading(false);
     }
@@ -107,36 +112,10 @@ export function useScheduleRuns(jobId: string | null) {
     fetchRuns();
   }, [fetchRuns]);
 
-  // Auto-poll runs every 3s if any run is 'running'
-  useEffect(() => {
-    const hasRunning = runs.some((r) => r.status === "running");
-
-    if (hasRunning && jobId) {
-      pollTimer.current = setInterval(async () => {
-        try {
-          const data = await fetchScheduleRuns(jobId);
-          setRuns(data);
-        } catch {
-          /* noop */
-        }
-      }, 3000);
-    } else if (pollTimer.current) {
-      clearInterval(pollTimer.current);
-      pollTimer.current = null;
-    }
-
-    return () => {
-      if (pollTimer.current) {
-        clearInterval(pollTimer.current);
-        pollTimer.current = null;
-      }
-    };
-  }, [runs, jobId]);
-
   const cancelRun = useCallback(
-    async (runId: string): Promise<void> => {
+    async (runId: string) => {
       if (!jobId) return;
-      await cancelScheduleRun(jobId, runId);
+      await schedulesService.cancelScheduleRun(jobId, runId);
       await fetchRuns();
     },
     [jobId, fetchRuns],

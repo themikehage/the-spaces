@@ -8,7 +8,7 @@ import { TeamMessages } from "@/components/teams/TeamMessages";
 import { useAgents } from "@/hooks/useAgents";
 import { useTeam } from "@/hooks/useTeam";
 import { useLiterals } from "@/lib";
-import { apiFetch } from "@/lib/api";
+import { teamsService } from "@/lib/api/teams.service";
 import { BarChart, ChevronLeft, MessageSquare, RefreshCw, Users, Wrench } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -66,11 +66,8 @@ export function TeamDetailPage({ teamId, onNavigate }: Props) {
   const fetchAnalytics = useCallback(async () => {
     setLoadingAnalytics(true);
     try {
-      const res = await apiFetch(`/api/teams/${teamId}/analytics`);
-      if (res.ok) {
-        const d = await res.json();
-        setAnalytics(d);
-      }
+      const d = await teamsService.fetchTeamAnalytics(teamId);
+      setAnalytics(d);
     } catch (err) {
       console.error(err);
     } finally {
