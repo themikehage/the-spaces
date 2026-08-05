@@ -451,7 +451,7 @@ export function DashboardPage({ onNavigate, onSelectProject }: Props) {
                         <Info size={14} />
                       </button>
                       <button
-                        onClick={() => setDeleteRepo(repo)}
+                        onClick={() => handleDeleteRepo(repo)}
                         className="p-2 text-text-secondary hover:text-error hover:bg-error/10 rounded-md transition-colors cursor-pointer"
                         title={l.deleteTooltip}
                       >

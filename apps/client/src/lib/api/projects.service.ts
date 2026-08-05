@@ -12,6 +12,8 @@ async function createProject(data: {
   name: string;
   description?: string;
   color?: string;
+  cloneUrl?: string;
+  avatarUrl?: string;
 }): Promise<any> {
   const res = await apiFetch("/api/workspace-projects", {
     method: "POST",
