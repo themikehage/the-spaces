@@ -4,9 +4,8 @@ import { createImageGenTool } from "./image-gen.tool";
 import { createVideoGenTool } from "./video-gen.tool";
 import { createVisionTool } from "./vision.tool";
 
-import { createDecomposeTasksTool } from "./decompose.tool";
 import { createManageDelegationsTool } from "./manage-delegations.tool";
-import { createUpdateTaskTools } from "./update-task.tool";
+import { createTaskTool } from "./task.tool";
 
 export function createUiTools(
   workspaceDir: string,
@@ -337,16 +336,11 @@ export function createUiTools(
   if (subagentOptions) {
     tools.push(createManageDelegationsTool(subagentOptions));
     tools.push(
-      createDecomposeTasksTool({
+      createTaskTool({
         username: subagentOptions.username,
         parentSessionId: subagentOptions.parentSessionId,
       }),
     );
-    const updateTools = createUpdateTaskTools({
-      username: subagentOptions.username,
-      parentSessionId: subagentOptions.parentSessionId,
-    });
-    tools.push(...updateTools);
   }
 
   return tools;

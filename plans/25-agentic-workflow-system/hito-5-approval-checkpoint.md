@@ -16,24 +16,24 @@ Permitir que cualquier step de un workflow (de tipo `"approval"`) pause la ejecu
 
 ### Lo que SÍ existe
 
-| Aspecto | Estado | Detalle |
-|---------|--------|---------|
-| `ApprovalPort.requestApproval()` | OK | Puerto para solicitar aprobación en `spaces-host.port.ts` |
-| `UiApprovalRegistry` | OK | Registro de aprobaciones pendientes con WebSocket |
-| `ask_question` tool | OK | Desacoplada de modales — renderizado inline en chat |
-| Attention Hub (TopBar) | OK | Popover con badges para aprobaciones/preguntas pendientes |
-| `WorkflowRun.status: "waiting_approval"` | OK | Definido en Hito 25.3 |
-| `approveStep` / `rejectStep` en `IWorkflowEngine` | OK | Definido en Hito 25.3 |
+| Aspecto                                           | Estado | Detalle                                                   |
+| ------------------------------------------------- | ------ | --------------------------------------------------------- |
+| `ApprovalPort.requestApproval()`                  | OK     | Puerto para solicitar aprobación en `spaces-host.port.ts` |
+| `UiApprovalRegistry`                              | OK     | Registro de aprobaciones pendientes con WebSocket         |
+| `ask_question` tool                               | OK     | Desacoplada de modales — renderizado inline en chat       |
+| Attention Hub (TopBar)                            | OK     | Popover con badges para aprobaciones/preguntas pendientes |
+| `WorkflowRun.status: "waiting_approval"`          | OK     | Definido en Hito 25.3                                     |
+| `approveStep` / `rejectStep` en `IWorkflowEngine` | OK     | Definido en Hito 25.3                                     |
 
 ### Lo que NO existe
 
-| Gap | Impacto | Ubicación |
-|-----|---------|-----------|
-| Step type `"approval"` en WorkflowEngine | El engine no sabe cómo pausar y esperar | `core/workflows/step-executor.ts` (a crear en H25.3) |
-| Notificación WS de aprobación pendiente | El cliente no sabe que hay un workflow esperando | `ws-messages.ts` |
-| UI para aprobar/rechazar steps de workflow | El usuario no puede interactuar con el workflow pausado | `WorkflowRunPanel` |
-| Timeout de aprobación | Un workflow puede quedar bloqueado indefinidamente | `step-executor.ts` |
-| Historial de aprobaciones en `WorkflowRun` | No hay trazabilidad de quién aprobó qué y cuándo | `WorkflowRun` |
+| Gap                                        | Impacto                                                 | Ubicación                                            |
+| ------------------------------------------ | ------------------------------------------------------- | ---------------------------------------------------- |
+| Step type `"approval"` en WorkflowEngine   | El engine no sabe cómo pausar y esperar                 | `core/workflows/step-executor.ts` (a crear en H25.3) |
+| Notificación WS de aprobación pendiente    | El cliente no sabe que hay un workflow esperando        | `ws-messages.ts`                                     |
+| UI para aprobar/rechazar steps de workflow | El usuario no puede interactuar con el workflow pausado | `WorkflowRunPanel`                                   |
+| Timeout de aprobación                      | Un workflow puede quedar bloqueado indefinidamente      | `step-executor.ts`                                   |
+| Historial de aprobaciones en `WorkflowRun` | No hay trazabilidad de quién aprobó qué y cuándo        | `WorkflowRun`                                        |
 
 ---
 
@@ -185,7 +185,7 @@ export interface WorkflowApprovalRecord {
 
 export interface WorkflowRun {
   // ... campos existentes ...
-  approvals?: WorkflowApprovalRecord[];  // ← nuevo
+  approvals?: WorkflowApprovalRecord[]; // ← nuevo
 }
 ```
 
@@ -233,15 +233,15 @@ El banner del Attention Hub existente debe mostrar workflows con aprobaciones pe
 
 ## Archivos afectados
 
-| Archivo | Operación | Descripción |
-|---------|-----------|-------------|
-| `packages/shared/src/workflows.ts` | MODIFY | Agregar `WorkflowApprovalRecord`, campo `approvals` en `WorkflowRun` |
-| `packages/shared/src/ws-messages.ts` | MODIFY | Agregar `workflow_step_approved`, `workflow_step_rejected` |
-| `core/workflows/step-executor.ts` | MODIFY | Implementar `executeApprovalStep`, `waitForApproval`, `approveStep`, `rejectStep` |
-| `core/workflows/workflow-engine.ts` | MODIFY | Delegar `approveStep`/`rejectStep` al `StepExecutor` |
-| `apps/server/src/routes/workflows/workflow-runs.ts` | MODIFY | Endpoints `POST /runs/:runId/steps/:stepId/approve` y `/reject` |
-| `apps/client/src/components/workflows/WorkflowApprovalBanner.tsx` | NEW | Banner de aprobación en `WorkflowRunPanel` |
-| `apps/client/src/components/layout/AttentionHub.tsx` | MODIFY | Integrar eventos de workflow approval |
+| Archivo                                                           | Operación | Descripción                                                                       |
+| ----------------------------------------------------------------- | --------- | --------------------------------------------------------------------------------- |
+| `packages/shared/src/workflows.ts`                                | MODIFY    | Agregar `WorkflowApprovalRecord`, campo `approvals` en `WorkflowRun`              |
+| `packages/shared/src/ws-messages.ts`                              | MODIFY    | Agregar `workflow_step_approved`, `workflow_step_rejected`                        |
+| `core/workflows/step-executor.ts`                                 | MODIFY    | Implementar `executeApprovalStep`, `waitForApproval`, `approveStep`, `rejectStep` |
+| `core/workflows/workflow-engine.ts`                               | MODIFY    | Delegar `approveStep`/`rejectStep` al `StepExecutor`                              |
+| `apps/server/src/routes/workflows/workflow-runs.ts`               | MODIFY    | Endpoints `POST /runs/:runId/steps/:stepId/approve` y `/reject`                   |
+| `apps/client/src/components/workflows/WorkflowApprovalBanner.tsx` | NEW       | Banner de aprobación en `WorkflowRunPanel`                                        |
+| `apps/client/src/components/layout/AttentionHub.tsx`              | MODIFY    | Integrar eventos de workflow approval                                             |
 
 ---
 

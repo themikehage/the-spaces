@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/Button";
 import { Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { McpServerConfig } from "shared";
+import type { McpServerConfig, McpTransportType } from "shared";
 
 interface MCPCustomFormProps {
   initialConfig?: McpServerConfig | null;
@@ -21,7 +21,7 @@ interface EnvVarRow {
 export function MCPCustomForm({ initialConfig, onSubmit, onCancel, onTest }: MCPCustomFormProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [transport, setTransport] = useState<"stdio" | "http">("stdio");
+  const [transport, setTransport] = useState<McpTransportType>("stdio");
   const [command, setCommand] = useState("npx");
   const [argsStr, setArgsStr] = useState("[]");
   const [url, setUrl] = useState("");

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import type { JsonlSessionStore } from "../stores/session-persistence";
 import type { Agent } from "../../vendor/agent/src/agent.ts";
+import type { JsonlSessionStore } from "../stores/session-persistence";
 
 export class NavigationController {
   constructor(
@@ -37,7 +37,8 @@ export class NavigationController {
     const sId = this.sessionStore.getSessionId();
     try {
       const registry =
-        this.delegationRegistry ?? (await import("../delegation/delegation-registry")).delegationRegistry;
+        this.delegationRegistry ??
+        (await import("../delegation/delegation-registry")).delegationRegistry;
       if (registry && typeof registry.abortAllForParentSession === "function") {
         registry.abortAllForParentSession(sId);
       }

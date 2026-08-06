@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import type { AgentSessionEvent } from "../session/agent-session";
 import type { IEventBus } from "../ports/event-bus.port";
+import type { AgentSessionEvent } from "../session/agent-session";
 
 export type EventListener<T = unknown> = (evt: T) => void;
 

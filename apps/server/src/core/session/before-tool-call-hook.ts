@@ -66,7 +66,7 @@ export function createBeforeToolCallHook({
       return { block: true, reason: `[Permission Denied] ${verdict.reason}` };
     }
 
-    const harmlessTools = ["ask_question", "request_approval", "memory_recall"];
+    const harmlessTools = ["ask_question", "request_approval", "memory"];
     const needsApproval =
       verdict.allow === "ask" ||
       (resolvedAutonomy === "propose" && !harmlessTools.includes(toolName));

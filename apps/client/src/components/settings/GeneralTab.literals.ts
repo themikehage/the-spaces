@@ -118,6 +118,22 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     showPromptPreviews: "Show System Prompt Previews",
     showPromptPreviewsDesc:
       "Displays full runtime system prompt inspectors in Agent, Repo, Team, Sub-agent, and Global settings.",
+
+    memorySectionTitle: "Session Memory",
+    memorySectionDesc:
+      "Enable long-term vector memory recall and auto-storage for active sessions.",
+    enableMemory: "Enable Long-term Memory",
+    autoStoreInteractions: "Automatically Store Session Interactions",
+    memoryLocalNotice: "Session memory is indexed locally using embedded vector stores.",
+
+    exaSearchTitle: "Exa AI Search",
+    exaSearchDesc:
+      "Enable semantic web search powered by Exa AI for documentation and web research.",
+    enableExaSearch: "Enable Global Exa Search",
+    exaKeyConfigured: "EXA_API_KEY Configured",
+    exaKeyMissing: "Missing EXA_API_KEY",
+    missingExaKeyNotice:
+      "EXA_API_KEY is not configured in Environment Variables. Add EXA_API_KEY in Settings > Env Vars to enable web search.",
   },
   es: {
     appearance: "Apariencia",
@@ -235,5 +251,22 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     showPromptPreviews: "Mostrar Previsualización de Prompts del Sistema",
     showPromptPreviewsDesc:
       "Muestra el inspector del system prompt completo en los ajustes de Agentes, Repos, Equipos, Sub-agentes y Global.",
+
+    memorySectionTitle: "Memoria de Sesión",
+    memorySectionDesc:
+      "Activa el almacenamiento y recuperación de memoria vectorial de largo plazo para sesiones.",
+    enableMemory: "Activar Memoria de Largo Plazo",
+    autoStoreInteractions: "Guardar Interacciones de Sesión Automáticamente",
+    memoryLocalNotice:
+      "La memoria de sesión se indexa localmente usando almacenes vectoriales embebidos.",
+
+    exaSearchTitle: "Búsqueda Exa AI",
+    exaSearchDesc:
+      "Activa búsqueda web semántica impulsada por Exa AI para documentación e investigación.",
+    enableExaSearch: "Activar Búsqueda Global Exa",
+    exaKeyConfigured: "EXA_API_KEY Configurada",
+    exaKeyMissing: "Falta EXA_API_KEY",
+    missingExaKeyNotice:
+      "EXA_API_KEY no está configurada en Variables de Entorno. Agregala en Ajustes > Env Vars para habilitar la búsqueda web.",
   },
 };

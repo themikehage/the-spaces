@@ -16,23 +16,23 @@ Implementar un sistema de trazabilidad completo que permita ver el árbol de eje
 
 ### Lo que SÍ existe
 
-| Aspecto | Estado | Detalle |
-|---------|--------|---------|
-| `ObservabilityService` | OK | Registra tool calls individuales en JSONL (`tool-calls.jsonl`) |
-| `DelegationRegistry.getAll()` | OK | Lista delegaciones de una sesión padre |
-| `DelegationsPanel` | OK | Muestra delegaciones con estado y `executive_summary` |
-| `/api/logs/tool-calls` | OK | Endpoint de auditoría de tool calls |
-| `AgentRuntimeEvent` (WS) | OK | Eventos de herramientas enviados al cliente en tiempo real |
+| Aspecto                       | Estado | Detalle                                                        |
+| ----------------------------- | ------ | -------------------------------------------------------------- |
+| `ObservabilityService`        | OK     | Registra tool calls individuales en JSONL (`tool-calls.jsonl`) |
+| `DelegationRegistry.getAll()` | OK     | Lista delegaciones de una sesión padre                         |
+| `DelegationsPanel`            | OK     | Muestra delegaciones con estado y `executive_summary`          |
+| `/api/logs/tool-calls`        | OK     | Endpoint de auditoría de tool calls                            |
+| `AgentRuntimeEvent` (WS)      | OK     | Eventos de herramientas enviados al cliente en tiempo real     |
 
 ### Lo que NO existe
 
-| Gap | Impacto | Ubicación |
-|-----|---------|-----------|
-| `WorkflowTrace` — árbol unificado | No hay vista global padre+subagentes+tool calls | (no existe) |
-| `/api/sessions/:id/workflow-trace` | No hay endpoint para obtener el árbol completo | `routes/sessions/` |
-| `WorkflowRunPanel` con árbol visual | `DelegationsPanel` muestra solo 1 nivel de profundidad | `apps/client` |
+| Gap                                          | Impacto                                                               | Ubicación              |
+| -------------------------------------------- | --------------------------------------------------------------------- | ---------------------- |
+| `WorkflowTrace` — árbol unificado            | No hay vista global padre+subagentes+tool calls                       | (no existe)            |
+| `/api/sessions/:id/workflow-trace`           | No hay endpoint para obtener el árbol completo                        | `routes/sessions/`     |
+| `WorkflowRunPanel` con árbol visual          | `DelegationsPanel` muestra solo 1 nivel de profundidad                | `apps/client`          |
 | Correlación de tool calls con workflow steps | No hay link entre una tool call y el step del workflow que la originó | `ObservabilityService` |
-| Métricas agregadas por workflow run | Tokens totales, tiempo total, tasa de éxito por step | (no existe) |
+| Métricas agregadas por workflow run          | Tokens totales, tiempo total, tasa de éxito por step                  | (no existe)            |
 
 ---
 
@@ -141,13 +141,8 @@ export class WorkflowTraceBuilder {
 
     const children: WorkflowTraceNode[] = await Promise.all(
       delegations.map((d) =>
-        this.buildNode(
-          username,
-          d.subagentSessionId,
-          d.toolCallId,
-          d.task.slice(0, 80),
-        )
-      )
+        this.buildNode(username, d.subagentSessionId, d.toolCallId, d.task.slice(0, 80)),
+      ),
     );
 
     return {
@@ -210,6 +205,7 @@ WorkflowRunPanel
 ```
 
 **Interactividad:**
+
 - Click en un nodo → abre la sesión asociada en el chat (navegación directa)
 - Expand/collapse de subárboles
 - Filtro por estado (solo errores, solo running)
@@ -222,8 +218,8 @@ WorkflowRunPanel
 
 export interface ToolCallRecord {
   // ... existente ...
-  workflowRunId?: string;   // ← nuevo
-  workflowStepId?: string;  // ← nuevo
+  workflowRunId?: string; // ← nuevo
+  workflowStepId?: string; // ← nuevo
 }
 ```
 
@@ -243,15 +239,15 @@ subagentMetadata = {
 
 ## Archivos afectados
 
-| Archivo | Operación | Descripción |
-|---------|-----------|-------------|
-| `packages/shared/src/workflows.ts` | MODIFY | Agregar `WorkflowTrace`, `WorkflowTraceNode` |
-| `core/workflows/workflow-trace-builder.ts` | NEW | Construye el árbol de traza recursivamente |
-| `core/observability/observability-service.ts` | MODIFY | Agregar `getMetricsForSession()`, campos `workflowRunId` y `workflowStepId` |
-| `apps/server/src/routes/sessions/session-analytics.ts` | MODIFY | Agregar `GET /api/sessions/:id/workflow-trace` |
-| `apps/server/src/routes/workflows/workflow-runs.ts` | MODIFY | Agregar `GET /api/workflows/runs/:runId/trace` |
-| `apps/client/src/components/workflows/WorkflowTreeView.tsx` | NEW | Árbol visual de ejecución |
-| `apps/client/src/components/workflows/WorkflowRunPanel.tsx` | MODIFY | Integrar `WorkflowTreeView` y métricas |
+| Archivo                                                     | Operación | Descripción                                                                 |
+| ----------------------------------------------------------- | --------- | --------------------------------------------------------------------------- |
+| `packages/shared/src/workflows.ts`                          | MODIFY    | Agregar `WorkflowTrace`, `WorkflowTraceNode`                                |
+| `core/workflows/workflow-trace-builder.ts`                  | NEW       | Construye el árbol de traza recursivamente                                  |
+| `core/observability/observability-service.ts`               | MODIFY    | Agregar `getMetricsForSession()`, campos `workflowRunId` y `workflowStepId` |
+| `apps/server/src/routes/sessions/session-analytics.ts`      | MODIFY    | Agregar `GET /api/sessions/:id/workflow-trace`                              |
+| `apps/server/src/routes/workflows/workflow-runs.ts`         | MODIFY    | Agregar `GET /api/workflows/runs/:runId/trace`                              |
+| `apps/client/src/components/workflows/WorkflowTreeView.tsx` | NEW       | Árbol visual de ejecución                                                   |
+| `apps/client/src/components/workflows/WorkflowRunPanel.tsx` | MODIFY    | Integrar `WorkflowTreeView` y métricas                                      |
 
 ---
 

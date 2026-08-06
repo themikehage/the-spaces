@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { describe, expect, test } from "bun:test";
-import { OpenAICompatibleProvider, type FetchFunction } from "../core/providers/openai-compatible";
 import type { MessageDelta } from "../core/ports/model.port";
+import { OpenAICompatibleProvider, type FetchFunction } from "../core/providers/openai-compatible";
 
 function createMockStream(chunks: string[]): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder();

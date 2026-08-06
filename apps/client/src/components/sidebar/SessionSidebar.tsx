@@ -1,17 +1,18 @@
 // SPDX-License-Identifier: MIT
 import { AgentAvatar } from "@/components/shared/AgentAvatar";
 import { useSessionList } from "@/hooks/useSessionList";
+import { useWorkflowList } from "@/hooks/useWorkflowList";
 import {
   ArrowRight,
-  ArrowUpDown,
   BookOpen,
   Calendar,
   ChevronRight,
   FolderPlus,
+  GitBranch,
   Settings,
 } from "lucide-react";
-import { useMemo } from "react";
-import { AgentListItem, ProjectListItem, TeamListItem } from "./SessionListItem";
+import { useMemo, useState } from "react";
+import { AgentListItem, ProjectListItem, TeamListItem, WorkflowListItem } from "./SessionListItem";
 
 interface Props {
   currentPage?: string;
@@ -32,6 +33,9 @@ export function SessionSidebar({
     isMobile,
     onCloseSidebar,
   });
+
+  const { workflows, loading: loadingWorkflows } = useWorkflowList();
+  const [isOpenWorkflows, setIsOpenWorkflows] = useState(true);
 
   const accordionHeaderClass = isMobile
     ? "group/title flex items-center px-4 py-3 h-12 text-sm uppercase tracking-wider font-semibold text-muted-foreground"
@@ -57,19 +61,19 @@ export function SessionSidebar({
         icon: <Calendar size={14} />,
       },
       {
+        id: "workflows",
+        label: "Workflows",
+        path: "/workflows",
+        icon: <GitBranch size={14} />,
+      },
+      {
         id: "settings",
         label: state.l.navSettings,
         path: "/settings",
         icon: <Settings size={14} />,
       },
-      {
-        id: "plugins",
-        label: state.l.navPlugins || "Plugins",
-        path: "/plugins",
-        icon: <ArrowUpDown size={14} />,
-      },
     ],
-    [state.l.navSkills, state.l.navSettings, state.l.navPlugins],
+    [state.l.navSkills, state.l.navSettings],
   );
 
   return (
@@ -283,6 +287,62 @@ export function SessionSidebar({
                       isMobile={isMobile}
                       itemClass={state.itemClass}
                       onClick={state.handleSelectTeamClick}
+                    />
+                  );
+                })
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Workflows Accordion */}
+        <div className="flex flex-col">
+          <div className={accordionHeaderClass} onClick={() => setIsOpenWorkflows((prev) => !prev)}>
+            <ChevronRight
+              size={chevronSize}
+              className={`transform transition-transform ${isOpenWorkflows ? "rotate-90" : ""}`}
+            />
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onCloseSidebar?.();
+                onNavigate?.("/workflows");
+              }}
+              className={accordionButtonClass}
+            >
+              <span className="ml-2">Workflows ({workflows.length})</span>
+              <ArrowRight
+                size={isMobile ? 20 : 12}
+                className="text-muted-foreground flex-shrink-0"
+              />
+            </button>
+          </div>
+
+          {isOpenWorkflows && (
+            <div className={isMobile ? "px-3 mt-1 space-y-1.5" : "px-2 mt-1 space-y-0.5"}>
+              {loadingWorkflows ? (
+                <div className="text-xs text-muted-foreground px-3 py-1 animate-pulse">
+                  {state.l.loading}
+                </div>
+              ) : workflows.length === 0 ? (
+                <div className="text-xs text-muted-foreground px-3 py-1">No workflows</div>
+              ) : (
+                workflows.map((wf) => {
+                  const isActive =
+                    currentPage === "workflows" &&
+                    window.location.pathname.includes(`/workflows/${wf.id}`);
+                  return (
+                    <WorkflowListItem
+                      key={wf.id}
+                      id={wf.id}
+                      name={wf.name}
+                      stepsCount={wf.steps?.length || 0}
+                      isActive={isActive}
+                      itemClass={state.itemClass}
+                      onClick={(id) => {
+                        onCloseSidebar?.();
+                        onNavigate?.(`/workflows/${id}`);
+                      }}
                     />
                   );
                 })

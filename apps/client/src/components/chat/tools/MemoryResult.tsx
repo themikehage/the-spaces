@@ -2,7 +2,7 @@
 import type { ToolResultData } from "./ToolCallRow";
 
 interface Props {
-  mode: "recall" | "store" | "forget";
+  mode: "read" | "upsert" | "delete" | "recall" | "store" | "forget";
   args?: Record<string, unknown>;
   details?: ToolResultData["details"];
   l: Record<string, string>;
@@ -145,10 +145,13 @@ function ForgetView({
 
 export function MemoryResult({ mode, args, details, l }: Props) {
   switch (mode) {
+    case "read":
     case "recall":
       return <RecallView details={details} l={l} />;
+    case "upsert":
     case "store":
       return <StoreView args={args} details={details} l={l} />;
+    case "delete":
     case "forget":
       return <ForgetView details={details} l={l} />;
   }

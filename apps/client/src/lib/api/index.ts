@@ -13,4 +13,5 @@ export * from "./sessions.service";
 export * from "./settings.service";
 export * from "./skills.service";
 export * from "./teams.service";
+export * from "./workflows.service";
 export * from "./workspace.service";

@@ -8,14 +8,36 @@ import type { ModelRegistry } from "..";
  * from an agent's response text.
  */
 export function parseEnvelope(text: string): EnvelopeResult {
+  const cleanText = text.trim();
+
+  const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
+  if (jsonMatch) {
+    try {
+      const parsed = JSON.parse(jsonMatch[0]);
+      if (parsed.status || parsed.executive_summary) {
+        const validStatuses = ["success", "partial", "blocked", "error"] as const;
+        return {
+          status: validStatuses.includes(parsed.status) ? parsed.status : "success",
+          executive_summary: parsed.executive_summary ?? cleanText.slice(0, 300),
+          artifacts: parsed.artifacts ?? "none",
+          risks: parsed.risks ?? "None",
+          outputs:
+            typeof parsed.outputs === "object" && parsed.outputs !== null ? parsed.outputs : {},
+        };
+      }
+    } catch {
+      // ignore json parse error, fallback to line parsing
+    }
+  }
+
   const result: EnvelopeResult = {
     status: "success",
     executive_summary: "",
     artifacts: "none",
     risks: "None",
+    outputs: {},
   };
 
-  const cleanText = text.trim();
   result.executive_summary = cleanText.slice(0, 500);
 
   const lines = cleanText.split("\n");
@@ -174,6 +196,10 @@ export function formatDelegationResultMessage(
 
   if (envelope.risks && envelope.risks !== "None") {
     parts.push(`Risks: ${envelope.risks}`);
+  }
+
+  if (envelope.outputs && Object.keys(envelope.outputs).length > 0) {
+    parts.push(`Outputs:\n${JSON.stringify(envelope.outputs, null, 2)}`);
   }
 
   if (outputText && outputText.trim()) {

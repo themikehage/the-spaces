@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: MIT
+import { useEntityConfig } from "@/hooks/useEntityConfig";
 import { useLiterals } from "@/lib";
 import { providersService } from "@/lib/api/providers.service";
 import { sessionsService } from "@/lib/api/sessions.service";
+import { STORAGE_KEYS, storage } from "@/lib/storage";
 import { ChevronDown, ChevronLeft, ChevronRight, Plus, Table } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import type { EntityType } from "shared";
 import { literals as u } from "./ChatInput.literals";
 import { PortalPopover } from "./PortalPopover";
 
@@ -27,10 +30,9 @@ interface Props {
   value?: string;
   onChange?: (modelId: string) => void;
   compact?: boolean;
+  entityType?: EntityType;
+  entityId?: string;
 }
-
-const STORAGE_KEY = "crewfy-selected-model";
-const RECENT_MODELS_KEY = "crewfy-recent-models";
 
 function parseModelString(modelId: string): SelectedModel | null {
   if (!modelId) return null;
@@ -49,31 +51,27 @@ export function ModelSelector({
   value,
   onChange,
   compact = false,
+  entityType,
+  entityId,
 }: Props) {
   const controlled = onChange !== undefined;
   const l = useLiterals(u);
+
+  const { resolvedConfig, patchConfig } = useEntityConfig(
+    entityType || "global",
+    entityId || "global",
+  );
 
   const [providers, setProviders] = useState<ProviderInfo[]>([]);
   const [selected, setSelected] = useState<SelectedModel | null>(() => {
     if (controlled) {
       return value ? parseModelString(value) : null;
     }
-    try {
-      const raw =
-        localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem("crewfy-selected-model");
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
+    const stored = storage.getJSON<SelectedModel>(STORAGE_KEYS.selectedModel);
+    return stored ?? null;
   });
   const [recentModels, setRecentModels] = useState<SelectedModel[]>(() => {
-    try {
-      const raw =
-        localStorage.getItem(RECENT_MODELS_KEY) ?? localStorage.getItem("pi-recent-models");
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
+    return storage.getJSON<SelectedModel[]>(STORAGE_KEYS.recentModels) ?? [];
   });
   const [open, setOpen] = useState(false);
   const [activeProvider, setActiveProvider] = useState<string | null>(null);
@@ -107,6 +105,15 @@ export function ModelSelector({
   }, [controlled, value]);
 
   useEffect(() => {
+    if (!controlled && resolvedConfig.defaultModel) {
+      const parsed = parseModelString(resolvedConfig.defaultModel);
+      if (parsed) {
+        setSelected(parsed);
+      }
+    }
+  }, [controlled, resolvedConfig.defaultModel]);
+
+  useEffect(() => {
     providersService
       .fetchProviders()
       .then((data) => {
@@ -135,7 +142,7 @@ export function ModelSelector({
             modelName: firstModel.name,
           };
           setSelected(fallbackSelection);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(fallbackSelection));
+          storage.setJSON(STORAGE_KEYS.selectedModel, fallbackSelection);
           setError(null);
         }
       }
@@ -149,7 +156,7 @@ export function ModelSelector({
           modelName: firstModel.name,
         };
         setSelected(fallbackSelection);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(fallbackSelection));
+        storage.setJSON(STORAGE_KEYS.selectedModel, fallbackSelection);
         setError(null);
       }
     }
@@ -166,9 +173,13 @@ export function ModelSelector({
       setRecentModels((prev) => {
         const filtered = prev.filter((rm) => !(rm.provider === provider && rm.modelId === modelId));
         const updated = [newSelection, ...filtered].slice(0, 5);
-        localStorage.setItem(RECENT_MODELS_KEY, JSON.stringify(updated));
+        storage.setJSON(STORAGE_KEYS.recentModels, updated);
         return updated;
       });
+
+      if (entityType && entityId) {
+        await patchConfig({ defaultModel: `${provider}/${modelId}` });
+      }
 
       if (sessionId) {
         applyModelToSession(newSelection, sessionId);
@@ -179,9 +190,9 @@ export function ModelSelector({
         return;
       }
 
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newSelection));
+      storage.setJSON(STORAGE_KEYS.selectedModel, newSelection);
     },
-    [controlled, onChange, sessionId, applyModelToSession],
+    [controlled, onChange, sessionId, entityType, entityId, patchConfig, applyModelToSession],
   );
 
   const isModelAvailable = useCallback(

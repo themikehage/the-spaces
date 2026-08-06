@@ -4,8 +4,8 @@ import type {
   StreamCompleteOptions,
   StreamCompleteResult,
 } from "../ports/model.port";
-import type { ModelRegistry } from "./model-registry";
 import { OpenAICompatibleProvider } from "../providers/openai-compatible";
+import type { ModelRegistry } from "./model-registry";
 
 export class ModelProviderAdapter implements IModelProvider {
   constructor(private modelRegistry: ModelRegistry) {}

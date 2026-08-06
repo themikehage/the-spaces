@@ -47,18 +47,18 @@ Welcome to Spaces. As the Global Spaces Director, you are responsible for orches
 ## Principles of Operation
 
 1. **Be Conversational & Helpful:** Explain what you are doing before executing actions. Keep the user informed.
-2. **Use Native Tools:** Always prefer Spaces tools (\`manage_factory\`, \`manage_delegations\`, \`decompose_tasks\`, \`read\`, \`write\`, \`bash\`) over raw HTTP calls.
-3. **Structured Task Planning:** For complex multi-step user requests, ALWAYS register a task plan with \`decompose_tasks\` before starting execution.
+2. **Use Native Tools:** Always prefer Spaces tools (\`manage_factory\`, \`manage_delegations\`, \`task\`, \`read\`, \`write\`, \`bash\`) over raw HTTP calls.
+3. **Structured Task Planning:** For complex multi-step user requests, ALWAYS register a task plan with \`task(action: "start", ...)\` before starting execution.
 4. **Clean Workspace Practices:** Maintain files neatly. Clean up temporary files when finished.
 
 ## Structured Task Planning (CRITICAL)
 If the user requests a complex, multi-step implementation or feature:
 - First, break down the objective into a structured array of tasks, specifying their IDs ("t1", "t2", etc.), descriptive titles, detailed self-contained instructions, and depends_on dependencies.
-- ALWAYS call the \`decompose_tasks(objective: "...", tasks: [...])\` tool to register your structured plan. Do not perform any execution actions before registering the plan.
+- ALWAYS call the \`task(action: "start", objective: "...", tasks: [...])\` tool to register your structured plan. Do not perform any execution actions before registering the plan.
 - Walk through the tasks in the plan sequentially, respecting the \`depends_on\` dependencies.
 - Explain to the user which task you are executing before performing the changes.
 - Once a task is complete, summarize the outcome before moving to the next.
-- If a task fails, re-plan the remaining steps and register the new plan by calling \`decompose_tasks\` again.
+- If a task fails, re-plan the remaining steps and register the new plan by calling \`task(action: "start", ...)\` again.
 
 ## Subagent Delegation (ORCHESTRATOR GATE)
 You are the Global Spaces Director — an ORCHESTRATOR, not an executor.
@@ -77,87 +77,6 @@ export const DEFAULT_FACTORY_SKILLS: Record<
   string,
   { name: string; description: string; content: string }
 > = {
-  "factory-pipelines": {
-    name: "factory-pipelines",
-    description: "Create, run, and monitor deterministic linear execution pipelines.",
-    content: `---
-name: factory-pipelines
-description: Create, run, and monitor deterministic linear execution pipelines.
----
-
-# Linear Pipelines Guide
-
-Pipelines are deterministic, linear sequences of stages. Unlike channels (which are collaborative and conversational), pipelines execute stages strictly in order. A failure at any stage stops the pipeline immediately (fail-fast).
-
-Always use the \`manage_pipelines\` tool to execute and debug pipelines.
-
-## Stage Types
-- **script**: Runs a bash script directly. No LLM. Extremely fast and deterministic.
-- **agent**: Delegates to an agent with a prompt, using LLM reasoning.
-
-## Actions available in \`manage_pipelines\`
-
-### 1. Create or Update a Pipeline (upsert)
-Call \`manage_pipelines\` with \`action: "upsert"\`, \`id: "pipeline-id"\`. You can specify stages and save scripts inline:
-
-\`\`\`json
-{
-  "action": "upsert",
-  "id": "my-pipeline",
-  "params": {
-    "name": "My Pipeline",
-    "description": "Lint and test",
-    "stages": [
-      {
-        "id": "lint",
-        "name": "Run Linter",
-        "type": "script",
-        "script": "lint.sh",
-        "timeoutMs": 60000,
-        "outputSchema": [
-          { "name": "passed", "type": "boolean", "description": "true if lint passed" }
-        ]
-      },
-      {
-        "id": "report",
-        "name": "Report Results",
-        "type": "agent",
-        "prompt": "Review the lint result: {{stages.lint.output.passed}}. Report your recommendation."
-      }
-    ],
-    "scripts": {
-      "lint.sh": "#!/bin/bash\\nset -e\\npnpm lint\\necho '---OUTPUT---'\\necho '{"passed":true}'\\necho '---END OUTPUT---'"
-    }
-  }
-}
-\`\`\`
-
-### 2. Run a Pipeline (run)
-Call \`manage_pipelines(action: "run", id: "my-pipeline")\` to trigger execution in the background (fire-and-forget). This returns a \`runId\` immediately:
-\`\`\`json
-{ "runId": "run_abc123", "message": "Pipeline started" }
-\`\`\`
-
-### 3. Check Run Summary (get)
-Call \`manage_pipelines(action: "get", id: "my-pipeline/runs/run_abc123")\` to get a quick summary.
-
-### 4. Debug a Failed Run (get_run)
-If a run fails, call \`manage_pipelines\` with \`action: "get_run"\` and \`params: { "runId": "run_abc123" }\` to get a detailed status containing the full \`rawOutput\` and \`stderr\` of each stage.
-
-### 5. Inspect and Patch Scripts
-- Read script: \`manage_pipelines(action: "read_script", id: "my-pipeline", params: { "scriptName": "lint.sh" })\`
-- Patch script: \`manage_pipelines(action: "patch_script", id: "my-pipeline", params: { "scriptName": "lint.sh", "content": "#!/bin/bash\\n..." })\`
-
-### 6. Abort a Run
-Call \`manage_pipelines(action: "abort", id: "my-pipeline", params: { "runId": "run_abc123" })\` to cancel execution.
-
-## Common Debugging Workflow
-1. Check failure: \`manage_pipelines(action: "get_run", id: "my-pipeline", params: { "runId": "run_abc123" })\` to read logs.
-2. Read the failing script: \`manage_pipelines(action: "read_script", id: "my-pipeline", params: { "scriptName": "lint.sh" })\`.
-3. Patch the script: \`manage_pipelines(action: "patch_script", id: "my-pipeline", params: { "scriptName": "lint.sh", "content": "fixed-content" })\`.
-4. Re-run execution: \`manage_pipelines(action: "run", id: "my-pipeline")\`.
-`,
-  },
   "factory-teams": {
     name: "factory-teams",
     description: "Create and manage Orchestration and Negotiation teams of agents.",

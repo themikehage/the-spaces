@@ -11,8 +11,12 @@ import {
 import { join } from "node:path";
 import {
   type AgentScopeTarget,
+  getAgentWorkspaceDir,
+  getProjectWorkspaceDir,
   getScopeConfigPath,
+  getTeamWorkspaceDir,
   getUserDir,
+  getWorkspaceDir,
   SPACES_DATA_PATH,
   USERS_DIR,
 } from "shared";
@@ -439,7 +443,45 @@ export class ScopeConfigManager {
       }
 
       this.persist(username, config);
+      this.syncDotSpacesConfig(username, target, payload);
     });
+  }
+
+  private syncDotSpacesConfig(
+    username: string,
+    target: ToolScopeTarget,
+    payload: { add: string[]; remove: string[] },
+  ) {
+    let workspaceDir: string | null = null;
+    if (target.type === "global") workspaceDir = getWorkspaceDir(username);
+    else if (target.type === "agent") workspaceDir = getAgentWorkspaceDir(username, target.id);
+    else if (target.type === "project") workspaceDir = getProjectWorkspaceDir(username, target.id);
+    else if (target.type === "team") workspaceDir = getTeamWorkspaceDir(username, target.id);
+
+    if (!workspaceDir) return;
+
+    try {
+      const dotSpacesDir = join(workspaceDir, ".spaces");
+      if (!existsSync(dotSpacesDir)) {
+        mkdirSync(dotSpacesDir, { recursive: true });
+      }
+      const configPath = join(dotSpacesDir, "config.json");
+      let existing: Record<string, unknown> = {};
+      if (existsSync(configPath)) {
+        try {
+          existing = JSON.parse(readFileSync(configPath, "utf-8"));
+        } catch {
+          existing = {};
+        }
+      }
+      existing.toolOverrides = {
+        add: payload.add,
+        remove: payload.remove ?? [],
+      };
+      writeFileSync(configPath, JSON.stringify(existing, null, 2), "utf-8");
+    } catch (err) {
+      console.error(`[ScopeConfigManager] Failed to sync .spaces/config.json:`, err);
+    }
   }
 
   async removeProjectScope(username: string, projectId: string): Promise<void> {

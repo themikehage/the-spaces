@@ -50,27 +50,56 @@ export class LocalMemoryProvider implements MemoryProvider {
     }
   }
 
+  async upsert(
+    id: string | undefined,
+    content: string,
+    type: MemoryType = "semantic",
+    importance = 0.5,
+    tags: string[] = [],
+    sessionId?: string,
+  ): Promise<string> {
+    const targetId = id || crypto.randomUUID();
+    const tagsJson = JSON.stringify(tags);
+    const now = Date.now();
+
+    if (id) {
+      const existing = this.db.query("SELECT id FROM memories WHERE id = ?").get(id);
+      if (existing) {
+        this.db.run(
+          "UPDATE memories SET content = ?, type = ?, importance = ?, tags = ?, session_id = ? WHERE id = ?",
+          [content, type, importance, tagsJson, sessionId || null, id],
+        );
+        this.db.run("DELETE FROM memories_fts WHERE id = ?", [id]);
+        this.db.run("INSERT INTO memories_fts (id, content, tags) VALUES (?, ?, ?)", [
+          id,
+          content,
+          tagsJson,
+        ]);
+        return id;
+      }
+    }
+
+    this.db.run(
+      "INSERT INTO memories (id, content, type, importance, tags, session_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [targetId, content, type, importance, tagsJson, sessionId || null, now],
+    );
+    this.db.run("INSERT INTO memories_fts (id, content, tags) VALUES (?, ?, ?)", [
+      targetId,
+      content,
+      tagsJson,
+    ]);
+
+    return targetId;
+  }
+
   async store(
     content: string,
-    type: MemoryType,
+    type: MemoryType = "semantic",
     importance = 0.5,
     tags: string[] = [],
     sessionId?: string,
   ): Promise<void> {
-    const id = crypto.randomUUID();
-    const tagsJson = JSON.stringify(tags);
-    const now = Date.now();
-
-    this.db.run(
-      "INSERT INTO memories (id, content, type, importance, tags, session_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      [id, content, type, importance, tagsJson, sessionId || null, now],
-    );
-
-    this.db.run("INSERT INTO memories_fts (id, content, tags) VALUES (?, ?, ?)", [
-      id,
-      content,
-      tagsJson,
-    ]);
+    await this.upsert(undefined, content, type, importance, tags, sessionId);
   }
 
   async recall(query: string, opts?: RecallOptions): Promise<RecalledMemory[]> {

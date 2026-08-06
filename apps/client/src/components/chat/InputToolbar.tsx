@@ -1,7 +1,7 @@
 import { useLiterals, type ContextUsage } from "@/lib";
 import { BookOpen, Paperclip, Sliders } from "lucide-react";
 import { useRef, useState } from "react";
-import type { EntityType } from "shared";
+import type { EntityType, ExecutionMode } from "shared";
 import { literals as u } from "./ChatInput.literals";
 import { ContextButton } from "./ContextButton";
 import { ModelSelector } from "./ModelSelector";
@@ -15,7 +15,7 @@ interface InputToolbarProps {
   streaming: boolean;
   disabled: boolean;
   activeTools: string[];
-  onToolsChange: (tools: string[], executionMode?: "readonly" | "standard" | "autonomous") => void;
+  onToolsChange: (tools: string[], executionMode?: ExecutionMode) => void;
   skills: SkillInfo[];
   skillsLoading: boolean;
   onSelectSkill: (skillName: string) => void;
@@ -26,7 +26,7 @@ interface InputToolbarProps {
   contextUsage?: ContextUsage | null;
   onCompact?: () => void;
   compacting?: boolean;
-  executionMode?: "readonly" | "standard" | "autonomous";
+  executionMode?: ExecutionMode;
   entityType?: EntityType;
   entityId?: string;
 }
@@ -91,7 +91,13 @@ export function InputToolbar({
           <Paperclip size={14} />
         </button>
 
-        <ModelSelector sessionId={sessionId} disabled={disabled} compact={true} />
+        <ModelSelector
+          sessionId={sessionId}
+          disabled={disabled}
+          compact={true}
+          entityType={entityType}
+          entityId={entityId}
+        />
 
         <div className="relative">
           <button
@@ -140,6 +146,9 @@ export function InputToolbar({
             toolStatus={toolStatus}
             disabled={disabled}
             executionMode={executionMode}
+            entityType={entityType}
+            entityId={entityId}
+            sessionId={sessionId}
           />
         </div>
 

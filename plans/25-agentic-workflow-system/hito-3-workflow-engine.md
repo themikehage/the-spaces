@@ -16,26 +16,26 @@ Implementar el concepto de **Workflow** como entidad de primera clase en Spaces:
 
 ### Lo que SÍ existe (base reutilizable)
 
-| Aspecto | Detalle |
-|---------|---------|
-| `DelegationRegistry` | Registro de delegaciones activas con BFS abort en cascada |
-| `SpacesHost.delegations` | Puerto de delegaciones inyectable |
-| `IAgentRuntime` | Contrato de runtime de agente — el engine delega a estos |
-| `ExecutionPipelineSchema` | Pipeline de steps — inspiración del modelo de WorkflowStep |
-| `CascadeConfigLoader` | Herencia de config por entidad — mismo patrón para workflows |
-| `ScheduleService` | Ejecución periódica desacoplada — referencia de arquitectura in-process |
+| Aspecto                   | Detalle                                                                 |
+| ------------------------- | ----------------------------------------------------------------------- |
+| `DelegationRegistry`      | Registro de delegaciones activas con BFS abort en cascada               |
+| `SpacesHost.delegations`  | Puerto de delegaciones inyectable                                       |
+| `IAgentRuntime`           | Contrato de runtime de agente — el engine delega a estos                |
+| `ExecutionPipelineSchema` | Pipeline de steps — inspiración del modelo de WorkflowStep              |
+| `CascadeConfigLoader`     | Herencia de config por entidad — mismo patrón para workflows            |
+| `ScheduleService`         | Ejecución periódica desacoplada — referencia de arquitectura in-process |
 
 ### Lo que NO existe (a construir)
 
-| Entidad | Descripción |
-|---------|-------------|
-| `WorkflowDefinition` | Contrato de un workflow en `packages/shared` |
-| `WorkflowStep` | Paso individual: agente, tool, approval, parallel |
-| `WorkflowRun` | Instancia de ejecución de un workflow |
-| `WorkflowEngine` | Motor de ejecución del DAG |
-| `IWorkflowEngine` | Puerto en `core/ports/` |
-| REST `/api/workflows` | CRUD + trigger |
-| UI `WorkflowBuilderPage` | Editor visual del grafo |
+| Entidad                  | Descripción                                       |
+| ------------------------ | ------------------------------------------------- |
+| `WorkflowDefinition`     | Contrato de un workflow en `packages/shared`      |
+| `WorkflowStep`           | Paso individual: agente, tool, approval, parallel |
+| `WorkflowRun`            | Instancia de ejecución de un workflow             |
+| `WorkflowEngine`         | Motor de ejecución del DAG                        |
+| `IWorkflowEngine`        | Puerto en `core/ports/`                           |
+| REST `/api/workflows`    | CRUD + trigger                                    |
+| UI `WorkflowBuilderPage` | Editor visual del grafo                           |
 
 ---
 
@@ -106,12 +106,15 @@ export interface WorkflowDefinition {
     entityId?: string;
   };
   /** Variables de entrada al workflow */
-  inputs?: Record<string, {
-    type: "string" | "number" | "boolean" | "object";
-    description?: string;
-    required?: boolean;
-    default?: unknown;
-  }>;
+  inputs?: Record<
+    string,
+    {
+      type: "string" | "number" | "boolean" | "object";
+      description?: string;
+      required?: boolean;
+      default?: unknown;
+    }
+  >;
   /** Steps del workflow (el orden de ejecución se deduce de dependsOn) */
   steps: WorkflowStep[];
   /** Comportamiento ante error en un step */
@@ -244,11 +247,16 @@ export class StepExecutor {
     signal: AbortSignal,
   ): Promise<WorkflowStepState> {
     switch (step.type) {
-      case "agent":   return this.executeAgentStep(step, run, scope, signal);
-      case "tool":    return this.executeToolStep(step, run, scope, signal);
-      case "approval": return this.executeApprovalStep(step, run, scope, signal);
-      case "parallel": return this.executeParallelStep(step, run, scope, signal);
-      case "condition": return this.executeConditionStep(step, run, scope, signal);
+      case "agent":
+        return this.executeAgentStep(step, run, scope, signal);
+      case "tool":
+        return this.executeToolStep(step, run, scope, signal);
+      case "approval":
+        return this.executeApprovalStep(step, run, scope, signal);
+      case "parallel":
+        return this.executeParallelStep(step, run, scope, signal);
+      case "condition":
+        return this.executeConditionStep(step, run, scope, signal);
     }
   }
 
@@ -298,7 +306,7 @@ export class WorkflowEngine implements IWorkflowEngine {
       if (signal.aborted) break;
 
       const batchResults = await Promise.allSettled(
-        batch.map((step) => this.stepExecutor.execute(step, run, scope, signal))
+        batch.map((step) => this.stepExecutor.execute(step, run, scope, signal)),
       );
 
       for (const result of batchResults) {
@@ -354,7 +362,10 @@ export function createWorkflowTools(opts: {
         },
         required: ["workflowId"],
       },
-      execute: async (_id: string, args: { workflowId: string; inputs?: Record<string, unknown> }) => {
+      execute: async (
+        _id: string,
+        args: { workflowId: string; inputs?: Record<string, unknown> },
+      ) => {
         const run = await opts.workflowEngine.run(opts.username, args.workflowId, {
           inputs: args.inputs,
           parentSessionId: opts.sessionId,
@@ -424,7 +435,7 @@ import type { IWorkflowEngine } from "./workflow-engine.port";
 
 export interface SpacesHost {
   // ... existente ...
-  workflows?: IWorkflowEngine;  // ← nuevo
+  workflows?: IWorkflowEngine; // ← nuevo
 }
 ```
 
@@ -473,21 +484,21 @@ apps/client/src/pages/
 
 ## Archivos modificados
 
-| Archivo | Operación | Descripción |
-|---------|-----------|-------------|
-| `packages/shared/src/workflows.ts` | NEW | Tipos `WorkflowDefinition`, `WorkflowStep`, `WorkflowRun`, `WorkflowStepState` |
-| `packages/shared/src/ws-messages.ts` | MODIFY | Agregar eventos WS de workflow |
-| `packages/shared/src/index.ts` | MODIFY | Re-exportar `workflows.ts` |
-| `core/ports/workflow-engine.port.ts` | NEW | Interfaz `IWorkflowEngine` |
-| `core/ports/spaces-host.port.ts` | MODIFY | Agregar `workflows?: IWorkflowEngine` |
-| `core/workflows/` | NEW (6 archivos) | Implementación del WorkflowEngine |
-| `core/tools/extensions/workflow.tool.ts` | NEW | Tools `list_workflows`, `run_workflow`, `get_workflow_status` |
-| `core/session/tool-factory.ts` | MODIFY | Registrar workflow tools si `workflowEngine` disponible |
-| `apps/server/src/routes/workflows/` | NEW (3 archivos) | Router REST de workflows |
-| `apps/server/src/index.ts` | MODIFY | Montar `/api/workflows` |
-| `apps/client/src/pages/WorkflowBuilderPage.tsx` | NEW | UI del builder |
-| `apps/client/src/App.tsx` | MODIFY | Ruta `/workflows` |
-| `apps/client/src/components/layout/Sidebar.tsx` | MODIFY | Ítem `Workflows` en nav |
+| Archivo                                         | Operación        | Descripción                                                                    |
+| ----------------------------------------------- | ---------------- | ------------------------------------------------------------------------------ |
+| `packages/shared/src/workflows.ts`              | NEW              | Tipos `WorkflowDefinition`, `WorkflowStep`, `WorkflowRun`, `WorkflowStepState` |
+| `packages/shared/src/ws-messages.ts`            | MODIFY           | Agregar eventos WS de workflow                                                 |
+| `packages/shared/src/index.ts`                  | MODIFY           | Re-exportar `workflows.ts`                                                     |
+| `core/ports/workflow-engine.port.ts`            | NEW              | Interfaz `IWorkflowEngine`                                                     |
+| `core/ports/spaces-host.port.ts`                | MODIFY           | Agregar `workflows?: IWorkflowEngine`                                          |
+| `core/workflows/`                               | NEW (6 archivos) | Implementación del WorkflowEngine                                              |
+| `core/tools/extensions/workflow.tool.ts`        | NEW              | Tools `list_workflows`, `run_workflow`, `get_workflow_status`                  |
+| `core/session/tool-factory.ts`                  | MODIFY           | Registrar workflow tools si `workflowEngine` disponible                        |
+| `apps/server/src/routes/workflows/`             | NEW (3 archivos) | Router REST de workflows                                                       |
+| `apps/server/src/index.ts`                      | MODIFY           | Montar `/api/workflows`                                                        |
+| `apps/client/src/pages/WorkflowBuilderPage.tsx` | NEW              | UI del builder                                                                 |
+| `apps/client/src/App.tsx`                       | MODIFY           | Ruta `/workflows`                                                              |
+| `apps/client/src/components/layout/Sidebar.tsx` | MODIFY           | Ítem `Workflows` en nav                                                        |
 
 ---
 

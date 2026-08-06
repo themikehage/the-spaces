@@ -52,6 +52,7 @@ export function ToolResultRouter({
   const text = result?.content.find((b) => b.type === "text")?.text ?? "";
 
   switch (toolName) {
+    case "task":
     case "decompose_tasks":
       return <DecomposeResult text={text} details={result?.details} l={l} />;
     case "create_experiment": {
@@ -292,12 +293,22 @@ export function ToolResultRouter({
       return <ExaSearchResult text={text} details={result?.details} l={l} />;
     case "web_fetch":
       return <WebFetchResult text={text} details={result?.details} l={l} />;
+    case "memory": {
+      const action = (args.action as string) || "read";
+      const mode =
+        action === "upsert" || action === "store"
+          ? "upsert"
+          : action === "delete" || action === "forget"
+            ? "delete"
+            : "read";
+      return <MemoryResult mode={mode} args={args} details={result?.details} l={l} />;
+    }
     case "memory_recall":
-      return <MemoryResult mode="recall" details={result?.details} l={l} />;
+      return <MemoryResult mode="read" details={result?.details} l={l} />;
     case "memory_store":
-      return <MemoryResult mode="store" args={args} details={result?.details} l={l} />;
+      return <MemoryResult mode="upsert" args={args} details={result?.details} l={l} />;
     case "memory_forget":
-      return <MemoryResult mode="forget" details={result?.details} l={l} />;
+      return <MemoryResult mode="delete" details={result?.details} l={l} />;
     case "manage_custom_tools":
       return (
         <div className="flex items-center gap-2 p-2.5 rounded-lg bg-bg border border-primary/30 text-xs font-mono">

@@ -8,6 +8,8 @@ import { attentionStore } from "@/lib/attention/attention-store";
 import { wsClient } from "@/lib/ws-client";
 import { AlertTriangle, Check, HelpCircle, Play, Send, Shield, Users, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import type { ProjectStatus } from "shared";
+import { ProjectStatusSchema } from "shared";
 import { ProjectAssignmentModal } from "./ProjectAssignmentModal";
 
 interface ProjectFloorPanelProps {
@@ -109,7 +111,7 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
     };
   }, [fetchProjectData]);
 
-  const updateProjectStatus = async (status: "planning" | "running" | "review" | "done") => {
+  const updateProjectStatus = async (status: ProjectStatus) => {
     if (!projectId || !project) return;
     try {
       const updated = await projectsService.updateProject(projectId, { status });
@@ -183,7 +185,7 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
     );
   }
 
-  const statuses = ["planning", "running", "review", "done"] as const;
+  const statuses = ProjectStatusSchema.options;
   const currentStatus = project?.status || "planning";
 
   return (

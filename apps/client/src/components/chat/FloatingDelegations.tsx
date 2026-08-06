@@ -1,18 +1,10 @@
 // SPDX-License-Identifier: MIT
 import { useLiterals } from "@/lib";
 import { ChevronRight } from "lucide-react";
+import type { PendingDelegation } from "shared";
 import { literals as u } from "./FloatingDelegations.literals";
 
-export interface PendingDelegation {
-  toolCallId: string;
-  subagentSessionId: string;
-  task: string;
-  targetType: "spawn" | "delegate";
-  status: "running" | "success" | "error" | "blocked";
-  startedAt: string;
-  completedAt?: string;
-  result?: any;
-}
+export type { PendingDelegation };
 
 interface Props {
   delegations: PendingDelegation[];

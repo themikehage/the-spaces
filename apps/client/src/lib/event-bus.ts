@@ -1,7 +1,15 @@
 // SPDX-License-Identifier: MIT
 
 export type EntityEventType =
-  "agent" | "team" | "project" | "session" | "config" | "skill" | "custom-tool" | "settings";
+  | "agent"
+  | "team"
+  | "project"
+  | "session"
+  | "config"
+  | "skill"
+  | "custom-tool"
+  | "settings"
+  | "workflow";
 
 export interface EntityUpdatedEvent {
   type?: EntityEventType;

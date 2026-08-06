@@ -8,8 +8,8 @@ import {
   getTeamWorkspaceDir,
   getWorkspaceSkillsDir,
 } from "shared";
-import { agentRegistry } from "../../../agents";
 import { loadSkills } from "../..";
+import { agentRegistry } from "../../../agents";
 import { sessionManager } from "../../session/session-manager";
 import { FACTORY_CONTRACTS } from "./factory-contracts";
 

@@ -23,7 +23,8 @@ export class DelegationService {
     req: DelegationRequest,
     parentSignal?: AbortSignal,
   ): Promise<unknown> {
-    const { createManageDelegationsTool } = await import("../tools/extensions/manage-delegations.tool");
+    const { createManageDelegationsTool } =
+      await import("../tools/extensions/manage-delegations.tool");
     const tool = createManageDelegationsTool(this.options);
     return tool.execute(toolCallId, req, parentSignal);
   }

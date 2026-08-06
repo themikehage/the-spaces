@@ -47,9 +47,7 @@ export function resolveActiveTools({
     ...customToolNames,
   ]);
   if (memoryEnabled) {
-    definedToolNames.add("memory_store");
-    definedToolNames.add("memory_recall");
-    definedToolNames.add("memory_forget");
+    definedToolNames.add("memory");
   }
 
   const enabledCustomSet = new Set(customToolNames);
@@ -57,7 +55,7 @@ export function resolveActiveTools({
   const merged = new Set<string>([
     ...activeTools,
     ...alwaysOnTools,
-    ...(memoryEnabled ? (["memory_store", "memory_recall", "memory_forget"] as const) : []),
+    ...(memoryEnabled ? (["memory"] as const) : []),
     ...customToolNames,
   ]);
 

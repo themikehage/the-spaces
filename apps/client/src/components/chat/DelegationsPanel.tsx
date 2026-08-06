@@ -90,7 +90,9 @@ export function DelegationsPanel({
           ...prev,
           {
             toolCallId: data.toolCallId,
+            parentSessionId: data.parentSessionId ?? sessionId,
             subagentSessionId: data.subagentSessionId,
+            targetLabel: data.targetLabel ?? data.subagentSessionId,
             task: data.task,
             targetType: data.targetType,
             status: "running",
@@ -364,6 +366,20 @@ export function DelegationsPanel({
                       </div>
                     </div>
                   )}
+
+                  {selectedDelegation.result.outputs &&
+                    Object.keys(selectedDelegation.result.outputs).length > 0 && (
+                      <div className="space-y-1">
+                        <h4 className="text-[10px] font-mono uppercase text-text-secondary font-semibold tracking-wider">
+                          Outputs
+                        </h4>
+                        <div className="p-3 bg-surface/40 border border-border/50 rounded-lg font-mono text-xs text-text-primary overflow-x-auto">
+                          <pre className="whitespace-pre-wrap break-all text-[11px]">
+                            {JSON.stringify(selectedDelegation.result.outputs, null, 2)}
+                          </pre>
+                        </div>
+                      </div>
+                    )}
                 </div>
               ) : (
                 selectedDelegation.status === "running" && (

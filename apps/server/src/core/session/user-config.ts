@@ -188,10 +188,41 @@ export class UserConfigManager {
   getUserDefaultModel(username: string): string | null {
     const { modelRegistry } = this.getUserContext(username);
     const available = modelRegistry.getAvailable();
-    if (available.length > 0) {
-      return `${available[0].provider}/${available[0].id}`;
+    if (available.length === 0) {
+      return null;
     }
-    return null;
+
+    const settings = this.getUserSettings(username);
+    const configuredProvider = settings.defaultProvider as string | undefined;
+    const providerDefaults =
+      (settings.providerDefaults as Record<string, string> | undefined) ?? {};
+
+    if (configuredProvider) {
+      const providerModels = available.filter((m) => m.provider === configuredProvider);
+      if (providerModels.length > 0) {
+        const userPreferredModelId = providerDefaults[configuredProvider];
+        if (userPreferredModelId) {
+          const match = providerModels.find((m) => m.id === userPreferredModelId);
+          if (match) {
+            return `${match.provider}/${match.id}`;
+          }
+        }
+        return `${providerModels[0].provider}/${providerModels[0].id}`;
+      }
+    }
+
+    const firstProvider = available[0].provider;
+    const userPreferredModelId = providerDefaults[firstProvider];
+    if (userPreferredModelId) {
+      const match = available.find(
+        (m) => m.provider === firstProvider && m.id === userPreferredModelId,
+      );
+      if (match) {
+        return `${match.provider}/${match.id}`;
+      }
+    }
+
+    return `${available[0].provider}/${available[0].id}`;
   }
 
   getUserPasswordHash(username: string): string | null {

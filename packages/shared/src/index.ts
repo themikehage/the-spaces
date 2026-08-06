@@ -9,4 +9,5 @@ export * from "./session-prefix";
 export * from "./stores";
 export * from "./tools";
 export * from "./tools-catalog";
+export * from "./workflows";
 export * from "./ws-messages";

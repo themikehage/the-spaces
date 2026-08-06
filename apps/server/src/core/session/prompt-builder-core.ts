@@ -1,9 +1,5 @@
 // SPDX-License-Identifier: MIT
-import type {
-  AgentContext,
-  IPromptBuilder,
-  PromptSection,
-} from "../ports/prompt-builder.port";
+import type { AgentContext, IPromptBuilder, PromptSection } from "../ports/prompt-builder.port";
 import type { DefaultResourceLoader } from "./resource-loader";
 import { SkillLoader } from "./skill-loader";
 

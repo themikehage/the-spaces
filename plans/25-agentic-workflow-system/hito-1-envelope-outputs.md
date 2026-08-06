@@ -16,21 +16,21 @@ Agregar un campo `outputs: Record<string, unknown>` a `EnvelopeResult` para que 
 
 ### Lo que SÍ funciona
 
-| Aspecto | Estado | Detalle |
-|---------|--------|---------|
-| `EnvelopeResult` existe en `packages/shared` | OK | `status`, `executive_summary`, `artifacts`, `risks` |
-| `handleDelegationCompletion` parsea el sobre | OK | `agent-utils.ts` — extrae el JSON del último mensaje del subagente |
-| `DelegationRegistry` almacena el resultado | OK | `delegation-registry.ts` — escribe el `EnvelopeResult` en JSON |
-| UI muestra delegaciones con su resultado | OK | `DelegationsPanel.tsx` — muestra estado y `executive_summary` |
+| Aspecto                                      | Estado | Detalle                                                            |
+| -------------------------------------------- | ------ | ------------------------------------------------------------------ |
+| `EnvelopeResult` existe en `packages/shared` | OK     | `status`, `executive_summary`, `artifacts`, `risks`                |
+| `handleDelegationCompletion` parsea el sobre | OK     | `agent-utils.ts` — extrae el JSON del último mensaje del subagente |
+| `DelegationRegistry` almacena el resultado   | OK     | `delegation-registry.ts` — escribe el `EnvelopeResult` en JSON     |
+| UI muestra delegaciones con su resultado     | OK     | `DelegationsPanel.tsx` — muestra estado y `executive_summary`      |
 
 ### Lo que NO funciona (gaps)
 
-| Gap | Impacto | Ubicación |
-|-----|---------|-----------|
-| `artifacts` es `string` — no estructurado | El agente padre no puede extraer datos del subagente para usar en el siguiente paso | `packages/shared/src/envelope.ts` |
-| `EnvelopeResult` sin `outputs: Record<string, unknown>` | No hay mecanismo para pass-by-name entre agentes | `packages/shared/src/envelope.ts` |
-| `parseEnvelope` no extrae outputs estructurados | Aunque el subagente los incluyera, el padre no los leería | `core/session/agent-utils.ts` |
-| UI no muestra outputs tipados | El usuario no puede ver qué datos pasaron entre agentes | `DelegationsPanel.tsx` |
+| Gap                                                     | Impacto                                                                             | Ubicación                         |
+| ------------------------------------------------------- | ----------------------------------------------------------------------------------- | --------------------------------- |
+| `artifacts` es `string` — no estructurado               | El agente padre no puede extraer datos del subagente para usar en el siguiente paso | `packages/shared/src/envelope.ts` |
+| `EnvelopeResult` sin `outputs: Record<string, unknown>` | No hay mecanismo para pass-by-name entre agentes                                    | `packages/shared/src/envelope.ts` |
+| `parseEnvelope` no extrae outputs estructurados         | Aunque el subagente los incluyera, el padre no los leería                           | `core/session/agent-utils.ts`     |
+| UI no muestra outputs tipados                           | El usuario no puede ver qué datos pasaron entre agentes                             | `DelegationsPanel.tsx`            |
 
 ---
 
@@ -88,7 +88,7 @@ export function parseEnvelope(text: string): EnvelopeResult {
         executive_summary: parsed.executive_summary ?? text,
         artifacts: parsed.artifacts ?? "none",
         risks: parsed.risks ?? "none",
-        outputs: parsed.outputs ?? {},   // ← nuevo
+        outputs: parsed.outputs ?? {}, // ← nuevo
       };
     }
   } catch {
@@ -112,9 +112,10 @@ El resultado de `manage_delegations` (el texto que el agente lee) debe incluir l
 // En handleDelegationCompletion (agent-utils.ts)
 // Al armar el tool result devuelto al agente padre:
 
-const outputsSection = result.outputs && Object.keys(result.outputs).length > 0
-  ? `\n\nOutputs disponibles:\n${JSON.stringify(result.outputs, null, 2)}`
-  : "";
+const outputsSection =
+  result.outputs && Object.keys(result.outputs).length > 0
+    ? `\n\nOutputs disponibles:\n${JSON.stringify(result.outputs, null, 2)}`
+    : "";
 
 return `${result.executive_summary}${outputsSection}`;
 ```
@@ -123,12 +124,12 @@ return `${result.executive_summary}${outputsSection}`;
 
 ## Archivos afectados
 
-| Archivo | Operación | Descripción |
-|---------|-----------|-------------|
-| `packages/shared/src/envelope.ts` | MODIFY | Agregar `outputs?: Record<string, unknown>` |
-| `apps/server/src/core/session/agent-utils.ts` | MODIFY | `parseEnvelope` extrae `outputs`, `handleDelegationCompletion` los incluye en el tool result |
-| `apps/server/src/core/prompts/prompt-assembly.ts` | MODIFY | `wrapDelegationTask` incluye instrucción de `outputs` |
-| `apps/client/src/components/chat/DelegationsPanel.tsx` | MODIFY | Mostrar `outputs` tipados en la card de delegación |
+| Archivo                                                | Operación | Descripción                                                                                  |
+| ------------------------------------------------------ | --------- | -------------------------------------------------------------------------------------------- |
+| `packages/shared/src/envelope.ts`                      | MODIFY    | Agregar `outputs?: Record<string, unknown>`                                                  |
+| `apps/server/src/core/session/agent-utils.ts`          | MODIFY    | `parseEnvelope` extrae `outputs`, `handleDelegationCompletion` los incluye en el tool result |
+| `apps/server/src/core/prompts/prompt-assembly.ts`      | MODIFY    | `wrapDelegationTask` incluye instrucción de `outputs`                                        |
+| `apps/client/src/components/chat/DelegationsPanel.tsx` | MODIFY    | Mostrar `outputs` tipados en la card de delegación                                           |
 
 ---
 

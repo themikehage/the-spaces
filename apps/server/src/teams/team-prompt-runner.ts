@@ -5,11 +5,11 @@ import { resolveModelWithFallback } from "../core/session/agent-utils";
 import { sessionManager } from "../core/session/session-manager";
 import { teamStore } from "./team-store";
 
-import { streamSimple } from "../vendor/ai/src/compat.ts";
 import { buildAgentPrompt } from "../core/multi-agent/agent-prompt-runner";
 import { parseMentions } from "../core/multi-agent/mention-parser";
 import { enforceDiffFormat, parseAgentResponse } from "../core/multi-agent/response-parser";
 import { assemblePromptAppends } from "../core/prompts/prompt-assembly";
+import { streamSimple } from "../vendor/ai/src/compat.ts";
 
 export interface ActiveTeamStream {
   agentId: string;

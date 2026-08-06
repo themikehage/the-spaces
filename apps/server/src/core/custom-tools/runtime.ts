@@ -106,6 +106,57 @@ export function createCustomToolRuntime(
             isError: false,
           };
 
+        case "agent": {
+          const { agentId, taskTemplate, subagentType, captureOutputAs, maxSteps } = executeDef;
+          const resolvedTask = resolveVariables(taskTemplate, params);
+
+          const { spawnSubagent } = await import("../session/spawn-subagent");
+          const { sessionManager } = await import("../session/session-manager");
+          const { delegationRegistry } = await import("../delegation/delegation-registry");
+
+          try {
+            const spawnResult = await spawnSubagent({
+              toolCallId,
+              username: context.username,
+              parentSessionId: context.sessionId,
+              agentId: agentId ?? undefined,
+              task: resolvedTask,
+              subagentType: subagentType ?? "builder",
+              maxSteps: maxSteps ?? 15,
+              sessionManager,
+              delegationRegistry: context.delegationRegistry ?? delegationRegistry,
+              workspaceDir: context.cwd,
+              signal,
+            });
+
+            const outputs = spawnResult.outputs ?? {};
+
+            if (captureOutputAs) {
+              return {
+                content: [{ type: "text", text: spawnResult.executive_summary }],
+                details: { capturedAs: captureOutputAs, value: outputs },
+                pipelineScopeUpdate: {
+                  [captureOutputAs]: spawnResult.executive_summary,
+                  ...outputs,
+                },
+                isError: spawnResult.status === "error",
+              };
+            }
+
+            return {
+              content: [{ type: "text", text: spawnResult.executive_summary }],
+              isError: spawnResult.status === "error",
+            };
+          } catch (err: any) {
+            return {
+              content: [
+                { type: "text", text: `Subagent execution failed: ${err?.message || err}` },
+              ],
+              isError: true,
+            };
+          }
+        }
+
         default:
           return {
             content: [

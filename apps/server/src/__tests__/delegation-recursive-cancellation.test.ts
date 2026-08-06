@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { beforeEach, describe, expect, test } from "bun:test";
-import { AbortToken } from "../core/session/abort-token";
 import { delegationRegistry } from "../core/delegation/delegation-registry";
+import { AbortToken } from "../core/session/abort-token";
 
 describe("AbortToken System", () => {
   test("runs registered callbacks in LIFO order", () => {

@@ -3,12 +3,13 @@ import { agentRegistry } from "@/agents";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { SessionPrefix } from "shared";
-import { AuthStorage } from "../../session/auth-storage";
-import { DefaultResourceLoader } from "../../session/resource-loader";
-import { ModelRegistry } from "../../model/model-registry";
-import { createBashToolDefinition } from "../base/bash.tool";
 import { getOrCreateToolSessionToken } from "../../../auth/ephemeral-tool-session";
 import { getAppConfig } from "../../../config/app-config";
+import { delegationRegistry } from "../../delegation/delegation-registry";
+import { ModelRegistry } from "../../model/model-registry";
+import { assemblePromptAppends, wrapDelegationTask } from "../../prompts/prompt-assembly";
+import { buildSubagentRules } from "../../sandbox";
+import { filterSecretsFromOutput } from "../../sandbox/bash-output-filter";
 import { AbortToken } from "../../session/abort-token";
 import {
   forwardSubagentEvents,
@@ -16,13 +17,12 @@ import {
   handleDelegationCompletion,
   parseEnvelope,
 } from "../../session/agent-utils";
-import { filterSecretsFromOutput } from "../../sandbox/bash-output-filter";
-import { delegationRegistry } from "../../delegation/delegation-registry";
-import { assemblePromptAppends, wrapDelegationTask } from "../../prompts/prompt-assembly";
-import { buildSubagentRules } from "../../sandbox";
-import { sessionManager } from "../../session/session-manager";
+import { AuthStorage } from "../../session/auth-storage";
+import { DefaultResourceLoader } from "../../session/resource-loader";
 import { getSubagentDepth } from "../../session/session-depth";
+import { sessionManager } from "../../session/session-manager";
 import { sessionToolFactory } from "../../session/tool-factory";
+import { createBashToolDefinition } from "../base/bash.tool";
 import { createUiTools } from "./ui.tool";
 
 export interface ManageDelegationsOptions {

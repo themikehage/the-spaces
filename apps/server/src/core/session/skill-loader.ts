@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import type { DefaultResourceLoader } from "./resource-loader";
 import { formatSkillsForSystemPrompt } from "../../vendor/agent/src/harness/system-prompt.ts";
+import type { DefaultResourceLoader } from "./resource-loader";
 
 export class SkillLoader {
   constructor(private resourceLoader: DefaultResourceLoader) {}

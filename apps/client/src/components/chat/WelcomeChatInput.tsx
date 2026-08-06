@@ -3,6 +3,7 @@ import { useLiterals } from "@/lib";
 import { skillsService } from "@/lib/api/skills.service";
 import { ArrowRight, BookOpen, Plus, Sliders, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { EntityType, ExecutionMode } from "shared";
 import { ModelSelector } from "./ModelSelector";
 import { SkillsPopover } from "./SkillsPopover";
 import type { SkillInfo } from "./SkillsSelector";
@@ -25,8 +26,8 @@ interface Props {
   selectedModel?: string;
   onModelChange?: (modelId: string) => void;
   activeTools?: string[];
-  onToolsChange?: (tools: string[], executionMode?: "readonly" | "standard" | "autonomous") => void;
-  executionMode?: "readonly" | "standard" | "autonomous";
+  onToolsChange?: (tools: string[], executionMode?: ExecutionMode) => void;
+  executionMode?: ExecutionMode;
   activeSkills?: string[];
   onSkillsChange?: (skills: string[]) => void;
   allowAttachments?: boolean;
@@ -35,6 +36,8 @@ interface Props {
   value?: string;
   onChange?: (val: string) => void;
   textareaRef?: React.RefObject<HTMLTextAreaElement | null>;
+  entityType?: EntityType;
+  entityId?: string;
 }
 
 export function WelcomeChatInput({
@@ -57,6 +60,8 @@ export function WelcomeChatInput({
   value,
   onChange,
   textareaRef: externalTextareaRef,
+  entityType,
+  entityId,
 }: Props) {
   const l = useLiterals(u);
   const [internalInput, setInternalInput] = useState("");
@@ -220,12 +225,14 @@ export function WelcomeChatInput({
                   disabled={disabled || loading}
                   value={selectedModel}
                   onChange={onModelChange}
+                  entityType={entityType}
+                  entityId={entityId}
                 />
               </div>
             )}
 
             {/* Tools Selector Button & Popover */}
-            {onToolsChange && (
+            {(onToolsChange || (entityType && entityId)) && (
               <div className="relative border-l border-border/40 pl-2">
                 <button
                   ref={toolsTriggerRef}
@@ -238,7 +245,6 @@ export function WelcomeChatInput({
                   title="Tools configuration"
                 >
                   <Sliders size={14} />
-                  <span>Tools</span>
                   {activeTools && (
                     <span className="ml-0.5 px-1.5 py-0.2 rounded-full bg-primary/20 text-primary text-[10px] font-mono font-bold">
                       {activeTools.length}
@@ -247,18 +253,21 @@ export function WelcomeChatInput({
                 </button>
                 <ToolsPopover
                   activeTools={activeTools || []}
-                  onChange={onToolsChange}
+                  onChange={onToolsChange || (() => {})}
                   open={openTools}
                   onClose={() => setOpenTools(false)}
                   triggerRef={toolsTriggerRef}
                   disabled={disabled || loading}
                   executionMode={executionMode}
+                  entityType={entityType}
+                  entityId={entityId}
+                  sessionId={sessionId}
                 />
               </div>
             )}
 
             {/* Skills Selector Button & Popover */}
-            {onSkillsChange && (
+            {(onSkillsChange || (entityType && entityId)) && (
               <div className="relative border-l border-border/40 pl-2">
                 <button
                   ref={skillsTriggerRef}
@@ -271,7 +280,6 @@ export function WelcomeChatInput({
                   title="Skills configuration"
                 >
                   <BookOpen size={14} />
-                  <span>Skills</span>
                   {activeSkills && (
                     <span className="ml-0.5 px-1.5 py-0.2 rounded-full bg-primary/20 text-primary text-[10px] font-mono font-bold">
                       {activeSkills.length}
@@ -285,6 +293,8 @@ export function WelcomeChatInput({
                   onClose={() => setOpenSkills(false)}
                   onSelectSkill={handleToggleSkill}
                   triggerRef={skillsTriggerRef}
+                  entityType={entityType}
+                  entityId={entityId}
                 />
               </div>
             )}

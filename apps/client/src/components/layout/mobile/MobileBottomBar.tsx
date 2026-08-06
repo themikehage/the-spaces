@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
-import { ArrowUpDown, BookOpen, Calendar, Home, Settings } from "lucide-react";
+import { BookOpen, Calendar, Home, Settings } from "lucide-react";
 
 interface MobileBottomBarProps {
   currentPage: string;
@@ -21,7 +21,6 @@ export function MobileBottomBar({
     { id: "skills", label: "Skills", icon: <BookOpen size={20} /> },
     { id: "schedules", label: "Schedules", icon: <Calendar size={20} /> },
     { id: "settings", label: "Settings", icon: <Settings size={20} /> },
-    { id: "plugins", label: "Plugins", icon: <ArrowUpDown size={20} /> },
   ];
 
   const handleTabClick = (tabId: string) => {
@@ -38,8 +37,6 @@ export function MobileBottomBar({
     } else if (tabId === "settings") {
       localStorage.setItem("settings-active-tab", "providers");
       onNavigate("/settings");
-    } else if (tabId === "plugins") {
-      onNavigate("/plugins");
     }
   };
 

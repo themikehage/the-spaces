@@ -10,27 +10,27 @@ Spaces tiene una arquitectura sólida para orquestación de agentes: puertos des
 
 ## Diagnóstico de Gaps
 
-| Gap | Descripción | Criticidad |
-|-----|-------------|------------|
-| [GAP-1](#) | No hay WorkflowEngine ni DAG de agentes | 🔴 Crítico |
-| [GAP-2](#) | Custom tools no pueden spawnar subagentes | 🔴 Crítico |
-| [GAP-3](#) | Teams no tienen workflow declarativo | 🟡 Importante |
-| [GAP-4](#) | AgentDirectory sin listAgents() ni capacidades | 🟡 Importante |
-| [GAP-5](#) | EnvelopeResult sin outputs tipados | 🔴 Crítico |
+| Gap        | Descripción                                         | Criticidad    |
+| ---------- | --------------------------------------------------- | ------------- |
+| [GAP-1](#) | No hay WorkflowEngine ni DAG de agentes             | 🔴 Crítico    |
+| [GAP-2](#) | Custom tools no pueden spawnar subagentes           | 🔴 Crítico    |
+| [GAP-3](#) | Teams no tienen workflow declarativo                | 🟡 Importante |
+| [GAP-4](#) | AgentDirectory sin listAgents() ni capacidades      | 🟡 Importante |
+| [GAP-5](#) | EnvelopeResult sin outputs tipados                  | 🔴 Crítico    |
 | [GAP-6](#) | No hay checkpoint de aprobación humana en workflows | 🟡 Importante |
-| [GAP-7](#) | Observabilidad no muestra árbol completo | 🟡 Importante |
+| [GAP-7](#) | Observabilidad no muestra árbol completo            | 🟡 Importante |
 
 ## Hitos
 
-| Hito | Archivo | Qué resuelve | Esfuerzo | Prioridad |
-|------|---------|--------------|----------|-----------|
-| [25.1](./hito-1-envelope-outputs.md) | Outputs tipados en `EnvelopeResult` | GAP-5 | 🟢 Bajo | 🔴 P0 |
-| [25.2](./hito-2-agent-tool-type.md) | Custom tool type `"agent"` | GAP-2 | 🟡 Medio | 🔴 P0 |
-| [25.3](./hito-3-workflow-engine.md) | `WorkflowDefinition` + `WorkflowEngine` | GAP-1 | 🔴 Alto | 🔴 P0 |
-| [25.4](./hito-4-agent-directory.md) | `AgentDirectory` con capacidades + tool | GAP-4 | 🟡 Medio | 🟡 P1 |
-| [25.5](./hito-5-approval-checkpoint.md) | Approval checkpoint en workflow steps | GAP-6 | 🟡 Medio | 🟡 P1 |
-| [25.6](./hito-6-workflow-trace.md) | WorkflowTrace + UI árbol de ejecución | GAP-7 | 🟡 Medio | 🟡 P1 |
-| [25.7](./hito-7-team-workflow.md) | Team Workflow declarativo | GAP-3 | 🔴 Alto | 🟢 P2 |
+| Hito                                    | Archivo                                 | Qué resuelve | Esfuerzo | Prioridad |
+| --------------------------------------- | --------------------------------------- | ------------ | -------- | --------- |
+| [25.1](./hito-1-envelope-outputs.md)    | Outputs tipados en `EnvelopeResult`     | GAP-5        | 🟢 Bajo  | 🔴 P0     |
+| [25.2](./hito-2-agent-tool-type.md)     | Custom tool type `"agent"`              | GAP-2        | 🟡 Medio | 🔴 P0     |
+| [25.3](./hito-3-workflow-engine.md)     | `WorkflowDefinition` + `WorkflowEngine` | GAP-1        | 🔴 Alto  | 🔴 P0     |
+| [25.4](./hito-4-agent-directory.md)     | `AgentDirectory` con capacidades + tool | GAP-4        | 🟡 Medio | 🟡 P1     |
+| [25.5](./hito-5-approval-checkpoint.md) | Approval checkpoint en workflow steps   | GAP-6        | 🟡 Medio | 🟡 P1     |
+| [25.6](./hito-6-workflow-trace.md)      | WorkflowTrace + UI árbol de ejecución   | GAP-7        | 🟡 Medio | 🟡 P1     |
+| [25.7](./hito-7-team-workflow.md)       | Team Workflow declarativo               | GAP-3        | 🔴 Alto  | 🟢 P2     |
 
 ## Principios de Diseño
 
@@ -43,6 +43,7 @@ Spaces tiene una arquitectura sólida para orquestación de agentes: puertos des
 ## Verificación Global
 
 Al completar todos los hitos:
+
 - `pnpm --filter server run typecheck` → 0 errores
 - `pnpm build` → 0 errores
 - Un workflow de 3 agentes en secuencia ejecuta end-to-end con outputs tipados entre pasos

@@ -30,6 +30,11 @@ interface VideoGenModelOption {
 interface GeneralModelSectionProps {
   l: Record<string, string>;
   settingsLoading: boolean;
+  defaultProvider: string;
+  providerDefaults: Record<string, string>;
+  allModels: Array<{ id: string; name: string; provider: string }>;
+  handleUpdateDefaultProvider: (provider: string) => void;
+  handleUpdateProviderDefaultModel: (provider: string, modelId: string) => void;
   visionModel: string;
   visionModels: VisionModelOption[];
   handleUpdateVisionModel: (model: string) => void;
@@ -73,6 +78,11 @@ interface GeneralModelSectionProps {
 export function GeneralModelSection({
   l,
   settingsLoading,
+  defaultProvider,
+  providerDefaults,
+  allModels,
+  handleUpdateDefaultProvider,
+  handleUpdateProviderDefaultModel,
   visionModel,
   visionModels,
   handleUpdateVisionModel,
@@ -112,6 +122,8 @@ export function GeneralModelSection({
   videoBlobUrl,
   videoError,
 }: GeneralModelSectionProps) {
+  const availableProviders = Array.from(new Set(allModels.map((m) => m.provider)));
+
   return (
     <div className="bg-card rounded-lg p-4 border border-input/30 space-y-4">
       <h3 className="text-foreground font-semibold text-sm">{l.aiToolsConfig}</h3>
@@ -120,6 +132,44 @@ export function GeneralModelSection({
         <div className="text-xs text-muted-foreground animate-pulse">{l.loadingModels}</div>
       ) : (
         <div className="space-y-4">
+          {/* Default Provider & Per-Provider Default Model */}
+          <div className="flex flex-col gap-3 border-b border-input/10 pb-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs text-muted-foreground uppercase font-bold tracking-wider">
+                Default Provider
+              </label>
+              <Dropdown<string>
+                value={defaultProvider}
+                onChange={handleUpdateDefaultProvider}
+                options={availableProviders.map((prov) => ({
+                  value: prov,
+                  label: prov.toUpperCase(),
+                }))}
+                placeholder="Select Default Provider"
+                matchWidth
+              />
+            </div>
+
+            {defaultProvider && (
+              <div className="flex flex-col gap-1.5 pl-2 border-l-2 border-primary/30">
+                <label className="text-xs text-muted-foreground uppercase font-bold tracking-wider">
+                  Default Model for {defaultProvider.toUpperCase()}
+                </label>
+                <Dropdown<string>
+                  value={providerDefaults[defaultProvider] || ""}
+                  onChange={(modelId) => handleUpdateProviderDefaultModel(defaultProvider, modelId)}
+                  options={allModels
+                    .filter((m) => m.provider === defaultProvider)
+                    .map((m) => ({
+                      value: m.id,
+                      label: m.name,
+                    }))}
+                  placeholder="Select Default Model"
+                  matchWidth
+                />
+              </div>
+            )}
+          </div>
           <div className="flex flex-col gap-1.5 border-b border-input/10 pb-4">
             <label className="text-xs text-muted-foreground uppercase font-bold tracking-wider">
               {l.visionModel}

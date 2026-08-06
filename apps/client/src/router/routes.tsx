@@ -5,13 +5,14 @@ import {
   AnalyticsRoute,
   DashboardRoute,
   LogsRoute,
-  PluginsRoute,
   ProjectsRoute,
   SchedulesRoute,
   SessionsRoute,
   SettingsRoute,
   SkillsRoute,
   TeamsRoute,
+  WorkflowDetailRoute,
+  WorkflowsRoute,
 } from "@/router/routes/AdministrativeLeaves";
 import {
   ChatRoute,
@@ -69,9 +70,11 @@ export function AppRoutes() {
         <Route path="preview" element={<PreviewRoute />} />
         <Route path="logs" element={<LogsRoute />} />
         <Route path="mcps" element={<McpRedirectRoute />} />
-        <Route path="plugins" element={<PluginsRoute />} />
         <Route path="sessions" element={<SessionsRoute />} />
         <Route path="schedules" element={<SchedulesRoute />} />
+        <Route path="workflows" element={<WorkflowsRoute />} />
+        <Route path="workflows/:workflowId" element={<WorkflowDetailRoute />} />
+        <Route path="workflows/:workflowId/:tab" element={<WorkflowDetailRoute />} />
         <Route path="*" element={<NotFoundRoute />} />
       </Route>
     </Routes>

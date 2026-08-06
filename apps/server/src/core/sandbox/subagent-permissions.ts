@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { AVAILABLE_TOOLS } from "shared";
-import { sessionManager } from "../session/session-manager";
 import { sessionMetadataStore } from "../session/metadata-store";
+import { sessionManager } from "../session/session-manager";
 import { userPermissionStore } from "./user-permission-store";
 
 export interface ToolPermissionRule {
@@ -27,7 +27,6 @@ export const DEFAULT_SUBAGENT_PERMISSIONS: SubagentPermissionConfig = {
     { toolName: "manage_delegations", pattern: "*", action: "deny", source: "agent-default" },
     { toolName: "manage_factory", pattern: "*", action: "deny", source: "agent-default" },
     { toolName: "manage_custom_tools", pattern: "*", action: "deny", source: "agent-default" },
-    { toolName: "manage_pipelines", pattern: "*", action: "deny", source: "agent-default" },
 
     // Safe read tools allowed by default
     { toolName: "read", pattern: "*", action: "allow", source: "agent-default" },
@@ -50,12 +49,7 @@ export const DEFAULT_SUBAGENT_PERMISSIONS: SubagentPermissionConfig = {
     { toolName: "manage_preview", pattern: "build", action: "ask", source: "agent-default" },
     { toolName: "manage_preview", pattern: "abort", action: "allow", source: "agent-default" },
   ],
-  excludedTools: [
-    "manage_delegations",
-    "manage_factory",
-    "manage_custom_tools",
-    "manage_pipelines",
-  ],
+  excludedTools: ["manage_delegations", "manage_factory", "manage_custom_tools"],
   maxDepth: 1,
 };
 

@@ -22,6 +22,9 @@ export interface SessionContext {
   workspaceDir: string;
 }
 
+/**
+ * @deprecated The plugin system is deprecated and non-operational. Use hooks and custom tools instead.
+ */
 export abstract class BasePlugin {
   abstract readonly name: string;
   readonly priority: number = 50;

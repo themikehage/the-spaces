@@ -29,3 +29,5 @@ nul
 local
 /outserver-debug.log
 /outserver-debug.log
+/out
+out/*

@@ -22,133 +22,54 @@ import {
   UserCheck,
   Users,
 } from "lucide-react";
+import { TOOL_DISPLAY_META, isKnownTool, type ToolName } from "shared";
 import type { ToolResultData } from "./ToolCallRow";
+
+const TOOL_ICONS: Record<string, React.ReactNode> = {
+  ls: <Folder size={13} />,
+  find: <Search size={13} strokeWidth={2.5} />,
+  write: <Pencil size={13} />,
+  read: <Eye size={13} />,
+  edit: <FileText size={13} />,
+  grep: <SearchX size={13} strokeWidth={2.5} />,
+  bash: <Terminal size={13} />,
+  request_approval: <AlertCircle size={13} />,
+  ask_question: <AlertCircle size={13} />,
+  render_images: <Image size={13} />,
+  render_html: <List size={13} />,
+  render_chart: <PieChart size={13} />,
+  refresh_ui: <RefreshCw size={13} />,
+  spawn_subagent: <PanelLeft size={13} strokeWidth={2.5} />,
+  delegate_task: <Users size={13} strokeWidth={2.5} />,
+  manage_delegations: <UserCheck size={13} strokeWidth={2.5} />,
+  exa_search: <Search size={13} strokeWidth={2.5} />,
+  web_fetch: <Globe size={13} strokeWidth={2.5} />,
+  task: <List size={13} strokeWidth={2.5} />,
+  memory: <Database size={13} strokeWidth={2.5} />,
+  memory_store: <Database size={13} strokeWidth={2.5} />,
+  memory_recall: <Search size={13} strokeWidth={2.5} />,
+  memory_forget: <Trash2 size={13} strokeWidth={2.5} />,
+  decompose_tasks: <List size={13} strokeWidth={2.5} />,
+  manage_custom_tools: <Layers size={13} strokeWidth={2.5} />,
+  manage_preview: <Monitor size={13} strokeWidth={2.5} />,
+};
 
 export const TOOL_META: Record<
   string,
   { label: string; colorClass: string; icon: React.ReactNode }
-> = {
-  ls: {
-    label: "ls",
-    colorClass: "text-primary",
-    icon: <Folder size={13} />,
+> = new Proxy(
+  {},
+  {
+    get(_target, prop: string) {
+      const display = isKnownTool(prop) ? TOOL_DISPLAY_META[prop as ToolName] : undefined;
+      return {
+        label: display?.label ?? prop,
+        colorClass: display?.colorClass ?? "text-primary",
+        icon: TOOL_ICONS[prop],
+      };
+    },
   },
-  find: {
-    label: "find",
-    colorClass: "text-primary",
-    icon: <Search size={13} strokeWidth={2.5} />,
-  },
-  write: {
-    label: "write",
-    colorClass: "text-primary",
-    icon: <Pencil size={13} />,
-  },
-  read: {
-    label: "read",
-    colorClass: "text-muted-foreground",
-    icon: <Eye size={13} />,
-  },
-  edit: {
-    label: "edit",
-    colorClass: "text-warning",
-    icon: <FileText size={13} />,
-  },
-  grep: {
-    label: "grep",
-    colorClass: "text-highlight",
-    icon: <SearchX size={13} strokeWidth={2.5} />,
-  },
-  bash: {
-    label: "bash",
-    colorClass: "text-primary",
-    icon: <Terminal size={13} />,
-  },
-  request_approval: {
-    label: "request_approval",
-    colorClass: "text-warning",
-    icon: <AlertCircle size={13} />,
-  },
-  ask_question: {
-    label: "ask_question",
-    colorClass: "text-warning",
-    icon: <AlertCircle size={13} />,
-  },
-  render_images: {
-    label: "render_images",
-    colorClass: "text-primary",
-    icon: <Image size={13} />,
-  },
-  render_html: {
-    label: "render_html",
-    colorClass: "text-primary",
-    icon: <List size={13} />,
-  },
-  render_chart: {
-    label: "render_chart",
-    colorClass: "text-primary",
-    icon: <PieChart size={13} />,
-  },
-  refresh_ui: {
-    label: "refresh_ui",
-    colorClass: "text-primary",
-    icon: <RefreshCw size={13} />,
-  },
-  spawn_subagent: {
-    label: "spawn_subagent",
-    colorClass: "text-primary",
-    icon: <PanelLeft size={13} strokeWidth={2.5} />,
-  },
-  delegate_task: {
-    label: "delegate_task",
-    colorClass: "text-primary",
-    icon: <Users size={13} strokeWidth={2.5} />,
-  },
-  manage_delegations: {
-    label: "manage_delegations",
-    colorClass: "text-primary",
-    icon: <UserCheck size={13} strokeWidth={2.5} />,
-  },
-  exa_search: {
-    label: "exa_search",
-    colorClass: "text-highlight",
-    icon: <Search size={13} strokeWidth={2.5} />,
-  },
-  web_fetch: {
-    label: "web_fetch",
-    colorClass: "text-highlight",
-    icon: <Globe size={13} strokeWidth={2.5} />,
-  },
-  memory_store: {
-    label: "memory_store",
-    colorClass: "text-accent",
-    icon: <Database size={13} strokeWidth={2.5} />,
-  },
-  memory_recall: {
-    label: "memory_recall",
-    colorClass: "text-accent",
-    icon: <Search size={13} strokeWidth={2.5} />,
-  },
-  memory_forget: {
-    label: "memory_forget",
-    colorClass: "text-error",
-    icon: <Trash2 size={13} strokeWidth={2.5} />,
-  },
-  decompose_tasks: {
-    label: "decompose_tasks",
-    colorClass: "text-primary",
-    icon: <List size={13} strokeWidth={2.5} />,
-  },
-  manage_custom_tools: {
-    label: "manage_custom_tools",
-    colorClass: "text-primary",
-    icon: <Layers size={13} strokeWidth={2.5} />,
-  },
-  manage_preview: {
-    label: "preview",
-    colorClass: "text-emerald-500",
-    icon: <Monitor size={13} strokeWidth={2.5} />,
-  },
-};
+);
 
 export function getArgSummary(
   toolName: string,
@@ -213,6 +134,19 @@ export function getArgSummary(
       const url = toSafeString(args.url);
       return url.length > 60 ? url.slice(0, 60) + "…" : url;
     }
+    case "memory": {
+      const action = toSafeString(args.action, "read");
+      if (action === "read") {
+        const q = toSafeString(args.query);
+        return q.length > 60 ? q.slice(0, 60) + "…" : q;
+      }
+      if (action === "upsert") {
+        const c = toSafeString(args.content);
+        return c.length > 50 ? c.slice(0, 50) + "…" : c;
+      }
+      if (action === "delete") return toSafeString(args.id);
+      return action;
+    }
     case "memory_recall": {
       const q = toSafeString(args.query);
       return q.length > 60 ? q.slice(0, 60) + "…" : q;
@@ -223,6 +157,18 @@ export function getArgSummary(
     }
     case "memory_forget":
       return toSafeString(args.id);
+    case "task": {
+      const action = toSafeString(args.action, "start");
+      if (action === "start") {
+        const obj = toSafeString(args.objective);
+        return obj.length > 50 ? obj.slice(0, 50) + "…" : obj;
+      }
+      if (action === "update") {
+        return `${toSafeString(args.taskId)} → ${toSafeString(args.status)}`;
+      }
+      if (action === "end") return toSafeString(args.summary);
+      return action;
+    }
     case "decompose_tasks": {
       const obj = toSafeString(args.objective);
       return obj.length > 50 ? obj.slice(0, 50) + "…" : obj;
@@ -316,6 +262,16 @@ export function getResultSummary(
       const title = result.details?.title || "";
       return title ? `"${title}"` : l.resCompleted;
     }
+    case "memory": {
+      const action = toSafeString(args.action, "read");
+      if (action === "read") {
+        const n = result.details?.count ?? 0;
+        return `${n} ${n !== 1 ? l.resMemories : l.resMemory}`;
+      }
+      if (action === "upsert") return l.resStored;
+      if (action === "delete") return l.resForgotten;
+      return "done";
+    }
     case "memory_recall": {
       const n = result.details?.count ?? 0;
       return `${n} ${n !== 1 ? l.resMemories : l.resMemory}`;
@@ -324,6 +280,11 @@ export function getResultSummary(
       return l.resStored;
     case "memory_forget":
       return l.resForgotten;
+    case "task": {
+      const action = toSafeString(args.action, "start");
+      if (action === "start") return l.resDecomposed;
+      return "done";
+    }
     case "decompose_tasks":
       return l.resDecomposed;
     case "manage_preview": {
@@ -371,10 +332,14 @@ export function getToolLabel(
       return l.labelExaSearch;
     case "web_fetch":
       return l.labelWebFetch;
+    case "memory":
     case "memory_recall":
     case "memory_store":
     case "memory_forget":
       return l.labelMemory;
+    case "task":
+    case "decompose_tasks":
+      return "task";
     case "manage_custom_tools":
       return l.labelManageCustomTools;
     default:
@@ -383,38 +348,5 @@ export function getToolLabel(
 }
 
 export function isCustomToolCheck(toolName: string): boolean {
-  return (
-    ![
-      "read",
-      "write",
-      "edit",
-      "bash",
-      "grep",
-      "find",
-      "ls",
-      "request_approval",
-      "ask_question",
-      "render_images",
-      "render_html",
-      "render_chart",
-      "share_file",
-      "refresh_ui",
-      "manage_delegations",
-      "spawn_subagent",
-      "delegate_task",
-      "exa_search",
-      "web_fetch",
-      "decompose_tasks",
-      "update_task_status",
-      "complete_task_list",
-      "memory_store",
-      "memory_recall",
-      "memory_forget",
-      "create_experiment",
-      "vision",
-      "generate_image",
-      "manage_factory",
-      "manage_custom_tools",
-    ].includes(toolName) && !toolName.startsWith("mcp_")
-  );
+  return !isKnownTool(toolName) && !toolName.startsWith("mcp_");
 }

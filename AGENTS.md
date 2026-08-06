@@ -4,11 +4,20 @@ Un espacio de trabajo en la nube para manejar todos tus proyectos con el poder d
 
 ## Mandatory Context Files
 
-Before any work, read: `about.md`, `steps.md`, `AGENTS.md` (this file). These are the single source of truth.
+Before any work, read: `about.md`, `steps.md`, `AGENTS.md` (this file), `.agents/rules/backend.rules.md`, `.agents/rules/frontend.rules.md`. These are the single source of truth.
+
+## Architecture Rules
+
+Non-negotiable coding standards live in `.agents/rules/`:
+
+- `.agents/rules/backend.rules.md` — Server-side principles (Bun + Hono + Zod)
+- `.agents/rules/frontend.rules.md` — Client-side principles (React 19 + Vite + Tailwind)
+
+Every PR must respect these rules. Reviewers reject violations.
 
 ## Workflow
 
-1. Read the 3 MDs above
+1. Read the 5 MDs above
 2. Pick the next incomplete task from `steps.md`
 3. Complete the task, validate, and commit
 4. Update `steps.md` to mark it completed

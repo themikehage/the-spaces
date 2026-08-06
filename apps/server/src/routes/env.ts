@@ -3,8 +3,8 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { SetEnvVarSchema } from "shared";
 import { z } from "zod";
-import { auditLog } from "../core/stores/audit-log";
 import { sessionManager } from "../core/session/session-manager";
+import { auditLog } from "../core/stores/audit-log";
 import { authMiddleware, getAuthPayload } from "../middleware/auth";
 
 export const envRouter = new Hono();

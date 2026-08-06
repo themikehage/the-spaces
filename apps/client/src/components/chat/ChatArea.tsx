@@ -63,6 +63,8 @@ export function ChatArea({
           disabled={state.streaming || !state.connected}
           loading={state.streaming}
           textareaRef={state.chatInputRef}
+          entityType={state.entityType}
+          entityId={state.entityId}
         />
       </div>
     );

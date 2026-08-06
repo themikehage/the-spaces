@@ -16,6 +16,9 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 import { StringDecoder } from "node:string_decoder";
+import { type AgentMessage, uuidv7 } from "../../vendor/agent/src/index.ts";
+import type { ImageContent, Message, TextContent } from "../../vendor/ai/src/index.ts";
+import { normalizePath, resolvePath } from "../infra/utils";
 import {
   type BashExecutionMessage,
   type CustomMessage,
@@ -23,9 +26,6 @@ import {
   createCompactionSummaryMessage,
   createCustomMessage,
 } from "../session/messages";
-import { normalizePath, resolvePath } from "../infra/utils";
-import { type AgentMessage, uuidv7 } from "../../vendor/agent/src/index.ts";
-import type { ImageContent, Message, TextContent } from "../../vendor/ai/src/index.ts";
 
 export const CURRENT_SESSION_VERSION = 3;
 

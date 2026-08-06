@@ -40,8 +40,8 @@ describe("session-bootstrap profile and tool catalog integration", () => {
       expect(activeTools).toContain("request_approval");
       expect(activeTools).toContain("ask_question");
       expect(activeTools).toContain("manage_delegations");
-      expect(activeTools).toContain("decompose_tasks");
-      expect(activeTools).toContain("memory_store");
+      expect(activeTools).toContain("task");
+      expect(activeTools).toContain("memory");
     } finally {
       cleanupTestUser(userDir);
     }

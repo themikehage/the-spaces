@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 import { describe, expect, it } from "bun:test";
+import { TypedEventEmitter } from "../core/infra/event-bus";
 import type { AgentSessionEvent } from "../core/session/agent-session";
 import type { AgentMessage } from "../vendor/agent/src/types.ts";
-import { TypedEventEmitter } from "../core/infra/event-bus";
 
 const createMockMessage = (text: string): AgentMessage =>
   ({

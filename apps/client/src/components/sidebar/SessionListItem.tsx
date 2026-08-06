@@ -108,3 +108,30 @@ export function TeamListItem({
     </button>
   );
 }
+
+interface WorkflowItemProps {
+  id: string;
+  name: string;
+  stepsCount: number;
+  isActive: boolean;
+  itemClass: (isActive: boolean) => string;
+  onClick: (id: string) => void;
+}
+
+export function WorkflowListItem({
+  id,
+  name,
+  stepsCount,
+  isActive,
+  itemClass,
+  onClick,
+}: WorkflowItemProps) {
+  return (
+    <button onClick={() => onClick(id)} className={itemClass(isActive)}>
+      <span className="truncate flex-1 text-left">{name}</span>
+      <span className="text-[10px] font-mono text-muted-foreground bg-accent/60 px-1.5 py-0.2 rounded flex-shrink-0">
+        {stepsCount}
+      </span>
+    </button>
+  );
+}

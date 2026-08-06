@@ -3,8 +3,8 @@ import { spawn } from "node:child_process";
 import { join } from "node:path";
 import { type PreviewConfig, getProjectWorkspaceDir } from "shared";
 import { broadcastToUser } from "../../ws/handler";
-import { getBuildCommand } from "./preview-config";
 import { resolveProjectDir } from "../session/workspace-resolver";
+import { getBuildCommand } from "./preview-config";
 
 const activeBuilds = new Map<string, AbortController>();
 

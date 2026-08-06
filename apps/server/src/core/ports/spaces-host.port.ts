@@ -68,6 +68,8 @@ export interface TeamDirectoryPort {
   ): Promise<{ name: string; leaderId: string; memberIds: string[] } | null>;
 }
 
+import type { IWorkflowEngine } from "./workflow-engine.port";
+
 export interface ScopePort {
   resolveProjectDir(username: string, projectId?: string): string | null;
 }
@@ -92,4 +94,5 @@ export interface SpacesHost {
   agents?: AgentDirectoryPort;
   teams?: TeamDirectoryPort;
   scope?: ScopePort;
+  workflows?: IWorkflowEngine;
 }

@@ -16,21 +16,21 @@ Agregar un nuevo tipo de ejecución `"agent"` en `CustomToolDefinition` que perm
 
 ### Lo que SÍ funciona
 
-| Aspecto | Estado | Detalle |
-|---------|--------|---------|
-| `ExecutionPipelineSchema` encadena tool calls | OK | `schemas.ts` — `steps: PipelineStep[]` con `tool`, `params`, `output` |
-| `createCustomToolRuntime` ejecuta pipelines | OK | `runtime.ts` — case `"pipeline"` usa `executePipeline()` |
-| `PipelineContext` tiene `username`, `sessionId`, `cwd` | OK | `pipeline-engine.ts` — contexto de ejecución |
-| `manage_delegations` hace spawn/delegate | OK | `manage-delegations.tool.ts` — usa `DelegationRegistry` |
+| Aspecto                                                | Estado | Detalle                                                               |
+| ------------------------------------------------------ | ------ | --------------------------------------------------------------------- |
+| `ExecutionPipelineSchema` encadena tool calls          | OK     | `schemas.ts` — `steps: PipelineStep[]` con `tool`, `params`, `output` |
+| `createCustomToolRuntime` ejecuta pipelines            | OK     | `runtime.ts` — case `"pipeline"` usa `executePipeline()`              |
+| `PipelineContext` tiene `username`, `sessionId`, `cwd` | OK     | `pipeline-engine.ts` — contexto de ejecución                          |
+| `manage_delegations` hace spawn/delegate               | OK     | `manage-delegations.tool.ts` — usa `DelegationRegistry`               |
 
 ### Lo que NO funciona (gaps)
 
-| Gap | Impacto | Ubicación |
-|-----|---------|-----------|
-| `execute.type` solo acepta `"pipeline"` o `"ui"` | No se puede definir un step que spawne un agente | `schemas.ts:243-246` |
-| `pipeline-engine.ts` no tiene acceso a `DelegationRegistry` | Un pipeline no puede crear delegaciones | `pipeline-engine.ts` |
-| `PipelineContext` no inyecta `delegationRegistry` | No hay forma de pasar el registry al runtime de pipeline | `pipeline-engine.ts:1-20` |
-| `createCustomToolRuntime` no recibe `delegationRegistry` | El runtime no puede iniciar delegaciones | `runtime.ts:8-11` |
+| Gap                                                         | Impacto                                                  | Ubicación                 |
+| ----------------------------------------------------------- | -------------------------------------------------------- | ------------------------- |
+| `execute.type` solo acepta `"pipeline"` o `"ui"`            | No se puede definir un step que spawne un agente         | `schemas.ts:243-246`      |
+| `pipeline-engine.ts` no tiene acceso a `DelegationRegistry` | Un pipeline no puede crear delegaciones                  | `pipeline-engine.ts`      |
+| `PipelineContext` no inyecta `delegationRegistry`           | No hay forma de pasar el registry al runtime de pipeline | `pipeline-engine.ts:1-20` |
+| `createCustomToolRuntime` no recibe `delegationRegistry`    | El runtime no puede iniciar delegaciones                 | `runtime.ts:8-11`         |
 
 ---
 
@@ -66,7 +66,7 @@ export type ExecutionAgent = z.infer<typeof ExecutionAgentSchema>;
 export const ExecutionModeSchema = z.discriminatedUnion("type", [
   ExecutionPipelineSchema,
   ExecutionUiSchema,
-  ExecutionAgentSchema,  // ← nuevo
+  ExecutionAgentSchema, // ← nuevo
 ]);
 ```
 
@@ -82,7 +82,7 @@ export interface PipelineContext {
   session: IAgentRuntime | null;
   username: string;
   sessionId: string;
-  delegationRegistry?: DelegationRegistry;  // ← nuevo
+  delegationRegistry?: DelegationRegistry; // ← nuevo
 }
 ```
 
@@ -183,13 +183,13 @@ if (step.output) {
 
 ## Archivos afectados
 
-| Archivo | Operación | Descripción |
-|---------|-----------|-------------|
-| `core/custom-tools/schemas.ts` | MODIFY | Agregar `ExecutionAgentSchema`, actualizar `ExecutionModeSchema` |
-| `core/custom-tools/pipeline-engine.ts` | MODIFY | Agregar `delegationRegistry` a `PipelineContext`, propagar `pipelineScopeUpdate` |
-| `core/custom-tools/runtime.ts` | MODIFY | Nuevo case `"agent"` que invoca `spawnSubagent` |
-| `core/session/agent-utils.ts` | MODIFY | Extraer helper `spawnSubagent` reutilizable |
-| `packages/shared/src/tools-catalog.ts` | MODIFY | Actualizar tipos si hay referencias al schema de ejecución |
+| Archivo                                | Operación | Descripción                                                                      |
+| -------------------------------------- | --------- | -------------------------------------------------------------------------------- |
+| `core/custom-tools/schemas.ts`         | MODIFY    | Agregar `ExecutionAgentSchema`, actualizar `ExecutionModeSchema`                 |
+| `core/custom-tools/pipeline-engine.ts` | MODIFY    | Agregar `delegationRegistry` a `PipelineContext`, propagar `pipelineScopeUpdate` |
+| `core/custom-tools/runtime.ts`         | MODIFY    | Nuevo case `"agent"` que invoca `spawnSubagent`                                  |
+| `core/session/agent-utils.ts`          | MODIFY    | Extraer helper `spawnSubagent` reutilizable                                      |
+| `packages/shared/src/tools-catalog.ts` | MODIFY    | Actualizar tipos si hay referencias al schema de ejecución                       |
 
 ---
 

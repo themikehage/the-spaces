@@ -1,8 +1,8 @@
 import { RichMarkdown } from "@/components/chat/RichMarkdown";
 import { Modal } from "@/components/ui/Modal";
 import { useEntitySkills, type SkillInfo } from "@/hooks/useEntitySkills";
-import { EntityEventBus } from "@/lib/event-bus";
 import { useLiterals } from "@/lib";
+import { EntityEventBus } from "@/lib/event-bus";
 import { Check } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { EntityType } from "shared";

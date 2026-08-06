@@ -93,7 +93,8 @@ export function RegisterModal({
   };
 
   const set =
-    (key: keyof AgentDefinition) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+    (key: keyof AgentDefinition) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       setForm((prev) => ({ ...prev, [key]: e.target.value }));
 
   const handleSubmit = async () => {

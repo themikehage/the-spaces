@@ -179,7 +179,7 @@ describe("AgentSession & Agent Class Integration Tests", () => {
     await sessionWithMock.prompt("hello");
 
     expect(sessionWithMock.messages.length).toBeGreaterThan(0);
-    expect(sessionWithMock.messages[0].role).toBe("assistant");
+    expect(sessionWithMock.messages[0].role).toBe("user");
   });
 
   test("Steer and FollowUp queueing", () => {

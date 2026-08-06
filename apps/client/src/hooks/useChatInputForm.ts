@@ -54,6 +54,7 @@ interface UseChatInputFormParams {
   disabled?: boolean;
   customEntityType?: EntityType;
   customEntityId?: string;
+  userMessages?: string[];
 }
 
 export function useChatInputForm({
@@ -71,6 +72,7 @@ export function useChatInputForm({
   disabled = false,
   customEntityType,
   customEntityId,
+  userMessages = [],
 }: UseChatInputFormParams) {
   const l = useLiterals(u);
   const resolvedEntityType: EntityType =
@@ -78,6 +80,8 @@ export function useChatInputForm({
   const resolvedEntityId: string = customEntityId || activeAgentId || activeProjectName || "global";
   const { addToast } = useToast();
   const [input, setInput] = useState("");
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [savedDraft, setSavedDraft] = useState("");
   const [activeTools, setActiveTools] = useState<string[]>(DEFAULT_TOOLS);
   const [executionMode, setExecutionMode] = useState<
     "readonly" | "standard" | "autonomous" | undefined
@@ -95,6 +99,22 @@ export function useChatInputForm({
   const [autocompleteMode, setAutocompleteMode] = useState<"skill" | "mention" | null>(null);
   const [autocompleteSearch, setAutocompleteSearch] = useState("");
   const [autocompleteSelectedIndex, setAutocompleteSelectedIndex] = useState(0);
+
+  useEffect(() => {
+    setHistoryIndex(-1);
+    setSavedDraft("");
+  }, [sessionId]);
+
+  const setInputValueFromHistory = (val: string) => {
+    setInput(val);
+    const textarea = textareaRef.current;
+    if (textarea) {
+      setTimeout(() => {
+        textarea.selectionStart = val.length;
+        textarea.selectionEnd = val.length;
+      }, 0);
+    }
+  };
 
   const filteredMentions = mentionTargets.filter((t) =>
     t.name.toLowerCase().includes(autocompleteSearch.toLowerCase()),
@@ -228,9 +248,20 @@ export function useChatInputForm({
       });
       setAttachments([]);
       setInput("");
+      setHistoryIndex(-1);
+      setSavedDraft("");
       setAutocompleteMode(null);
     } catch (err) {
       addToast("error", err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  const handleInputChange = (val: string) => {
+    setInput(val);
+    setHistoryIndex(-1);
+    const textarea = textareaRef.current;
+    if (textarea) {
+      checkAutocomplete(val, textarea.selectionStart);
     }
   };
 
@@ -261,6 +292,39 @@ export function useChatInputForm({
       if (e.key === "Escape") {
         e.preventDefault();
         setAutocompleteMode(null);
+        return;
+      }
+    }
+
+    if (e.key === "ArrowUp" && !autocompleteMode && userMessages.length > 0) {
+      const textarea = textareaRef.current;
+      if (textarea && textarea.selectionStart === 0) {
+        e.preventDefault();
+        if (historyIndex === -1) {
+          setSavedDraft(input);
+          setHistoryIndex(0);
+          setInputValueFromHistory(userMessages[userMessages.length - 1]);
+        } else if (historyIndex < userMessages.length - 1) {
+          const nextIndex = historyIndex + 1;
+          setHistoryIndex(nextIndex);
+          setInputValueFromHistory(userMessages[userMessages.length - 1 - nextIndex]);
+        }
+        return;
+      }
+    }
+
+    if (e.key === "ArrowDown" && !autocompleteMode && historyIndex !== -1) {
+      const textarea = textareaRef.current;
+      if (textarea && textarea.selectionStart === textarea.value.length) {
+        e.preventDefault();
+        if (historyIndex > 0) {
+          const nextIndex = historyIndex - 1;
+          setHistoryIndex(nextIndex);
+          setInputValueFromHistory(userMessages[userMessages.length - 1 - nextIndex]);
+        } else {
+          setInputValueFromHistory(savedDraft);
+          setHistoryIndex(-1);
+        }
         return;
       }
     }
@@ -377,6 +441,7 @@ export function useChatInputForm({
     resolvedEntityId,
     input,
     setInput,
+    handleInputChange,
     activeTools,
     executionMode,
     toolStatus,

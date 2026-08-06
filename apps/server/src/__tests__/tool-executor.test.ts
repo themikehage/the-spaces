@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 import { describe, expect, it } from "bun:test";
+import { ToolExecutor } from "../core/infra/tool-executor";
+import { ToolRegistry } from "../core/infra/tool-registry";
 import type { IHookRunner } from "../core/ports/hook.port";
 import type { IPermissionEngine } from "../core/ports/permission.port";
 import type { ITool, ToolContext } from "../core/ports/tool.port";
-import { ToolExecutor } from "../core/infra/tool-executor";
-import { ToolRegistry } from "../core/infra/tool-registry";
 
 class MockTool implements ITool {
   constructor(

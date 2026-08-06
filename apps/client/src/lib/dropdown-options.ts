@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 export const ROLE_OPTIONS = [
   { value: "lead", label: "Lead" },
-  { value: "senior", label: "Senior" },
   { value: "member", label: "Member" },
   { value: "observer", label: "Observer" },
 ] as const;

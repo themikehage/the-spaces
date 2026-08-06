@@ -54,9 +54,14 @@ export const ModelSettingsSchema = z.object({
 export {
   AVAILABLE_TOOLS,
   DEFAULT_ALWAYS_ON_TOOLS,
+  GATE_ENV_VARS,
+  TOOL_DISPLAY_META,
   TOOL_GROUPS,
+  TOOL_PRESETS,
+  type ToolDisplayMeta,
   type ToolGroup,
   type ToolName,
+  type ToolPreset,
 } from "./tools-catalog";
 
 export const ToolPermissionsSchema = z.object({
@@ -65,6 +70,7 @@ export const ToolPermissionsSchema = z.object({
   autonomyLevel: z.enum(["auto", "propose", "suggest"]).optional(),
 });
 export type ToolPermissions = z.infer<typeof ToolPermissionsSchema>;
+export type ExecutionMode = NonNullable<z.infer<typeof ToolPermissionsSchema>["executionMode"]>;
 
 export const SetApiKeySchema = z.object({
   apiKey: z.string().min(1),

@@ -36,3 +36,9 @@ export function buildDelegationsPath(
 export function buildWorkspacePath(context: ContextPathInput | null): string {
   return context ? buildContextPath(context, "workspace") : "/workspace";
 }
+
+export function buildWorkflowPath(workflowId?: string, tab?: string): string {
+  if (!workflowId) return "/workflows";
+  if (!tab) return `/workflows/${workflowId}`;
+  return `/workflows/${workflowId}/${tab}`;
+}

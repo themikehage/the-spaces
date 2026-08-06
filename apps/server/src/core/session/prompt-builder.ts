@@ -12,8 +12,8 @@ import {
 import { loadSkills } from "..";
 import type { EntityConfig } from "../config";
 import { CUSTOM_TOOL_INSTRUCTIONS } from "../custom-tools";
-import { DEFAULT_AGENTS_MD } from "../prompts/default-factory-skills";
 import { promptComposer } from "../prompts/composer";
+import { DEFAULT_AGENTS_MD } from "../prompts/default-factory-skills";
 import { buildProjectContextPrompt } from "../prompts/project-context";
 import { assemblePromptAppends } from "../prompts/prompt-assembly";
 import {
@@ -249,9 +249,9 @@ export class SessionPromptBuilder {
           `- Instructions: "${activeTask?.prompt || "N/A"}"\n\n` +
           `Guidelines:\n` +
           `1. Focus ONLY on completing the active task: ${tasksState.currentTaskId}. Do not perform actions related to other tasks.\n` +
-          `2. When the active task's objective is fully achieved, you MUST call the native tool: \`update_task_status(taskId: "${tasksState.currentTaskId}", status: "done", log: "summary of what was done")\` to mark it as complete. This will automatically update your active instructions in the next turn.\n` +
-          `3. If a task fails or you hit an error you cannot resolve, call \`update_task_status(taskId: "${tasksState.currentTaskId}", status: "failed", log: "error reason")\`.\n` +
-          `4. When all tasks in the list have been marked as "done", you MUST call \`complete_task_list(summary: "final completion summary")\` to finalize the execution.`;
+          `2. When the active task's objective is fully achieved, you MUST call the native tool: \`task(action: "update", taskId: "${tasksState.currentTaskId}", status: "done", log: "summary of what was done")\` to mark it as complete. This will automatically update your active instructions in the next turn.\n` +
+          `3. If a task fails or you hit an error you cannot resolve, call \`task(action: "update", taskId: "${tasksState.currentTaskId}", status: "failed", log: "error reason")\`.\n` +
+          `4. When all tasks in the list have been marked as "done", you MUST call \`task(action: "end", summary: "final completion summary")\` to finalize the execution.`;
 
         appendPrompts.push(promptSnippet);
       } catch (e) {

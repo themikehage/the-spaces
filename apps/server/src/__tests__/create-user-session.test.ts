@@ -4,13 +4,13 @@ import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { getProjectsDir, getTeamWorkspaceDir, getUserDir } from "shared";
 import { agentRegistry } from "../agents";
-import { sessionManager } from "../core/session/session-manager";
 import {
   createUserSession,
   LeaderNotRegisteredError,
   LeaderRequiredError,
   TeamNotFoundError,
 } from "../core/session/create-user-session";
+import { sessionManager } from "../core/session/session-manager";
 import { teamStore } from "../teams/team-store";
 
 describe("createUserSession domain helper", () => {

@@ -9,9 +9,9 @@ import {
   getSessionMetadataPath,
 } from "shared";
 import { approvalManager } from "../core/approvals/approval-manager";
+import { uiApprovalRegistry } from "../core/approvals/ui-approval-registry";
 import { ensureWatcher, setBuilding, setError, setReady } from "../core/preview/preview-watcher";
 import { sessionManager } from "../core/session/session-manager";
-import { uiApprovalRegistry } from "../core/approvals/ui-approval-registry";
 import {
   resolveUsernameFromCookieHeader,
   resolveUsernameFromToken,

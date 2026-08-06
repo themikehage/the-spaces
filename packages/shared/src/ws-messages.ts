@@ -232,6 +232,36 @@ export const WsServerControlMessageSchema = z.discriminatedUnion("type", [
     sessionId: z.string().optional(),
     tasks: z.array(z.unknown()).optional(),
   }),
+  z.object({
+    type: z.literal("workflow_run_started"),
+    runId: z.string(),
+    workflowId: z.string(),
+    workflowName: z.string(),
+  }),
+  z.object({
+    type: z.literal("workflow_step_started"),
+    runId: z.string(),
+    stepId: z.string(),
+    stepLabel: z.string(),
+  }),
+  z.object({
+    type: z.literal("workflow_step_completed"),
+    runId: z.string(),
+    stepId: z.string(),
+    status: z.string(),
+    outputs: z.record(z.unknown()).optional(),
+  }),
+  z.object({
+    type: z.literal("workflow_step_approval"),
+    runId: z.string(),
+    stepId: z.string(),
+    approvalMessage: z.string(),
+  }),
+  z.object({
+    type: z.literal("workflow_run_completed"),
+    runId: z.string(),
+    status: z.enum(["success", "error", "cancelled"]),
+  }),
 ]);
 
 export type WsServerControlMessage = z.infer<typeof WsServerControlMessageSchema>;

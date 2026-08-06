@@ -3,83 +3,22 @@ import { Modal } from "@/components/ui/Modal";
 import { useLiterals } from "@/lib";
 import { ChevronDown, Shield } from "lucide-react";
 import { useState } from "react";
+import {
+  AVAILABLE_TOOLS,
+  GATE_ENV_VARS,
+  TOOL_DISPLAY_META,
+  TOOL_PRESETS,
+  type ExecutionMode,
+  type ToolPreset,
+} from "shared";
 import { literals as u } from "./ToolsSelector.literals";
-
-export interface ToolDefinition {
-  id: string;
-  name: string;
-  desc: string;
-  gateKey?: string;
-}
-
-export const ALL_TOOLS: ToolDefinition[] = [
-  { id: "read", name: "Read File", desc: "Read content of files on disk" },
-  { id: "write", name: "Write File", desc: "Create new files on disk" },
-  { id: "edit", name: "Edit File", desc: "Modify existing files on disk" },
-  { id: "bash", name: "Bash Command", desc: "Execute shell commands on host" },
-  { id: "grep", name: "Grep Search", desc: "Find pattern matches within files" },
-  { id: "find", name: "Find Files", desc: "Locate files in directory structure" },
-  { id: "ls", name: "Directory List", desc: "List directory contents" },
-  {
-    id: "request_approval",
-    name: "Request Approval",
-    desc: "Require explicit authorization for critical actions",
-  },
-  {
-    id: "ask_question",
-    name: "Ask Question",
-    desc: "Ask single/multi-choice or custom text questions",
-  },
-  {
-    id: "render_images",
-    name: "Render Images",
-    desc: "Display a responsive grid of generated drawings/images",
-  },
-  {
-    id: "render_chart",
-    name: "Render Charts",
-    desc: "Visualize metrics via line/bar/pie/area charts",
-  },
-  { id: "render_html", name: "Render HTML", desc: "Render interactive HTML documents in the chat" },
-  {
-    id: "share_file",
-    name: "Share File",
-    desc: "Share downloadable files with the user (PDF, DOC, XLSX, ZIP, etc.)",
-  },
-  {
-    id: "refresh_ui",
-    name: "Refresh UI",
-    desc: "Notify the interface to reload sidebars and lists after changes",
-  },
-  {
-    id: "spawn_subagent",
-    name: "Spawn Subagent",
-    desc: "Delegate a task to a fresh subagent with isolated context",
-  },
-  {
-    id: "delegate_task",
-    name: "Delegate Task",
-    desc: "Delegate task to another agent, project, channel, or session",
-  },
-  {
-    id: "exa_search",
-    name: "Exa Search",
-    desc: "Search the web using Exa AI (semantic search engine)",
-    gateKey: "EXA_API_KEY",
-  },
-  {
-    id: "web_fetch",
-    name: "Web Fetch",
-    desc: "Fetch and extract content from any URL as clean Markdown",
-  },
-];
 
 interface Props {
   activeTools: string[];
-  onChange: (tools: string[], executionMode?: "readonly" | "standard" | "autonomous") => void;
+  onChange: (tools: string[], executionMode?: ExecutionMode) => void;
   disabled?: boolean;
   toolStatus?: Record<string, "available" | "missing_key">;
-  executionMode?: "readonly" | "standard" | "autonomous";
+  executionMode?: ExecutionMode;
 }
 
 export function ToolsSelector({
@@ -102,29 +41,15 @@ export function ToolsSelector({
     onChange(next, executionMode);
   };
 
-  const applyPreset = (preset: "autonomous" | "standard" | "readonly") => {
+  const applyPreset = (preset: ToolPreset) => {
+    let selected: string[] = [...TOOL_PRESETS[preset]];
     if (preset === "autonomous") {
-      const available = ALL_TOOLS.filter(
-        (t) => !(t.gateKey && toolStatus?.[t.id] === "missing_key"),
-      ).map((t) => t.id);
-      onChange(available, "autonomous");
-    } else if (preset === "standard") {
-      const standardTools = [
-        "read",
-        "write",
-        "edit",
-        "bash",
-        "grep",
-        "find",
-        "ls",
-        "request_approval",
-        "ask_question",
-        "render_html",
-      ];
-      onChange(standardTools, "standard");
-    } else {
-      onChange(["read", "grep", "find", "ls"], "readonly");
+      selected = selected.filter(
+        (t) =>
+          !(GATE_ENV_VARS[t as keyof typeof GATE_ENV_VARS] && toolStatus?.[t] === "missing_key"),
+      );
     }
+    onChange(selected, preset);
   };
 
   const isReadOnly =
@@ -140,9 +65,8 @@ export function ToolsSelector({
   const isAutonomous = executionMode === "autonomous";
   const isStandard = executionMode === "standard" || (!isReadOnly && !isAutonomous);
 
-  let statusLabel = `${activeTools.length}/${ALL_TOOLS.length} tools`;
-  if (isAutonomous)
-    statusLabel = l.fullAccess; // displays Autonomous
+  let statusLabel = `${activeTools.length}/${AVAILABLE_TOOLS.length} tools`;
+  if (isAutonomous) statusLabel = l.fullAccess;
   else if (isStandard) statusLabel = l.standard || "Standard";
   else if (isReadOnly) statusLabel = l.readOnly;
   else if (activeTools.length === 0) statusLabel = l.restricted;
@@ -196,31 +120,33 @@ export function ToolsSelector({
             </button>
           </div>
           <div className="space-y-2">
-            {ALL_TOOLS.map((t) => {
-              const isGated = !!(t.gateKey && toolStatus?.[t.id] === "missing_key");
-              const checked = activeTools.includes(t.id);
+            {AVAILABLE_TOOLS.map((toolId) => {
+              const meta = TOOL_DISPLAY_META[toolId];
+              const gateKey = GATE_ENV_VARS[toolId];
+              const isGated = !!(gateKey && toolStatus?.[toolId] === "missing_key");
+              const checked = activeTools.includes(toolId);
               const isToolDisabled = disabled || isGated;
 
               return (
                 <label
-                  key={t.id}
+                  key={toolId}
                   className={`flex items-start gap-2.5 p-1.5 rounded-md transition-colors ${
                     isToolDisabled
                       ? "opacity-40 cursor-not-allowed"
                       : "hover:bg-card-hover/50 cursor-pointer"
                   }`}
-                  title={isGated ? `Requires ${t.gateKey} in Settings > Env Vars` : undefined}
+                  title={isGated ? `Requires ${gateKey} in Settings > Env Vars` : undefined}
                 >
                   <input
                     type="checkbox"
                     checked={checked}
                     disabled={isToolDisabled}
-                    onChange={() => !isToolDisabled && handleToggleTool(t.id)}
+                    onChange={() => !isToolDisabled && handleToggleTool(toolId)}
                     className="mt-0.5 accent-accent"
                   />
                   <div>
                     <div className="font-semibold text-foreground font-mono text-xs flex items-center gap-1.5">
-                      {t.id}
+                      {meta?.displayName || toolId}
                       {isGated && (
                         <span className="px-1 py-0.2 bg-warning/10 text-warning text-[8px] font-semibold rounded">
                           Gated
@@ -228,10 +154,10 @@ export function ToolsSelector({
                       )}
                     </div>
                     <div className="text-muted-foreground text-xs leading-snug">
-                      {t.desc}
+                      {meta?.description}
                       {isGated && (
                         <span className="block text-warning text-[8px] mt-0.5 font-medium">
-                          Requires {t.gateKey}
+                          Requires {gateKey}
                         </span>
                       )}
                     </div>

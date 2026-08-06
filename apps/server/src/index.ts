@@ -8,11 +8,11 @@ import { join } from "node:path";
 import { SPACES_DATA_PATH } from "shared";
 import { auth } from "./auth/index";
 import { ensureAuthTables } from "./auth/migrate";
+import { createServerContext } from "./core/infra/server-context";
 import { memoryRegistry } from "./core/memory/registry";
 import { globalErrorHandler } from "./core/middleware/error-handler";
 import { requestIdMiddleware } from "./core/middleware/request-id";
 import { scheduleRunner } from "./core/schedules/index";
-import { createServerContext } from "./core/infra/server-context";
 import { sessionMetadataStore } from "./core/session/metadata-store";
 import { handleRequest as previewRequest, startPreviewServer } from "./preview-server";
 import { agentsRouter } from "./routes/agents";
@@ -36,6 +36,7 @@ import { sessionsRouter } from "./routes/sessions/index";
 import { settingsRouter } from "./routes/settings";
 import { skillsRouter } from "./routes/skills";
 import { teamsRouter } from "./routes/teams";
+import { workflowsRouter } from "./routes/workflows/index";
 import { teamStore } from "./teams/team-store";
 import { createWsContext } from "./ws/factory";
 
@@ -129,6 +130,7 @@ app.route("/api/gallery", galleryRouter);
 app.route("/api/factory", factoryRouter);
 app.route("/api/approvals", approvalsRouter);
 app.route("/api/schedules", schedulesRouter);
+app.route("/api/workflows", workflowsRouter);
 app.route("/api", filesRouter);
 
 app.get(

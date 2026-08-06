@@ -2,18 +2,21 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { agentRegistry } from "../../agents";
 import { teamStore } from "../../teams/team-store";
+import { uiApprovalRegistry } from "../approvals/ui-approval-registry";
 import { delegationRegistry } from "../delegation/delegation-registry";
 import { mcpRegistry } from "../mcp/mcp-registry";
 import type { SpacesHost } from "../ports/spaces-host.port";
 import type { WorkspaceConfig } from "../ports/workspace-config.port";
 import { workspaceConfigLoader } from "../session/workspace-config-loader";
 import { resolveProjectDir } from "../session/workspace-resolver";
-import { uiApprovalRegistry } from "../approvals/ui-approval-registry";
 
 import { FileArtifactStore } from "../stores/file-artifact-store";
 import { FileSessionStore } from "../stores/file-session-store";
 
+import { workflowEngine } from "../workflows/workflow-engine-instance";
+
 export class ServerSpacesHost implements SpacesHost {
+  workflows = workflowEngine;
   stores = {
     session: new FileSessionStore(),
     artifact: new FileArtifactStore(process.cwd()),

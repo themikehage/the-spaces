@@ -130,6 +130,7 @@ export interface ProviderConfig {
   baseUrl: string;
   apiKey: string;
   api: string;
+  defaultModel?: string;
   models: Array<{
     id: string;
     name: string;

@@ -1,25 +1,4 @@
 import type { BaseTool } from "shared";
-import { TypedEventEmitter } from "../infra/event-bus";
-import { HookRunner } from "../infra/hook-runner";
-import { NavigationController } from "./navigation-controller";
-import { PermissionEngine } from "../infra/permission-engine";
-import type { IAgentRuntime } from "../ports/agent-runtime.port";
-import type { IEventBus } from "../ports/event-bus.port";
-import type { Hook, IHookRunner } from "../ports/hook.port";
-import type { IPermissionEngine } from "../ports/permission.port";
-import type { IPromptBuilder } from "../ports/prompt-builder.port";
-import type { ITool } from "../ports/tool.port";
-import { ToolRegistry } from "../infra/tool-registry";
-import type { AuthStorage } from "./auth-storage";
-import { CompactionManager } from "./compaction-manager";
-import { estimateContextUsage as estimateContextUsageHelper } from "./context-estimator";
-import { convertToLlm } from "./messages";
-import type { AvailableModel, ModelRegistry } from "../model/model-registry";
-import { PromptBuilder } from "./prompt-builder-core";
-import type { DefaultResourceLoader } from "./resource-loader";
-import { handleAgentEvent as processAgentEvent } from "./session-event-handler";
-import type { JsonlSessionStore } from "../stores/session-persistence";
-import { calculateSessionStats } from "./session-stats-calculator";
 import { Agent } from "../../vendor/agent/src/agent.ts";
 import { formatSkillsForSystemPrompt } from "../../vendor/agent/src/harness/system-prompt.ts";
 import type {
@@ -29,6 +8,27 @@ import type {
   BeforeToolCallResult,
 } from "../../vendor/agent/src/types.ts";
 import { streamSimple } from "../../vendor/ai/src/compat.ts";
+import { TypedEventEmitter } from "../infra/event-bus";
+import { HookRunner } from "../infra/hook-runner";
+import { PermissionEngine } from "../infra/permission-engine";
+import { ToolRegistry } from "../infra/tool-registry";
+import type { AvailableModel, ModelRegistry } from "../model/model-registry";
+import type { IAgentRuntime } from "../ports/agent-runtime.port";
+import type { IEventBus } from "../ports/event-bus.port";
+import type { Hook, IHookRunner } from "../ports/hook.port";
+import type { IPermissionEngine } from "../ports/permission.port";
+import type { IPromptBuilder } from "../ports/prompt-builder.port";
+import type { ITool } from "../ports/tool.port";
+import type { JsonlSessionStore } from "../stores/session-persistence";
+import type { AuthStorage } from "./auth-storage";
+import { CompactionManager } from "./compaction-manager";
+import { estimateContextUsage as estimateContextUsageHelper } from "./context-estimator";
+import { convertToLlm } from "./messages";
+import { NavigationController } from "./navigation-controller";
+import { PromptBuilder } from "./prompt-builder-core";
+import type { DefaultResourceLoader } from "./resource-loader";
+import { handleAgentEvent as processAgentEvent } from "./session-event-handler";
+import { calculateSessionStats } from "./session-stats-calculator";
 
 export interface AgentSessionDeps {
   cwd: string;

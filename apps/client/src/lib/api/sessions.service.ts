@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 import { apiFetch } from "@/lib/api";
+import type { SessionStatus } from "shared";
 
-export type SessionStatus = "active" | "streaming" | "task-running" | "sleeping";
+export type { SessionStatus };
 
 export interface SessionItem {
   id: string;

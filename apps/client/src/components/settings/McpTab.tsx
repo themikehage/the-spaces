@@ -2,18 +2,8 @@
 import { useLiterals } from "@/lib";
 import { mcpService } from "@/lib/api/mcp.service";
 import { useCallback, useEffect, useState } from "react";
+import type { McpConfig } from "shared";
 import { literals as u } from "./McpTab.literals";
-
-interface McpServerConfig {
-  enabled: boolean;
-  command: string;
-  args: string[];
-  env?: Record<string, string>;
-}
-
-interface McpConfig {
-  mcpServers: Record<string, McpServerConfig>;
-}
 
 export function McpTab() {
   const l = useLiterals(u);

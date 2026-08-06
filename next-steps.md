@@ -15,21 +15,21 @@ Las custom tools ya tienen una arquitectura de dos capas (`BaseTool` en shared +
 
 ### Archivos relevantes
 
-| Archivo | Rol |
-|---|---|
-| `packages/shared/src/tools/base-tool.ts` | Interfaz canónica `BaseTool`, `ToolDeclaration`, `ToolResult` |
-| `packages/shared/src/tools/function-tool.ts` | `FunctionTool` — implementación concreta |
-| `packages/shared/src/tools/tool-registry.ts` | `ToolRegistry` compartido con namespaces |
-| `packages/shared/src/tools/legacy-adapter.ts` | `legacyToolToBaseTool()` |
-| `apps/server/src/core/custom-tools/schemas.ts` | `CustomToolDefinitionSchema` con campo `scope` opcional |
-| `apps/server/src/core/custom-tools/storage.ts` | `CustomToolStorage` — persistencia flat-file |
-| `apps/server/src/core/custom-tools/runtime.ts` | `createCustomToolRuntime()` |
-| `apps/server/src/core/custom-tools/manage-custom-tools-tool.ts` | Tool `manage_custom_tools` para CRUD runtime |
-| `apps/server/src/core/session/tool-factory.ts` | `SessionToolFactory.createSessionTools()` |
-| `apps/server/src/core/scope/scope-config-manager.ts` | Cascada `resolveToolsForAgent()` |
-| `apps/client/src/components/settings/EntityCustomToolsEditor.tsx` | UI de toggles por entidad |
-| `apps/client/src/hooks/useEntityCustomTools.ts` | Hook de gestión de scope |
-| `apps/client/src/lib/api/custom-tools.service.ts` | Cliente API |
+| Archivo                                                           | Rol                                                           |
+| ----------------------------------------------------------------- | ------------------------------------------------------------- |
+| `packages/shared/src/tools/base-tool.ts`                          | Interfaz canónica `BaseTool`, `ToolDeclaration`, `ToolResult` |
+| `packages/shared/src/tools/function-tool.ts`                      | `FunctionTool` — implementación concreta                      |
+| `packages/shared/src/tools/tool-registry.ts`                      | `ToolRegistry` compartido con namespaces                      |
+| `packages/shared/src/tools/legacy-adapter.ts`                     | `legacyToolToBaseTool()`                                      |
+| `apps/server/src/core/custom-tools/schemas.ts`                    | `CustomToolDefinitionSchema` con campo `scope` opcional       |
+| `apps/server/src/core/custom-tools/storage.ts`                    | `CustomToolStorage` — persistencia flat-file                  |
+| `apps/server/src/core/custom-tools/runtime.ts`                    | `createCustomToolRuntime()`                                   |
+| `apps/server/src/core/custom-tools/manage-custom-tools-tool.ts`   | Tool `manage_custom_tools` para CRUD runtime                  |
+| `apps/server/src/core/session/tool-factory.ts`                    | `SessionToolFactory.createSessionTools()`                     |
+| `apps/server/src/core/scope/scope-config-manager.ts`              | Cascada `resolveToolsForAgent()`                              |
+| `apps/client/src/components/settings/EntityCustomToolsEditor.tsx` | UI de toggles por entidad                                     |
+| `apps/client/src/hooks/useEntityCustomTools.ts`                   | Hook de gestión de scope                                      |
+| `apps/client/src/lib/api/custom-tools.service.ts`                 | Cliente API                                                   |
 
 ### Plan de implementación
 
@@ -80,14 +80,16 @@ Las custom tools ya tienen una arquitectura de dos capas (`BaseTool` en shared +
 ### Estado actual
 
 EL `AgentScopeTargetSchema` solo soporta dos variantes:
+
 ```ts
 z.discriminatedUnion("type", [
   z.object({ type: z.literal("global") }),
   z.object({ type: z.literal("project"), id: z.string() }),
-])
+]);
 ```
 
 **No existe `{ type: "team" }`.** La visibilidad de agentes se controla mediante `ScopeConfigManager`:
+
 - `global.agents[]` — agentes visibles globalmente
 - `projects[id].agents[]` — agentes visibles solo en un proyecto
 - `teams[id].agents[]` — existe para resolución de tools, pero NO para visibilidad
@@ -96,13 +98,13 @@ z.discriminatedUnion("type", [
 
 ### Archivos relevantes
 
-| Archivo | Rol |
-|---|---|
-| `packages/shared/src/schemas.ts` (L223-257) | `AgentScopeTargetSchema`, `AgentDefinitionSchema` |
-| `apps/server/src/agents/agent-registry.ts` | `AgentRegistry` con `list()`, `listScoped()`, `register()` |
-| `apps/server/src/core/scope/scope-config-manager.ts` | `ScopeConfigManager` con `registerAgent()`, `getAgentTeamMembership()` |
-| `apps/server/src/routes/agents.ts` | Endpoints `GET /api/agents`, `POST /api/agents`, `PATCH /api/agents/:id/scope` |
-| `apps/client/src/lib/api/agents.service.ts` | Cliente API |
+| Archivo                                              | Rol                                                                            |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `packages/shared/src/schemas.ts` (L223-257)          | `AgentScopeTargetSchema`, `AgentDefinitionSchema`                              |
+| `apps/server/src/agents/agent-registry.ts`           | `AgentRegistry` con `list()`, `listScoped()`, `register()`                     |
+| `apps/server/src/core/scope/scope-config-manager.ts` | `ScopeConfigManager` con `registerAgent()`, `getAgentTeamMembership()`         |
+| `apps/server/src/routes/agents.ts`                   | Endpoints `GET /api/agents`, `POST /api/agents`, `PATCH /api/agents/:id/scope` |
+| `apps/client/src/lib/api/agents.service.ts`          | Cliente API                                                                    |
 
 ### Plan de implementación
 
@@ -139,13 +141,14 @@ z.discriminatedUnion("type", [
 
 ---
 
-## 3. Modelo por omisión para cada proveedor y proveedor por omisión
+## 3. Modelo por omisión para cada proveedor y proveedor por omisión (COMPLETADO)
 
 ### Estado actual
 
 **No existe** el concepto de "modelo por defecto por proveedor" ni "proveedor por defecto".
 
 La resolución actual:
+
 - `DefaultModelResolver.resolve()` toma el primer modelo disponible del `ModelRegistry` como fallback.
 - `userConfigManager.getUserDefaultModel()` retorna `"${available[0].provider}/${available[0].id}"`.
 - `EntityConfig.defaultModel` es un string global como `"openai/gpt-4o"`, no per-provider.
@@ -155,16 +158,16 @@ Cuando se crea un agente/equipo/proyecto nuevo y no se especifica modelo explíc
 
 ### Archivos relevantes
 
-| Archivo | Rol |
-|---|---|
-| `apps/server/src/core/model/model-registry.ts` | `ModelRegistry`, `ProviderConfig`, `AvailableModel` |
-| `apps/server/src/core/session/model-resolver.ts` | `DefaultModelResolver` |
-| `apps/server/src/core/session/user-config.ts` | `getUserDefaultModel()` |
-| `apps/server/src/core/config/entity-config.ts` | `EntityConfig.defaultModel` |
-| `apps/server/src/core/config/cascade-config-loader.ts` | `CascadeConfigLoader` |
-| `apps/server/src/routes/settings.ts` | `GET/PATCH /api/settings` |
-| `apps/client/src/components/settings/GeneralModelSection.tsx` | UI de selección de modelos |
-| `apps/client/src/components/chat/ModelSelector.tsx` | Selector de modelo en chat |
+| Archivo                                                       | Rol                                                 |
+| ------------------------------------------------------------- | --------------------------------------------------- |
+| `apps/server/src/core/model/model-registry.ts`                | `ModelRegistry`, `ProviderConfig`, `AvailableModel` |
+| `apps/server/src/core/session/model-resolver.ts`              | `DefaultModelResolver`                              |
+| `apps/server/src/core/session/user-config.ts`                 | `getUserDefaultModel()`                             |
+| `apps/server/src/core/config/entity-config.ts`                | `EntityConfig.defaultModel`                         |
+| `apps/server/src/core/config/cascade-config-loader.ts`        | `CascadeConfigLoader`                               |
+| `apps/server/src/routes/settings.ts`                          | `GET/PATCH /api/settings`                           |
+| `apps/client/src/components/settings/GeneralModelSection.tsx` | UI de selección de modelos                          |
+| `apps/client/src/components/chat/ModelSelector.tsx`           | Selector de modelo en chat                          |
 
 ### Plan de implementación
 
@@ -173,7 +176,7 @@ Cuando se crea un agente/equipo/proyecto nuevo y no se especifica modelo explíc
 ```ts
 interface ProviderConfig {
   // ... existing fields ...
-  defaultModel?: string;  // model ID within this provider, e.g. "gpt-4o-mini"
+  defaultModel?: string; // model ID within this provider, e.g. "gpt-4o-mini"
 }
 ```
 
@@ -194,6 +197,7 @@ interface ProviderConfig {
 #### Fase 3: Ajustar `ModelResolver` para usar default por provider
 
 Cuando no se especifica modelo para una entidad nueva:
+
 1. Si hay `defaultProvider` en user settings → usar `providerConfig.defaultModel` de ese proveedor.
 2. Si no hay `defaultProvider` → usar el primer proveedor configurado con API key + su `defaultModel`.
 3. Si no hay ningún provider con key → error controlado.
@@ -221,13 +225,13 @@ Los mensajes existen solo en React state (`useChatAreaState.messages`) y se fetc
 
 ### Archivos relevantes
 
-| Archivo | Rol |
-|---|---|
-| `apps/client/src/components/chat/ChatInput.tsx` | Input principal con sesión activa |
-| `apps/client/src/components/chat/WelcomeChatInput.tsx` | Input sin sesión (creación) |
-| `apps/client/src/hooks/useChatInputForm.ts` | Estado del formulario de chat (404 líneas) |
-| `apps/client/src/hooks/useChatAreaState.ts` | Estado de sesión, `handleSend()` |
-| `apps/client/src/lib/storage.ts` | Utilidad tipada de localStorage |
+| Archivo                                                | Rol                                        |
+| ------------------------------------------------------ | ------------------------------------------ |
+| `apps/client/src/components/chat/ChatInput.tsx`        | Input principal con sesión activa          |
+| `apps/client/src/components/chat/WelcomeChatInput.tsx` | Input sin sesión (creación)                |
+| `apps/client/src/hooks/useChatInputForm.ts`            | Estado del formulario de chat (404 líneas) |
+| `apps/client/src/hooks/useChatAreaState.ts`            | Estado de sesión, `handleSend()`           |
+| `apps/client/src/lib/storage.ts`                       | Utilidad tipada de localStorage            |
 
 ### Plan de implementación
 
@@ -272,6 +276,7 @@ Los mensajes existen solo en React state (`useChatAreaState.messages`) y se fetc
 El schema (`GalleryItemSchema`, `BlueprintTypeSchema`) ya soporta `type: "team"`. La UI del cliente (`AgentsPage` > Gallery tab) ya renderiza team blueprints con vista de detalle (miembros, contexto). El modelo `TeamSchema` ya tiene campo `blueprintId`.
 
 **Lo que falta es el backend:**
+
 - `GET /api/gallery/blueprints` solo escanea `community/agents/`, no `community/teams/`.
 - `POST /api/gallery/blueprints/:id/install` solo instala agentes, no equipos.
 - No existe el directorio `community/teams/`.
@@ -279,15 +284,15 @@ El schema (`GalleryItemSchema`, `BlueprintTypeSchema`) ya soporta `type: "team"`
 
 ### Archivos relevantes
 
-| Archivo | Rol |
-|---|---|
-| `packages/shared/src/schemas.ts` (L543-658) | `GalleryItemSchema`, `GalleryMetadataSchema`, `BlueprintTypeSchema` |
-| `apps/server/src/routes/gallery.ts` | Endpoints de gallery (solo agents actualmente) |
-| `apps/client/src/pages/AgentsPage.tsx` | Gallery tab con filtro "Teams" |
-| `apps/client/src/components/agents/BlueprintDetailModal.tsx` | Vista de detalle (soporta teams) |
-| `apps/client/src/hooks/useAgentsPageState.ts` | Estado de gallery, `fetchBlueprints()`, `handleInstall()` |
-| `apps/client/src/lib/api/agents.service.ts` | `fetchBlueprints()`, `installBlueprint()` |
-| `apps/server/src/teams/team-store.ts` | `TeamStore.createTeam()` |
+| Archivo                                                      | Rol                                                                 |
+| ------------------------------------------------------------ | ------------------------------------------------------------------- |
+| `packages/shared/src/schemas.ts` (L543-658)                  | `GalleryItemSchema`, `GalleryMetadataSchema`, `BlueprintTypeSchema` |
+| `apps/server/src/routes/gallery.ts`                          | Endpoints de gallery (solo agents actualmente)                      |
+| `apps/client/src/pages/AgentsPage.tsx`                       | Gallery tab con filtro "Teams"                                      |
+| `apps/client/src/components/agents/BlueprintDetailModal.tsx` | Vista de detalle (soporta teams)                                    |
+| `apps/client/src/hooks/useAgentsPageState.ts`                | Estado de gallery, `fetchBlueprints()`, `handleInstall()`           |
+| `apps/client/src/lib/api/agents.service.ts`                  | `fetchBlueprints()`, `installBlueprint()`                           |
+| `apps/server/src/teams/team-store.ts`                        | `TeamStore.createTeam()`                                            |
 
 ### Plan de implementación
 
@@ -301,8 +306,8 @@ El schema (`GalleryItemSchema`, `BlueprintTypeSchema`) ya soporta `type: "team"`
 - El `blueprint.json` debe tener estructura:
   ```json
   {
-    "definition": { /* CreateTeamSchema */ },
-    "metadata": { /* GalleryMetadataSchema */ }
+    "definition": {/* CreateTeamSchema */},
+    "metadata": {/* GalleryMetadataSchema */}
   }
   ```
 - Devolver items con `type: "team"` en el array de blueprints.
@@ -347,6 +352,7 @@ El schema (`GalleryItemSchema`, `BlueprintTypeSchema`) ya soporta `type: "team"`
 Las custom tools tienen dos modos de ejecución (`pipeline` y `ui`), pero **ninguno** interactúa con el sistema de aprobaciones. El `CustomToolDefinitionSchema` no tiene campo `requiresApproval`.
 
 El sistema de aprobaciones tiene dos registros paralelos:
+
 - `ApprovalManager`: para aprobaciones de seguridad (60s timeout), usado por `beforeToolCall` hook + `PermissionEngine`.
 - `UiApprovalRegistry`: para interacciones UI (`ask_question`, `request_approval`), timeout de 300s.
 
@@ -354,18 +360,18 @@ El `PermissionEngine` puede retornar `"ask"` para requerir aprobación, pero est
 
 ### Archivos relevantes
 
-| Archivo | Rol |
-|---|---|
-| `apps/server/src/core/custom-tools/schemas.ts` | `CustomToolDefinitionSchema` (sin campo approval) |
-| `apps/server/src/core/custom-tools/runtime.ts` | `createCustomToolRuntime()` |
-| `apps/server/src/core/approvals/approval-manager.ts` | `ApprovalManager` (seguridad, 60s) |
-| `apps/server/src/core/approvals/ui-approval-registry.ts` | `UiApprovalRegistry` (UI, 300s) |
-| `apps/server/src/core/sandbox/permission-engine.ts` | `PermissionEngine` con `allow/deny/ask` |
-| `apps/server/src/core/session/before-tool-call-hook.ts` | Hook central de aprobación |
-| `apps/server/src/core/tools/extensions/ui.tool.ts` | `request_approval`, `ask_question` |
-| `apps/server/src/ws/handlers/tools.ts` | WS handler para `ui_action` |
-| `apps/client/src/components/approvals/GlobalApprovalOverlay.tsx` | Overlay de aprobaciones |
-| `apps/client/src/components/approvals/AttentionHubPopover.tsx` | Popover de campanita |
+| Archivo                                                          | Rol                                               |
+| ---------------------------------------------------------------- | ------------------------------------------------- |
+| `apps/server/src/core/custom-tools/schemas.ts`                   | `CustomToolDefinitionSchema` (sin campo approval) |
+| `apps/server/src/core/custom-tools/runtime.ts`                   | `createCustomToolRuntime()`                       |
+| `apps/server/src/core/approvals/approval-manager.ts`             | `ApprovalManager` (seguridad, 60s)                |
+| `apps/server/src/core/approvals/ui-approval-registry.ts`         | `UiApprovalRegistry` (UI, 300s)                   |
+| `apps/server/src/core/sandbox/permission-engine.ts`              | `PermissionEngine` con `allow/deny/ask`           |
+| `apps/server/src/core/session/before-tool-call-hook.ts`          | Hook central de aprobación                        |
+| `apps/server/src/core/tools/extensions/ui.tool.ts`               | `request_approval`, `ask_question`                |
+| `apps/server/src/ws/handlers/tools.ts`                           | WS handler para `ui_action`                       |
+| `apps/client/src/components/approvals/GlobalApprovalOverlay.tsx` | Overlay de aprobaciones                           |
+| `apps/client/src/components/approvals/AttentionHubPopover.tsx`   | Popover de campanita                              |
 
 ### Plan de implementación
 
@@ -373,7 +379,7 @@ El `PermissionEngine` puede retornar `"ask"` para requerir aprobación, pero est
 
 - Agregar campo `requiresApproval`:
   ```ts
-  requiresApproval: z.boolean().optional().default(false)
+  requiresApproval: z.boolean().optional().default(false);
   ```
 - Agregar campo `approvalConfig` (opcional, para afinar comportamiento):
   ```ts
@@ -382,7 +388,7 @@ El `PermissionEngine` puede retornar `"ask"` para requerir aprobación, pero est
     confirmLabel: z.string().optional(),
     cancelLabel: z.string().optional(),
     timeout: z.number().optional().default(60000),
-  }).optional()
+  }).optional();
   ```
 
 #### Fase 2: Integrar aprobación en `createCustomToolRuntime()`
@@ -429,28 +435,28 @@ El `PermissionEngine` puede retornar `"ask"` para requerir aprobación, pero est
 
 Tres tools separadas + una muerta:
 
-| Tool | Archivo | Acción |
-|---|---|---|
-| `decompose_tasks` | `decompose.tool.ts` | Crear plan de tareas |
-| `update_task_status` | `update-task.tool.ts` | Marcar tarea como done/failed |
-| `complete_task_list` | `update-task.tool.ts` | Finalizar plan completo |
-| `manage_pipelines` | `manage-pipelines.tool.ts` | **Muerta** — siempre retorna error |
+| Tool                 | Archivo                    | Acción                             |
+| -------------------- | -------------------------- | ---------------------------------- |
+| `decompose_tasks`    | `decompose.tool.ts`        | Crear plan de tareas               |
+| `update_task_status` | `update-task.tool.ts`      | Marcar tarea como done/failed      |
+| `complete_task_list` | `update-task.tool.ts`      | Finalizar plan completo            |
+| `manage_pipelines`   | `manage-pipelines.tool.ts` | **Muerta** — siempre retorna error |
 
 El estado se persiste en `tasks.json` vía `TaskStateManager`. La UI es `FloatingTasks.tsx`.
 
 ### Archivos relevantes
 
-| Archivo | Rol |
-|---|---|
-| `apps/server/src/core/tools/extensions/decompose.tool.ts` | Tool `decompose_tasks` |
-| `apps/server/src/core/tools/extensions/update-task.tool.ts` | Tools `update_task_status` + `complete_task_list` |
-| `apps/server/src/core/tools/extensions/task-state-manager.ts` | Persistencia y validación |
-| `apps/server/src/core/tools/extensions/manage-pipelines.tool.ts` | Tool muerta |
-| `apps/server/src/core/tools/extensions/ui.tool.ts` | Crea las tools de task |
-| `apps/server/src/core/session/prompt-builder.ts` | Inyecta plan activo en system prompt |
-| `packages/shared/src/schemas.ts` | `TaskSchema`, `TaskRunnerStateSchema` |
-| `packages/shared/src/tools-catalog.ts` | `AVAILABLE_TOOLS`, `TOOL_GROUPS.tasks` |
-| `apps/client/src/components/chat/FloatingTasks.tsx` | UI de progreso |
+| Archivo                                                          | Rol                                               |
+| ---------------------------------------------------------------- | ------------------------------------------------- |
+| `apps/server/src/core/tools/extensions/decompose.tool.ts`        | Tool `decompose_tasks`                            |
+| `apps/server/src/core/tools/extensions/update-task.tool.ts`      | Tools `update_task_status` + `complete_task_list` |
+| `apps/server/src/core/tools/extensions/task-state-manager.ts`    | Persistencia y validación                         |
+| `apps/server/src/core/tools/extensions/manage-pipelines.tool.ts` | Tool muerta                                       |
+| `apps/server/src/core/tools/extensions/ui.tool.ts`               | Crea las tools de task                            |
+| `apps/server/src/core/session/prompt-builder.ts`                 | Inyecta plan activo en system prompt              |
+| `packages/shared/src/schemas.ts`                                 | `TaskSchema`, `TaskRunnerStateSchema`             |
+| `packages/shared/src/tools-catalog.ts`                           | `AVAILABLE_TOOLS`, `TOOL_GROUPS.tasks`            |
+| `apps/client/src/components/chat/FloatingTasks.tsx`              | UI de progreso                                    |
 
 ### Plan de implementación
 
@@ -519,25 +525,25 @@ El estado se persiste en `tasks.json` vía `TaskStateManager`. La UI es `Floatin
 
 Tres tools separadas:
 
-| Tool | Función |
-|---|---|
-| `memory_store` | Guardar memoria |
+| Tool            | Función            |
+| --------------- | ------------------ |
+| `memory_store`  | Guardar memoria    |
 | `memory_recall` | Recuperar memorias |
-| `memory_forget` | Eliminar memoria |
+| `memory_forget` | Eliminar memoria   |
 
 Todas usan `MemoryProvider` (interfaz compartida). La UI tiene `MemoryResult.tsx` con tres modos (`recall`, `store`, `forget`). El storage es SQLite con FTS5.
 
 ### Archivos relevantes
 
-| Archivo | Rol |
-|---|---|
-| `apps/server/src/core/memory/memory-tools.ts` | `createMemoryTools()` — las 3 tools |
-| `apps/server/src/core/memory/local-provider.ts` | `LocalMemoryProvider` (SQLite) |
-| `apps/server/src/core/memory/registry.ts` | `MemoryRegistry` |
-| `packages/shared/src/stores/memory-store.ts` | `IMemoryStore` interface |
-| `packages/shared/src/tools-catalog.ts` | `TOOL_GROUPS.memory` |
-| `apps/client/src/components/chat/tools/MemoryResult.tsx` | UI de resultados |
-| `apps/client/src/components/chat/tools/ToolResultRouter.tsx` | Router de resultados |
+| Archivo                                                      | Rol                                 |
+| ------------------------------------------------------------ | ----------------------------------- |
+| `apps/server/src/core/memory/memory-tools.ts`                | `createMemoryTools()` — las 3 tools |
+| `apps/server/src/core/memory/local-provider.ts`              | `LocalMemoryProvider` (SQLite)      |
+| `apps/server/src/core/memory/registry.ts`                    | `MemoryRegistry`                    |
+| `packages/shared/src/stores/memory-store.ts`                 | `IMemoryStore` interface            |
+| `packages/shared/src/tools-catalog.ts`                       | `TOOL_GROUPS.memory`                |
+| `apps/client/src/components/chat/tools/MemoryResult.tsx`     | UI de resultados                    |
+| `apps/client/src/components/chat/tools/ToolResultRouter.tsx` | Router de resultados                |
 
 ### Plan de implementación
 
@@ -603,19 +609,19 @@ El sistema de plugins (`PluginManager` + `BasePlugin`) es **código muerto no op
 
 ### Archivos relevantes
 
-| Archivo | Rol |
-|---|---|
-| `packages/shared/src/plugins/base-plugin.ts` | `BasePlugin` (dead code) |
-| `packages/shared/src/plugins/plugin-manager.ts` | `PluginManager` (dead code) |
-| `apps/server/src/core/plugins/audit-log.plugin.ts` | `AuditLogPlugin` (dormant) |
-| `apps/server/src/core/plugins/memory-enricher.plugin.ts` | `MemoryEnricherPlugin` (dormant) |
-| `apps/server/src/core/plugins/ws-notify.plugin.ts` | `WsNotifyPlugin` (dead) |
-| `apps/server/src/core/session/agent-runtime.ts` | Instancia PluginManager (nunca usado) |
-| `packages/spaces-sdk/src/index.ts` | Exporta `BasePlugin`, `PluginManager` |
-| `apps/client/src/pages/PluginsPage.tsx` | UI de "plugins" (en realidad settings) |
-| `apps/client/src/pages/PluginsPage.literals.ts` | i18n |
-| `apps/client/src/router/routes.tsx` | Ruta `/plugins` |
-| `apps/server/src/routes/settings.ts` | `GET/PATCH /api/settings` |
+| Archivo                                                  | Rol                                    |
+| -------------------------------------------------------- | -------------------------------------- |
+| `packages/shared/src/plugins/base-plugin.ts`             | `BasePlugin` (dead code)               |
+| `packages/shared/src/plugins/plugin-manager.ts`          | `PluginManager` (dead code)            |
+| `apps/server/src/core/plugins/audit-log.plugin.ts`       | `AuditLogPlugin` (dormant)             |
+| `apps/server/src/core/plugins/memory-enricher.plugin.ts` | `MemoryEnricherPlugin` (dormant)       |
+| `apps/server/src/core/plugins/ws-notify.plugin.ts`       | `WsNotifyPlugin` (dead)                |
+| `apps/server/src/core/session/agent-runtime.ts`          | Instancia PluginManager (nunca usado)  |
+| `packages/spaces-sdk/src/index.ts`                       | Exporta `BasePlugin`, `PluginManager`  |
+| `apps/client/src/pages/PluginsPage.tsx`                  | UI de "plugins" (en realidad settings) |
+| `apps/client/src/pages/PluginsPage.literals.ts`          | i18n                                   |
+| `apps/client/src/router/routes.tsx`                      | Ruta `/plugins`                        |
+| `apps/server/src/routes/settings.ts`                     | `GET/PATCH /api/settings`              |
 
 ### Plan de implementación
 

@@ -2,12 +2,19 @@
 import { literals as u } from "@/components/settings/GeneralTab.literals";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLiterals } from "@/lib";
+import { envService } from "@/lib/api/env.service";
 import { settingsService } from "@/lib/api/settings.service";
 import { useEffect, useState } from "react";
+import { GATE_ENV_VARS } from "shared";
 
 export function useGeneralSettingsForm() {
   const { user, logout, changePassword } = useAuth();
   const l = useLiterals(u);
+
+  const [memoryEnabled, setMemoryEnabled] = useState(true);
+  const [memoryAutoStore, setMemoryAutoStore] = useState(false);
+  const [exaSearchEnabled, setExaSearchEnabled] = useState(true);
+  const [hasExaKey, setHasExaKey] = useState(false);
 
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [pwCurrent, setPwCurrent] = useState("");
@@ -27,6 +34,11 @@ export function useGeneralSettingsForm() {
   const [overwriteConfirmation, setOverwriteConfirmation] = useState("");
   const [exporting, setExporting] = useState(false);
 
+  const [defaultProvider, setDefaultProvider] = useState("");
+  const [providerDefaults, setProviderDefaults] = useState<Record<string, string>>({});
+  const [allModels, setAllModels] = useState<Array<{ id: string; name: string; provider: string }>>(
+    [],
+  );
   const [visionModel, setVisionModel] = useState("");
   const [imageGenModel, setImageGenModel] = useState("");
   const [videoGenModel, setVideoGenModel] = useState("");
@@ -101,14 +113,22 @@ export function useGeneralSettingsForm() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [settingsData, modelsData, imgModelsData, vidModelsData] = await Promise.all([
-          settingsService.fetchSettings().catch(() => ({})),
-          settingsService.fetchModels().catch(() => []),
-          settingsService.fetchImageModels().catch(() => []),
-          settingsService.fetchVideoModels().catch(() => []),
-        ]);
+        const [settingsData, modelsData, imgModelsData, vidModelsData, envData] = await Promise.all(
+          [
+            settingsService.fetchSettings().catch(() => ({})),
+            settingsService.fetchModels().catch(() => []),
+            settingsService.fetchImageModels().catch(() => []),
+            settingsService.fetchVideoModels().catch(() => []),
+            envService.fetchEnvVars().catch(() => []),
+          ],
+        );
 
         if (settingsData) {
+          setMemoryEnabled(settingsData.memoryEnabled ?? true);
+          setMemoryAutoStore(settingsData.memoryAutoStore ?? false);
+          setExaSearchEnabled(settingsData.exaSearchEnabled ?? true);
+          setDefaultProvider(settingsData.defaultProvider || "");
+          setProviderDefaults(settingsData.providerDefaults || {});
           setVisionModel(settingsData.visionModel || "");
           setImageGenModel(settingsData.imageGenModel || "");
           setVideoGenModel(settingsData.videoGenModel || "");
@@ -117,7 +137,13 @@ export function useGeneralSettingsForm() {
           setShowPromptPreviews(settingsData.showPromptPreviews ?? false);
         }
 
+        const envList = ((envData as any).env ?? envData ?? []) as Array<{ key: string }>;
+        const exaKeyExists =
+          Array.isArray(envList) && envList.some((e) => e.key === GATE_ENV_VARS.exa_search);
+        setHasExaKey(exaKeyExists);
+
         const modelsList = (modelsData as any)?.models || modelsData || [];
+        setAllModels(modelsList);
         const filtered = modelsList.filter((m: any) => m.input?.includes("image"));
         setVisionModels(filtered);
         setImageGenModels((imgModelsData as any)?.models || imgModelsData || []);
@@ -294,6 +320,33 @@ export function useGeneralSettingsForm() {
     }
   };
 
+  const handleToggleMemoryEnabled = async (enabled: boolean) => {
+    setMemoryEnabled(enabled);
+    try {
+      await settingsService.updateSettings({ memoryEnabled: enabled });
+    } catch (err) {
+      console.error("Failed to update memoryEnabled setting:", err);
+    }
+  };
+
+  const handleToggleMemoryAutoStore = async (enabled: boolean) => {
+    setMemoryAutoStore(enabled);
+    try {
+      await settingsService.updateSettings({ memoryAutoStore: enabled });
+    } catch (err) {
+      console.error("Failed to update memoryAutoStore setting:", err);
+    }
+  };
+
+  const handleToggleExaSearchEnabled = async (enabled: boolean) => {
+    setExaSearchEnabled(enabled);
+    try {
+      await settingsService.updateSettings({ exaSearchEnabled: enabled });
+    } catch (err) {
+      console.error("Failed to update exaSearchEnabled setting:", err);
+    }
+  };
+
   const handleExportBackup = async () => {
     setExporting(true);
     setImportError("");
@@ -384,10 +437,41 @@ export function useGeneralSettingsForm() {
     setPwSuccess(false);
   };
 
+  const handleUpdateDefaultProvider = async (provider: string) => {
+    setDefaultProvider(provider);
+    try {
+      await settingsService.updateSettings({ defaultProvider: provider });
+    } catch (err) {
+      console.error("Failed to update default provider setting:", err);
+    }
+  };
+
+  const handleUpdateProviderDefaultModel = async (provider: string, modelId: string) => {
+    const updated = { ...providerDefaults, [provider]: modelId };
+    setProviderDefaults(updated);
+    try {
+      await settingsService.updateSettings({ providerDefaults: updated });
+    } catch (err) {
+      console.error("Failed to update provider default model setting:", err);
+    }
+  };
+
   return {
     l,
     user,
     logout,
+    defaultProvider,
+    providerDefaults,
+    allModels,
+    handleUpdateDefaultProvider,
+    handleUpdateProviderDefaultModel,
+    memoryEnabled,
+    memoryAutoStore,
+    exaSearchEnabled,
+    hasExaKey,
+    handleToggleMemoryEnabled,
+    handleToggleMemoryAutoStore,
+    handleToggleExaSearchEnabled,
     showPasswordForm,
     setShowPasswordForm,
     pwCurrent,

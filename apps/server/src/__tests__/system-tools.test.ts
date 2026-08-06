@@ -3,6 +3,8 @@ import { describe, expect, it } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { ToolExecutor } from "../core/infra/tool-executor";
+import { ToolRegistry } from "../core/infra/tool-registry";
 import {
   BashTool,
   createBashTool,
@@ -19,8 +21,6 @@ import {
   ReadTool,
   WriteTool,
 } from "../core/tools";
-import { ToolExecutor } from "../core/infra/tool-executor";
-import { ToolRegistry } from "../core/infra/tool-registry";
 
 describe("Modular System Tools (ITool)", () => {
   it("should implement ITool contract properties and parameters", () => {

@@ -16,7 +16,6 @@ export type RoutePage =
   | "teams"
   | "team"
   | "logs"
-  | "plugins"
   | "sessions"
   | "analytics"
   | "not-found"
@@ -41,7 +40,6 @@ export function useRoutePage(): RoutePage {
   if (pathname === "/agents") return "agents";
   if (pathname === "/teams") return "teams";
   if (pathname === "/logs") return "logs";
-  if (pathname === "/plugins") return "plugins";
   if (pathname === "/sessions") return "sessions";
   return pathname === "/" ||
     pathname.startsWith("/session/") ||

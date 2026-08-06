@@ -36,16 +36,17 @@ export function EnvVarsTab({
   const [localEnvLoading, setLocalEnvLoading] = useState(false);
 
   const handleSaveEnvVar = async () => {
-    const formattedKey = newEnvKey.trim().toUpperCase();
-    if (!formattedKey || !newEnvVal.trim()) return;
+    const rawKey = newEnvKey.trim();
+    if (!rawKey || !newEnvVal.trim()) return;
 
-    if (!/^[A-Z_][A-Z0-9_]*$/.test(formattedKey)) {
+    if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(rawKey)) {
       setEnvError(
         "Invalid variable name. Must start with a letter or underscore and contain only letters, numbers, or underscores.",
       );
       return;
     }
 
+    const formattedKey = rawKey.toUpperCase();
     setSavingEnv(true);
     setEnvError("");
     try {

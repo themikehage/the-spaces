@@ -240,9 +240,22 @@ export const ExecutionUiSchema = z.object({
   type: z.literal("ui"),
 });
 
+export const ExecutionAgentSchema = z.object({
+  type: z.literal("agent"),
+  agentId: z.string().optional(),
+  taskTemplate: z.string().min(10),
+  subagentType: z.enum(["explorer", "builder", "autonomous"]).default("builder"),
+  captureOutputAs: z.string().optional(),
+  waitForCompletion: z.boolean().default(true),
+  maxSteps: z.number().min(1).max(50).default(15),
+});
+
+export type ExecutionAgent = z.infer<typeof ExecutionAgentSchema>;
+
 export const ExecutionModeSchema = z.discriminatedUnion("type", [
   ExecutionPipelineSchema,
   ExecutionUiSchema,
+  ExecutionAgentSchema,
 ]);
 
 // --- Presentation / Display Options ---
@@ -295,3 +308,4 @@ export type CustomToolDefinition = z.infer<typeof CustomToolDefinitionSchema>;
 export type UiComponent = z.infer<typeof UiComponentSchema>;
 export type ExecutionPipeline = z.infer<typeof ExecutionPipelineSchema>;
 export type PipelineStep = z.infer<typeof PipelineStepSchema>;
+export type ExecutionMode = z.infer<typeof ExecutionModeSchema>;

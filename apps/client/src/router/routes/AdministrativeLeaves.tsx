@@ -3,14 +3,23 @@ import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
 import { AgentsPage } from "@/pages/AgentsPage";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { LogsConsolePage } from "@/pages/LogsConsolePage";
-import { PluginsPage } from "@/pages/PluginsPage";
 import { ProjectsPage } from "@/pages/ProjectsPage";
 import { SchedulesPage } from "@/pages/SchedulesPage";
 import { SessionsPage } from "@/pages/SessionsPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { SkillsPage } from "@/pages/SkillsPage";
 import { TeamsPage } from "@/pages/TeamsPage";
+import { WorkflowDetailPage } from "@/pages/WorkflowDetailPage";
+import { WorkflowsListPage } from "@/pages/WorkflowsListPage";
 import { Navigate, useNavigate } from "react-router-dom";
+
+export function WorkflowsRoute() {
+  return <WorkflowsListPage />;
+}
+
+export function WorkflowDetailRoute() {
+  return <WorkflowDetailPage />;
+}
 
 export function SchedulesRoute() {
   return <SchedulesPage />;
@@ -49,9 +58,6 @@ export function LogsRoute() {
       onSelectAgent={selectAgent}
     />
   );
-}
-export function PluginsRoute() {
-  return <PluginsPage />;
 }
 export function SessionsRoute() {
   const navigate = useNavigate();

@@ -107,6 +107,8 @@
 - [x] Implementar Hito 3 de Desacoplamiento de Arquitectura (Plan 19): Modularización de Herramientas del Sistema (`ITool`). Creación de clases puras e independientes `ReadTool`, `WriteTool`, `EditTool`, `GrepTool`, `FindTool`, `LsTool` y `BashTool` con esquemas tipados, adaptadores de compatibilidad retrocompatible y suite de pruebas unitarias (`system-tools.test.ts`).
 - [x] Implementar Hito 4 de Desacoplamiento de Arquitectura (Plan 20): Persistencia Limpia `FilesystemSessionStore` (`ISessionStore`). Implementación completa y thread-safe de la interfaz `ISessionStore` para lectura/escritura JSONL (`messages.jsonl`) y metadatos (`metadata.json`), paginación, filtros de búsqueda, adaptadores e inyección en `AgentRuntime` y suite de pruebas unitarias (`filesystem-session-store.test.ts`).
 - [x] Implementar Hito 5 de Desacoplamiento de Arquitectura (Plan 21): Proveedor de Modelo Unificado `OpenAICompatibleProvider` (`IModelProvider`). Implementación desacoplada y nativa con `fetch` y streaming SSE para endpoints `/v1/chat/completions`, ensamblado de llamadas a herramientas fragmentadas, deltas de razonamiento, adaptador `ModelProviderAdapter`, inyección en `AgentRuntime` y suite de pruebas unitarias (`openai-compatible-provider.test.ts`).
+- [x] Eliminar el sistema de plugins, mover ajustes de UI a la configuración (Memory & Exa Search integrados en Settings > General, remoción de PluginsPage, ruta `/plugins` y código durmiente PluginManager/BasePlugin).
+- [x] Unificar herramientas de tareas en `task.tool` (acciones start/update/end/status), unificar herramientas de memoria en `memory.tool` (acciones read/upsert/delete) y eliminar código muerto de `manage_pipelines` y sus referencias.
 
 ## Siguiente sprint: arquitectura del frontend
 

@@ -16,24 +16,24 @@ Asociar un `WorkflowDefinition` a un `Team` para que el equipo tenga un flujo de
 
 ### Lo que SÍ existe
 
-| Aspecto | Estado | Detalle |
-|---------|--------|---------|
-| Team CRUD | OK | `agentId` (líder) + `memberIds` + `teamType: "Orchestration"` |
-| `TeamDirectoryPort` | OK | `getTeamDef(teamId)` → `{ name, leaderId, memberIds }` |
-| Workspace de equipo | OK | `getTeamWorkspaceDir(username, teamId)` — directorio compartido |
-| Delegación a equipo | OK | `manage_delegations` con `targetType: "team"` — delega al líder |
-| `TeamDetailPage` | OK | UI con settings, miembros y sesiones del equipo |
+| Aspecto             | Estado | Detalle                                                         |
+| ------------------- | ------ | --------------------------------------------------------------- |
+| Team CRUD           | OK     | `agentId` (líder) + `memberIds` + `teamType: "Orchestration"`   |
+| `TeamDirectoryPort` | OK     | `getTeamDef(teamId)` → `{ name, leaderId, memberIds }`          |
+| Workspace de equipo | OK     | `getTeamWorkspaceDir(username, teamId)` — directorio compartido |
+| Delegación a equipo | OK     | `manage_delegations` con `targetType: "team"` — delega al líder |
+| `TeamDetailPage`    | OK     | UI con settings, miembros y sesiones del equipo                 |
 
 ### Lo que NO existe
 
-| Gap | Impacto | Ubicación |
-|-----|---------|-----------|
-| `Team.workflowId` | Un team no puede tener un workflow asociado | `packages/shared/src/schemas.ts` |
-| `TeamWorkflowRunner` | No hay forma de ejecutar el workflow de un equipo con sus miembros | (no existe) |
-| Tipos de equipo declarativos | `teamType: "Orchestration"` es el único tipo con semántica especial | `packages/shared` |
-| UI `TeamWorkflowTab` | No hay pestaña de workflow en `TeamDetailPage` | `apps/client` |
-| Tool `run_team_workflow` | El agente global no puede ejecutar el workflow de un equipo | (no existe) |
-| Scope `{ type: "team", entityId }` en `WorkflowDefinition` | Los workflows de equipo no están diferenciados de los globales | (Hito 25.3 lo define pero no lo usa el Team) |
+| Gap                                                        | Impacto                                                             | Ubicación                                    |
+| ---------------------------------------------------------- | ------------------------------------------------------------------- | -------------------------------------------- |
+| `Team.workflowId`                                          | Un team no puede tener un workflow asociado                         | `packages/shared/src/schemas.ts`             |
+| `TeamWorkflowRunner`                                       | No hay forma de ejecutar el workflow de un equipo con sus miembros  | (no existe)                                  |
+| Tipos de equipo declarativos                               | `teamType: "Orchestration"` es el único tipo con semántica especial | `packages/shared`                            |
+| UI `TeamWorkflowTab`                                       | No hay pestaña de workflow en `TeamDetailPage`                      | `apps/client`                                |
+| Tool `run_team_workflow`                                   | El agente global no puede ejecutar el workflow de un equipo         | (no existe)                                  |
+| Scope `{ type: "team", entityId }` en `WorkflowDefinition` | Los workflows de equipo no están diferenciados de los globales      | (Hito 25.3 lo define pero no lo usa el Team) |
 
 ---
 
@@ -45,11 +45,11 @@ Asociar un `WorkflowDefinition` a un `Team` para que el equipo tenga un flujo de
 // packages/shared/src/schemas.ts
 
 export const TeamTypeSchema = z.enum([
-  "Orchestration",   // Líder coordina ad-hoc (existente)
-  "Pipeline",        // Steps secuenciales A → B → C (nuevo)
-  "HubAndSpoke",     // Líder distribuye tareas a miembros en paralelo (nuevo)
-  "RoundRobin",      // Distribución rotatoria equitativa (nuevo)
-  "Custom",          // Workflow declarativo personalizado (nuevo — usa WorkflowDefinition)
+  "Orchestration", // Líder coordina ad-hoc (existente)
+  "Pipeline", // Steps secuenciales A → B → C (nuevo)
+  "HubAndSpoke", // Líder distribuye tareas a miembros en paralelo (nuevo)
+  "RoundRobin", // Distribución rotatoria equitativa (nuevo)
+  "Custom", // Workflow declarativo personalizado (nuevo — usa WorkflowDefinition)
 ]);
 
 export const TeamSchema = z.object({
@@ -61,14 +61,16 @@ export const TeamSchema = z.object({
    * Configuración integrada para tipos built-in (Pipeline, HubAndSpoke, RoundRobin)
    * Describe el orden/distribución de los miembros
    */
-  workflowConfig: z.object({
-    /** Para Pipeline: orden de ejecución de los miembros */
-    memberOrder: z.array(z.string()).optional(),
-    /** Para HubAndSpoke: si true, el líder agrega los resultados */
-    aggregateResults: z.boolean().optional().default(true),
-    /** Para RoundRobin: estrategia de distribución */
-    distributionStrategy: z.enum(["round-robin", "load-based"]).optional().default("round-robin"),
-  }).optional(),
+  workflowConfig: z
+    .object({
+      /** Para Pipeline: orden de ejecución de los miembros */
+      memberOrder: z.array(z.string()).optional(),
+      /** Para HubAndSpoke: si true, el líder agrega los resultados */
+      aggregateResults: z.boolean().optional().default(true),
+      /** Para RoundRobin: estrategia de distribución */
+      distributionStrategy: z.enum(["round-robin", "load-based"]).optional().default("round-robin"),
+    })
+    .optional(),
 });
 ```
 
@@ -93,7 +95,7 @@ export class TeamWorkflowRunner {
     username: string,
     teamId: string,
     task: string,
-    opts?: { inputs?: Record<string, unknown>; parentSessionId?: string }
+    opts?: { inputs?: Record<string, unknown>; parentSessionId?: string },
   ): Promise<WorkflowRun> {
     const team = await this.teamDirectory.getTeamDef(teamId);
     if (!team) throw new Error(`Team ${teamId} not found`);
@@ -148,9 +150,10 @@ export class TeamWorkflowRunner {
       label: `Step ${index + 1}: ${agentId}`,
       agentId,
       dependsOn: index > 0 ? [`step-${memberOrder[index - 1]}`] : [],
-      taskTemplate: index === 0
-        ? task
-        : `Continua donde lo dejó el agente anterior. Tarea original: ${task}\nResultado previo: {{step-${memberOrder[index - 1]}.summary}}`,
+      taskTemplate:
+        index === 0
+          ? task
+          : `Continua donde lo dejó el agente anterior. Tarea original: ${task}\nResultado previo: {{step-${memberOrder[index - 1]}.summary}}`,
       captureOutputs: ["summary", "artifacts"],
     }));
 
@@ -261,15 +264,15 @@ TeamDetailPage
 
 ## Archivos afectados
 
-| Archivo | Operación | Descripción |
-|---------|-----------|-------------|
-| `packages/shared/src/schemas.ts` | MODIFY | Extender `TeamSchema` con `workflowId`, `workflowConfig`, `TeamTypeSchema` |
-| `core/workflows/team-workflow-runner.ts` | NEW | `TeamWorkflowRunner` — generador de workflows para equipos built-in |
-| `core/tools/extensions/workflow.tool.ts` | MODIFY | Agregar `run_team_workflow` |
-| `apps/server/src/routes/teams/` | MODIFY | `POST /api/teams/:id/workflow/run` |
-| `apps/client/src/pages/TeamDetailPage.tsx` | MODIFY | Agregar `WorkflowTab` |
-| `apps/client/src/components/teams/TeamWorkflowTab.tsx` | NEW | UI de configuración y ejecución del workflow de equipo |
-| `apps/client/src/components/teams/TeamTypeSelector.tsx` | NEW | Selector de tipo de equipo con descripción visual |
+| Archivo                                                 | Operación | Descripción                                                                |
+| ------------------------------------------------------- | --------- | -------------------------------------------------------------------------- |
+| `packages/shared/src/schemas.ts`                        | MODIFY    | Extender `TeamSchema` con `workflowId`, `workflowConfig`, `TeamTypeSchema` |
+| `core/workflows/team-workflow-runner.ts`                | NEW       | `TeamWorkflowRunner` — generador de workflows para equipos built-in        |
+| `core/tools/extensions/workflow.tool.ts`                | MODIFY    | Agregar `run_team_workflow`                                                |
+| `apps/server/src/routes/teams/`                         | MODIFY    | `POST /api/teams/:id/workflow/run`                                         |
+| `apps/client/src/pages/TeamDetailPage.tsx`              | MODIFY    | Agregar `WorkflowTab`                                                      |
+| `apps/client/src/components/teams/TeamWorkflowTab.tsx`  | NEW       | UI de configuración y ejecución del workflow de equipo                     |
+| `apps/client/src/components/teams/TeamTypeSelector.tsx` | NEW       | Selector de tipo de equipo con descripción visual                          |
 
 ---
 

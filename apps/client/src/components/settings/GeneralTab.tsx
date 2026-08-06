@@ -2,6 +2,7 @@
 import { useGeneralSettingsForm } from "@/hooks/useGeneralSettingsForm";
 import { GeneralDangerZone } from "./GeneralDangerZone";
 import { GeneralIdentitySection } from "./GeneralIdentitySection";
+import { GeneralMemorySection } from "./GeneralMemorySection";
 import { GeneralModelSection } from "./GeneralModelSection";
 import { GeneralPermissionsSection } from "./GeneralPermissionsSection";
 import { GeneralSubagentSection } from "./GeneralSubagentSection";
@@ -13,9 +14,25 @@ export function GeneralTab() {
     <div className="space-y-6">
       <GeneralIdentitySection user={form.user} logout={form.logout} l={form.l} />
 
+      <GeneralMemorySection
+        l={form.l}
+        memoryEnabled={form.memoryEnabled}
+        memoryAutoStore={form.memoryAutoStore}
+        handleToggleMemoryEnabled={form.handleToggleMemoryEnabled}
+        handleToggleMemoryAutoStore={form.handleToggleMemoryAutoStore}
+        exaSearchEnabled={form.exaSearchEnabled}
+        hasExaKey={form.hasExaKey}
+        handleToggleExaSearchEnabled={form.handleToggleExaSearchEnabled}
+      />
+
       <GeneralModelSection
         l={form.l}
         settingsLoading={form.settingsLoading}
+        defaultProvider={form.defaultProvider}
+        providerDefaults={form.providerDefaults}
+        allModels={form.allModels}
+        handleUpdateDefaultProvider={form.handleUpdateDefaultProvider}
+        handleUpdateProviderDefaultModel={form.handleUpdateProviderDefaultModel}
         visionModel={form.visionModel}
         visionModels={form.visionModels}
         handleUpdateVisionModel={form.handleUpdateVisionModel}

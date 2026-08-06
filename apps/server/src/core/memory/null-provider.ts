@@ -6,6 +6,17 @@ export class NullMemoryProvider implements MemoryProvider {
     return [];
   }
 
+  async upsert(
+    id: string | undefined,
+    content: string,
+    type?: MemoryType,
+    importance?: number,
+    tags?: string[],
+    sessionId?: string,
+  ): Promise<string> {
+    return id || "null-memory-id";
+  }
+
   async store(
     content: string,
     type: MemoryType,

@@ -7,11 +7,7 @@ import { mcpRegistry } from "../mcp/mcp-registry";
 import { memoryRegistry } from "../memory/registry";
 import type { IAgentRuntime } from "../ports/agent-runtime.port";
 import { sessionMetadataStore } from "./metadata-store";
-import {
-  sessionLister,
-  type SessionListItem,
-  type SessionListQuery,
-} from "./session-lister";
+import { sessionLister, type SessionListItem, type SessionListQuery } from "./session-lister";
 import { userConfigManager } from "./user-config";
 
 import { subscribeSessionEvents } from "./session-event-publisher";

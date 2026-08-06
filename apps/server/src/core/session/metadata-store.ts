@@ -98,9 +98,33 @@ export class SessionMetadataStore {
     if (!existsSync(metadataPath)) return fallbackTools();
     try {
       const metadata = JSON.parse(readFileSync(metadataPath, "utf-8"));
-      let tools = Array.isArray(metadata.tools) ? metadata.tools : fallbackTools();
-      if (tools.includes("run_pipeline")) {
-        tools = tools.map((t: string) => (t === "run_pipeline" ? "manage_pipelines" : t));
+      let tools: string[] = Array.isArray(metadata.tools) ? metadata.tools : fallbackTools();
+      let needsPersist = false;
+
+      // Migrate legacy tool names
+      const legacyTaskTools = ["decompose_tasks", "update_task_status", "complete_task_list"];
+      const legacyMemTools = ["memory_store", "memory_recall", "memory_forget"];
+      const removedTools = ["manage_pipelines", "run_pipeline"];
+
+      const updatedTools = new Set<string>();
+      for (const t of tools) {
+        if (removedTools.includes(t)) {
+          needsPersist = true;
+          continue;
+        }
+        if (legacyTaskTools.includes(t)) {
+          updatedTools.add("task");
+          needsPersist = true;
+        } else if (legacyMemTools.includes(t)) {
+          updatedTools.add("memory");
+          needsPersist = true;
+        } else {
+          updatedTools.add(t);
+        }
+      }
+
+      tools = Array.from(updatedTools);
+      if (needsPersist) {
         this.persistSessionTools(username, sessionId, tools);
       }
       return tools;

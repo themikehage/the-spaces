@@ -65,6 +65,7 @@ settingsRouter.get("/", (c) => {
     memoryEnabled: settings.memoryEnabled ?? true,
     memoryAutoStore: settings.memoryAutoStore ?? false,
     memoryEmbeddings: settings.memoryEmbeddings ?? true,
+    exaSearchEnabled: settings.exaSearchEnabled ?? true,
     visionModel: settings.visionModel ?? "",
     imageGenModel: settings.imageGenModel ?? "",
     videoGenModel: settings.videoGenModel ?? "",
@@ -78,6 +79,8 @@ settingsRouter.get("/", (c) => {
     factorySystemPrompt,
     showPromptPreviews: settings.showPromptPreviews ?? false,
     previewBaseUrl: process.env.PREVIEW_BASE_URL ?? null,
+    defaultProvider: settings.defaultProvider ?? null,
+    providerDefaults: settings.providerDefaults ?? {},
   });
 });
 
@@ -88,6 +91,7 @@ settingsRouter.patch("/", async (c) => {
       memoryEnabled?: boolean;
       memoryAutoStore?: boolean;
       memoryEmbeddings?: boolean;
+      exaSearchEnabled?: boolean;
       visionModel?: string;
       imageGenModel?: string;
       videoGenModel?: string;
@@ -97,9 +101,18 @@ settingsRouter.patch("/", async (c) => {
       factoryAvatarUrl?: string | null;
       factorySystemPrompt?: string;
       showPromptPreviews?: boolean;
+      defaultProvider?: string | null;
+      providerDefaults?: Record<string, string>;
     }>();
 
     const updates: Record<string, any> = {};
+
+    if (body.defaultProvider !== undefined) {
+      updates.defaultProvider = body.defaultProvider ? String(body.defaultProvider) : null;
+    }
+    if (body.providerDefaults !== undefined && typeof body.providerDefaults === "object") {
+      updates.providerDefaults = body.providerDefaults;
+    }
 
     if (body.memoryEnabled !== undefined) {
       updates.memoryEnabled = !!body.memoryEnabled;
@@ -109,6 +122,9 @@ settingsRouter.patch("/", async (c) => {
     }
     if (body.memoryEmbeddings !== undefined) {
       updates.memoryEmbeddings = !!body.memoryEmbeddings;
+    }
+    if (body.exaSearchEnabled !== undefined) {
+      updates.exaSearchEnabled = !!body.exaSearchEnabled;
     }
     if (body.visionModel !== undefined) {
       updates.visionModel = String(body.visionModel);

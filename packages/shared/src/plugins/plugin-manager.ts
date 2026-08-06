@@ -7,6 +7,9 @@ import {
   type ToolCallContext,
 } from "./base-plugin";
 
+/**
+ * @deprecated The plugin system is deprecated and non-operational. Use hooks and custom tools instead.
+ */
 export class PluginManager {
   private plugins: BasePlugin[] = [];
 

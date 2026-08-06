@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { convertToLlm } from "./messages";
 import { estimateContextTokens } from "../../vendor/ai/src/utils/estimate.ts";
+import { convertToLlm } from "./messages";
 
 export interface ContextUsageResult {
   totalTokens: number;

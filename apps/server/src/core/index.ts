@@ -11,6 +11,7 @@ export * from "./ports/session-store.port";
 export * from "./ports/spaces-host.port";
 export * from "./ports/tool-executor.port";
 export * from "./ports/tool.port";
+export * from "./ports/workflow-engine.port";
 export * from "./ports/workspace-config.port";
 
 export { TypedEventEmitter } from "./infra/event-bus";
@@ -25,16 +26,19 @@ export { ServerSpacesHost, serverSpacesHost } from "./infra/spaces-host";
 export { ToolExecutor } from "./infra/tool-executor";
 export { ToolRegistry } from "./infra/tool-registry";
 
-export { AgentRuntime, type AgentEngineAdapter, type AgentRuntimeDeps } from "./session/agent-runtime-adapter";
-export { AgentSession, createAgentSession } from "./session/agent-session";
-export { AuthStorage } from "./session/auth-storage";
 export { ModelProviderAdapter } from "./model/model-provider-adapter";
 export { ModelRegistry } from "./model/model-registry";
+export {
+  AgentRuntime,
+  type AgentEngineAdapter,
+  type AgentRuntimeDeps,
+} from "./session/agent-runtime-adapter";
+export { AgentSession, createAgentSession } from "./session/agent-session";
+export { AuthStorage } from "./session/auth-storage";
 export { DefaultResourceLoader } from "./session/resource-loader";
 export { JsonlSessionStore } from "./stores/session-persistence";
 export { SessionStoreAdapter } from "./stores/session-store-adapter";
 
-export { BashTool, createBashTool, createBashToolDefinition } from "./tools/base/bash.tool";
 export { loadSkills } from "./session/load-skills";
 export {
   EditTool,
@@ -56,5 +60,6 @@ export {
   createWriteTool,
   createWriteToolDefinition,
 } from "./tools";
+export { BashTool, createBashTool, createBashToolDefinition } from "./tools/base/bash.tool";
 
 export type { AgentSessionEvent } from "./session/agent-session";

@@ -16,7 +16,7 @@ import {
 } from "@/lib/session-utils";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import type { TaskRunnerState } from "shared";
+import type { EntityType, TaskRunnerState } from "shared";
 
 const ALL_TOOL_NAMES = ["read", "write", "edit", "bash", "grep", "find", "ls"];
 
@@ -77,7 +77,7 @@ export function useChatAreaState({
   const [contextUsage, setContextUsage] = useState<ContextUsage | null>(null);
   const [settledApprovals, setSettledApprovals] = useState<Record<string, "confirm" | "deny">>({});
 
-  const entityType = activeTeam
+  const entityType: EntityType = activeTeam
     ? "team"
     : activeAgent
       ? "agent"
@@ -689,5 +689,7 @@ export function useChatAreaState({
     getSuggestions,
     isReadOnlyExecution,
     isChannelExecution,
+    entityType,
+    entityId,
   };
 }

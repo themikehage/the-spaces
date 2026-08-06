@@ -316,6 +316,17 @@ export function TeamChatArea({ activeTeam, sessionId, variantMode = false }: Pro
             onAbort={abortDispatch}
             mentionTargets={mentionTargets}
             activeChannelId={activeTeam.id} // We reuse activeChannelId prop so it binds correctly in ChatInput
+            userMessages={(messages || [])
+              .filter((m: any) => m.role === "user")
+              .map((m: any) => {
+                if (typeof m.content === "string") return m.content;
+                if (Array.isArray(m.content)) {
+                  const textPart = m.content.find((c: any) => c.type === "text" && c.text);
+                  if (textPart?.text) return textPart.text;
+                }
+                return "";
+              })
+              .filter((text: string) => text.trim().length > 0)}
           />
         )}
       </>

@@ -23,19 +23,12 @@ export const AG_UI_INSTRUCTIONS =
   `- vision: Analyze local image files (e.g. uploaded screenshots or generated designs) located in the workspace, providing answers to questions about them.\n`;
 
 export const PERSISTENT_MEMORY_INSTRUCTIONS =
-  `\n\nPersistent Memory Tools (memory_store, memory_recall, memory_forget):\n` +
-  `You have access to long-term persistent memory tools that help you remember facts, decisions, patterns, and interactions across sessions.\n` +
-  `- memory_store: Save a fact, event, or code/architectural pattern into your long-term persistent memory. Use this to remember user preferences, project conventions, bug fixes, architecture decisions, and important discoveries.\n` +
-  `  * content: The memory text or factual content to store (required).\n` +
-  `  * type: "semantic" (facts/concepts), "episodic" (events/interactions), or "procedural" (patterns/procedures). Default: "semantic".\n` +
-  `  * importance: 0.0 (low) to 1.0 (high). Default: 0.5.\n` +
-  `  * tags: Optional categorization tags for searching later.\n` +
-  `- memory_recall: Search and retrieve query-relevant memories from your long-term memory. Use this before starting work on a topic to check if you have prior knowledge about it.\n` +
-  `  * query: Natural language search term or semantic query (required).\n` +
-  `  * limit: Max number of memories to return (1-20, default: 5).\n` +
-  `- memory_forget: Delete a specific memory by its ID when it's no longer relevant or correct.\n` +
-  `  * id: The unique memory ID to be deleted (required).\n` +
-  `IMPORTANT: Use memory_store proactively after completing significant work (bug fixes, architecture decisions, discoveries, new patterns). Always use memory_recall before starting work on a topic that may have prior context.\n`;
+  `\n\nPersistent Memory Tool (memory):\n` +
+  `You have access to long-term persistent memory to remember facts, decisions, patterns, and interactions across sessions.\n` +
+  `- memory(action: "read", query: "..."): Search and retrieve query-relevant memories. Use this before starting work on a topic to check prior knowledge.\n` +
+  `- memory(action: "upsert", content: "...", type?: "semantic"|"episodic"|"procedural", importance?: number, tags?: string[], id?: string): Store or update a fact, pattern, preference, or discovery.\n` +
+  `- memory(action: "delete", id: "..."): Delete a specific memory by its ID.\n` +
+  `IMPORTANT: Use memory(action: "upsert", ...) proactively after completing significant work (bug fixes, architecture decisions, discoveries, new patterns). Always use memory(action: "read", ...) before starting work on a topic that may have prior context.\n`;
 
 export const SUBAGENT_DELEGATION_INSTRUCTIONS =
   `\n\nSubagent Delegation (manage_delegations tool with action "spawn"):\n` +

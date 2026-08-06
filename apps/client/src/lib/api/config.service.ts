@@ -43,9 +43,23 @@ async function fetchSessionConfig(sessionId: string): Promise<EntityConfigType> 
   return res.json();
 }
 
+async function patchEntityConfig(
+  entityType: EntityType,
+  entityId: string,
+  patch: Partial<EntityConfigType>,
+): Promise<EntityConfigType> {
+  const current = await fetchEntityConfig(entityType, entityId).catch(() => ({}));
+  const merged: EntityConfigType = {
+    ...current,
+    ...patch,
+  };
+  return updateEntityConfig(entityType, entityId, merged);
+}
+
 export const configService = {
   fetchEntityConfig,
   fetchResolvedConfig,
   updateEntityConfig,
+  patchEntityConfig,
   fetchSessionConfig,
 };

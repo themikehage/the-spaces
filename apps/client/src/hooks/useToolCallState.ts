@@ -61,6 +61,8 @@ export function useToolCallState({
       toolName === "manage_delegations" ||
       toolName === "exa_search" ||
       toolName === "web_fetch" ||
+      toolName === "memory" ||
+      toolName === "task" ||
       toolName === "memory_recall" ||
       toolName === "memory_store"
     );

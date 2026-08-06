@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 import { readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
-import type { ITool, ToolContext } from "../../ports/tool.port";
 import { truncateHead } from "../../../vendor/agent/src/harness/utils/truncate";
+import type { ITool, ToolContext } from "../../ports/tool.port";
 import { resolveSafePath } from "./path-safety";
 
 export interface LsToolParams {

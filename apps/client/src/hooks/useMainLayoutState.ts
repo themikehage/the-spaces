@@ -278,7 +278,6 @@ export function useMainLayoutState({
     if (page === "skills") return l.breadSkills || "Skills";
     if (page === "logs") return l.breadLogs || "Logs";
     if (page === "sessions") return l.breadSessions || "Sessions";
-    if (page === "plugins") return "Plugins";
     return "Spaces";
   }, [activeProjectId, activeProjectName, activeAgent, activeTeam, page, l]);
 

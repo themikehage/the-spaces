@@ -10,11 +10,8 @@ import {
   createReadToolDefinition,
   createWriteToolDefinition,
 } from "..";
-import type { AuthStorage } from "./auth-storage";
-import type { ModelRegistry } from "../model/model-registry";
 import { getOrCreateToolSessionToken } from "../../auth/ephemeral-tool-session";
 import { teamStore } from "../../teams/team-store";
-import { filterSecretsFromOutput } from "../sandbox/bash-output-filter";
 import {
   createCustomToolRuntime,
   createManageCustomToolsTool,
@@ -22,12 +19,17 @@ import {
 } from "../custom-tools";
 import { createMemoryTools } from "../memory/memory-tools";
 import type { MemoryProvider } from "../memory/types";
+import type { ModelRegistry } from "../model/model-registry";
+import type { IWorkflowEngine } from "../ports/workflow-engine.port";
+import { filterSecretsFromOutput } from "../sandbox/bash-output-filter";
 import { scopeConfigManager } from "../scope";
 import { createExaSearchTool } from "../tools/extensions/exa-search.tool";
 import { createFactoryTool } from "../tools/extensions/factory.tool";
 import { createPreviewTools } from "../tools/extensions/preview.tool";
 import { createUiTools } from "../tools/extensions/ui.tool";
 import { createWebFetchTool } from "../tools/extensions/web-fetch";
+import { createWorkflowTools } from "../tools/extensions/workflow.tool";
+import type { AuthStorage } from "./auth-storage";
 import { userConfigManager } from "./user-config";
 
 export interface CreateSessionToolsParams {
@@ -42,6 +44,7 @@ export interface CreateSessionToolsParams {
   contextAgentId?: string;
   teamId?: string;
   projectId?: string;
+  workflowEngine?: IWorkflowEngine;
 }
 
 export class SessionToolFactory {
@@ -93,7 +96,7 @@ export class SessionToolFactory {
 
     const exaSearchTool = createExaSearchTool({ username });
     const webFetchTool = createWebFetchTool({ username });
-    const memoryTools = memoryEnabled && memory ? createMemoryTools(memory) : [];
+    const memoryTools = memory ? createMemoryTools(memory, memoryEnabled) : [];
 
     const { teamId, projectId } = params;
     let previewTools: any[] = [];
@@ -174,6 +177,12 @@ export class SessionToolFactory {
       }),
     );
 
+    const workflowTools = createWorkflowTools({
+      username,
+      sessionId,
+      workflowEngine: params.workflowEngine,
+    });
+
     const rawTools = [
       customBashTool,
       readTool,
@@ -190,6 +199,7 @@ export class SessionToolFactory {
       webFetchTool,
       ...memoryTools,
       ...previewTools,
+      ...workflowTools,
     ];
 
     const customTools: BaseTool[] = rawTools.map((t) => legacyToolToBaseTool(t));

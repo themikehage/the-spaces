@@ -28,6 +28,14 @@ export interface IMemoryStore {
     tags?: string[],
     sessionId?: string,
   ): Promise<void>;
+  upsert?(
+    id: string | undefined,
+    content: string,
+    type?: MemoryType,
+    importance?: number,
+    tags?: string[],
+    sessionId?: string,
+  ): Promise<string>;
   forget(id: string): Promise<void>;
   clear?(): Promise<void>;
   buildContext(query: string, opts?: { sessionId?: string }): Promise<string>;

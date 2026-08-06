@@ -3,16 +3,7 @@ import { storage } from "@/lib/storage";
 import { useCallback, useEffect, useState } from "react";
 
 export interface NavigationStackItem {
-  type:
-    | "home"
-    | "sessions"
-    | "chat"
-    | "settings"
-    | "skills"
-    | "logs"
-    | "plugins"
-    | "admin"
-    | (string & {});
+  type: "home" | "sessions" | "chat" | "settings" | "skills" | "logs" | "admin" | (string & {});
   page: string;
   path: string;
   projectId?: string;

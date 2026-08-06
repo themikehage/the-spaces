@@ -3,8 +3,8 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { ResolveAttentionSchema } from "shared";
 import { approvalManager } from "../core/approvals/approval-manager";
-import { sessionMetadataStore } from "../core/session/metadata-store";
 import { uiApprovalRegistry } from "../core/approvals/ui-approval-registry";
+import { sessionMetadataStore } from "../core/session/metadata-store";
 import { authMiddleware, getAuthPayload } from "../middleware/auth";
 
 export const approvalsRouter = new Hono();

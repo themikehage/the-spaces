@@ -79,6 +79,22 @@ configRouter.put("/:entityType/:entityId", async (c) => {
     const configPath = join(dotSpacesDir, "config.json");
     writeFileSync(configPath, JSON.stringify(parsed.data, null, 2), "utf-8");
 
+    if (parsed.data.toolOverrides) {
+      try {
+        const { scopeConfigManager } = await import("../core/scope");
+        const target =
+          entityType === "global"
+            ? { type: "global" as const }
+            : { type: entityType as "agent" | "project" | "team", id: entityId };
+        await scopeConfigManager.setScopeTools(username, target, {
+          add: parsed.data.toolOverrides.add ?? [],
+          remove: parsed.data.toolOverrides.remove ?? [],
+        });
+      } catch (err) {
+        console.error("[configRouter] Failed to sync scopeConfigManager:", err);
+      }
+    }
+
     return c.json({ success: true, config: parsed.data });
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : "Failed to save entity config";

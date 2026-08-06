@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { isRestrictedPath } from "./restricted-paths";
 import type { ISandbox, SandboxOptions, SandboxResult } from "../ports/sandbox.port";
+import { isRestrictedPath } from "./restricted-paths";
 
 export class LocalSandbox implements ISandbox {
   constructor(private readonly restrictedPaths: string[] = []) {}

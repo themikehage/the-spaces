@@ -75,6 +75,18 @@ export function ChatBody({
   isReadOnlyExecution,
   navigate,
 }: ChatBodyProps) {
+  const userMessages = messages
+    .filter((m) => m.role === "user")
+    .map((m) => {
+      if (typeof m.content === "string") return m.content;
+      if (Array.isArray(m.content)) {
+        const textPart = m.content.find((c) => c.type === "text" && c.text);
+        if (textPart?.text) return textPart.text;
+      }
+      return "";
+    })
+    .filter((text) => text.trim().length > 0);
+
   return (
     <div className="flex-1 flex flex-col min-w-0 h-full relative">
       <div
@@ -120,6 +132,24 @@ export function ChatBody({
                 disabled={streaming || !connected}
                 loading={streaming}
                 textareaRef={chatInputRef}
+                entityType={
+                  activeTeam
+                    ? "team"
+                    : activeAgent
+                      ? "agent"
+                      : activeProjectName
+                        ? "project"
+                        : "global"
+                }
+                entityId={
+                  activeTeam
+                    ? activeTeam.id
+                    : activeAgent
+                      ? activeAgent.id
+                      : activeProjectName
+                        ? activeProjectName
+                        : "global"
+                }
               />
             ) : (
               <>
@@ -211,6 +241,7 @@ export function ChatBody({
             compacting={compacting}
             textareaRef={chatInputRef}
             disabled={!connected}
+            userMessages={userMessages}
           />
         </div>
       )}

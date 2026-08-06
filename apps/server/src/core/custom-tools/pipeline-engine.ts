@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 import { type AgentSession } from "..";
+import type { DelegationRegistry } from "../delegation/delegation-registry";
 import { type PipelineStep } from "./schemas";
 
 export interface PipelineContext {
@@ -7,6 +8,7 @@ export interface PipelineContext {
   session: AgentSession;
   username: string;
   sessionId: string;
+  delegationRegistry?: DelegationRegistry;
 }
 
 function getNestedValue(obj: Record<string, any>, path: string): any {
@@ -149,6 +151,10 @@ export async function executePipeline(
     try {
       const toolCallId = `step_${stepNum}_${Date.now()}`;
       const result = await tool.execute(toolCallId, resolvedParams, signal);
+
+      if (result?.pipelineScopeUpdate && typeof result.pipelineScopeUpdate === "object") {
+        Object.assign(scope, result.pipelineScopeUpdate);
+      }
 
       const rawText =
         result?.content?.[0]?.text ??

@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: MIT
+import {
+  compact,
+  prepareCompaction,
+} from "../../vendor/agent/src/harness/compaction/compaction.ts";
+import { completeSimple } from "../../vendor/ai/src/compat.ts";
 import type { AvailableModel, ModelRegistry } from "../model/model-registry";
 import type { JsonlSessionStore } from "../stores/session-persistence";
-import { compact, prepareCompaction } from "../../vendor/agent/src/harness/compaction/compaction.ts";
-import { completeSimple } from "../../vendor/ai/src/compat.ts";
 
 export class CompactionManager {
   constructor(

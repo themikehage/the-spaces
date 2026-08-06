@@ -219,6 +219,7 @@ interface Props {
   disabled?: boolean;
   entityType?: EntityType;
   entityId?: string;
+  userMessages?: string[];
 }
 
 export function ChatInput({
@@ -239,6 +240,7 @@ export function ChatInput({
   disabled = false,
   entityType: customEntityType,
   entityId: customEntityId,
+  userMessages,
 }: Props) {
   const form = useChatInputForm({
     onSend,
@@ -255,6 +257,7 @@ export function ChatInput({
     disabled,
     customEntityType,
     customEntityId,
+    userMessages,
   });
 
   return (
@@ -288,11 +291,7 @@ export function ChatInput({
           onRemoveAttachment={form.removeAttachment}
           input={form.input}
           onInputChange={(val) => {
-            form.setInput(val);
-            const textarea = form.textareaRef.current;
-            if (textarea) {
-              form.checkAutocomplete(val, textarea.selectionStart);
-            }
+            form.handleInputChange(val);
           }}
           onKeyDown={form.handleKeyDown}
           placeholder={form.placeholderText}

@@ -21,7 +21,7 @@ export type { BaseTool, ToolDeclaration, ToolResult, ToolResultMetadata } from "
 export { LLMRegistry } from "shared";
 export type { BaseLlmProvider, ProviderCapabilities, ProviderModelInfo } from "shared";
 
-// Plugin System Abstraction
+// Plugin System Abstraction (Deprecated)
 export { BasePlugin, PluginManager } from "shared";
 export type { ModelCallContext, SessionContext, ToolCallContext } from "shared";
 
