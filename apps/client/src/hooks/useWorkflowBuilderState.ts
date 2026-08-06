@@ -4,10 +4,8 @@ import {
   deleteWorkflow as apiDeleteWorkflow,
   runWorkflow as apiRunWorkflow,
   saveWorkflow as apiSaveWorkflow,
-  approveWorkflowStep,
   fetchWorkflowRuns,
   fetchWorkflows,
-  rejectWorkflowStep,
 } from "@/lib/api/workflows.service";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { WorkflowDefinition, WorkflowRun, WorkflowStep } from "shared";
@@ -87,9 +85,11 @@ export function useWorkflowBuilderState(targetWorkflowId?: string) {
           stepStates: {
             ...prev.stepStates,
             [data.stepId]: {
+              ...(prev.stepStates[data.stepId] || { stepId: data.stepId }),
               stepId: data.stepId,
               status: "running",
               startedAt: new Date().toISOString(),
+              agentSessionId: data.agentSessionId || prev.stepStates[data.stepId]?.agentSessionId,
             },
           },
         };
@@ -202,15 +202,14 @@ export function useWorkflowBuilderState(targetWorkflowId?: string) {
     }
   };
 
-  const handleAddStep = (type: WorkflowStep["type"]) => {
+  const handleAddStep = (_type?: WorkflowStep["type"]) => {
     if (!selectedWorkflow) return;
     const newStepId = `step-${selectedWorkflow.steps.length + 1}`;
     const newStep: WorkflowStep = {
       id: newStepId,
-      type,
-      label: `New ${type.toUpperCase()} Step`,
-      taskTemplate: type === "agent" ? "Execute agent task..." : undefined,
-      toolName: type === "tool" ? "grep" : undefined,
+      type: "agent",
+      label: `New Step ${selectedWorkflow.steps.length + 1}`,
+      taskTemplate: "Execute agent task...",
     };
     const updatedSteps = [...selectedWorkflow.steps, newStep];
     updateSelectedWorkflow({ ...selectedWorkflow, steps: updatedSteps });
@@ -260,28 +259,6 @@ export function useWorkflowBuilderState(targetWorkflowId?: string) {
     }
   };
 
-  const handleApproveStep = async (runId: string, stepId: string) => {
-    try {
-      await approveWorkflowStep(runId, stepId);
-      if (selectedWorkflow) {
-        await loadRunHistory(selectedWorkflow.id);
-      }
-    } catch (err: any) {
-      setError(err.message || "Failed to approve step");
-    }
-  };
-
-  const handleRejectStep = async (runId: string, stepId: string) => {
-    try {
-      await rejectWorkflowStep(runId, stepId);
-      if (selectedWorkflow) {
-        await loadRunHistory(selectedWorkflow.id);
-      }
-    } catch (err: any) {
-      setError(err.message || "Failed to reject step");
-    }
-  };
-
   return {
     workflows,
     selectedWorkflow,
@@ -303,8 +280,6 @@ export function useWorkflowBuilderState(targetWorkflowId?: string) {
       handleRunWorkflow,
       handleSelectRun,
       handleAbortRun,
-      handleApproveStep,
-      handleRejectStep,
       setSelectedStep,
       setActiveRun,
     },

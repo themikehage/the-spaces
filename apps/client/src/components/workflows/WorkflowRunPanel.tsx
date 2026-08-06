@@ -1,22 +1,19 @@
 // SPDX-License-Identifier: MIT
-import { AlertCircle, CheckCircle2, Clock, StopCircle, UserCheck, XCircle } from "lucide-react";
+import { AlertCircle, CheckCircle2, Clock, StopCircle } from "lucide-react";
 import React from "react";
 import type { WorkflowDefinition, WorkflowRun } from "shared";
+import { WorkflowStepChatStream } from "./WorkflowStepChatStream";
 
 interface WorkflowRunPanelProps {
   run: WorkflowRun;
   workflow?: WorkflowDefinition | null;
   onAbort: (runId: string) => void;
-  onApproveStep: (runId: string, stepId: string) => void;
-  onRejectStep: (runId: string, stepId: string) => void;
 }
 
 export const WorkflowRunPanel: React.FC<WorkflowRunPanelProps> = ({
   run,
   workflow,
   onAbort,
-  onApproveStep,
-  onRejectStep,
 }) => {
   const getStepLabel = (stepId: string) => {
     return workflow?.steps.find((s) => s.id === stepId)?.label || stepId;
@@ -51,11 +48,11 @@ export const WorkflowRunPanel: React.FC<WorkflowRunPanelProps> = ({
         )}
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-3">
         {Object.values(run.stepStates).map((stepState) => (
           <div
             key={stepState.stepId}
-            className="flex flex-col p-3 rounded-xl bg-accent/30 border border-border/50 text-xs gap-1.5"
+            className="flex flex-col p-3.5 rounded-xl bg-accent/30 border border-border/50 text-xs gap-1.5"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -75,23 +72,6 @@ export const WorkflowRunPanel: React.FC<WorkflowRunPanelProps> = ({
                   ({stepState.stepId})
                 </span>
               </div>
-
-              {stepState.status === "waiting_approval" && (
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => onApproveStep(run.id, stepState.stepId)}
-                    className="flex items-center gap-1 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[11px] font-medium transition"
-                  >
-                    <UserCheck className="w-3 h-3" /> Approve
-                  </button>
-                  <button
-                    onClick={() => onRejectStep(run.id, stepState.stepId)}
-                    className="flex items-center gap-1 px-2.5 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-[11px] font-medium transition"
-                  >
-                    <XCircle className="w-3 h-3" /> Reject
-                  </button>
-                </div>
-              )}
             </div>
 
             {stepState.error && (
@@ -109,6 +89,13 @@ export const WorkflowRunPanel: React.FC<WorkflowRunPanelProps> = ({
                   {JSON.stringify(stepState.outputs, null, 2)}
                 </pre>
               </div>
+            )}
+
+            {stepState.agentSessionId && (
+              <WorkflowStepChatStream
+                agentSessionId={stepState.agentSessionId}
+                status={stepState.status}
+              />
             )}
           </div>
         ))}

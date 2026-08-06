@@ -7,7 +7,7 @@ describe("dag-resolver", () => {
   it("resolves steps without dependencies into a single batch", () => {
     const steps: WorkflowStep[] = [
       { id: "step1", type: "agent", label: "Step 1" },
-      { id: "step2", type: "tool", label: "Step 2" },
+      { id: "step2", type: "agent", label: "Step 2" },
     ];
 
     const batches = resolveExecutionOrder(steps);
@@ -18,7 +18,7 @@ describe("dag-resolver", () => {
   it("resolves linear dependencies sequentially", () => {
     const steps: WorkflowStep[] = [
       { id: "step1", type: "agent", label: "Step 1" },
-      { id: "step2", type: "tool", label: "Step 2", dependsOn: ["step1"] },
+      { id: "step2", type: "agent", label: "Step 2", dependsOn: ["step1"] },
       { id: "step3", type: "agent", label: "Step 3", dependsOn: ["step2"] },
     ];
 
@@ -32,8 +32,8 @@ describe("dag-resolver", () => {
   it("resolves diamond dependency into correct batches", () => {
     const steps: WorkflowStep[] = [
       { id: "A", type: "agent", label: "A" },
-      { id: "B", type: "tool", label: "B", dependsOn: ["A"] },
-      { id: "C", type: "tool", label: "C", dependsOn: ["A"] },
+      { id: "B", type: "agent", label: "B", dependsOn: ["A"] },
+      { id: "C", type: "agent", label: "C", dependsOn: ["A"] },
       { id: "D", type: "agent", label: "D", dependsOn: ["B", "C"] },
     ];
 
@@ -47,7 +47,7 @@ describe("dag-resolver", () => {
   it("detects cyclic dependencies and throws DagValidationError", () => {
     const steps: WorkflowStep[] = [
       { id: "A", type: "agent", label: "A", dependsOn: ["B"] },
-      { id: "B", type: "tool", label: "B", dependsOn: ["A"] },
+      { id: "B", type: "agent", label: "B", dependsOn: ["A"] },
     ];
 
     expect(detectCycles(steps)).toContain("Cyclic dependency detected");
@@ -64,7 +64,7 @@ describe("dag-resolver", () => {
   it("detects duplicate step IDs", () => {
     const steps: WorkflowStep[] = [
       { id: "A", type: "agent", label: "A" },
-      { id: "A", type: "tool", label: "A copy" },
+      { id: "A", type: "agent", label: "A copy" },
     ];
 
     expect(detectCycles(steps)).toContain("Duplicate step ID found: A");

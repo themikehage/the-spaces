@@ -10,6 +10,4 @@ export interface IWorkflowEngine {
   getRunStatus(username: string, runId: string): WorkflowRun | null;
   abort(username: string, runId: string): Promise<void>;
   listRuns(username: string, workflowId: string): WorkflowRun[];
-  approveStep(username: string, runId: string, stepId: string): Promise<void>;
-  rejectStep(username: string, runId: string, stepId: string): Promise<void>;
 }

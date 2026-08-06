@@ -16,6 +16,7 @@ import { agentRegistry } from "../agents";
 import { applyCacheHeaders } from "../core/middleware/cache-headers";
 import { scopeConfigManager } from "../core/scope";
 
+import { serverSpacesHost } from "../core/infra/spaces-host";
 import { sessionManager } from "../core/session/session-manager";
 import { getUsername } from "../lib/auth-helpers";
 import { authMiddleware } from "../middleware/auth";
@@ -63,6 +64,38 @@ agentsRouter.get("/", (c) => {
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
   return c.json({ agents: agentRegistry.list(username) });
+});
+
+agentsRouter.get(
+  "/directory",
+  zValidator(
+    "query",
+    z.object({
+      tags: z.string().optional(),
+      hasCapability: z.string().optional(),
+    }),
+  ),
+  async (c) => {
+    const username = getUsername(c);
+    if (!username) return c.json({ error: "Unauthorized" }, 401);
+    const { tags, hasCapability } = c.req.valid("query");
+    const tagArray = tags ? tags.split(",").map((t) => t.trim()).filter(Boolean) : undefined;
+
+    const agents = await serverSpacesHost.agents.listAgents(username, {
+      tags: tagArray,
+      hasCapability,
+    });
+    return c.json({ agents });
+  },
+);
+
+agentsRouter.get("/:id/capabilities", async (c) => {
+  const username = getUsername(c);
+  if (!username) return c.json({ error: "Unauthorized" }, 401);
+  const id = c.req.param("id");
+  const caps = await serverSpacesHost.agents.getAgentCapabilities(username, id);
+  if (!caps) return c.json({ error: "Agent not found" }, 404);
+  return c.json(caps);
 });
 
 agentsRouter.post("/", zValidator("json", AgentDefinitionSchema), async (c) => {

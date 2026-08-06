@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-import { ArrowDown, Bot, GitBranch, HelpCircle, Play, Plus, Wrench } from "lucide-react";
-import React, { useState } from "react";
+import { ArrowDown, Plus } from "lucide-react";
+import React from "react";
 import type { WorkflowDefinition, WorkflowRun, WorkflowStep } from "shared";
 import { WorkflowStepCard } from "./WorkflowStepCard";
 
@@ -21,27 +21,6 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
   onAddStep,
   onDeleteStep,
 }) => {
-  const [showAddMenu, setShowAddMenu] = useState(false);
-
-  const stepTypes: { type: WorkflowStep["type"]; label: string; icon: React.ReactNode }[] = [
-    { type: "agent", label: "Agent Step", icon: <Bot className="w-3.5 h-3.5 text-blue-400" /> },
-    { type: "tool", label: "Tool Step", icon: <Wrench className="w-3.5 h-3.5 text-emerald-400" /> },
-    {
-      type: "approval",
-      label: "Approval Step",
-      icon: <HelpCircle className="w-3.5 h-3.5 text-amber-400" />,
-    },
-    {
-      type: "condition",
-      label: "Condition Step",
-      icon: <GitBranch className="w-3.5 h-3.5 text-purple-400" />,
-    },
-    {
-      type: "parallel",
-      label: "Parallel Batch",
-      icon: <Play className="w-3.5 h-3.5 text-cyan-400" />,
-    },
-  ];
 
   return (
     <div className="flex-1 flex flex-col h-full bg-background p-6 overflow-y-auto">
@@ -71,34 +50,16 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
           </React.Fragment>
         ))}
 
-        {/* Add Step Connector / Dropdown */}
+        {/* Add Step Button */}
         <div className="relative flex flex-col items-center mt-4">
           {workflow.steps.length > 0 && <div className="w-0.5 h-6 bg-border mb-2" />}
 
           <button
-            onClick={() => setShowAddMenu(!showAddMenu)}
+            onClick={() => onAddStep("agent")}
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold shadow-md transition"
           >
             <Plus className="w-4 h-4" /> Add Step
           </button>
-
-          {showAddMenu && (
-            <div className="absolute top-full mt-2 w-48 bg-popover border border-border rounded-xl shadow-xl z-20 overflow-hidden p-1">
-              {stepTypes.map((item) => (
-                <button
-                  key={item.type}
-                  onClick={() => {
-                    onAddStep(item.type);
-                    setShowAddMenu(false);
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-popover-foreground hover:bg-accent rounded-lg text-left transition"
-                >
-                  {item.icon}
-                  <span>{item.label}</span>
-                </button>
-              ))}
-            </div>
-          )}
         </div>
 
         {workflow.steps.length === 0 && (

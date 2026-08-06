@@ -83,23 +83,3 @@ export async function abortWorkflowRun(runId: string): Promise<void> {
     throw new Error(err.error || "Failed to abort workflow run");
   }
 }
-
-export async function approveWorkflowStep(runId: string, stepId: string): Promise<void> {
-  const res = await apiFetch(`/api/workflows/runs/${runId}/steps/${stepId}/approve`, {
-    method: "POST",
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || "Failed to approve step");
-  }
-}
-
-export async function rejectWorkflowStep(runId: string, stepId: string): Promise<void> {
-  const res = await apiFetch(`/api/workflows/runs/${runId}/steps/${stepId}/reject`, {
-    method: "POST",
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || "Failed to reject step");
-  }
-}

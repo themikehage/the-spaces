@@ -10,8 +10,6 @@ interface WorkflowExecutionsTabProps {
   activeRun: WorkflowRun | null;
   onSelectRun: (run: WorkflowRun) => void;
   onAbortRun: (runId: string) => Promise<void>;
-  onApproveStep: (runId: string, stepId: string) => Promise<void>;
-  onRejectStep: (runId: string, stepId: string) => Promise<void>;
 }
 
 export const WorkflowExecutionsTab: React.FC<WorkflowExecutionsTabProps> = ({
@@ -20,8 +18,6 @@ export const WorkflowExecutionsTab: React.FC<WorkflowExecutionsTabProps> = ({
   activeRun,
   onSelectRun,
   onAbortRun,
-  onApproveStep,
-  onRejectStep,
 }) => {
   const [selectedRunId, setSelectedRunId] = useState<string | null>(
     activeRun?.id || (runHistory.length > 0 ? runHistory[0].id : null),
@@ -138,8 +134,6 @@ export const WorkflowExecutionsTab: React.FC<WorkflowExecutionsTabProps> = ({
               run={displayedRun}
               workflow={workflow}
               onAbort={onAbortRun}
-              onApproveStep={onApproveStep}
-              onRejectStep={onRejectStep}
             />
           </div>
         ) : (

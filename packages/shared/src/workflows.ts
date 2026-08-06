@@ -1,13 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { z } from "zod";
 
-export const WorkflowStepTypeSchema = z.enum([
-  "agent",
-  "tool",
-  "approval",
-  "parallel",
-  "condition",
-]);
+export const WorkflowStepTypeSchema = z.enum(["agent"]);
 export type WorkflowStepType = z.infer<typeof WorkflowStepTypeSchema>;
 
 export const WorkflowStepSchema = z.object({
@@ -20,13 +14,6 @@ export const WorkflowStepSchema = z.object({
   subagentType: z.enum(["explorer", "builder", "autonomous"]).optional(),
   maxSteps: z.number().optional(),
   captureOutputs: z.array(z.string()).optional(),
-  toolName: z.string().optional(),
-  toolParams: z.record(z.unknown()).optional(),
-  approvalMessage: z.string().optional(),
-  parallelStepIds: z.array(z.string()).optional(),
-  conditionExpression: z.string().optional(),
-  ifTrueStepId: z.string().optional(),
-  ifFalseStepId: z.string().optional(),
 });
 export type WorkflowStep = z.infer<typeof WorkflowStepSchema>;
 
@@ -61,7 +48,7 @@ export type WorkflowDefinition = z.infer<typeof WorkflowDefinitionSchema>;
 
 export const WorkflowStepStateSchema = z.object({
   stepId: z.string(),
-  status: z.enum(["pending", "running", "success", "error", "skipped", "waiting_approval"]),
+  status: z.enum(["pending", "running", "success", "error"]),
   startedAt: z.string().optional(),
   completedAt: z.string().optional(),
   outputs: z.record(z.unknown()).optional(),

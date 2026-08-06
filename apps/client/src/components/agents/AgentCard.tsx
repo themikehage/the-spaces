@@ -89,7 +89,23 @@ export function AgentCard({
         </span>
       </div>
 
-      <div className="flex items-center gap-2 flex-wrap">
+      {agent.description && (
+        <p className="text-xs text-muted-foreground line-clamp-2">{agent.description}</p>
+      )}
+
+      <div className="flex items-center gap-1.5 flex-wrap">
+        {agent.tags && agent.tags.length > 0 && (
+          <div className="flex items-center gap-1 flex-wrap">
+            {agent.tags.map((tag) => (
+              <span
+                key={tag}
+                className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border"
+              >
+                #{tag}
+              </span>
+            ))}
+          </div>
+        )}
         <span className="text-xs text-muted-foreground ml-auto">
           {new Date(agent.createdAt).toLocaleTimeString()}
         </span>

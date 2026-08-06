@@ -9,8 +9,6 @@ interface WorkflowPlaygroundProps {
   activeRun: WorkflowRun | null;
   onRunWorkflow: (inputs?: Record<string, unknown>) => Promise<void>;
   onAbortRun: (runId: string) => Promise<void>;
-  onApproveStep: (runId: string, stepId: string) => Promise<void>;
-  onRejectStep: (runId: string, stepId: string) => Promise<void>;
 }
 
 export const WorkflowPlayground: React.FC<WorkflowPlaygroundProps> = ({
@@ -18,8 +16,6 @@ export const WorkflowPlayground: React.FC<WorkflowPlaygroundProps> = ({
   activeRun,
   onRunWorkflow,
   onAbortRun,
-  onApproveStep,
-  onRejectStep,
 }) => {
   const inputConfigs = workflow.inputs ? Object.entries(workflow.inputs) : [];
   const [formInputs, setFormInputs] = useState<Record<string, any>>(() => {
@@ -195,8 +191,6 @@ export const WorkflowPlayground: React.FC<WorkflowPlaygroundProps> = ({
               run={activeRun}
               workflow={workflow}
               onAbort={onAbortRun}
-              onApproveStep={onApproveStep}
-              onRejectStep={onRejectStep}
             />
           </div>
         ) : (

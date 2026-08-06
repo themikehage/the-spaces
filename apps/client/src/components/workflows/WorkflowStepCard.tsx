@@ -1,15 +1,5 @@
 // SPDX-License-Identifier: MIT
-import {
-  AlertTriangle,
-  Bot,
-  CheckCircle,
-  Clock,
-  GitBranch,
-  HelpCircle,
-  Play,
-  Trash2,
-  Wrench,
-} from "lucide-react";
+import { AlertTriangle, Bot, CheckCircle, Clock, Trash2 } from "lucide-react";
 import React from "react";
 import type { WorkflowStep, WorkflowStepState } from "shared";
 
@@ -28,36 +18,6 @@ export const WorkflowStepCard: React.FC<WorkflowStepCardProps> = ({
   onSelect,
   onDelete,
 }) => {
-  const renderIcon = () => {
-    switch (step.type) {
-      case "agent":
-        return <Bot className="w-4 h-4 text-blue-400" />;
-      case "tool":
-        return <Wrench className="w-4 h-4 text-emerald-400" />;
-      case "approval":
-        return <HelpCircle className="w-4 h-4 text-amber-400" />;
-      case "condition":
-        return <GitBranch className="w-4 h-4 text-purple-400" />;
-      case "parallel":
-        return <Play className="w-4 h-4 text-cyan-400" />;
-    }
-  };
-
-  const getBorderColor = () => {
-    switch (step.type) {
-      case "agent":
-        return "border-l-blue-500";
-      case "tool":
-        return "border-l-emerald-500";
-      case "approval":
-        return "border-l-amber-500";
-      case "condition":
-        return "border-l-purple-500";
-      case "parallel":
-        return "border-l-cyan-500";
-    }
-  };
-
   const renderStatusBadge = () => {
     if (!stepState) return null;
     switch (stepState.status) {
@@ -79,12 +39,6 @@ export const WorkflowStepCard: React.FC<WorkflowStepCardProps> = ({
             <AlertTriangle className="w-3 h-3" /> Error
           </span>
         );
-      case "waiting_approval":
-        return (
-          <span className="flex items-center gap-1 text-[11px] text-amber-400 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800/40">
-            <HelpCircle className="w-3 h-3" /> Approval Needed
-          </span>
-        );
       default:
         return null;
     }
@@ -93,7 +47,7 @@ export const WorkflowStepCard: React.FC<WorkflowStepCardProps> = ({
   return (
     <div
       onClick={onSelect}
-      className={`group relative p-4 rounded-xl border border-l-4 transition-all cursor-pointer bg-card/80 backdrop-blur shadow-sm ${getBorderColor()} ${
+      className={`group relative p-4 rounded-xl border border-l-4 border-l-blue-500 transition-all cursor-pointer bg-card/80 backdrop-blur shadow-sm ${
         isSelected
           ? "border-primary ring-2 ring-primary/20 shadow-md"
           : "border-border hover:border-border/80 hover:bg-accent/40"
@@ -101,7 +55,9 @@ export const WorkflowStepCard: React.FC<WorkflowStepCardProps> = ({
     >
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2.5">
-          <div className="p-1.5 rounded-lg bg-accent/80 border border-border">{renderIcon()}</div>
+          <div className="p-1.5 rounded-lg bg-accent/80 border border-border">
+            <Bot className="w-4 h-4 text-blue-400" />
+          </div>
           <div>
             <h4 className="text-sm font-semibold text-foreground">{step.label}</h4>
             <span className="text-[11px] text-muted-foreground uppercase tracking-wider font-mono">
@@ -140,15 +96,9 @@ export const WorkflowStepCard: React.FC<WorkflowStepCardProps> = ({
         </div>
       )}
 
-      {step.type === "agent" && step.taskTemplate && (
+      {step.taskTemplate && (
         <p className="mt-2 text-xs text-muted-foreground line-clamp-2 italic font-sans bg-accent/30 p-2 rounded border border-border/30">
           "{step.taskTemplate}"
-        </p>
-      )}
-
-      {step.type === "tool" && step.toolName && (
-        <p className="mt-2 text-xs text-muted-foreground font-mono bg-accent/30 p-1.5 rounded border border-border/30">
-          Tool: <span className="text-primary font-semibold">{step.toolName}</span>
         </p>
       )}
     </div>

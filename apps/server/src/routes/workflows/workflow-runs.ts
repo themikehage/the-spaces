@@ -50,19 +50,3 @@ workflowRunsRouter.post("/runs/:runId/abort", async (c) => {
   await workflowEngine.abort(username, runId);
   return c.json({ success: true });
 });
-
-workflowRunsRouter.post("/runs/:runId/steps/:stepId/approve", async (c) => {
-  const { username } = getAuthPayload(c);
-  const runId = c.req.param("runId");
-  const stepId = c.req.param("stepId");
-  await workflowEngine.approveStep(username, runId, stepId);
-  return c.json({ success: true });
-});
-
-workflowRunsRouter.post("/runs/:runId/steps/:stepId/reject", async (c) => {
-  const { username } = getAuthPayload(c);
-  const runId = c.req.param("runId");
-  const stepId = c.req.param("stepId");
-  await workflowEngine.rejectStep(username, runId, stepId);
-  return c.json({ success: true });
-});

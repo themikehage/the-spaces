@@ -243,6 +243,8 @@ export const AgentDefinitionSchema = z.object({
   avatarUrl: z.string().optional(),
   blueprintId: z.string().optional(),
   scope: AgentScopeTargetSchema.optional(),
+  tags: z.array(z.string()).optional(),
+  description: z.string().max(500).optional(),
 });
 export type AgentDefinition = z.infer<typeof AgentDefinitionSchema>;
 
@@ -259,6 +261,8 @@ export const AgentInfoSchema = z.object({
   createdAt: z.string(),
   avatarUrl: z.string().optional(),
   blueprintId: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  description: z.string().optional(),
 });
 export type AgentInfo = z.infer<typeof AgentInfoSchema>;
 

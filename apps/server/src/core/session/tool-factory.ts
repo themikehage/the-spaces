@@ -20,9 +20,11 @@ import {
 import { createMemoryTools } from "../memory/memory-tools";
 import type { MemoryProvider } from "../memory/types";
 import type { ModelRegistry } from "../model/model-registry";
+import type { AgentDirectoryPort } from "../ports/spaces-host.port";
 import type { IWorkflowEngine } from "../ports/workflow-engine.port";
 import { filterSecretsFromOutput } from "../sandbox/bash-output-filter";
 import { scopeConfigManager } from "../scope";
+import { createAgentDirectoryTools } from "../tools/extensions/agents-directory.tool";
 import { createExaSearchTool } from "../tools/extensions/exa-search.tool";
 import { createFactoryTool } from "../tools/extensions/factory.tool";
 import { createPreviewTools } from "../tools/extensions/preview.tool";
@@ -45,6 +47,7 @@ export interface CreateSessionToolsParams {
   teamId?: string;
   projectId?: string;
   workflowEngine?: IWorkflowEngine;
+  agentDirectory?: AgentDirectoryPort;
 }
 
 export class SessionToolFactory {
@@ -183,6 +186,11 @@ export class SessionToolFactory {
       workflowEngine: params.workflowEngine,
     });
 
+    const agentDirectoryTools = createAgentDirectoryTools({
+      username,
+      agentDirectory: params.agentDirectory,
+    });
+
     const rawTools = [
       customBashTool,
       readTool,
@@ -200,6 +208,7 @@ export class SessionToolFactory {
       ...memoryTools,
       ...previewTools,
       ...workflowTools,
+      ...agentDirectoryTools,
     ];
 
     const customTools: BaseTool[] = rawTools.map((t) => legacyToolToBaseTool(t));

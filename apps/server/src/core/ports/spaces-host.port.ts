@@ -58,8 +58,31 @@ export interface McpPort {
   executeTool(name: string, args: Record<string, unknown>): Promise<unknown>;
 }
 
+export interface AgentCapabilities {
+  model?: { provider: string; modelId: string };
+  activeTools: string[];
+  skills: string[];
+  tags: string[];
+  description?: string;
+}
+
+export interface AgentDirectoryEntry {
+  agentId: string;
+  name: string;
+  isActive: boolean;
+  capabilities: AgentCapabilities;
+}
+
 export interface AgentDirectoryPort {
   getAgentDef(agentId: string): Promise<{ name: string; systemPrompt: string } | null>;
+  listAgents(
+    username: string,
+    filter?: {
+      tags?: string[];
+      hasCapability?: string;
+    },
+  ): Promise<AgentDirectoryEntry[]>;
+  getAgentCapabilities(username: string, agentId: string): Promise<AgentCapabilities | null>;
 }
 
 export interface TeamDirectoryPort {

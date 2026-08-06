@@ -163,7 +163,7 @@ async function abortSessionDelegation(sessionId: string, toolCallId: string): Pr
   if (!res.ok) throw new Error(`Failed to abort delegation: ${res.statusText}`);
 }
 
-async function fetchSessionMessages(sessionId: string): Promise<any[]> {
+export async function fetchSessionMessages(sessionId: string): Promise<any[]> {
   const res = await apiFetch(`/api/sessions/${sessionId}/messages`);
   if (!res.ok) throw new Error(`Failed to fetch messages: ${res.statusText}`);
   const data = await res.json();

@@ -32,6 +32,33 @@ class SimpleEventBus implements EventBus {
 
 const eventBus = new SimpleEventBus();
 
+// Bridge workflow eventBus events to WebSocket clients via wsRegistry
+const WORKFLOW_EVENTS = [
+  "workflow_run_started",
+  "workflow_step_started",
+  "workflow_step_completed",
+  "workflow_run_completed",
+];
+
+for (const eventName of WORKFLOW_EVENTS) {
+  eventBus.on(eventName, (payload) => {
+    // Lazy import wsRegistry to prevent circular dependencies
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { wsRegistry } = require("../../ws/registry");
+    const message = JSON.stringify({ type: eventName, ...(payload as object) });
+
+    for (const [, sockets] of wsRegistry.userSockets.entries()) {
+      for (const ws of sockets) {
+        try {
+          ws.send(message);
+        } catch {
+          /* noop */
+        }
+      }
+    }
+  });
+}
+
 export const workflowEngine = new WorkflowEngine({
   getSessionManager: () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports

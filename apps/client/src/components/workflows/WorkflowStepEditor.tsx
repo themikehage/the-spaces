@@ -65,144 +65,66 @@ export const WorkflowStepEditor: React.FC<WorkflowStepEditorProps> = ({
 
         <div>
           <label className="block text-xs font-medium text-muted-foreground mb-1">Step Type</label>
+          <div className="w-full px-3 py-1.5 rounded-lg bg-accent/30 border border-border text-foreground text-xs font-medium">
+            Agent
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-muted-foreground mb-1">
+            Agent ID (Optional)
+          </label>
+          <input
+            type="text"
+            value={step.agentId || ""}
+            onChange={(e) => onUpdate({ ...step, agentId: e.target.value || undefined })}
+            placeholder="Leave blank for anonymous subagent"
+            className="w-full px-3 py-1.5 rounded-lg bg-accent/50 border border-border text-foreground text-xs font-mono focus:outline-none focus:border-primary"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-muted-foreground mb-1">
+            Task Template
+          </label>
+          <textarea
+            value={step.taskTemplate || ""}
+            onChange={(e) => onUpdate({ ...step, taskTemplate: e.target.value })}
+            rows={4}
+            placeholder="Use {{inputs.var}} or {{stepId.outputs.var}}"
+            className="w-full px-3 py-2 rounded-lg bg-accent/50 border border-border text-foreground text-xs focus:outline-none focus:border-primary font-mono"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-muted-foreground mb-1">
+            Subagent Type
+          </label>
           <select
-            value={step.type}
-            onChange={(e) => onUpdate({ ...step, type: e.target.value as any })}
+            value={step.subagentType || "builder"}
+            onChange={(e) => onUpdate({ ...step, subagentType: e.target.value as any })}
             className="w-full px-3 py-1.5 rounded-lg bg-accent/50 border border-border text-foreground text-xs focus:outline-none focus:border-primary"
           >
-            <option value="agent">Agent</option>
-            <option value="tool">Tool</option>
-            <option value="approval">Approval</option>
-            <option value="condition">Condition</option>
-            <option value="parallel">Parallel</option>
+            <option value="builder">Builder</option>
+            <option value="explorer">Explorer</option>
+            <option value="autonomous">Autonomous</option>
           </select>
         </div>
 
-        {step.type === "agent" && (
-          <>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">
-                Agent ID (Optional)
-              </label>
-              <input
-                type="text"
-                value={step.agentId || ""}
-                onChange={(e) => onUpdate({ ...step, agentId: e.target.value || undefined })}
-                placeholder="Leave blank for anonymous subagent"
-                className="w-full px-3 py-1.5 rounded-lg bg-accent/50 border border-border text-foreground text-xs font-mono focus:outline-none focus:border-primary"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">
-                Task Template
-              </label>
-              <textarea
-                value={step.taskTemplate || ""}
-                onChange={(e) => onUpdate({ ...step, taskTemplate: e.target.value })}
-                rows={4}
-                placeholder="Use {{inputs.var}} or {{stepId.output}}"
-                className="w-full px-3 py-2 rounded-lg bg-accent/50 border border-border text-foreground text-xs focus:outline-none focus:border-primary font-mono"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">
-                Subagent Type
-              </label>
-              <select
-                value={step.subagentType || "builder"}
-                onChange={(e) => onUpdate({ ...step, subagentType: e.target.value as any })}
-                className="w-full px-3 py-1.5 rounded-lg bg-accent/50 border border-border text-foreground text-xs focus:outline-none focus:border-primary"
-              >
-                <option value="builder">Builder</option>
-                <option value="explorer">Explorer</option>
-                <option value="autonomous">Autonomous</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">
-                Max Steps
-              </label>
-              <input
-                type="number"
-                value={step.maxSteps || ""}
-                onChange={(e) =>
-                  onUpdate({ ...step, maxSteps: Number(e.target.value) || undefined })
-                }
-                placeholder="25"
-                className="w-full px-3 py-1.5 rounded-lg bg-accent/50 border border-border text-foreground text-xs font-mono focus:outline-none focus:border-primary"
-              />
-            </div>
-          </>
-        )}
-
-        {step.type === "tool" && (
-          <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1">
-              Tool Name
-            </label>
-            <input
-              type="text"
-              value={step.toolName || ""}
-              onChange={(e) => onUpdate({ ...step, toolName: e.target.value })}
-              placeholder="e.g. grep, run_command"
-              className="w-full px-3 py-1.5 rounded-lg bg-accent/50 border border-border text-foreground text-xs font-mono focus:outline-none focus:border-primary"
-            />
-          </div>
-        )}
-
-        {step.type === "approval" && (
-          <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1">
-              Approval Message
-            </label>
-            <textarea
-              value={step.approvalMessage || ""}
-              onChange={(e) => onUpdate({ ...step, approvalMessage: e.target.value })}
-              rows={3}
-              placeholder="Prompt shown to human for approval..."
-              className="w-full px-3 py-2 rounded-lg bg-accent/50 border border-border text-foreground text-xs focus:outline-none focus:border-primary"
-            />
-          </div>
-        )}
-
-        {step.type === "condition" && (
-          <>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">
-                Condition Expression
-              </label>
-              <input
-                type="text"
-                value={step.conditionExpression || ""}
-                onChange={(e) => onUpdate({ ...step, conditionExpression: e.target.value })}
-                placeholder="{{step1.outputs.result}} == true"
-                className="w-full px-3 py-1.5 rounded-lg bg-accent/50 border border-border text-foreground text-xs font-mono focus:outline-none focus:border-primary"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">
-                If True &rarr; Step ID
-              </label>
-              <input
-                type="text"
-                value={step.ifTrueStepId || ""}
-                onChange={(e) => onUpdate({ ...step, ifTrueStepId: e.target.value })}
-                className="w-full px-3 py-1.5 rounded-lg bg-accent/50 border border-border text-foreground text-xs font-mono focus:outline-none focus:border-primary"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">
-                If False &rarr; Step ID
-              </label>
-              <input
-                type="text"
-                value={step.ifFalseStepId || ""}
-                onChange={(e) => onUpdate({ ...step, ifFalseStepId: e.target.value })}
-                className="w-full px-3 py-1.5 rounded-lg bg-accent/50 border border-border text-foreground text-xs font-mono focus:outline-none focus:border-primary"
-              />
-            </div>
-          </>
-        )}
+        <div>
+          <label className="block text-xs font-medium text-muted-foreground mb-1">
+            Max Steps
+          </label>
+          <input
+            type="number"
+            value={step.maxSteps || ""}
+            onChange={(e) =>
+              onUpdate({ ...step, maxSteps: Number(e.target.value) || undefined })
+            }
+            placeholder="25"
+            className="w-full px-3 py-1.5 rounded-lg bg-accent/50 border border-border text-foreground text-xs font-mono focus:outline-none focus:border-primary"
+          />
+        </div>
 
         <div>
           <label className="block text-xs font-medium text-muted-foreground mb-2">

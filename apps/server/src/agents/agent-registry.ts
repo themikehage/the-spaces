@@ -146,6 +146,8 @@ class AgentRegistry {
           createdAt: entry.createdAt,
           avatarUrl: entry.server.definition.avatarUrl,
           blueprintId: entry.server.definition.blueprintId,
+          tags: entry.server.definition.tags ?? [],
+          description: entry.server.definition.description,
         });
       }
     }
@@ -164,6 +166,8 @@ class AgentRegistry {
           createdAt: entry.createdAt,
           avatarUrl: entry.server.definition.avatarUrl,
           blueprintId: entry.server.definition.blueprintId,
+          tags: entry.server.definition.tags ?? [],
+          description: entry.server.definition.description,
         });
       }
     }

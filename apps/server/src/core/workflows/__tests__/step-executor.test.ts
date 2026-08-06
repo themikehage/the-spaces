@@ -1,27 +1,32 @@
 // SPDX-License-Identifier: MIT
 import { describe, expect, it } from "bun:test";
-import { evaluateCondition } from "../step-executor";
+import { StepExecutor } from "../step-executor";
 
-describe("evaluateCondition", () => {
-  const scope = {
-    inputs: { count: 10, status: "active" },
-    step1: { outputs: { success: true, total: 100 } },
-  };
+describe("StepExecutor", () => {
+  it("rejects unsupported step types", async () => {
+    const executor = new StepExecutor({
+      sessionManager: {} as any,
+      delegationRegistry: {} as any,
+    });
 
-  it("evaluates boolean true/false strings", () => {
-    expect(evaluateCondition("true", scope)).toBe(true);
-    expect(evaluateCondition("false", scope)).toBe(false);
-  });
+    const state = await executor.execute(
+      { id: "step1", type: "invalid" as any, label: "Invalid Step" },
+      {
+        id: "run1",
+        workflowId: "wf1",
+        workflowName: "Test WF",
+        inputs: {},
+        status: "running",
+        stepStates: {},
+        startedAt: new Date().toISOString(),
+        username: "testuser",
+      },
+      {},
+      "/tmp",
+    );
 
-  it("evaluates numeric comparisons", () => {
-    expect(evaluateCondition("{{inputs.count}} > 5", scope)).toBe(true);
-    expect(evaluateCondition("{{inputs.count}} <= 10", scope)).toBe(true);
-    expect(evaluateCondition("{{step1.outputs.total}} == 100", scope)).toBe(true);
-    expect(evaluateCondition("{{step1.outputs.total}} != 100", scope)).toBe(false);
-  });
-
-  it("evaluates string equality", () => {
-    expect(evaluateCondition("{{inputs.status}} == 'active'", scope)).toBe(true);
-    expect(evaluateCondition("{{inputs.status}} != 'inactive'", scope)).toBe(true);
+    expect(state.status).toBe("error");
+    expect(state.error).toContain("Unsupported workflow step type");
   });
 });
+

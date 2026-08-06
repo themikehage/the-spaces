@@ -18,6 +18,8 @@ import { sessionPromptBuilder } from "./prompt-builder";
 import { enrichSessionWithMemory } from "./session-memory-enricher";
 import { resolveActiveTools } from "./tool-activation-engine";
 import { sessionToolFactory } from "./tool-factory";
+import type { IWorkflowEngine } from "../ports/workflow-engine.port";
+import { serverSpacesHost } from "../infra/spaces-host";
 import { userConfigManager } from "./user-config";
 import {
   getResolvedSkillPaths,
@@ -47,6 +49,7 @@ export interface AgentRuntimeConfig {
   skipMcpTools?: boolean;
   resourceLoader?: DefaultResourceLoader;
   customTools?: BaseTool[];
+  workflowEngine?: IWorkflowEngine;
 }
 
 export interface AgentRuntimeInstance {
@@ -237,6 +240,8 @@ export async function createAgentRuntime(
     contextAgentId: agentId,
     teamId,
     projectId: resolvedProjectId,
+    agentDirectory: serverSpacesHost.agents,
+    workflowEngine: config.workflowEngine ?? serverSpacesHost.workflows,
   });
 
   let finalCustomTools = factoryCustomTools;

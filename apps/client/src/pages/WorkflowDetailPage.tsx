@@ -148,8 +148,6 @@ export const WorkflowDetailPage: React.FC = () => {
             activeRun={activeRun}
             onRunWorkflow={actions.handleRunWorkflow}
             onAbortRun={actions.handleAbortRun}
-            onApproveStep={actions.handleApproveStep}
-            onRejectStep={actions.handleRejectStep}
           />
         )}
 
@@ -184,8 +182,6 @@ export const WorkflowDetailPage: React.FC = () => {
             activeRun={activeRun}
             onSelectRun={actions.handleSelectRun}
             onAbortRun={actions.handleAbortRun}
-            onApproveStep={actions.handleApproveStep}
-            onRejectStep={actions.handleRejectStep}
           />
         )}
       </div>

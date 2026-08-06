@@ -130,17 +130,6 @@ export class WorkflowEngine implements IWorkflowEngine {
       }
 
       const batchPromises = batch.map(async (step) => {
-        this.opts.eventBus?.emit("workflow_step_started", {
-          runId: run.id,
-          stepId: step.id,
-          stepLabel: step.label,
-        });
-
-        workflowRunStore.updateStepState(username, run.id, step.id, {
-          status: "running",
-          startedAt: new Date().toISOString(),
-        });
-
         let attempts = 0;
         const maxAttempts = def.onError === "retry" ? (def.retryCount || 1) + 1 : 1;
         let lastState: WorkflowStepState = { stepId: step.id, status: "pending" };
@@ -214,20 +203,5 @@ export class WorkflowEngine implements IWorkflowEngine {
 
   listRuns(username: string, workflowId: string): WorkflowRun[] {
     return workflowRunStore.listRuns(username, workflowId);
-  }
-
-  async approveStep(username: string, runId: string, stepId: string): Promise<void> {
-    workflowRunStore.updateStepState(username, runId, stepId, {
-      status: "success",
-      completedAt: new Date().toISOString(),
-    });
-  }
-
-  async rejectStep(username: string, runId: string, stepId: string): Promise<void> {
-    workflowRunStore.updateStepState(username, runId, stepId, {
-      status: "error",
-      error: "Approval rejected by user",
-      completedAt: new Date().toISOString(),
-    });
   }
 }
