@@ -8,6 +8,7 @@ import {
   PERSISTENT_MEMORY_INSTRUCTIONS,
   SUBAGENT_DELEGATION_INSTRUCTIONS,
   TASK_DELEGATION_INSTRUCTIONS,
+  WORKFLOW_INSTRUCTIONS,
 } from "./system-instructions";
 
 export type PromptAssemblyMode =
@@ -36,6 +37,7 @@ export const STANDARD_APPEND_INSTRUCTIONS = [
   PERSISTENT_MEMORY_INSTRUCTIONS,
   SUBAGENT_DELEGATION_INSTRUCTIONS,
   TASK_DELEGATION_INSTRUCTIONS,
+  WORKFLOW_INSTRUCTIONS,
 ];
 
 export function formatEnvironmentContext(workspaceDir: string): string {

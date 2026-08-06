@@ -166,7 +166,7 @@ export const WorkflowDetailPage: React.FC = () => {
             {selectedStep && (
               <WorkflowStepEditor
                 step={selectedStep}
-                allStepIds={selectedWorkflow.steps.map((s) => s.id)}
+                workflow={selectedWorkflow}
                 onUpdate={actions.handleUpdateStep}
                 onDelete={actions.handleDeleteStep}
                 onClose={() => actions.setSelectedStep(null)}

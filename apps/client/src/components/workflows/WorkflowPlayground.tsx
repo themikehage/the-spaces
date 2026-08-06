@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { Play, RefreshCw, Send, Terminal } from "lucide-react";
+import { Pin, Play, RefreshCw, Send, Terminal } from "lucide-react";
 import React, { useState } from "react";
 import type { WorkflowDefinition, WorkflowRun } from "shared";
 import { WorkflowRunPanel } from "./WorkflowRunPanel";
@@ -7,8 +7,9 @@ import { WorkflowRunPanel } from "./WorkflowRunPanel";
 interface WorkflowPlaygroundProps {
   workflow: WorkflowDefinition;
   activeRun: WorkflowRun | null;
-  onRunWorkflow: (inputs?: Record<string, unknown>) => Promise<void>;
+  onRunWorkflow: (inputs?: Record<string, unknown>, options?: { dryRun?: boolean }) => Promise<void>;
   onAbortRun: (runId: string) => Promise<void>;
+  onResolveApproval?: (runId: string, stepId: string, approved: boolean) => Promise<void>;
 }
 
 export const WorkflowPlayground: React.FC<WorkflowPlaygroundProps> = ({
@@ -16,10 +17,11 @@ export const WorkflowPlayground: React.FC<WorkflowPlaygroundProps> = ({
   activeRun,
   onRunWorkflow,
   onAbortRun,
+  onResolveApproval,
 }) => {
   const inputConfigs = workflow.inputs ? Object.entries(workflow.inputs) : [];
-  const [formInputs, setFormInputs] = useState<Record<string, any>>(() => {
-    const initial: Record<string, any> = {};
+  const [formInputs, setFormInputs] = useState<Record<string, unknown>>(() => {
+    const initial: Record<string, unknown> = {};
     inputConfigs.forEach(([key, param]) => {
       if (param.default !== undefined) {
         initial[key] = param.default;
@@ -36,10 +38,11 @@ export const WorkflowPlayground: React.FC<WorkflowPlaygroundProps> = ({
 
   const [rawJsonInput, setRawJsonInput] = useState<string>('{\n  "message": ""\n}');
   const [useRawJson, setUseRawJson] = useState<boolean>(inputConfigs.length === 0);
+  const [isDryRun, setIsDryRun] = useState<boolean>(false);
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleFieldChange = (key: string, value: any) => {
+  const handleFieldChange = (key: string, value: unknown) => {
     setFormInputs((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -52,15 +55,15 @@ export const WorkflowPlayground: React.FC<WorkflowPlaygroundProps> = ({
         try {
           payload = JSON.parse(rawJsonInput);
         } catch {
-          // If not valid JSON, treat as message text string
           payload = { message: rawJsonInput };
         }
       } else {
         payload = formInputs;
       }
-      await onRunWorkflow(payload);
-    } catch (err: any) {
-      setError(err.message || "Failed to launch workflow execution");
+      await onRunWorkflow(payload, { dryRun: isDryRun });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to launch workflow execution";
+      setError(msg);
     } finally {
       setIsRunning(false);
     }
@@ -78,7 +81,7 @@ export const WorkflowPlayground: React.FC<WorkflowPlaygroundProps> = ({
           {inputConfigs.length > 0 && (
             <button
               onClick={() => setUseRawJson(!useRawJson)}
-              className="text-[11px] text-muted-foreground hover:text-primary transition"
+              className="text-[11px] text-muted-foreground hover:text-primary transition cursor-pointer"
             >
               {useRawJson ? "Form Mode" : "JSON Mode"}
             </button>
@@ -90,6 +93,22 @@ export const WorkflowPlayground: React.FC<WorkflowPlaygroundProps> = ({
             Execute <span className="font-medium text-foreground">{workflow.name}</span> in real
             time and monitor step execution.
           </p>
+
+          <div className="flex items-center justify-between p-2.5 rounded-xl bg-accent/40 border border-border">
+            <div className="flex items-center gap-2">
+              <Pin className="w-3.5 h-3.5 text-amber-400" />
+              <span className="text-xs font-medium text-foreground">Dry Run Mode</span>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isDryRun}
+                onChange={(e) => setIsDryRun(e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-9 h-5 bg-accent peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-600"></div>
+            </label>
+          </div>
 
           {error && (
             <div className="p-2.5 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs">
@@ -116,19 +135,19 @@ export const WorkflowPlayground: React.FC<WorkflowPlaygroundProps> = ({
                       type="checkbox"
                       checked={!!formInputs[key]}
                       onChange={(e) => handleFieldChange(key, e.target.checked)}
-                      className="rounded border-border bg-accent text-primary focus:ring-primary h-4 w-4"
+                      className="rounded border-border bg-accent text-primary focus:ring-primary h-4 w-4 cursor-pointer"
                     />
                   ) : param.type === "number" ? (
                     <input
                       type="number"
-                      value={formInputs[key] ?? 0}
+                      value={(formInputs[key] as number) ?? 0}
                       onChange={(e) => handleFieldChange(key, Number(e.target.value))}
                       className="w-full px-3 py-1.5 rounded-lg bg-card border border-border text-xs text-foreground focus:outline-none focus:border-primary"
                     />
                   ) : (
                     <input
                       type="text"
-                      value={formInputs[key] ?? ""}
+                      value={(formInputs[key] as string) ?? ""}
                       onChange={(e) => handleFieldChange(key, e.target.value)}
                       placeholder={`Enter ${key}...`}
                       className="w-full px-3 py-1.5 rounded-lg bg-card border border-border text-xs text-foreground focus:outline-none focus:border-primary"
@@ -157,7 +176,7 @@ export const WorkflowPlayground: React.FC<WorkflowPlaygroundProps> = ({
           <button
             onClick={handleExecute}
             disabled={isRunning || activeRun?.status === "running"}
-            className="w-full py-2 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center justify-center gap-2 shadow-sm transition disabled:opacity-50"
+            className="w-full py-2 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center justify-center gap-2 shadow-sm transition disabled:opacity-50 cursor-pointer"
           >
             {isRunning ? (
               <>
@@ -167,7 +186,7 @@ export const WorkflowPlayground: React.FC<WorkflowPlaygroundProps> = ({
             ) : (
               <>
                 <Play className="w-4 h-4 fill-current" />
-                <span>Run Playground</span>
+                <span>{isDryRun ? "Run Dry Run (Pinned Data)" : "Run Playground"}</span>
               </>
             )}
           </button>
@@ -191,6 +210,7 @@ export const WorkflowPlayground: React.FC<WorkflowPlaygroundProps> = ({
               run={activeRun}
               workflow={workflow}
               onAbort={onAbortRun}
+              onResolveApproval={onResolveApproval}
             />
           </div>
         ) : (

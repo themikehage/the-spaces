@@ -3,6 +3,7 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
 import { workflowEngine } from "../../core/workflows/workflow-engine-instance";
+import { workflowApprovalStore } from "../../core/workflows/workflow-approval-store";
 import { authMiddleware, getAuthPayload } from "../../middleware/auth";
 
 export const workflowRunsRouter = new Hono();
@@ -12,6 +13,11 @@ workflowRunsRouter.use("/*", authMiddleware);
 const RunWorkflowBodySchema = z.object({
   inputs: z.record(z.unknown()).optional(),
   parentSessionId: z.string().optional(),
+  dryRun: z.boolean().optional(),
+});
+
+const ApproveStepBodySchema = z.object({
+  approved: z.boolean(),
 });
 
 workflowRunsRouter.post("/:id/run", zValidator("json", RunWorkflowBodySchema), async (c) => {
@@ -22,8 +28,9 @@ workflowRunsRouter.post("/:id/run", zValidator("json", RunWorkflowBodySchema), a
   try {
     const run = await workflowEngine.run(username, workflowId, body);
     return c.json(run, 201);
-  } catch (err: any) {
-    return c.json({ error: err.message || "Failed to run workflow" }, 400);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to run workflow";
+    return c.json({ error: message }, 400);
   }
 });
 
@@ -50,3 +57,19 @@ workflowRunsRouter.post("/runs/:runId/abort", async (c) => {
   await workflowEngine.abort(username, runId);
   return c.json({ success: true });
 });
+
+workflowRunsRouter.post(
+  "/runs/:runId/steps/:stepId/approve",
+  zValidator("json", ApproveStepBodySchema),
+  async (c) => {
+    const runId = c.req.param("runId");
+    const stepId = c.req.param("stepId");
+    const { approved } = c.req.valid("json");
+
+    const resolved = workflowApprovalStore.resolveApproval(runId, stepId, approved);
+    if (!resolved) {
+      return c.json({ error: `Pending approval not found for run '${runId}' step '${stepId}'` }, 404);
+    }
+    return c.json({ success: true, approved });
+  },
+);

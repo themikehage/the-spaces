@@ -27,6 +27,7 @@ export const AVAILABLE_TOOLS = [
   "manage_factory",
   "manage_custom_tools",
   "manage_preview",
+  "manage_workflow",
 ] as const;
 
 export type ToolName = (typeof AVAILABLE_TOOLS)[number];
@@ -46,7 +47,7 @@ export const TOOL_GROUPS = {
   memory: ["memory"],
   tasks: ["task"],
   vision: ["vision", "generate_image", "generate_video"],
-  factory: ["manage_factory", "manage_custom_tools"],
+  factory: ["manage_factory", "manage_custom_tools", "manage_workflow"],
   search: ["exa_search", "web_fetch"],
   preview: ["manage_preview"],
 } as const;
@@ -259,6 +260,12 @@ export const TOOL_DISPLAY_META: Record<ToolName, ToolDisplayMeta> = {
     displayName: "Preview",
     description: "Manages project preview",
     colorClass: "text-emerald-500",
+  },
+  manage_workflow: {
+    label: "manage_workflow",
+    displayName: "Workflows",
+    description: "Manages and executes workflows",
+    colorClass: "text-primary",
   },
 };
 

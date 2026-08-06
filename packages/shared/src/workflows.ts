@@ -1,7 +1,14 @@
 // SPDX-License-Identifier: MIT
 import { z } from "zod";
 
-export const WorkflowStepTypeSchema = z.enum(["agent"]);
+export const WorkflowStepTypeSchema = z.enum([
+  "agent",
+  "if",
+  "switch",
+  "merge",
+  "approval",
+  "code",
+]);
 export type WorkflowStepType = z.infer<typeof WorkflowStepTypeSchema>;
 
 export const WorkflowStepSchema = z.object({
@@ -14,6 +21,13 @@ export const WorkflowStepSchema = z.object({
   subagentType: z.enum(["explorer", "builder", "autonomous"]).optional(),
   maxSteps: z.number().optional(),
   captureOutputs: z.array(z.string()).optional(),
+  condition: z.string().optional(),
+  branches: z.record(z.array(z.string())).optional(),
+  defaultBranch: z.string().optional(),
+  approvalMessage: z.string().optional(),
+  pinnedOutputs: z.record(z.unknown()).optional(),
+  codeSnippet: z.string().optional(),
+  codeTimeout: z.number().optional(),
 });
 export type WorkflowStep = z.infer<typeof WorkflowStepSchema>;
 
@@ -48,14 +62,31 @@ export type WorkflowDefinition = z.infer<typeof WorkflowDefinitionSchema>;
 
 export const WorkflowStepStateSchema = z.object({
   stepId: z.string(),
-  status: z.enum(["pending", "running", "success", "error"]),
+  status: z.enum([
+    "pending",
+    "running",
+    "success",
+    "error",
+    "skipped",
+    "pinned",
+    "waiting_approval",
+  ]),
   startedAt: z.string().optional(),
   completedAt: z.string().optional(),
   outputs: z.record(z.unknown()).optional(),
   agentSessionId: z.string().optional(),
   error: z.string().optional(),
+  activeBranch: z.string().optional(),
 });
 export type WorkflowStepState = z.infer<typeof WorkflowStepStateSchema>;
+
+export const WorkflowApprovalRequestSchema = z.object({
+  runId: z.string(),
+  stepId: z.string(),
+  message: z.string(),
+  requestedAt: z.string(),
+});
+export type WorkflowApprovalRequest = z.infer<typeof WorkflowApprovalRequestSchema>;
 
 export const WorkflowRunSchema = z.object({
   id: z.string(),
@@ -74,5 +105,6 @@ export type WorkflowRun = z.infer<typeof WorkflowRunSchema>;
 export const WorkflowRunOptionsSchema = z.object({
   inputs: z.record(z.unknown()).optional(),
   parentSessionId: z.string().optional(),
+  dryRun: z.boolean().optional(),
 });
 export type WorkflowRunOptions = z.infer<typeof WorkflowRunOptionsSchema>;

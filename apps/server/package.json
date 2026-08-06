@@ -19,6 +19,8 @@
     "diff": "^9.0.0",
     "hono": "^4",
     "ignore": "^7.0.5",
+    "isolated-vm": "^7.0.1",
+    "jsonata": "^2.2.2",
     "jsonwebtoken": "^9",
     "linkedom": "^0.18.13",
     "openai": "^6.45.0",
@@ -34,6 +36,7 @@
     "@types/bcryptjs": "^2.4",
     "@types/bun": "latest",
     "@types/diff": "^8.0.0",
+    "@types/jsonata": "^1.5.1",
     "@types/jsonwebtoken": "^9",
     "typescript": "^5"
   }

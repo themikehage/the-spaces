@@ -10,6 +10,7 @@ import type { EventBus } from "../ports/spaces-host.port";
 import type { IWorkflowEngine } from "../ports/workflow-engine.port";
 import type { SessionManager } from "../session/session-manager";
 import { resolveExecutionOrder } from "./dag-resolver";
+import type { ExpressionContext } from "./expression-engine";
 import { StepExecutor } from "./step-executor";
 import { workflowRunStore } from "./workflow-run-store";
 import { workflowStore } from "./workflow-store";
@@ -90,9 +91,8 @@ export class WorkflowEngine implements IWorkflowEngine {
 
     const workspaceDir = this.opts.workspaceDir || process.cwd();
 
-    // Async execution of DAG without blocking the response
-    this.executeDAG(username, def, run, workspaceDir, abortController.signal)
-      .catch((err) => {
+    this.executeDAG(username, def, run, workspaceDir, abortController.signal, opts?.dryRun)
+      .catch(() => {
         workflowRunStore.updateRunStatus(username, run.id, "error");
         this.opts.eventBus?.emit("workflow_run_completed", {
           runId: run.id,
@@ -112,9 +112,20 @@ export class WorkflowEngine implements IWorkflowEngine {
     run: WorkflowRun,
     workspaceDir: string,
     signal: AbortSignal,
+    dryRun?: boolean,
   ): Promise<void> {
     const batches = resolveExecutionOrder(def.steps);
-    const scope: Record<string, unknown> = {
+    const skippedStepIds = new Set<string>();
+
+    const exprContext: ExpressionContext = {
+      $inputs: run.inputs,
+      $steps: {},
+      $run: {
+        id: run.id,
+        workflowId: def.id,
+        workflowName: def.name,
+        status: "running",
+      },
       inputs: run.inputs,
       ...run.inputs,
     };
@@ -130,14 +141,38 @@ export class WorkflowEngine implements IWorkflowEngine {
       }
 
       const batchPromises = batch.map(async (step) => {
+        if (skippedStepIds.has(step.id)) {
+          const skippedState: WorkflowStepState = {
+            stepId: step.id,
+            status: "skipped",
+            completedAt: new Date().toISOString(),
+          };
+          workflowRunStore.updateStepState(username, run.id, step.id, skippedState);
+          this.opts.eventBus?.emit("workflow_step_completed", {
+            runId: run.id,
+            stepId: step.id,
+            status: "skipped",
+          });
+          return { step, state: skippedState };
+        }
+
         let attempts = 0;
         const maxAttempts = def.onError === "retry" ? (def.retryCount || 1) + 1 : 1;
         let lastState: WorkflowStepState = { stepId: step.id, status: "pending" };
 
         while (attempts < maxAttempts) {
           attempts++;
-          lastState = await this.stepExecutor.execute(step, run, scope, workspaceDir, signal);
-          if (lastState.status === "success" || signal.aborted) break;
+          lastState = await this.stepExecutor.execute(
+            step,
+            run,
+            exprContext as unknown as Record<string, unknown>,
+            workspaceDir,
+            signal,
+            dryRun,
+          );
+          if (lastState.status === "success" || lastState.status === "pinned" || signal.aborted) {
+            break;
+          }
         }
 
         workflowRunStore.updateStepState(username, run.id, step.id, lastState);
@@ -148,6 +183,20 @@ export class WorkflowEngine implements IWorkflowEngine {
           status: lastState.status,
           outputs: lastState.outputs,
         });
+
+        // If step is a control-flow branch, prune unselected target steps
+        if (lastState.status === "success" && step.branches && lastState.activeBranch) {
+          const activeBranchTargets = step.branches[lastState.activeBranch] || [];
+          for (const [branchKey, targetStepIds] of Object.entries(step.branches)) {
+            if (branchKey !== lastState.activeBranch) {
+              for (const targetId of targetStepIds) {
+                if (!activeBranchTargets.includes(targetId)) {
+                  skippedStepIds.add(targetId);
+                }
+              }
+            }
+          }
+        }
 
         return { step, state: lastState };
       });
@@ -161,9 +210,13 @@ export class WorkflowEngine implements IWorkflowEngine {
           (res.status === "fulfilled" && res.value.state.status === "error")
         ) {
           hasError = true;
-        } else if (res.status === "fulfilled" && res.value.state.outputs) {
-          scope[res.value.step.id] = { outputs: res.value.state.outputs };
-          Object.assign(scope, res.value.state.outputs);
+        } else if (res.status === "fulfilled") {
+          const { step, state } = res.value;
+          exprContext.$steps[step.id] = state;
+          (exprContext as Record<string, unknown>)[step.id] = { outputs: state.outputs };
+          if (state.outputs) {
+            Object.assign(exprContext as Record<string, unknown>, state.outputs);
+          }
         }
       }
 

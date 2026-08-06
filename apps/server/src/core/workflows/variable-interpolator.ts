@@ -2,8 +2,9 @@
 
 export function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
   if (!obj || typeof obj !== "object") return undefined;
-  const keys = path.split(".");
-  let current: any = obj;
+  const cleanPath = path.trim();
+  const keys = cleanPath.split(".");
+  let current: unknown = obj;
 
   for (const key of keys) {
     if (current === null || current === undefined) return undefined;
@@ -14,15 +15,15 @@ export function getNestedValue(obj: Record<string, unknown>, path: string): unkn
         return undefined;
       }
     }
-    if (typeof current !== "object") return undefined;
-    current = current[key];
+    if (typeof current !== "object" || current === null) return undefined;
+    current = (current as Record<string, unknown>)[key];
   }
 
   return current;
 }
 
 export function interpolateString(template: string, scope: Record<string, unknown>): unknown {
-  const exactMatch = template.match(/^\{\{([\w.-]+)\}\}$/);
+  const exactMatch = template.match(/^\{\{\s*([\w.$_-]+)\s*\}\}$/);
   if (exactMatch) {
     const val = getNestedValue(scope, exactMatch[1]);
     if (val !== undefined) {
@@ -30,7 +31,7 @@ export function interpolateString(template: string, scope: Record<string, unknow
     }
   }
 
-  return template.replace(/\{\{([\w.-]+)\}\}/g, (match, path) => {
+  return template.replace(/\{\{\s*([\w.$_-]+)\s*\}\}/g, (match, path) => {
     const val = getNestedValue(scope, path);
     if (val !== undefined) {
       if (typeof val === "object" && val !== null) {

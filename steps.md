@@ -131,6 +131,14 @@
   - [x] Fase 5: Primitivas de formulario reutilizables (`FormField`, `FormSection`)
   - [x] Fase 6: Hooks de eventos (`useEscapeKey`, `useClickOutside`)
   - [x] Verificación: `pnpm --filter client run typecheck` y `pnpm --filter client run build` exitosos con 0 errores.
+- [x] Implementar las 5 Mejoras Principales de Robustez del Editor de Workflows:
+  - [x] Feature 1: Nodos de Control de Flujo (`if`, `switch`, `merge`) con podado dinámico de ramas.
+  - [x] Feature 2: Expression Engine & JSONata con scope `$inputs`, `$steps`, `$run` y soporte de interpolación.
+  - [x] Feature 3: Human-in-the-Loop Node (Pausa por Aprobación) con UI Banner, eventos WS y endpoints REST.
+  - [x] Feature 4: Data Pinning & Step Dry-Run para testing determinista sin consumo redundante de LLM.
+  - [x] Feature 5: Code Node con ejecución de snippets JS en sandbox aislado (`isolated-vm` + V8 Isolate).
+  - [x] Feature 6: Herramienta `manage_workflow` (Single Tool Pattern) para el Agente Global con contrato declarativo (`action: "contract"`), operaciones CRUD, control granular de nodos y ramas, control de ejecuciones (`run`, `get_run`, `abort`, `approve`), catálogo unificado y guía `.agents/rules/workflow.rules.md`.
+  - [x] Suite de pruebas unitarias (`workflow-features.test.ts`) y verificación completa de `pnpm build`.
 
 ## Criterio de cierre del sprint
 

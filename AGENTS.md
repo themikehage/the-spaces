@@ -12,6 +12,7 @@ Non-negotiable coding standards live in `.agents/rules/`:
 
 - `.agents/rules/backend.rules.md` — Server-side principles (Bun + Hono + Zod)
 - `.agents/rules/frontend.rules.md` — Client-side principles (React 19 + Vite + Tailwind)
+- `.agents/rules/workflow.rules.md` — Workflow engine capabilities, schema contracts, and agent debugging rules
 
 Every PR must respect these rules. Reviewers reject violations.
 

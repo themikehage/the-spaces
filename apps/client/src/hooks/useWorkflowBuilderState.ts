@@ -6,6 +6,7 @@ import {
   saveWorkflow as apiSaveWorkflow,
   fetchWorkflowRuns,
   fetchWorkflows,
+  resolveWorkflowApproval,
 } from "@/lib/api/workflows.service";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { WorkflowDefinition, WorkflowRun, WorkflowStep } from "shared";
@@ -43,8 +44,9 @@ export function useWorkflowBuilderState(targetWorkflowId?: string) {
         savedRef.current = JSON.stringify(list[0]);
         setIsDirty(false);
       }
-    } catch (err: any) {
-      setError(err.message || "Failed to load workflows");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to load workflows";
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
@@ -114,6 +116,23 @@ export function useWorkflowBuilderState(targetWorkflowId?: string) {
       });
     });
 
+    const unsubApprovalRequested = subscribe("workflow_approval_requested", (data: any) => {
+      setActiveRun((prev) => {
+        if (!prev || prev.id !== data.runId) return prev;
+        return {
+          ...prev,
+          status: "waiting_approval",
+          stepStates: {
+            ...prev.stepStates,
+            [data.stepId]: {
+              ...(prev.stepStates[data.stepId] || { stepId: data.stepId }),
+              status: "waiting_approval",
+            },
+          },
+        };
+      });
+    });
+
     const unsubCompleted = subscribe("workflow_run_completed", (data: any) => {
       setActiveRun((prev) => {
         if (!prev || prev.id !== data.runId) return prev;
@@ -128,6 +147,7 @@ export function useWorkflowBuilderState(targetWorkflowId?: string) {
       unsubStarted();
       unsubStepStarted();
       unsubStepCompleted();
+      unsubApprovalRequested();
       unsubCompleted();
     };
   }, [subscribe, selectedWorkflow, loadRunHistory]);
@@ -182,8 +202,9 @@ export function useWorkflowBuilderState(targetWorkflowId?: string) {
       savedRef.current = JSON.stringify(saved);
       setIsDirty(false);
       await loadWorkflows();
-    } catch (err: any) {
-      setError(err.message || "Failed to save workflow");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to save workflow";
+      setError(msg);
     } finally {
       setIsSaving(false);
     }
@@ -197,19 +218,23 @@ export function useWorkflowBuilderState(targetWorkflowId?: string) {
         setSelectedStep(null);
       }
       await loadWorkflows();
-    } catch (err: any) {
-      setError(err.message || "Failed to delete workflow");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to delete workflow";
+      setError(msg);
     }
   };
 
-  const handleAddStep = (_type?: WorkflowStep["type"]) => {
+  const handleAddStep = (type: WorkflowStep["type"] = "agent") => {
     if (!selectedWorkflow) return;
     const newStepId = `step-${selectedWorkflow.steps.length + 1}`;
     const newStep: WorkflowStep = {
       id: newStepId,
-      type: "agent",
-      label: `New Step ${selectedWorkflow.steps.length + 1}`,
-      taskTemplate: "Execute agent task...",
+      type,
+      label: `New ${type.toUpperCase()} Step`,
+      taskTemplate: type === "agent" ? "Execute agent task..." : undefined,
+      condition: type === "if" || type === "switch" ? "$inputs.amount > 0" : undefined,
+      codeSnippet: type === "code" ? "return { outputs: {} };" : undefined,
+      approvalMessage: type === "approval" ? `Approval required for step ${newStepId}` : undefined,
     };
     const updatedSteps = [...selectedWorkflow.steps, newStep];
     updateSelectedWorkflow({ ...selectedWorkflow, steps: updatedSteps });
@@ -232,15 +257,31 @@ export function useWorkflowBuilderState(targetWorkflowId?: string) {
     }
   };
 
-  const handleRunWorkflow = async (inputs?: Record<string, unknown>) => {
+  const handleRunWorkflow = async (
+    inputs?: Record<string, unknown>,
+    options?: { dryRun?: boolean },
+  ) => {
     if (!selectedWorkflow) return;
     setError(null);
     try {
-      const run = await apiRunWorkflow(selectedWorkflow.id, inputs);
+      const run = await apiRunWorkflow(selectedWorkflow.id, inputs, options);
       setActiveRun(run);
       await loadRunHistory(selectedWorkflow.id);
-    } catch (err: any) {
-      setError(err.message || "Failed to launch workflow run");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to launch workflow run";
+      setError(msg);
+    }
+  };
+
+  const handleResolveApproval = async (runId: string, stepId: string, approved: boolean) => {
+    try {
+      await resolveWorkflowApproval(runId, stepId, approved);
+      if (selectedWorkflow) {
+        await loadRunHistory(selectedWorkflow.id);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to resolve approval";
+      setError(msg);
     }
   };
 
@@ -254,8 +295,9 @@ export function useWorkflowBuilderState(targetWorkflowId?: string) {
       if (selectedWorkflow) {
         await loadRunHistory(selectedWorkflow.id);
       }
-    } catch (err: any) {
-      setError(err.message || "Failed to abort run");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to abort run";
+      setError(msg);
     }
   };
 
@@ -278,6 +320,7 @@ export function useWorkflowBuilderState(targetWorkflowId?: string) {
       handleUpdateStep,
       handleDeleteStep,
       handleRunWorkflow,
+      handleResolveApproval,
       handleSelectRun,
       handleAbortRun,
       setSelectedStep,

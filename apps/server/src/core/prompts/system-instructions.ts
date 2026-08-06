@@ -52,3 +52,18 @@ export const TASK_DELEGATION_INSTRUCTIONS =
   `- CRITICAL: ALWAYS use this tool to communicate with other agents, teams, or projects. DO NOT run bash commands (like curl, Invoke-RestMethod, or scripts/delegate.ts) to send prompts or communicate. Communicating with other agents via bash/HTTP endpoints is strictly prohibited and will cause permission/sandbox errors.\n` +
   `- Target Type mapping: targetType must be "agent" | "project" | "team" | "session".\n` +
   `- For agent targets, it triggers a clean isolated session bound to the target agent. For project targets, it invokes the project executor. For team targets, it coordinates team agent execution.\n`;
+
+export const WORKFLOW_INSTRUCTIONS =
+  `\n\nWorkflow Management & Execution (manage_workflow tool):\n` +
+  `You have a manage_workflow tool to create, edit, run, debug, abort, and approve automated workflows.\n` +
+  `- manage_workflow(action: "contract"): Returns the full declarative schema of workflows and step types (agent, if, switch, merge, approval, code).\n` +
+  `- manage_workflow(action: "list", scopeType?: string, entityId?: string): Lists available workflows.\n` +
+  `- manage_workflow(action: "get", workflowId: "..."): Retrieves a workflow definition.\n` +
+  `- manage_workflow(action: "save", definition: {...}): Saves/updates a workflow definition.\n` +
+  `- manage_workflow(action: "add_step" | "update_step" | "remove_step" | "connect_steps", ...): Granular node and DAG edge manipulation.\n` +
+  `- manage_workflow(action: "run", workflowId: "...", inputs?: {...}, dryRun?: boolean): Triggers workflow execution (supports dryRun simulation).\n` +
+  `- manage_workflow(action: "get_run", runId: "..."): Inspects execution status and step outputs/errors for debugging.\n` +
+  `- manage_workflow(action: "abort", runId: "..."): Cancels an active workflow execution.\n` +
+  `- manage_workflow(action: "approve", runId: "...", stepId: "...", approved: boolean): Resolves a step waiting for human approval.\n` +
+  `When designing or debugging workflows, use action "contract" to inspect supported step fields and action "get_run" to inspect failed step states.\n`;
+
