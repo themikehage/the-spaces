@@ -19,22 +19,30 @@ export class IsolatedVmSandbox implements ICodeSandbox {
 
     let ivm: typeof import("isolated-vm") | null = null;
     try {
-      ivm = await import("isolated-vm");
+      const mod = await import("isolated-vm");
+      ivm = ((mod as unknown as { default?: typeof import("isolated-vm") }).default ?? mod) as typeof import("isolated-vm");
     } catch {
       ivm = null;
     }
 
-    if (ivm) {
-      const isolate = new ivm.Isolate({ memoryLimit: memoryLimitMb });
+    if (ivm && typeof ivm.Isolate === "function") {
+      let isolate: InstanceType<typeof ivm.Isolate> | null = null;
       try {
-        const vmContext = await isolate.createContext();
-        const jail = vmContext.global;
-        await jail.set("global", jail.deref());
+        isolate = new ivm.Isolate({ memoryLimit: memoryLimitMb });
+      } catch {
+        isolate = null;
+      }
 
-        const serializedContext = JSON.stringify(context);
-        await jail.set("$context_json", serializedContext);
+      if (isolate) {
+        try {
+          const vmContext = await isolate.createContext();
+          const jail = vmContext.global;
+          await jail.set("global", jail.deref());
 
-        const scriptCode = `
+          const serializedContext = JSON.stringify(context);
+          await jail.set("$context_json", serializedContext);
+
+          const scriptCode = `
           const $scope = JSON.parse($context_json);
           const $inputs = $scope.$inputs || {};
           const $steps = $scope.$steps || {};
@@ -59,6 +67,7 @@ export class IsolatedVmSandbox implements ICodeSandbox {
       } finally {
         isolate.dispose();
       }
+    }
     }
 
     const vm = await import("node:vm");

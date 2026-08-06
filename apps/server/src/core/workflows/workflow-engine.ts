@@ -120,6 +120,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     const exprContext: ExpressionContext = {
       $inputs: run.inputs,
       $steps: {},
+      steps: {},
       $run: {
         id: run.id,
         workflowId: def.id,
@@ -129,6 +130,8 @@ export class WorkflowEngine implements IWorkflowEngine {
       inputs: run.inputs,
       ...run.inputs,
     };
+
+    exprContext.steps = exprContext.$steps;
 
     for (const batch of batches) {
       if (signal.aborted) {

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import jsonata from "jsonata";
 import { BadRequestError } from "../infra/errors";
+import { getNestedValue } from "./variable-interpolator";
 import type { IConditionEvaluator } from "../ports/condition-evaluator.port";
 
 export class ConditionEvaluationError extends BadRequestError {
@@ -13,6 +14,18 @@ export class JsonataConditionEvaluator implements IConditionEvaluator {
   async evaluate(condition: string, scope: Record<string, unknown>): Promise<boolean | string> {
     const trimmed = condition.trim();
     if (!trimmed) return true;
+
+    const templateMatch = trimmed.match(/^\{\{\s*([\w.$_-]+)\s*\}\}$/);
+    if (templateMatch) {
+      const value = getNestedValue(scope, templateMatch[1]);
+      if (typeof value === "boolean" || typeof value === "string") {
+        return value;
+      }
+      if (value !== undefined && value !== null) {
+        return String(value);
+      }
+      return "";
+    }
 
     try {
       const expression = jsonata(trimmed);
