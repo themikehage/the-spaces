@@ -9,6 +9,7 @@ import type { DelegationRegistry } from "../delegation/delegation-registry";
 import type { EventBus } from "../ports/spaces-host.port";
 import type { IWorkflowEngine } from "../ports/workflow-engine.port";
 import type { SessionManager } from "../session/session-manager";
+import { inactiveBranchIds } from "./branch-pruner";
 import { resolveExecutionOrder } from "./dag-resolver";
 import type { ExpressionContext } from "./expression-engine";
 import { StepExecutor } from "./step-executor";
@@ -187,17 +188,11 @@ export class WorkflowEngine implements IWorkflowEngine {
           outputs: lastState.outputs,
         });
 
-        // If step is a control-flow branch, prune unselected target steps
+        // If step is a control-flow branch, prune the entire unselected branch
+        // subgraph (transitive downstream), not just the direct branch targets.
         if (lastState.status === "success" && step.branches && lastState.activeBranch) {
-          const activeBranchTargets = step.branches[lastState.activeBranch] || [];
-          for (const [branchKey, targetStepIds] of Object.entries(step.branches)) {
-            if (branchKey !== lastState.activeBranch) {
-              for (const targetId of targetStepIds) {
-                if (!activeBranchTargets.includes(targetId)) {
-                  skippedStepIds.add(targetId);
-                }
-              }
-            }
+          for (const id of inactiveBranchIds(def.steps, step.id, lastState.activeBranch)) {
+            skippedStepIds.add(id);
           }
         }
 

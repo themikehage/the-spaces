@@ -52,6 +52,28 @@ export class StepExecutor {
       };
     }
 
+    if (dryRun) {
+      switch (step.type) {
+        case "agent":
+        case "code":
+          return {
+            stepId: step.id,
+            status: "skipped",
+            startedAt,
+            completedAt: startedAt,
+            outputs: {},
+          };
+        case "approval":
+          return {
+            stepId: step.id,
+            status: "success",
+            startedAt,
+            completedAt: startedAt,
+            outputs: { approved: true },
+          };
+      }
+    }
+
     try {
       switch (step.type) {
         case "agent":
