@@ -7,6 +7,8 @@ import { AlertTriangle, Check, ChevronDown, Info, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { RichMarkdown } from "../RichMarkdown";
 
+import { unwrapToolContent } from "./tool-row-utils";
+
 interface Props {
   toolCallId: string;
   args: {
@@ -44,8 +46,17 @@ export function ApprovalForm({ toolCallId, args, result, sessionId }: Props) {
   const cancelLabel = toSafeString(rawCancelLabel, "Cancelar");
   const details = rawDetails ? toSafeString(rawDetails) : undefined;
 
-  const resolvedStatus = result?.content?.[0]?.text;
-  const isResolved = !!resolvedStatus;
+  const rawStatus = result?.content?.[0]?.text || "";
+  const { text: unwrappedStatus } = unwrapToolContent(rawStatus);
+  const normalizedStatus = unwrappedStatus.trim().toLowerCase();
+
+  const isResolved = !!result;
+  const isConfirmed =
+    normalizedStatus === "confirmed" ||
+    normalizedStatus === "confirm" ||
+    normalizedStatus === "approved" ||
+    normalizedStatus === "yes" ||
+    normalizedStatus === "true";
 
   useEffect(() => {
     const unsub = wsClient.subscribe("ui_action_error", (data: any) => {
@@ -164,14 +175,14 @@ export function ApprovalForm({ toolCallId, args, result, sessionId }: Props) {
             animate={{ opacity: 1, scale: 1 }}
             className="flex items-center gap-1.5 shrink-0"
           >
-            {resolvedStatus === "confirmed" ? (
-              <span className="flex items-center gap-1 text-[11px] font-bold text-success bg-success/10 border border-success/20 px-2.5 py-1 rounded-full">
-                <Check className="w-3.5 h-3.5 text-success shrink-0" strokeWidth={2.5} />
+            {isConfirmed ? (
+              <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
+                <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" strokeWidth={2.5} />
                 Aprobado
               </span>
             ) : (
-              <span className="flex items-center gap-1 text-[11px] font-bold text-error bg-error/10 border border-error/20 px-2.5 py-1 rounded-full">
-                <X className="w-3.5 h-3.5 text-error shrink-0" strokeWidth={2.5} />
+              <span className="flex items-center gap-1 text-[11px] font-bold text-destructive bg-destructive/10 border border-destructive/20 px-2.5 py-1 rounded-full">
+                <X className="w-3.5 h-3.5 text-destructive shrink-0" strokeWidth={2.5} />
                 Cancelado
               </span>
             )}

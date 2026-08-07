@@ -40,6 +40,38 @@ function parseDiff(diff: string): DiffLine[] {
   return lines;
 }
 
+function buildDiffFromArgs(args?: Record<string, unknown>): DiffLine[] {
+  if (!args) return [];
+  const lines: DiffLine[] = [];
+  const edits = Array.isArray(args.edits) ? args.edits : [args];
+
+  for (let idx = 0; idx < edits.length; idx++) {
+    const chunk = edits[idx];
+    const target = String(chunk.targetContent || chunk.oldText || chunk.old_string || "");
+    const replacement = String(
+      chunk.replacementContent || chunk.newText || chunk.new_string || "",
+    );
+
+    if (!target && !replacement) continue;
+
+    if (edits.length > 1) {
+      lines.push({ type: "hunk", content: `@@ Edit Block ${idx + 1} @@` });
+    }
+
+    if (target) {
+      for (const line of target.split("\n")) {
+        lines.push({ type: "remove", content: line });
+      }
+    }
+    if (replacement) {
+      for (const line of replacement.split("\n")) {
+        lines.push({ type: "add", content: line });
+      }
+    }
+  }
+  return lines;
+}
+
 interface Props {
   text: string;
   filePath?: string;
@@ -48,10 +80,11 @@ interface Props {
     patch?: string;
     firstChangedLine?: number;
   };
+  args?: Record<string, unknown>;
   isError: boolean;
 }
 
-export function EditResult({ text, filePath, details, isError }: Props) {
+export function EditResult({ text, filePath, details, args, isError }: Props) {
   if (isError) {
     return (
       <div className="flex items-center gap-2 text-destructive text-xs font-mono">
@@ -61,7 +94,9 @@ export function EditResult({ text, filePath, details, isError }: Props) {
     );
   }
 
-  if (!details?.diff) {
+  const lines = details?.diff ? parseDiff(details.diff) : buildDiffFromArgs(args);
+
+  if (lines.length === 0) {
     return (
       <div className="space-y-1.5">
         {filePath && (
@@ -76,8 +111,6 @@ export function EditResult({ text, filePath, details, isError }: Props) {
       </div>
     );
   }
-
-  const lines = parseDiff(details.diff);
 
   return (
     <div className="w-full space-y-1.5">

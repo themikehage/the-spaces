@@ -11,6 +11,7 @@ import type {
   IWorkflowEngine,
   IWorkflowSessionBootstrap,
 } from "../ports/workflow-engine.port";
+import type { ListWorkflowRunsFilter } from "../ports/IWorkflowRunStore";
 import type { SessionManager } from "../session/session-manager";
 import { inactiveBranchIds, unhandledErrorBranchIds } from "./branch-pruner";
 import { resolveExecutionOrder } from "./dag-resolver";
@@ -18,6 +19,8 @@ import type { ExpressionContext } from "./expression-engine";
 import { StepExecutor } from "./step-executor";
 import { workflowRunStore } from "./workflow-run-store";
 import { workflowSessionBootstrap } from "./workflow-session-bootstrap";
+import { notifyWorkflowFailure } from "./workflow-notifier";
+import { workflowScheduler } from "./workflow-scheduler";
 import { workflowStore } from "./workflow-store";
 
 import type { ICredentialStore } from "../ports/credential-store.port";
@@ -57,16 +60,20 @@ export class WorkflowEngine implements IWorkflowEngine {
         eventBus: this.opts.eventBus,
         httpClient: this.opts.httpClient,
         credentialStore: this.opts.credentialStore,
+        workflowEngine: this,
       });
     }
     return this._stepExecutor;
   }
 
   async save(username: string, def: WorkflowDefinition): Promise<WorkflowDefinition> {
-    return workflowStore.save(username, def);
+    const saved = workflowStore.save(username, def);
+    workflowScheduler.syncWorkflow(username, saved);
+    return saved;
   }
 
   async delete(username: string, workflowId: string): Promise<void> {
+    workflowScheduler.unregisterWorkflow(workflowId);
     workflowStore.delete(username, workflowId);
   }
 
@@ -110,11 +117,17 @@ export class WorkflowEngine implements IWorkflowEngine {
       : this.opts.workspaceDir || process.cwd();
 
     this.executeDAG(username, def, run, workspaceDir, abortController.signal, opts?.dryRun)
-      .catch(() => {
-        workflowRunStore.updateRunStatus(username, run.id, "error");
+      .catch((err) => {
+        const updatedRun = workflowRunStore.updateRunStatus(username, run.id, "error") || run;
         this.opts.eventBus?.emit("workflow_run_completed", {
           runId: run.id,
           status: "error",
+        });
+        notifyWorkflowFailure({
+          def,
+          run: updatedRun,
+          eventBus: this.opts.eventBus,
+          errorMessage: err instanceof Error ? err.message : String(err),
         });
       })
       .finally(() => {
@@ -292,10 +305,15 @@ export class WorkflowEngine implements IWorkflowEngine {
       }
 
       if (hasUnhandledError) {
-        workflowRunStore.updateRunStatus(username, run.id, "error");
+        const updatedRun = workflowRunStore.updateRunStatus(username, run.id, "error") || run;
         this.opts.eventBus?.emit("workflow_run_completed", {
           runId: run.id,
           status: "error",
+        });
+        await notifyWorkflowFailure({
+          def,
+          run: updatedRun,
+          eventBus: this.opts.eventBus,
         });
         return;
       }
@@ -325,7 +343,7 @@ export class WorkflowEngine implements IWorkflowEngine {
     });
   }
 
-  listRuns(username: string, workflowId: string): WorkflowRun[] {
-    return workflowRunStore.listRuns(username, workflowId);
+  listRuns(username: string, filter?: ListWorkflowRunsFilter | string): WorkflowRun[] {
+    return workflowRunStore.listRuns(username, filter);
   }
 }

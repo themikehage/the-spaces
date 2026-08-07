@@ -22,6 +22,8 @@ Reglas y estándares inamovibles para el subsistema de workflows en Spaces. Todo
 | `http` | Llamada HTTP/REST a servicios externos con auth | `id`, `type`, `label`, `httpUrl` | `httpMethod`, `httpHeaders`, `httpBody`, `httpTimeoutMs`, `httpResponseMapping`, `httpCredentialId`, `httpExpectStatus`, `dependsOn`, `pinnedOutputs` |
 | `variables` | Estado y variables persistentes cross-run (get/set/del/inc) | `id`, `type`, `label`, `variableOps` | `dependsOn`, `pinnedOutputs` |
 | `webhook` | Trigger de entrada que procesa peticiones HTTP externas | `id`, `type`, `label` | `webhookId`, `webhookSecret`, `webhookResponseMode`, `dependsOn`, `pinnedOutputs` |
+| `delay` | Pausa en milisegundos (mín: 1, máx: 900,000 / 15 min) | `id`, `type`, `label`, `durationMs` | `dependsOn`, `pinnedOutputs` |
+| `workflow` | Sub-workflow modular (profundidad máx: 3) | `id`, `type`, `label`, `subWorkflowId` | `subWorkflowInputs`, `dependsOn`, `pinnedOutputs` |
 
 ## 3. Expresiones e Interpolación de Variables
 

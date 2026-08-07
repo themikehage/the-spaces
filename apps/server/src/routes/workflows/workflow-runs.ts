@@ -34,6 +34,19 @@ workflowRunsRouter.post("/:id/run", zValidator("json", RunWorkflowBodySchema), a
   }
 });
 
+const ListRunsQuerySchema = z.object({
+  workflowId: z.string().optional(),
+  status: z.string().optional(),
+  limit: z.coerce.number().optional(),
+});
+
+workflowRunsRouter.get("/runs", zValidator("query", ListRunsQuerySchema), async (c) => {
+  const { username } = getAuthPayload(c);
+  const query = c.req.valid("query");
+  const runs = workflowEngine.listRuns(username, query);
+  return c.json(runs);
+});
+
 workflowRunsRouter.get("/:id/runs", async (c) => {
   const { username } = getAuthPayload(c);
   const workflowId = c.req.param("id");

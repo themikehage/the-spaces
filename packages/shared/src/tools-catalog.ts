@@ -28,6 +28,7 @@ export const AVAILABLE_TOOLS = [
   "manage_custom_tools",
   "manage_preview",
   "manage_workflow",
+  "deep_research",
 ] as const;
 
 export type ToolName = (typeof AVAILABLE_TOOLS)[number];
@@ -48,7 +49,7 @@ export const TOOL_GROUPS = {
   tasks: ["task"],
   vision: ["vision", "generate_image", "generate_video"],
   factory: ["manage_factory", "manage_custom_tools", "manage_workflow"],
-  search: ["exa_search", "web_fetch"],
+  search: ["exa_search", "web_fetch", "deep_research"],
   preview: ["manage_preview"],
 } as const;
 
@@ -266,6 +267,12 @@ export const TOOL_DISPLAY_META: Record<ToolName, ToolDisplayMeta> = {
     displayName: "Workflows",
     description: "Manages and executes workflows",
     colorClass: "text-primary",
+  },
+  deep_research: {
+    label: "deep_research",
+    displayName: "Deep Research",
+    description: "Multi-query parallel search, batch extraction, and synthesis",
+    colorClass: "text-highlight",
   },
 };
 

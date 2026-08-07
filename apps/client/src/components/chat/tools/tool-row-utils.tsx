@@ -2,10 +2,12 @@
 import { toSafeString } from "@/lib";
 import {
   AlertCircle,
+  Bot,
   Database,
   Eye,
   FileText,
   Folder,
+  GitBranch,
   Globe,
   Image,
   Layers,
@@ -24,6 +26,72 @@ import {
 } from "lucide-react";
 import { TOOL_DISPLAY_META, isKnownTool, type ToolName } from "shared";
 import type { ToolResultData } from "./ToolCallRow";
+
+export interface UnwrappedContent {
+  text: string;
+  json: any | null;
+}
+
+export function unwrapToolContent(raw: unknown): UnwrappedContent {
+  let text = typeof raw === "string" ? raw : String(raw ?? "");
+  let json: any = null;
+
+  for (let depth = 0; depth < 3; depth++) {
+    const trimmed = text.trim();
+    if (!trimmed) break;
+
+    if (
+      (trimmed.startsWith("[") && trimmed.endsWith("]")) ||
+      (trimmed.startsWith("{") && trimmed.endsWith("}"))
+    ) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          if (parsed.every((item) => typeof item === "object" && item !== null && "text" in item)) {
+            text = parsed.map((item) => String(item.text ?? "")).join("\n");
+            continue;
+          } else {
+            json = parsed;
+          }
+        } else if (typeof parsed === "object" && parsed !== null) {
+          json = parsed;
+        }
+      } catch {
+        break;
+      }
+    }
+
+    if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+      try {
+        const parsedStr = JSON.parse(trimmed);
+        if (typeof parsedStr === "string") {
+          text = parsedStr;
+          continue;
+        }
+      } catch {
+        break;
+      }
+    }
+
+    break;
+  }
+
+  if (!json && text.trim()) {
+    const trimmed = text.trim();
+    if (
+      (trimmed.startsWith("[") && trimmed.endsWith("]")) ||
+      (trimmed.startsWith("{") && trimmed.endsWith("}"))
+    ) {
+      try {
+        json = JSON.parse(trimmed);
+      } catch {
+        json = null;
+      }
+    }
+  }
+
+  return { text, json };
+}
 
 const TOOL_ICONS: Record<string, React.ReactNode> = {
   ls: <Folder size={13} />,
@@ -50,6 +118,8 @@ const TOOL_ICONS: Record<string, React.ReactNode> = {
   memory_recall: <Search size={13} strokeWidth={2.5} />,
   memory_forget: <Trash2 size={13} strokeWidth={2.5} />,
   decompose_tasks: <List size={13} strokeWidth={2.5} />,
+  manage_factory: <Bot size={13} strokeWidth={2.5} />,
+  manage_workflow: <GitBranch size={13} strokeWidth={2.5} />,
   manage_custom_tools: <Layers size={13} strokeWidth={2.5} />,
   manage_preview: <Monitor size={13} strokeWidth={2.5} />,
 };
@@ -255,8 +325,27 @@ export function getResultSummary(
     case "manage_delegations":
       return l.resCompleted;
     case "exa_search": {
-      const n = result.details?.totalResults ?? 0;
+      const { text: unwrappedText, json } = unwrapToolContent(text);
+      let n = result.details?.totalResults ?? (result.details?.results?.length || 0);
+      if (n === 0 && unwrappedText) {
+        if (Array.isArray(json)) {
+          n = json.length;
+        } else {
+          const matches = unwrappedText.match(/URL:\s*https?:\/\//gi);
+          if (matches) n = matches.length;
+        }
+      }
       return `${n} ${n !== 1 ? l.resExaResults : l.resExaResult}`;
+    }
+    case "manage_factory": {
+      const { json } = unwrapToolContent(text);
+      if (Array.isArray(json)) return `${json.length} ${args.entity || "items"}`;
+      return "completado";
+    }
+    case "manage_workflow": {
+      const { json } = unwrapToolContent(text);
+      if (Array.isArray(json)) return `${json.length} flujos`;
+      return "completado";
     }
     case "web_fetch": {
       const title = result.details?.title || "";

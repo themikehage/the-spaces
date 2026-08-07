@@ -11,6 +11,8 @@ export const WorkflowStepTypeSchema = z.enum([
   "http",
   "variables",
   "webhook",
+  "delay",
+  "workflow",
 ]);
 export type WorkflowStepType = z.infer<typeof WorkflowStepTypeSchema>;
 
@@ -58,6 +60,9 @@ export const WorkflowStepSchema = z.object({
   webhookId: z.string().optional(),
   webhookSecret: z.string().optional(),
   webhookResponseMode: z.enum(["onReceived", "onWorkflowCompleted"]).optional(),
+  durationMs: z.number().min(1).max(900_000).optional(),
+  subWorkflowId: z.string().optional(),
+  subWorkflowInputs: z.record(z.unknown()).optional(),
 });
 export type WorkflowStep = z.infer<typeof WorkflowStepSchema>;
 
@@ -76,12 +81,25 @@ export const WorkflowInputParamSchema = z.object({
 });
 export type WorkflowInputParam = z.infer<typeof WorkflowInputParamSchema>;
 
+export const WorkflowOnFailureSchema = z.object({
+  webhook: z
+    .object({
+      url: z.string(),
+      headers: z.record(z.string()).optional(),
+    })
+    .optional(),
+  notify: z.boolean().optional(),
+});
+export type WorkflowOnFailure = z.infer<typeof WorkflowOnFailureSchema>;
+
 export const WorkflowDefinitionSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string().optional(),
   scope: WorkflowScopeSchema.optional(),
   inputs: z.record(WorkflowInputParamSchema).optional(),
+  schedule: z.string().optional(),
+  onFailure: WorkflowOnFailureSchema.optional(),
   steps: z.array(WorkflowStepSchema),
   onError: z.enum(["stop", "continue", "retry"]),
   retryCount: z.number().optional(),

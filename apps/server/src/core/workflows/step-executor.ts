@@ -6,11 +6,14 @@ import type { IHttpClient } from "../ports/http-client.port";
 import type { EventBus } from "../ports/spaces-host.port";
 import type { SessionManager } from "../session/session-manager";
 import type { DelegationRegistry } from "../delegation/delegation-registry";
+import type { IWorkflowEngine } from "../ports/workflow-engine.port";
 import { executeAgentStep } from "./executors/agent-executor";
 import { executeApprovalStep } from "./executors/approval-executor";
 import { executeCodeStep } from "./executors/code-executor";
 import { executeIfStep, executeMergeStep, executeSwitchStep } from "./executors/control-executor";
+import { executeDelayStep } from "./executors/delay-executor";
 import { executeHttpStep } from "./executors/http-executor";
+import { executeSubWorkflowStep } from "./executors/subworkflow-executor";
 import { executeVariableStep } from "./executors/variable-executor";
 import { executeWebhookStep } from "./executors/webhook-executor";
 import { workflowRunStore } from "./workflow-run-store";
@@ -21,6 +24,7 @@ export interface StepExecutorDeps {
   eventBus?: EventBus;
   httpClient?: IHttpClient;
   credentialStore?: ICredentialStore;
+  workflowEngine?: IWorkflowEngine;
 }
 
 export class StepExecutor {
@@ -69,6 +73,8 @@ export class StepExecutor {
         case "agent":
         case "code":
         case "http":
+        case "workflow":
+        case "delay":
           return {
             stepId: step.id,
             status: "skipped",
@@ -146,6 +152,17 @@ export class StepExecutor {
             return await executeVariableStep(step, run, scope, startedAt);
           case "webhook":
             return await executeWebhookStep(step, run, scope, startedAt);
+          case "delay":
+            return await executeDelayStep(step, run, startedAt, stepController.signal);
+          case "workflow":
+            return await executeSubWorkflowStep(
+              step,
+              run,
+              scope,
+              startedAt,
+              { workflowEngine: this.deps.workflowEngine },
+              stepController.signal,
+            );
           default:
             throw new Error(`Unsupported workflow step type: ${(step as WorkflowStep).type}`);
         }

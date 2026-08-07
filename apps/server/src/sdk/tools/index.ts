@@ -11,6 +11,7 @@ import {
 } from "../../core";
 import { createExaSearchTool } from "../../core/tools/extensions/exa-search.tool";
 import { createWebFetchTool } from "../../core/tools/extensions/web-fetch";
+import { createDeepResearchTool } from "../../core/tools/extensions/deep-research";
 
 export function createBashTool(workspaceDir: string): BaseTool {
   return legacyToolToBaseTool(createBashToolDefinition(workspaceDir));
@@ -46,4 +47,8 @@ export function createWebFetchSdkTool(username = "default"): BaseTool {
 
 export function createExaSearchSdkTool(username = "default"): BaseTool {
   return legacyToolToBaseTool(createExaSearchTool({ username }));
+}
+
+export function createDeepResearchSdkTool(username = "default"): BaseTool {
+  return legacyToolToBaseTool(createDeepResearchTool({ username }));
 }

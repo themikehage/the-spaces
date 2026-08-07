@@ -28,22 +28,76 @@ function formatDate(dateStr: string): string {
   }
 }
 
+interface ExtractedResult {
+  title?: string;
+  url: string;
+  publishedDate?: string;
+  snippet?: string;
+}
+
+function parseTextResults(text: string): ExtractedResult[] {
+  if (!text) return [];
+  const trimmed = text.trim();
+  if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+    try {
+      const jsonArr = JSON.parse(trimmed);
+      if (Array.isArray(jsonArr) && jsonArr.length > 0) {
+        return jsonArr
+          .map((item) => {
+            if (typeof item === "object" && item !== null && item.url) {
+              return {
+                title: item.title || item.name || "Untitled",
+                url: item.url,
+                publishedDate: item.publishedDate || item.published_date,
+                snippet: item.snippet || item.text || item.content,
+              };
+            }
+            return null;
+          })
+          .filter(Boolean) as ExtractedResult[];
+      }
+    } catch {
+      // Ignore JSON parse error and fallback to pattern matching
+    }
+  }
+
+  const items: ExtractedResult[] = [];
+  const blocks = text.split(/(?=\n?\d+\.\s+)/);
+  for (const block of blocks) {
+    const titleMatch = block.match(/\d+\.\s+(.+?)(?:\r?\n|$)/);
+    const urlMatch = block.match(/URL:\s*(https?:\/\/[^\s\r\n]+)/i);
+    const dateMatch = block.match(/Published:\s*([^\r\n]+)/i);
+    const snippetMatch = block.match(/>\s*([^\r\n]+)/);
+
+    if (urlMatch) {
+      items.push({
+        title: titleMatch ? titleMatch[1].trim() : "Untitled",
+        url: urlMatch[1].trim(),
+        publishedDate: dateMatch ? dateMatch[1].trim() : undefined,
+        snippet: snippetMatch ? snippetMatch[1].trim() : undefined,
+      });
+    }
+  }
+  return items;
+}
+
 export function ExaSearchResult({ text, details, l }: Props) {
   const [showAll, setShowAll] = useState(false);
   const [synthOpen, setSynthOpen] = useState(false);
 
-  const results = details?.results ?? [];
-  const totalResults = details?.totalResults ?? results.length;
+  const rawResults = details?.results ?? [];
+  const parsedResults = rawResults.length > 0 ? rawResults : parseTextResults(text);
+  const totalResults = details?.totalResults ?? parsedResults.length;
   const searchType = details?.searchType;
   const cost = details?.costDollars;
   const synthesized = details?.synthesizedOutput;
 
-  if (totalResults === 0 && !text.trim()) {
+  if (parsedResults.length === 0 && !text.trim()) {
     return <p className="text-muted-foreground text-xs italic">{l.bodyNoResults}</p>;
   }
 
-  const visibleResults = showAll ? results : results.slice(0, VISIBLE_COUNT);
-  const hiddenCount = results.length - VISIBLE_COUNT;
+  const visibleResults = showAll ? parsedResults : parsedResults.slice(0, VISIBLE_COUNT);
+  const hiddenCount = parsedResults.length - VISIBLE_COUNT;
 
   return (
     <div className="flex flex-col gap-2 font-mono text-[11px]">
@@ -86,6 +140,11 @@ export function ExaSearchResult({ text, details, l }: Props) {
                     </>
                   )}
                 </div>
+                {(r as any).snippet && (
+                  <p className="text-[10.5px] text-text-secondary line-clamp-2 mt-1 leading-normal font-sans opacity-85">
+                    {(r as any).snippet}
+                  </p>
+                )}
               </div>
             </div>
           </div>

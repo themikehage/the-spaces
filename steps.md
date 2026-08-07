@@ -140,6 +140,17 @@
   - [x] Feature 6: Herramienta `manage_workflow` (Single Tool Pattern) para el Agente Global con contrato declarativo (`action: "contract"`), operaciones CRUD, control granular de nodos y ramas, control de ejecuciones (`run`, `get_run`, `abort`, `approve`), catálogo unificado y guía `.agents/rules/workflow.rules.md`.
   - [x] Suite de pruebas unitarias (`workflow-features.test.ts`) y verificación completa de `pnpm build`.
 
+- [x] Implementar el Plan Profesional de Mejoras Post-Auditoría del Motor de Workflows:
+  - [x] WF-01: `$inputs` dinámicos al ejecutar (`run` acepta `inputs` parametrizables inyectados en `$inputs`).
+  - [x] WF-02: Fix `captureOutputs` en paso `agent` (extracción resiliente de claves mapeadas desde envelope y outputs).
+  - [x] WF-03: Historial de runs con filtros en SQLite `workflows.db` (`IWorkflowRunStore` / `SqliteWorkflowRunStore` + `GET /api/workflows/runs` + `manage_workflow(action:"list_runs", status, limit)`).
+  - [x] WF-04: Hardening de timeouts, retry y `errorBranch` con suite de pruebas de integración.
+  - [x] WF-05: Notificaciones de fallo de workflow (`onFailure` con webhook POST y alértas `attention_item_created` en Attention Hub).
+  - [x] WF-06: Cron Scheduler para Workflows (`schedule` cron expression auto-sincronizada en `WorkflowScheduler` usando `croner`).
+  - [x] WF-07: Paso `delay` / sleep (pausa configurable de 1ms a 15 min `durationMs` en `executeDelayStep`).
+  - [x] WF-08: Paso Sub-Workflow (`type:"workflow"`) para modularización con `subWorkflowId`, passing de inputs y protección anti-recursión (`maxDepth: 3`).
+  - [x] Actualizar esquemas Zod en `@shared`, contrato `manage_workflow`, documentación `.agents/rules/workflow.rules.md` y suite de pruebas `workflow-engine-enhancements.test.ts`.
+
 ## Criterio de cierre del sprint
 
 - La compilación, typecheck, lint y pruebas pasan de forma reproducible.

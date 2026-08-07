@@ -43,9 +43,9 @@ export class WorkflowRunActions {
     return run;
   }
 
-  listRuns(workflowId?: string): WorkflowRun[] {
+  listRuns(filter?: { workflowId?: string; status?: string; limit?: number } | string): WorkflowRun[] {
     const engine = this.checkEngine();
-    return engine.listRuns(this.opts.username, workflowId || "");
+    return engine.listRuns(this.opts.username, filter);
   }
 
   async abort(runId: string): Promise<void> {

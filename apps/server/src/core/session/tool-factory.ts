@@ -25,12 +25,14 @@ import type { IWorkflowEngine } from "../ports/workflow-engine.port";
 import { filterSecretsFromOutput } from "../sandbox/bash-output-filter";
 import { scopeConfigManager } from "../scope";
 import { createAgentDirectoryTools } from "../tools/extensions/agents-directory.tool";
+import { createDeepResearchTool } from "../tools/extensions/deep-research";
 import { createExaSearchTool } from "../tools/extensions/exa-search.tool";
 import { createFactoryTool } from "../tools/extensions/factory.tool";
 import { createPreviewTools } from "../tools/extensions/preview.tool";
 import { createUiTools } from "../tools/extensions/ui.tool";
 import { createWebFetchTool } from "../tools/extensions/web-fetch";
 import { createWorkflowTools } from "../tools/extensions/workflow.tool";
+import { ModelProviderAdapter } from "../model/model-provider-adapter";
 import type { AuthStorage } from "./auth-storage";
 import { userConfigManager } from "./user-config";
 
@@ -99,6 +101,8 @@ export class SessionToolFactory {
 
     const exaSearchTool = createExaSearchTool({ username });
     const webFetchTool = createWebFetchTool({ username });
+    const modelProvider = new ModelProviderAdapter(modelRegistry);
+    const deepResearchTool = createDeepResearchTool({ username, modelProvider });
     const memoryTools = memory ? createMemoryTools(memory, memoryEnabled) : [];
 
     const { teamId, projectId } = params;
@@ -205,6 +209,7 @@ export class SessionToolFactory {
       ...uiTools,
       exaSearchTool,
       webFetchTool,
+      deepResearchTool,
       ...memoryTools,
       ...previewTools,
       ...workflowTools,

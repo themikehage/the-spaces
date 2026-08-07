@@ -102,6 +102,14 @@ export function createManageWorkflowTool(opts: CreateManageWorkflowToolOptions) 
           type: "boolean",
           description: "Respuesta de aprobación boolean (true para aprobar, false para rechazar) en 'approve'.",
         },
+        status: {
+          type: "string",
+          description: "Filtro por estado de ejecución en 'list_runs': running | success | error | cancelled | waiting_approval.",
+        },
+        limit: {
+          type: "number",
+          description: "Límite de resultados a retornar en 'list_runs' (por defecto 50).",
+        },
         scopeType: {
           type: "string",
           description: "Filtro por alcance en 'list': global | team | project | agent.",
@@ -232,7 +240,15 @@ export function createManageWorkflowTool(opts: CreateManageWorkflowToolOptions) 
               content: [
                 {
                   type: "text" as const,
-                  text: JSON.stringify(runs.listRuns(args.workflowId), null, 2),
+                  text: JSON.stringify(
+                    runs.listRuns({
+                      workflowId: args.workflowId,
+                      status: args.status,
+                      limit: args.limit,
+                    }),
+                    null,
+                    2,
+                  ),
                 },
               ],
             };

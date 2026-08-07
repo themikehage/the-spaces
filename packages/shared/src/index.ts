@@ -5,6 +5,7 @@ export * from "./models";
 export * from "./paths";
 export * from "./plugins";
 export * from "./schemas";
+export * from "./schemas/deep-research.schema";
 export * from "./session-prefix";
 export * from "./stores";
 export * from "./tools";

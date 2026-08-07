@@ -66,12 +66,31 @@ export async function executeAgentStep(
     };
   }
 
-  let outputs: Record<string, unknown> = envelope.outputs || {};
+  let rawOutputs: Record<string, unknown> = envelope.outputs || {};
+  let outputs: Record<string, unknown> = rawOutputs;
+
   if (step.captureOutputs && step.captureOutputs.length > 0) {
     const filtered: Record<string, unknown> = {};
     for (const key of step.captureOutputs) {
-      if (outputs[key] !== undefined) {
-        filtered[key] = outputs[key];
+      if (rawOutputs[key] !== undefined) {
+        filtered[key] = rawOutputs[key];
+      } else if ((envelope as any)[key] !== undefined) {
+        filtered[key] = (envelope as any)[key];
+      } else if (
+        (key === "summary" || key === "executive_summary") &&
+        envelope.executive_summary
+      ) {
+        filtered[key] = envelope.executive_summary;
+      } else {
+        const lowerKey = key.toLowerCase();
+        const foundKey = Object.keys(rawOutputs).find(
+          (k) => k.toLowerCase() === lowerKey || k.toLowerCase().replace(/_/g, "") === lowerKey.replace(/_/g, ""),
+        );
+        if (foundKey && rawOutputs[foundKey] !== undefined) {
+          filtered[key] = rawOutputs[foundKey];
+        } else if (envelope.executive_summary) {
+          filtered[key] = envelope.executive_summary;
+        }
       }
     }
     outputs = filtered;

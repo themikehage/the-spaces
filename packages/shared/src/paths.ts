@@ -1,11 +1,29 @@
 // SPDX-License-Identifier: MIT
-import fs from "node:fs";
-import path from "node:path";
 
-const join = (...args: string[]): string => path.join(...args);
-const existsSync = (p: string): boolean => fs.existsSync(p);
-const mkdirSync = (p: string, options?: { recursive?: boolean }): string | undefined =>
-  fs.mkdirSync(p, options) as string | undefined;
+const join = (...args: string[]): string =>
+  args
+    .filter(Boolean)
+    .join("/")
+    .replace(/\\/g, "/")
+    .replace(/\/+/g, "/");
+
+const existsSync = (p: string): boolean => {
+  try {
+    const fs = globalThis.require ? globalThis.require("node:fs") : null;
+    return fs ? fs.existsSync(p) : false;
+  } catch {
+    return false;
+  }
+};
+
+const mkdirSync = (p: string, options?: { recursive?: boolean }): string | undefined => {
+  try {
+    const fs = globalThis.require ? globalThis.require("node:fs") : null;
+    return fs ? fs.mkdirSync(p, options) : undefined;
+  } catch {
+    return undefined;
+  }
+};
 
 export const SPACES_DATA_PATH = () => process.env.SPACES_DATA_PATH || "/app/spaces";
 
@@ -32,6 +50,10 @@ export function getAuditDir(): string {
 
 export function getSchedulesDbPath(): string {
   return join(SPACES_DATA_PATH(), "schedules.db");
+}
+
+export function getWorkflowsDbPath(): string {
+  return join(SPACES_DATA_PATH(), "workflows.db");
 }
 
 export function getUserDir(username: string): string {

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import { HtmlPreview } from "../HtmlPreview";
@@ -10,6 +9,7 @@ import { ChartView } from "./ChartView";
 import { DecomposeResult } from "./DecomposeResult";
 import { EditResult } from "./EditResult";
 import { ExaSearchResult } from "./ExaSearchResult";
+import { FactoryResult } from "./FactoryResult";
 import { FindResult } from "./FindResult";
 import { GrepResult } from "./GrepResult";
 import { LsResult } from "./LsResult";
@@ -18,7 +18,9 @@ import { ReadResult } from "./ReadResult";
 import { ShareFileCard } from "./ShareFileCard";
 import { SubagentLiveView } from "./SubagentLiveView";
 import type { ToolResultData } from "./ToolCallRow";
+import { unwrapToolContent } from "./tool-row-utils";
 import { WebFetchResult } from "./WebFetchResult";
+import { WorkflowResult } from "./WorkflowResult";
 import { WriteResult } from "./WriteResult";
 import { CustomToolBody } from "./custom";
 
@@ -49,9 +51,14 @@ export function ToolResultRouter({
   onOpenSubagentConsole,
   l,
 }: ToolResultRouterProps) {
-  const text = result?.content.find((b) => b.type === "text")?.text ?? "";
+  const rawText = result?.content.find((b) => b.type === "text")?.text ?? "";
+  const { text, json } = unwrapToolContent(rawText);
 
   switch (toolName) {
+    case "manage_factory":
+      return <FactoryResult args={args} text={text} json={json} />;
+    case "manage_workflow":
+      return <WorkflowResult args={args} text={text} json={json} />;
     case "task":
     case "decompose_tasks":
       return <DecomposeResult text={text} details={result?.details} l={l} />;
@@ -188,6 +195,7 @@ export function ToolResultRouter({
           text={text}
           filePath={(args.path as string) || undefined}
           details={result?.details}
+          args={args}
           isError={result?.isError ?? false}
         />
       );
@@ -426,9 +434,10 @@ export function ToolResultRouter({
           </div>
         );
       }
+      const displayText = json ? JSON.stringify(json, null, 2) : text;
       return (
-        <pre className="text-[11px] font-mono text-muted-foreground whitespace-pre-wrap break-words bg-muted p-3 rounded-md max-h-48 overflow-y-auto">
-          {text}
+        <pre className="text-[11px] font-mono text-muted-foreground whitespace-pre-wrap break-words bg-muted/60 p-3 rounded-md max-h-48 overflow-y-auto">
+          {displayText}
         </pre>
       );
     }

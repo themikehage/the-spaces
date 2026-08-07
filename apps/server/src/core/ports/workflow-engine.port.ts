@@ -23,5 +23,8 @@ export interface IWorkflowEngine {
   run(username: string, workflowId: string, opts?: WorkflowRunOptions): Promise<WorkflowRun>;
   getRunStatus(username: string, runId: string): WorkflowRun | null;
   abort(username: string, runId: string): Promise<void>;
-  listRuns(username: string, workflowId: string): WorkflowRun[];
+  listRuns(
+    username: string,
+    filter?: { workflowId?: string; status?: string; limit?: number } | string,
+  ): WorkflowRun[];
 }
