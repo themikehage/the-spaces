@@ -27,7 +27,7 @@ export function useWorkflowList() {
 
   useEffect(() => {
     return EntityEventBus.subscribe((detail) => {
-      if (!detail?.type) {
+      if (!detail?.type || detail.type === "workflow" || detail.type === "all") {
         loadWorkflows();
       }
     });

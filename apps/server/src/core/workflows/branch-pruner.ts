@@ -52,3 +52,15 @@ export function inactiveBranchIds(
   }
   return skipped;
 }
+
+export function unhandledErrorBranchIds(
+  steps: WorkflowStep[],
+  succeededStepId: string,
+): Set<string> {
+  const step = steps.find((s) => s.id === succeededStepId);
+  const errorBranch = step?.errorBranch;
+  if (!errorBranch || errorBranch.length === 0) return new Set();
+
+  const dependents = buildDependentsMap(steps);
+  return reachableDownstream(dependents, errorBranch);
+}

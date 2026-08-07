@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/Button";
 import { useLiterals } from "@/lib";
 import { envService } from "@/lib/api/env.service";
 import { useState } from "react";
+import { CredentialsSection } from "./CredentialsSection";
 import { literals as u } from "./EnvVarsTab.literals";
 
 interface EnvVar {
@@ -341,6 +342,8 @@ export function EnvVarsTab({
           </div>
         </div>
       )}
+
+      <CredentialsSection />
     </div>
   );
 }

@@ -59,16 +59,46 @@ for (const eventName of WORKFLOW_EVENTS) {
   });
 }
 
-export const workflowEngine = new WorkflowEngine({
-  getSessionManager: () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { sessionManager } = require("../session/session-manager");
-    return sessionManager;
+let _workflowEngine: WorkflowEngine | null = null;
+
+export function getWorkflowEngineInstance(): WorkflowEngine {
+  if (!_workflowEngine) {
+    _workflowEngine = new WorkflowEngine({
+      getSessionManager: () => {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { sessionManager } = require("../session/session-manager");
+        return sessionManager;
+      },
+      getDelegationRegistry: () => {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { delegationRegistry } = require("../delegation/delegation-registry");
+        return delegationRegistry;
+      },
+      getWorkspaceDir: (username: string, projectId?: string, workflowId?: string) => {
+        if (projectId) {
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
+          const { resolveSessionWorkspace } = require("../session/workspace-resolver");
+          return resolveSessionWorkspace(username, "wf-session", projectId).workspaceDir;
+        }
+        if (workflowId) {
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
+          const { getWorkflowWorkspaceDir } = require("shared");
+          return getWorkflowWorkspaceDir(username, workflowId);
+        }
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { ensureWorkspaceStructure } = require("../session/workspace-resolver");
+        return ensureWorkspaceStructure(username);
+      },
+      eventBus,
+    });
+  }
+  return _workflowEngine;
+}
+
+export const workflowEngine = new Proxy({} as WorkflowEngine, {
+  get(_target, prop, receiver) {
+    const instance = getWorkflowEngineInstance();
+    const value = Reflect.get(instance, prop, receiver);
+    return typeof value === "function" ? value.bind(instance) : value;
   },
-  getDelegationRegistry: () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { delegationRegistry } = require("../delegation/delegation-registry");
-    return delegationRegistry;
-  },
-  eventBus,
 });

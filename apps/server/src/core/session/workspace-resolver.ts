@@ -115,26 +115,64 @@ export function ensureWorkspaceStructure(username: string): string {
 }
 
 export function resolveSubagentSessionDir(username: string, sessionId: string): string | null {
+  const userDir = userConfigManager.ensureUserDir(username);
+
+  if (sessionId.startsWith("wf-run-")) {
+    const workflowsDir = join(userDir, "workflows");
+    if (existsSync(workflowsDir)) {
+      try {
+        const wfFolders = readdirSync(workflowsDir);
+        const runId = sessionId.slice("wf-run-".length);
+        for (const wfId of wfFolders) {
+          const candidateDir = join(workflowsDir, wfId, "runs", runId, "session");
+          if (existsSync(candidateDir)) {
+            return candidateDir;
+          }
+        }
+      } catch {
+        /* noop */
+      }
+    }
+  }
+
   if (
     sessionId.startsWith(SessionPrefix.SUBAGENT) ||
     sessionId.startsWith(SessionPrefix.DELEGATE)
   ) {
-    const userDir = userConfigManager.ensureUserDir(username);
     const sessionsDir = join(userDir, "sessions");
     if (existsSync(sessionsDir)) {
       try {
-        // Direct session dir check first (e.g. userDir/sessions/sub_... or userDir/sessions/del_...)
         const directDir = join(sessionsDir, sessionId);
         if (existsSync(directDir)) {
           return directDir;
         }
 
-        // Subagents dir under parent check (e.g. userDir/sessions/parent/subagents/sub_...)
         const sessionFolders = readdirSync(sessionsDir);
         for (const parentId of sessionFolders) {
           const candidateDir = join(sessionsDir, parentId, "subagents", sessionId);
           if (existsSync(candidateDir)) {
             return candidateDir;
+          }
+        }
+      } catch {
+        /* noop */
+      }
+    }
+
+    const workflowsDir = join(userDir, "workflows");
+    if (existsSync(workflowsDir)) {
+      try {
+        const wfFolders = readdirSync(workflowsDir);
+        for (const wfId of wfFolders) {
+          const runsDir = join(workflowsDir, wfId, "runs");
+          if (existsSync(runsDir)) {
+            const runFolders = readdirSync(runsDir);
+            for (const rId of runFolders) {
+              const candidateDir = join(runsDir, rId, "session", "subagents", sessionId);
+              if (existsSync(candidateDir)) {
+                return candidateDir;
+              }
+            }
           }
         }
       } catch {

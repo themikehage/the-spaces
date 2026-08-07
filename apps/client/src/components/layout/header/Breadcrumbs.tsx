@@ -8,6 +8,7 @@ interface BreadcrumbsProps {
   activeProjectName: string | null;
   activeAgent: { id: string; name: string } | null;
   activeTeam?: { id: string; name: string } | null;
+  activeWorkflow?: { id: string; name: string } | null;
   onNavigate: (path: string) => void;
   l: Record<string, string>;
   factoryName?: string;
@@ -21,6 +22,7 @@ export function Breadcrumbs({
   activeProjectName,
   activeAgent,
   activeTeam = null,
+  activeWorkflow = null,
   onNavigate,
   l,
   factoryName = "Spaces",
@@ -75,6 +77,13 @@ export function Breadcrumbs({
     items = [{ label: l.breadTeams || "Teams", path: "/teams" }];
     if (activeTeam) {
       items.push({ label: activeTeam.name });
+    }
+  } else if (page === "workflows") {
+    items = [{ label: l.breadWorkflows || "Workflows" }];
+  } else if (page === "workflow") {
+    items = [{ label: l.breadWorkflows || "Workflows", path: "/workflows" }];
+    if (activeWorkflow) {
+      items.push({ label: activeWorkflow.name });
     }
   } else if (page === "org") {
     items.push({ label: l.tabOrgChart || "Org Chart" });

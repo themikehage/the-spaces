@@ -16,7 +16,31 @@ export function getNestedValue(obj: Record<string, unknown>, path: string): unkn
       }
     }
     if (typeof current !== "object" || current === null) return undefined;
-    current = (current as Record<string, unknown>)[key];
+    const rec = current as Record<string, unknown>;
+    let val = rec[key];
+    if (val === undefined) {
+      const isDollar = key.startsWith("$");
+      const raw = isDollar ? key.slice(1) : key;
+      const candidates = [
+        raw,
+        `$${raw}`,
+        raw.replace(/-/g, "_"),
+        `$${raw.replace(/-/g, "_")}`,
+        raw.replace(/_/g, "-"),
+        `$${raw.replace(/_/g, "-")}`,
+        raw.split("-")[0],
+        `$${raw.split("-")[0]}`,
+        raw.split("_")[0],
+        `$${raw.split("_")[0]}`,
+      ];
+      for (const cand of candidates) {
+        if (cand in rec && rec[cand] !== undefined) {
+          val = rec[cand];
+          break;
+        }
+      }
+    }
+    current = val;
   }
 
   return current;

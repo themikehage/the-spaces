@@ -24,6 +24,7 @@ export const GENERATED_DIR = "generated";
 export const SKILLS_SUBDIR = ".spaces/skills";
 export const EXECUTIONS_DIR = "executions";
 export const PIPELINES_DIR = "pipelines";
+export const WORKFLOWS_DIR = "workflows";
 
 export function getAuditDir(): string {
   return join(SPACES_DATA_PATH(), AUDIT_DIR);
@@ -135,6 +136,26 @@ export function getPipelineRunsDir(username: string, pipelineId: string): string
 
 export function getPipelineRunDir(username: string, pipelineId: string, runId: string): string {
   return join(getPipelineRunsDir(username, pipelineId), runId);
+}
+
+export function getWorkflowsDir(username: string): string {
+  return join(getUserDir(username), WORKFLOWS_DIR);
+}
+
+export function getWorkflowDir(username: string, workflowId: string): string {
+  return join(getWorkflowsDir(username), workflowId);
+}
+
+export function getWorkflowWorkspaceDir(username: string, workflowId: string): string {
+  return join(getWorkflowDir(username, workflowId), WORKSPACE_DIR);
+}
+
+export function getWorkflowRunsDir(username: string, workflowId: string): string {
+  return join(getWorkflowDir(username, workflowId), "runs");
+}
+
+export function getWorkflowRunDir(username: string, workflowId: string, runId: string): string {
+  return join(getWorkflowRunsDir(username, workflowId), runId);
 }
 
 export function getMcpServersPath(username: string): string {
@@ -259,6 +280,7 @@ export function ensureAllDirs(username: string): void {
     getTeamsDir(username),
     getExperimentsDir(username),
     getPipelinesDir(username),
+    getWorkflowsDir(username),
     getWorkspaceSkillsDir(username),
     join(getWorkspaceDir(username), ASSETS_DIR, UPLOADS_DIR),
     join(getWorkspaceDir(username), ASSETS_DIR, GENERATED_DIR),

@@ -423,7 +423,7 @@ export function useChatInputForm({
 
   useEffect(() => {
     return EntityEventBus.subscribe((detail) => {
-      if (detail?.type === "skill" || !detail?.type) {
+      if (detail?.type === "skill" || detail?.type === "all" || !detail?.type) {
         fetchSessionSkills();
       }
     });

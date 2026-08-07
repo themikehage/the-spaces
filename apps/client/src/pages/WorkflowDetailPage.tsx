@@ -5,7 +5,7 @@ import { WorkflowExecutionsTab } from "@/components/workflows/WorkflowExecutions
 import { WorkflowPlayground } from "@/components/workflows/WorkflowPlayground";
 import { WorkflowStepEditor } from "@/components/workflows/WorkflowStepEditor";
 import { useWorkflowBuilderState } from "@/hooks/useWorkflowBuilderState";
-import { AlertCircle, ArrowLeft, GitBranch, Play, Save, Trash2 } from "lucide-react";
+import { AlertCircle, Save, Trash2 } from "lucide-react";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -61,55 +61,21 @@ export const WorkflowDetailPage: React.FC = () => {
 
   return (
     <div className="flex-1 flex flex-col h-full bg-background overflow-hidden select-none">
-      {/* Top Header Bar */}
-      <div className="h-14 border-b border-border bg-card/40 px-6 flex items-center justify-between flex-shrink-0">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate("/workflows")}
-            className="p-1.5 rounded-lg bg-card hover:bg-accent border border-border text-muted-foreground hover:text-foreground transition"
-            title="Back to Workflows List"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </button>
-          <div className="p-1.5 rounded-xl bg-primary/10 border border-primary/20 text-primary">
-            <GitBranch className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-sm font-bold text-foreground">{selectedWorkflow.name}</h1>
-              {isDirty && (
-                <span className="text-[10px] bg-amber-500/10 text-amber-500 border border-amber-500/20 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" /> Unsaved
-                </span>
-              )}
-            </div>
-            <p className="text-[11px] text-muted-foreground truncate max-w-md">
-              {selectedWorkflow.description || "Automated Agentic Workflow DAG"}
-            </p>
-          </div>
-        </div>
+      {/* First-Level Tabs Bar with Action Icons on the Right */}
+      <div className="px-6 bg-card/20 border-b border-border flex items-center justify-between flex-shrink-0">
+        <TabsNav tabs={tabs} activeTab={tab} onChange={handleTabChange} />
 
-        {/* Action Controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 py-2">
           {tab === "editor" && (
             <button
               onClick={actions.handleSaveWorkflow}
               disabled={isSaving || !isDirty}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold transition disabled:opacity-40 shadow-sm cursor-pointer"
+              className="p-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground transition disabled:opacity-40 shadow-sm cursor-pointer"
+              title={
+                isSaving ? "Saving..." : isDirty ? "Save Workflow (Unsaved changes)" : "Save Workflow"
+              }
             >
-              <Save className="w-3.5 h-3.5" /> {isSaving ? "Saving..." : "Save"}
-            </button>
-          )}
-
-          {tab !== "playground" && (
-            <button
-              onClick={() => {
-                handleTabChange("playground");
-                actions.handleRunWorkflow();
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition shadow-sm cursor-pointer"
-            >
-              <Play className="w-3.5 h-3.5 fill-current" /> Run Playground
+              <Save className="w-4 h-4" />
             </button>
           )}
 
@@ -126,11 +92,6 @@ export const WorkflowDetailPage: React.FC = () => {
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
-      </div>
-
-      {/* Tabs Bar */}
-      <div className="px-6 bg-card/20 border-b border-border">
-        <TabsNav tabs={tabs} activeTab={tab} onChange={handleTabChange} />
       </div>
 
       {error && (

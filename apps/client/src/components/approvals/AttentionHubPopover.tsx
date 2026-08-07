@@ -98,26 +98,26 @@ export function AttentionHubPopover({ onNavigate }: Props) {
                     <div
                       key={item.approvalId}
                       onClick={() => handleItemClick(item)}
-                      className="p-3.5 hover:bg-accent/40 transition-colors cursor-pointer flex flex-col gap-2 group"
+                      className="px-3 py-2 hover:bg-accent/40 transition-colors cursor-pointer flex flex-col gap-1 group"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-1.5">
                           {isQuestion ? (
-                            <span className="flex items-center gap-1 text-[11px] font-medium text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-md">
+                            <span className="flex items-center gap-1 text-[10px] font-medium text-sky-400 bg-sky-500/10 px-1.5 py-0.5 rounded">
                               <HelpCircle className="w-3 h-3" /> Pregunta
                             </span>
                           ) : (
-                            <span className="flex items-center gap-1 text-[11px] font-medium text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md">
+                            <span className="flex items-center gap-1 text-[10px] font-medium text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded">
                               <ShieldAlert className="w-3 h-3" /> Aprobación
                             </span>
                           )}
                         </div>
-                        <span className="text-[10px] text-muted-foreground flex items-center gap-1 group-hover:text-primary transition-colors">
-                          Ir a sesión <ExternalLink className="w-3 h-3" />
+                        <span className="text-[10px] text-muted-foreground flex items-center gap-1 group-hover:text-primary transition-colors shrink-0">
+                          Ir a sesión <ExternalLink className="w-2.5 h-2.5" />
                         </span>
                       </div>
 
-                      <p className="text-xs font-medium text-foreground line-clamp-2 leading-relaxed">
+                      <p className="text-[11px] font-medium text-foreground line-clamp-1 leading-snug">
                         {item.reason ||
                           (item.args.question as string) ||
                           (item.args.title as string) ||
@@ -125,16 +125,16 @@ export function AttentionHubPopover({ onNavigate }: Props) {
                       </p>
 
                       {!isQuestion && (
-                        <div className="flex items-center justify-end gap-2 mt-1">
+                        <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={(e) => handleResolveApproval(e, item.approvalId, "deny")}
-                            className="px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-accent rounded-md cursor-pointer transition-colors"
+                            className="px-2 py-0.5 text-[10px] text-muted-foreground hover:text-foreground hover:bg-accent rounded cursor-pointer transition-colors"
                           >
                             Denegar
                           </button>
                           <button
                             onClick={(e) => handleResolveApproval(e, item.approvalId, "approve")}
-                            className="px-2.5 py-1 text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 rounded-md cursor-pointer transition-colors"
+                            className="px-2 py-0.5 text-[10px] font-medium bg-primary text-primary-foreground hover:bg-primary/90 rounded cursor-pointer transition-colors"
                           >
                             Aprobar
                           </button>

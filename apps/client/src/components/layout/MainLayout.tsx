@@ -146,6 +146,7 @@ export function MainLayout({
       activeProjectName={state.activeProjectName}
       activeAgent={state.activeAgent}
       activeTeam={state.activeTeam}
+      activeWorkflow={state.activeWorkflow}
       onNavigate={onNavigate}
       l={state.l}
       factoryName={state.globalSettings?.factoryName}

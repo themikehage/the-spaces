@@ -7,6 +7,7 @@ import {
   Code2,
   GitFork,
   GitMerge,
+  Globe,
   Pin,
   ShieldAlert,
   Slash,
@@ -41,6 +42,8 @@ export const WorkflowStepCard: React.FC<WorkflowStepCardProps> = ({
         return <ShieldAlert className="w-4 h-4 text-amber-400" />;
       case "code":
         return <Code2 className="w-4 h-4 text-emerald-400" />;
+      case "http":
+        return <Globe className="w-4 h-4 text-sky-400" />;
       default:
         return <Bot className="w-4 h-4 text-blue-400" />;
     }
@@ -101,6 +104,8 @@ export const WorkflowStepCard: React.FC<WorkflowStepCardProps> = ({
         return "border-l-amber-500";
       case "code":
         return "border-l-emerald-500";
+      case "http":
+        return "border-l-sky-500";
       default:
         return "border-l-blue-500";
     }
@@ -166,6 +171,13 @@ export const WorkflowStepCard: React.FC<WorkflowStepCardProps> = ({
               </span>
             ))}
           </div>
+        </div>
+      )}
+
+      {step.type === "http" && (
+        <div className="mt-2 text-xs font-mono text-sky-300 bg-sky-950/30 p-2 rounded border border-sky-800/30 truncate">
+          <span className="font-bold text-sky-400 mr-1.5">{step.httpMethod || "GET"}</span>
+          {step.httpUrl || "https://..."}
         </div>
       )}
 

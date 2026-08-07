@@ -2,7 +2,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { AVAILABLE_TOOLS, getSessionDir } from "shared";
-import { resolveSubagentSessionDir } from "./workspace-resolver";
 
 export interface TeamConfigReader {
   getTeamType(username: string, teamId: string): string | null;
@@ -16,12 +15,16 @@ export class SessionMetadataStore {
   }
 
   private getMetadataPath(username: string, sessionId: string): string {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { resolveSubagentSessionDir } = require("./workspace-resolver");
     const sessionDir =
       resolveSubagentSessionDir(username, sessionId) ?? getSessionDir(username, sessionId);
     return join(sessionDir, "metadata.json");
   }
 
   ensureSessionDir(username: string, sessionId: string): string {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { resolveSubagentSessionDir } = require("./workspace-resolver");
     const sessionDir =
       resolveSubagentSessionDir(username, sessionId) ?? getSessionDir(username, sessionId);
     if (!existsSync(sessionDir)) {

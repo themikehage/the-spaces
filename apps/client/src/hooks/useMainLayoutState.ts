@@ -13,9 +13,10 @@ import { teamsService } from "@/lib/api/teams.service";
 import { EntityEventBus } from "@/lib/event-bus";
 import { getSessionPath } from "@/lib/session-utils";
 import { wsClient, type ConnectionState } from "@/lib/ws-client";
+import { useWorkflowList } from "@/hooks/useWorkflowList";
 import type { RoutePage } from "@/router/useRoutePage";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { matchPath, useLocation } from "react-router-dom";
 import type { AgentDefinition } from "shared";
 
 interface UseMainLayoutStateParams {
@@ -44,7 +45,20 @@ export function useMainLayoutState({
   const activeAgent = rawActiveAgent;
   const l = useLiterals(u);
   const { pathname } = useLocation();
+  const { workflows } = useWorkflowList();
   const { sessions } = useSessions();
+
+  const workflowMatch = matchPath("/workflows/:workflowId/*", pathname);
+  const activeWorkflowId =
+    workflowMatch?.params.workflowId ||
+    (pathname.startsWith("/workflows/") ? pathname.split("/")[2] : null);
+
+  const activeWorkflow = useMemo(() => {
+    if (!activeWorkflowId) return null;
+    return (
+      workflows.find((w) => w.id === activeWorkflowId) || { id: activeWorkflowId, name: "Workflow" }
+    );
+  }, [activeWorkflowId, workflows]);
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sessionPopoverOpen, setSessionPopoverOpen] = useState(false);
@@ -330,6 +344,7 @@ export function useMainLayoutState({
     activeAgent,
     rawActiveAgent,
     activeTeam,
+    activeWorkflow,
     onSelectProject,
     onSelectTeam,
     sidebarOpen,

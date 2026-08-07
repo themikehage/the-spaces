@@ -16,13 +16,52 @@ export function parseEnvelope(text: string): EnvelopeResult {
       const parsed = JSON.parse(jsonMatch[0]);
       if (parsed.status || parsed.executive_summary) {
         const validStatuses = ["success", "partial", "blocked", "error"] as const;
+        let outputs: Record<string, unknown> =
+          typeof parsed.outputs === "object" && parsed.outputs !== null
+            ? (parsed.outputs as Record<string, unknown>)
+            : {};
+
+        // If outputs is empty, collect extra top-level keys that aren't metadata
+        if (Object.keys(outputs).length === 0) {
+          const envelopeKeys = new Set(["status", "executive_summary", "artifacts", "risks", "outputs"]);
+          const extraKeys: Record<string, unknown> = {};
+          for (const [key, value] of Object.entries(parsed)) {
+            if (!envelopeKeys.has(key)) {
+              extraKeys[key] = value;
+            }
+          }
+          if (Object.keys(extraKeys).length > 0) {
+            outputs = extraKeys;
+          }
+        }
+
+        // Also check if there's a separate pure JSON block in the text
+        const allJsonBlocks = Array.from(cleanText.matchAll(/\{[\s\S]*?\}/g));
+        if (allJsonBlocks.length > 1) {
+          for (const block of allJsonBlocks) {
+            try {
+              const bParsed = JSON.parse(block[0]);
+              if (
+                typeof bParsed === "object" &&
+                bParsed !== null &&
+                !Array.isArray(bParsed) &&
+                !bParsed.status &&
+                !bParsed.executive_summary
+              ) {
+                outputs = { ...bParsed, ...outputs };
+              }
+            } catch {
+              // ignore invalid block parse
+            }
+          }
+        }
+
         return {
           status: validStatuses.includes(parsed.status) ? parsed.status : "success",
           executive_summary: parsed.executive_summary ?? cleanText.slice(0, 300),
           artifacts: parsed.artifacts ?? "none",
           risks: parsed.risks ?? "None",
-          outputs:
-            typeof parsed.outputs === "object" && parsed.outputs !== null ? parsed.outputs : {},
+          outputs,
         };
       }
 

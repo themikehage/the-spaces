@@ -1,8 +1,12 @@
-// SPDX-License-Identifier: MIT
 import { Dropdown, type DropdownOption } from "@/components/ui/Dropdown";
 import { Pin, Trash2, X } from "lucide-react";
 import React, { useState } from "react";
 import type { WorkflowDefinition, WorkflowStep, WorkflowStepType } from "shared";
+import { AgentStepForm } from "./editors/AgentStepForm";
+import { ApprovalStepForm } from "./editors/ApprovalStepForm";
+import { CodeStepForm } from "./editors/CodeStepForm";
+import { ControlStepForm } from "./editors/ControlStepForm";
+import { HttpStepForm } from "./editors/HttpStepForm";
 import { WorkflowVariablePicker } from "./WorkflowVariablePicker";
 
 interface WorkflowStepEditorProps {
@@ -13,8 +17,6 @@ interface WorkflowStepEditorProps {
   onClose: () => void;
 }
 
-type SubagentType = "builder" | "explorer" | "autonomous";
-
 const STEP_TYPE_OPTIONS: DropdownOption<WorkflowStepType>[] = [
   { value: "agent", label: "Agent Task" },
   { value: "if", label: "If Condition" },
@@ -22,12 +24,7 @@ const STEP_TYPE_OPTIONS: DropdownOption<WorkflowStepType>[] = [
   { value: "merge", label: "Merge Flow" },
   { value: "approval", label: "Human Approval" },
   { value: "code", label: "Code Node (JS)" },
-];
-
-const SUBAGENT_TYPE_OPTIONS: DropdownOption<SubagentType>[] = [
-  { value: "builder", label: "Builder Subagent" },
-  { value: "explorer", label: "Explorer Subagent" },
-  { value: "autonomous", label: "Autonomous Subagent" },
+  { value: "http", label: "HTTP Request" },
 ];
 
 export const WorkflowStepEditor: React.FC<WorkflowStepEditorProps> = ({
@@ -37,14 +34,18 @@ export const WorkflowStepEditor: React.FC<WorkflowStepEditorProps> = ({
   onDelete,
   onClose,
 }) => {
-  const [activeField, setActiveField] = useState<"taskTemplate" | "condition" | "codeSnippet" | "approvalMessage">(
+  const [activeField, setActiveField] = useState<
+    "taskTemplate" | "condition" | "codeSnippet" | "approvalMessage" | "httpUrl" | "httpBody"
+  >(
     step.type === "if" || step.type === "switch"
       ? "condition"
       : step.type === "code"
         ? "codeSnippet"
         : step.type === "approval"
           ? "approvalMessage"
-          : "taskTemplate",
+          : step.type === "http"
+            ? "httpUrl"
+            : "taskTemplate",
   );
 
   const availableDependsOn = workflow.steps.map((s) => s.id).filter((id) => id !== step.id);
@@ -62,22 +63,24 @@ export const WorkflowStepEditor: React.FC<WorkflowStepEditorProps> = ({
       type,
       codeSnippet: type === "code" && !step.codeSnippet ? "return { outputs: {} };" : step.codeSnippet,
       condition: (type === "if" || type === "switch") && !step.condition ? "$inputs.amount > 0" : step.condition,
+      httpMethod: type === "http" && !step.httpMethod ? "GET" : step.httpMethod,
     });
   };
 
   const handleInsertVariable = (varExpr: string) => {
     if (activeField === "condition" && (step.type === "if" || step.type === "switch")) {
-      const current = step.condition || "";
-      onUpdate({ ...step, condition: current ? `${current} ${varExpr}` : varExpr });
+      onUpdate({ ...step, condition: `${step.condition || ""} ${varExpr}`.trim() });
     } else if (activeField === "codeSnippet" && step.type === "code") {
-      const current = step.codeSnippet || "";
-      onUpdate({ ...step, codeSnippet: current ? `${current}\n${varExpr}` : varExpr });
+      onUpdate({ ...step, codeSnippet: `${step.codeSnippet || ""}\n${varExpr}`.trim() });
     } else if (activeField === "approvalMessage" && step.type === "approval") {
-      const current = step.approvalMessage || "";
-      onUpdate({ ...step, approvalMessage: `${current} ${varExpr}`.trim() });
+      onUpdate({ ...step, approvalMessage: `${step.approvalMessage || ""} ${varExpr}`.trim() });
+    } else if (activeField === "httpUrl" && step.type === "http") {
+      onUpdate({ ...step, httpUrl: `${step.httpUrl || ""}${varExpr}` });
+    } else if (activeField === "httpBody" && step.type === "http") {
+      const current = typeof step.httpBody === "object" ? JSON.stringify(step.httpBody) : String(step.httpBody || "");
+      onUpdate({ ...step, httpBody: `${current} ${varExpr}`.trim() });
     } else {
-      const current = step.taskTemplate || "";
-      onUpdate({ ...step, taskTemplate: `${current} ${varExpr}`.trim() });
+      onUpdate({ ...step, taskTemplate: `${step.taskTemplate || ""} ${varExpr}`.trim() });
     }
   };
 
@@ -85,6 +88,25 @@ export const WorkflowStepEditor: React.FC<WorkflowStepEditorProps> = ({
     const next = { ...step };
     delete next.pinnedOutputs;
     onUpdate(next);
+  };
+
+  const renderFormContent = () => {
+    switch (step.type) {
+      case "agent":
+        return <AgentStepForm step={step} onUpdate={onUpdate} onFocusField={setActiveField} />;
+      case "if":
+      case "switch":
+      case "merge":
+        return <ControlStepForm step={step} onUpdate={onUpdate} onFocusField={setActiveField} />;
+      case "approval":
+        return <ApprovalStepForm step={step} onUpdate={onUpdate} onFocusField={setActiveField} />;
+      case "code":
+        return <CodeStepForm step={step} onUpdate={onUpdate} onFocusField={setActiveField} />;
+      case "http":
+        return <HttpStepForm step={step} onUpdate={onUpdate} onFocusField={setActiveField} />;
+      default:
+        return null;
+    }
   };
 
   return (
@@ -124,7 +146,6 @@ export const WorkflowStepEditor: React.FC<WorkflowStepEditorProps> = ({
           />
         </div>
 
-        {/* Variable Picker Helper */}
         <WorkflowVariablePicker
           workflow={workflow}
           currentStepId={step.id}
@@ -132,110 +153,7 @@ export const WorkflowStepEditor: React.FC<WorkflowStepEditorProps> = ({
           format={step.type === "if" || step.type === "switch" || step.type === "code" ? "raw" : "mustache"}
         />
 
-        {(step.type === "if" || step.type === "switch") && (
-          <div>
-            <label className="block text-xs font-medium text-purple-300 mb-1">
-              JSONata Condition
-            </label>
-            <input
-              type="text"
-              value={step.condition || ""}
-              onFocus={() => setActiveField("condition")}
-              onChange={(e) => onUpdate({ ...step, condition: e.target.value })}
-              placeholder="$steps.step1.outputs.status = 'ok'"
-              className="w-full px-3 py-1.5 rounded-lg bg-purple-950/30 border border-purple-800/40 text-purple-200 text-xs font-mono focus:outline-none focus:border-purple-500"
-            />
-          </div>
-        )}
-
-        {step.type === "approval" && (
-          <div>
-            <label className="block text-xs font-medium text-amber-300 mb-1">
-              Approval Prompt Message
-            </label>
-            <textarea
-              value={step.approvalMessage || ""}
-              onFocus={() => setActiveField("approvalMessage")}
-              onChange={(e) => onUpdate({ ...step, approvalMessage: e.target.value })}
-              rows={3}
-              placeholder="Confirm deployment to production workspace?"
-              className="w-full px-3 py-1.5 rounded-lg bg-amber-950/30 border border-amber-800/40 text-amber-200 text-xs focus:outline-none focus:border-amber-500"
-            />
-          </div>
-        )}
-
-        {step.type === "code" && (
-          <div className="space-y-2">
-            <div>
-              <label className="block text-xs font-medium text-emerald-300 mb-1">
-                JS Sandbox Snippet
-              </label>
-              <textarea
-                value={step.codeSnippet || ""}
-                onFocus={() => setActiveField("codeSnippet")}
-                onChange={(e) => onUpdate({ ...step, codeSnippet: e.target.value })}
-                rows={6}
-                placeholder="const res = $inputs.val * 2; return { outputs: { res } };"
-                className="w-full px-3 py-2 rounded-lg bg-emerald-950/30 border border-emerald-800/40 text-emerald-200 text-xs font-mono focus:outline-none focus:border-emerald-500"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">
-                Timeout (ms)
-              </label>
-              <input
-                type="number"
-                value={step.codeTimeout || 5000}
-                onChange={(e) => onUpdate({ ...step, codeTimeout: Number(e.target.value) || 5000 })}
-                className="w-full px-3 py-1.5 rounded-lg bg-accent/50 border border-border text-foreground text-xs font-mono"
-              />
-            </div>
-          </div>
-        )}
-
-        {step.type === "agent" && (
-          <>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">
-                Subagent Strategy
-              </label>
-              <Dropdown
-                value={step.subagentType || "builder"}
-                onChange={(val) => onUpdate({ ...step, subagentType: val })}
-                options={SUBAGENT_TYPE_OPTIONS}
-                matchWidth
-                className="w-full"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">
-                Agent ID (Optional)
-              </label>
-              <input
-                type="text"
-                value={step.agentId || ""}
-                onChange={(e) => onUpdate({ ...step, agentId: e.target.value || undefined })}
-                placeholder="Leave blank for anonymous subagent"
-                className="w-full px-3 py-1.5 rounded-lg bg-accent/50 border border-border text-foreground text-xs font-mono focus:outline-none focus:border-primary"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">
-                Task Template
-              </label>
-              <textarea
-                value={step.taskTemplate || ""}
-                onFocus={() => setActiveField("taskTemplate")}
-                onChange={(e) => onUpdate({ ...step, taskTemplate: e.target.value })}
-                rows={4}
-                placeholder="Use {{ $inputs.var }} or {{ $steps.step1.outputs.var }}"
-                className="w-full px-3 py-2 rounded-lg bg-accent/50 border border-border text-foreground text-xs focus:outline-none focus:border-primary font-mono"
-              />
-            </div>
-          </>
-        )}
+        {renderFormContent()}
 
         {step.pinnedOutputs && (
           <div className="p-3 rounded-lg bg-amber-950/30 border border-amber-800/40">

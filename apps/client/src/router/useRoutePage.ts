@@ -15,6 +15,8 @@ export type RoutePage =
   | "benchmark"
   | "teams"
   | "team"
+  | "workflows"
+  | "workflow"
   | "logs"
   | "sessions"
   | "analytics"
@@ -26,6 +28,8 @@ export function useRoutePage(): RoutePage {
   const { pathname } = useLocation();
   if (pathname.includes("/analytics") || pathname === "/analytics") return "analytics";
   if (pathname.startsWith("/team/")) return "team";
+  if (pathname.startsWith("/workflows/")) return "workflow";
+  if (pathname === "/workflows" || pathname.startsWith("/workflows")) return "workflows";
   if (pathname.includes("/benchmarks")) return "benchmark";
   if (pathname.includes("/org")) return "org";
   if (pathname.includes("/floor")) return "floor";

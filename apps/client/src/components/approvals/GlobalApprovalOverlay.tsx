@@ -71,61 +71,52 @@ function ApprovalCard({
       initial={{ opacity: 0, x: -50, scale: 0.95 }}
       animate={{ opacity: 1, x: 0, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.15 } }}
-      className="pointer-events-auto flex flex-col p-4 rounded-xl border border-border bg-card shadow-2xl backdrop-blur-md text-foreground max-w-sm w-full gap-3"
+      className="pointer-events-auto flex flex-col p-3 rounded-xl border border-border bg-card shadow-2xl backdrop-blur-md text-foreground max-w-xs w-full gap-2"
     >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
-          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            Tool Approval Required
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
+          <span className="text-[10px] font-mono font-semibold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded">
+            {approval.toolName}
+          </span>
+          <span className="text-[10px] text-muted-foreground truncate">
+            {approval.sessionId.split("-")[0]}
           </span>
         </div>
-        <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground shrink-0">
           {timeLeft}s
         </span>
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-mono px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 border border-amber-500/20">
-            {approval.toolName}
-          </span>
-          <span className="text-xs text-muted-foreground truncate">
-            Session: {approval.sessionId.split("-")[0]}
-          </span>
-        </div>
-
-        <div className="text-xs text-foreground bg-muted/50 font-mono p-2 rounded-lg border border-border/50 max-h-24 overflow-y-auto whitespace-pre-wrap break-words">
-          {getToolArgString()}
-        </div>
-
-        <div className="text-xs text-muted-foreground">
-          <span className="font-semibold text-foreground">Reason: </span>
-          {approval.reason}
-        </div>
+      <div className="text-[11px] text-foreground bg-muted/50 font-mono p-2 rounded-lg border border-border/50 max-h-16 overflow-y-auto whitespace-pre-wrap break-words leading-snug">
+        {getToolArgString()}
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="text-[11px] text-muted-foreground leading-snug">
+        {approval.reason}
+      </div>
+
+      <div className="flex items-center gap-1.5">
         <input
           type="checkbox"
           id={`persist-${approval.approvalId}`}
           checked={persist}
           onChange={(e) => setPersist(e.target.checked)}
-          className="w-3.5 h-3.5 rounded border-border text-primary focus:ring-ring bg-background cursor-pointer"
+          className="w-3 h-3 rounded border-border text-primary focus:ring-ring bg-background cursor-pointer"
         />
         <label
           htmlFor={`persist-${approval.approvalId}`}
-          className="text-[11px] text-muted-foreground select-none cursor-pointer"
+          className="text-[10px] text-muted-foreground select-none cursor-pointer"
         >
-          Remember this decision for future actions
+          Remember this decision
         </label>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-1.5">
         <Button
           variant="outline"
           size="sm"
-          className="flex-1 text-xs"
+          className="flex-1 text-[11px] h-7"
           onClick={() => onResolve("deny", persist)}
         >
           Deny
@@ -133,7 +124,7 @@ function ApprovalCard({
         <Button
           variant="accent"
           size="sm"
-          className="flex-1 text-xs"
+          className="flex-1 text-[11px] h-7"
           onClick={() => onResolve("approve", persist)}
         >
           Approve

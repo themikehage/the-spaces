@@ -297,7 +297,7 @@ export function createUiTools(
       properties: {
         entityType: {
           type: "string",
-          enum: ["project", "agent", "skill", "all"],
+          enum: ["project", "agent", "skill", "workflow", "all"],
           description:
             "The type of entity to refresh in the user interface. Use 'all' if multiple types changed.",
         },

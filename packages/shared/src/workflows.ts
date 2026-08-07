@@ -8,11 +8,24 @@ export const WorkflowStepTypeSchema = z.enum([
   "merge",
   "approval",
   "code",
+  "http",
+  "variables",
+  "webhook",
 ]);
 export type WorkflowStepType = z.infer<typeof WorkflowStepTypeSchema>;
 
+export const VariableOpSchema = z.object({
+  op: z.enum(["get", "set", "delete", "increment"]),
+  key: z.string(),
+  value: z.unknown().optional(),
+  amount: z.number().optional(),
+});
+export type VariableOp = z.infer<typeof VariableOpSchema>;
+
 export const WorkflowStepSchema = z.object({
-  id: z.string(),
+  id: z.string().regex(/^[a-z0-9_]+$/, {
+    message: "Step ID must use only lowercase letters, digits, and underscores (snake_case). No hyphens or special characters.",
+  }),
   type: WorkflowStepTypeSchema,
   label: z.string(),
   dependsOn: z.array(z.string()).optional(),
@@ -28,6 +41,23 @@ export const WorkflowStepSchema = z.object({
   pinnedOutputs: z.record(z.unknown()).optional(),
   codeSnippet: z.string().optional(),
   codeTimeout: z.number().optional(),
+  httpMethod: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]).optional(),
+  httpUrl: z.string().optional(),
+  httpHeaders: z.record(z.string()).optional(),
+  httpBody: z.unknown().optional(),
+  httpTimeoutMs: z.number().optional(),
+  httpResponseMapping: z.record(z.string()).optional(),
+  httpCredentialId: z.string().optional(),
+  httpExpectStatus: z.array(z.number()).optional(),
+  timeoutMs: z.number().optional(),
+  onError: z.enum(["stop", "continue", "retry"]).optional(),
+  retryCount: z.number().optional(),
+  retryDelayMs: z.number().optional(),
+  errorBranch: z.array(z.string()).optional(),
+  variableOps: z.array(VariableOpSchema).optional(),
+  webhookId: z.string().optional(),
+  webhookSecret: z.string().optional(),
+  webhookResponseMode: z.enum(["onReceived", "onWorkflowCompleted"]).optional(),
 });
 export type WorkflowStep = z.infer<typeof WorkflowStepSchema>;
 
@@ -99,12 +129,14 @@ export const WorkflowRunSchema = z.object({
   completedAt: z.string().optional(),
   username: z.string(),
   parentSessionId: z.string().optional(),
+  workflowSessionId: z.string().optional(),
 });
 export type WorkflowRun = z.infer<typeof WorkflowRunSchema>;
 
 export const WorkflowRunOptionsSchema = z.object({
   inputs: z.record(z.unknown()).optional(),
   parentSessionId: z.string().optional(),
+  projectId: z.string().optional(),
   dryRun: z.boolean().optional(),
 });
 export type WorkflowRunOptions = z.infer<typeof WorkflowRunOptionsSchema>;

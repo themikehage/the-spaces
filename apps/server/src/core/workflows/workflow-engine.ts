@@ -7,14 +7,21 @@ import type {
 } from "shared";
 import type { DelegationRegistry } from "../delegation/delegation-registry";
 import type { EventBus } from "../ports/spaces-host.port";
-import type { IWorkflowEngine } from "../ports/workflow-engine.port";
+import type {
+  IWorkflowEngine,
+  IWorkflowSessionBootstrap,
+} from "../ports/workflow-engine.port";
 import type { SessionManager } from "../session/session-manager";
-import { inactiveBranchIds } from "./branch-pruner";
+import { inactiveBranchIds, unhandledErrorBranchIds } from "./branch-pruner";
 import { resolveExecutionOrder } from "./dag-resolver";
 import type { ExpressionContext } from "./expression-engine";
 import { StepExecutor } from "./step-executor";
 import { workflowRunStore } from "./workflow-run-store";
+import { workflowSessionBootstrap } from "./workflow-session-bootstrap";
 import { workflowStore } from "./workflow-store";
+
+import type { ICredentialStore } from "../ports/credential-store.port";
+import type { IHttpClient } from "../ports/http-client.port";
 
 export interface WorkflowEngineOptions {
   sessionManager?: SessionManager;
@@ -23,13 +30,19 @@ export interface WorkflowEngineOptions {
   getDelegationRegistry?: () => DelegationRegistry;
   eventBus?: EventBus;
   workspaceDir?: string;
+  getWorkspaceDir?: (username: string, projectId?: string, workflowId?: string) => string;
+  sessionBootstrap?: IWorkflowSessionBootstrap;
+  httpClient?: IHttpClient;
+  credentialStore?: ICredentialStore;
 }
 
 export class WorkflowEngine implements IWorkflowEngine {
   private activeRuns = new Map<string, AbortController>();
   private _stepExecutor?: StepExecutor;
 
-  constructor(private opts: WorkflowEngineOptions) {}
+  constructor(private opts: WorkflowEngineOptions) {
+    workflowRunStore.cleanupStaleRuns();
+  }
 
   private get stepExecutor(): StepExecutor {
     if (!this._stepExecutor) {
@@ -42,6 +55,8 @@ export class WorkflowEngine implements IWorkflowEngine {
         sessionManager: sm,
         delegationRegistry: dr,
         eventBus: this.opts.eventBus,
+        httpClient: this.opts.httpClient,
+        credentialStore: this.opts.credentialStore,
       });
     }
     return this._stepExecutor;
@@ -90,7 +105,9 @@ export class WorkflowEngine implements IWorkflowEngine {
 
     workflowRunStore.updateRunStatus(username, run.id, "running");
 
-    const workspaceDir = this.opts.workspaceDir || process.cwd();
+    const workspaceDir = this.opts.getWorkspaceDir
+      ? this.opts.getWorkspaceDir(username, opts?.projectId, workflowId)
+      : this.opts.workspaceDir || process.cwd();
 
     this.executeDAG(username, def, run, workspaceDir, abortController.signal, opts?.dryRun)
       .catch(() => {
@@ -108,6 +125,35 @@ export class WorkflowEngine implements IWorkflowEngine {
   }
 
   private async executeDAG(
+    username: string,
+    def: WorkflowDefinition,
+    run: WorkflowRun,
+    workspaceDir: string,
+    signal: AbortSignal,
+    dryRun?: boolean,
+  ): Promise<void> {
+    const sessionBootstrap = this.opts.sessionBootstrap || workflowSessionBootstrap;
+    const { workflowSessionId, cleanup } = await sessionBootstrap.bootstrap(
+      username,
+      run.id,
+      def.id,
+      workspaceDir,
+    );
+    workflowRunStore.setWorkflowSessionId(username, run.id, workflowSessionId);
+
+    const updatedRun = workflowRunStore.getRun(username, run.id) || {
+      ...run,
+      workflowSessionId,
+    };
+
+    try {
+      await this.runDAGExecution(username, def, updatedRun, workspaceDir, signal, dryRun);
+    } finally {
+      await cleanup();
+    }
+  }
+
+  private async runDAGExecution(
     username: string,
     def: WorkflowDefinition,
     run: WorkflowRun,
@@ -161,10 +207,16 @@ export class WorkflowEngine implements IWorkflowEngine {
         }
 
         let attempts = 0;
-        const maxAttempts = def.onError === "retry" ? (def.retryCount || 1) + 1 : 1;
+        const stepOnError = step.onError ?? def.onError;
+        const stepRetryCount = step.retryCount ?? def.retryCount ?? 1;
+        const maxAttempts = stepOnError === "retry" ? stepRetryCount + 1 : 1;
+        const retryDelayMs = step.retryDelayMs ?? 0;
         let lastState: WorkflowStepState = { stepId: step.id, status: "pending" };
 
         while (attempts < maxAttempts) {
+          if (attempts > 0 && retryDelayMs > 0) {
+            await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
+          }
           attempts++;
           lastState = await this.stepExecutor.execute(
             step,
@@ -188,9 +240,24 @@ export class WorkflowEngine implements IWorkflowEngine {
           outputs: lastState.outputs,
         });
 
+        if (
+          (lastState.status === "success" || lastState.status === "pinned") &&
+          step.errorBranch &&
+          step.errorBranch.length > 0
+        ) {
+          for (const id of unhandledErrorBranchIds(def.steps, step.id)) {
+            skippedStepIds.add(id);
+          }
+        }
+
         // If step is a control-flow branch, prune the entire unselected branch
         // subgraph (transitive downstream), not just the direct branch targets.
-        if (lastState.status === "success" && step.branches && lastState.activeBranch) {
+        if (
+          lastState.status === "success" &&
+          step.branches &&
+          lastState.activeBranch !== undefined &&
+          lastState.activeBranch !== ""
+        ) {
           for (const id of inactiveBranchIds(def.steps, step.id, lastState.activeBranch)) {
             skippedStepIds.add(id);
           }
@@ -201,24 +268,30 @@ export class WorkflowEngine implements IWorkflowEngine {
 
       const results = await Promise.allSettled(batchPromises);
 
-      let hasError = false;
+      let hasUnhandledError = false;
       for (const res of results) {
-        if (
-          res.status === "rejected" ||
-          (res.status === "fulfilled" && res.value.state.status === "error")
-        ) {
-          hasError = true;
+        if (res.status === "rejected") {
+          hasUnhandledError = true;
         } else if (res.status === "fulfilled") {
           const { step, state } = res.value;
           exprContext.$steps[step.id] = state;
           (exprContext as Record<string, unknown>)[step.id] = { outputs: state.outputs };
+          (exprContext as Record<string, unknown>)[`$${step.id}`] = { outputs: state.outputs };
           if (state.outputs) {
             Object.assign(exprContext as Record<string, unknown>, state.outputs);
+          }
+
+          if (state.status === "error") {
+            const stepOnError = step.onError ?? def.onError;
+            const hasErrorBranch = Boolean(step.errorBranch && step.errorBranch.length > 0);
+            if (stepOnError === "stop" && !hasErrorBranch) {
+              hasUnhandledError = true;
+            }
           }
         }
       }
 
-      if (hasError && def.onError === "stop") {
+      if (hasUnhandledError) {
         workflowRunStore.updateRunStatus(username, run.id, "error");
         this.opts.eventBus?.emit("workflow_run_completed", {
           runId: run.id,

@@ -19,6 +19,9 @@ Reglas y estándares inamovibles para el subsistema de workflows en Spaces. Todo
 | `merge` | Punto de convergencia para ramas divergentes | `id`, `type`, `label` | `dependsOn`, `pinnedOutputs` |
 | `approval` | Pausa el workflow hasta confirmación del usuario | `id`, `type`, `label`, `approvalMessage` | `dependsOn`, `pinnedOutputs` |
 | `code` | Código TS/JS ejecutado en sandbox aislado | `id`, `type`, `label`, `codeSnippet` | `codeTimeout`, `dependsOn`, `pinnedOutputs` |
+| `http` | Llamada HTTP/REST a servicios externos con auth | `id`, `type`, `label`, `httpUrl` | `httpMethod`, `httpHeaders`, `httpBody`, `httpTimeoutMs`, `httpResponseMapping`, `httpCredentialId`, `httpExpectStatus`, `dependsOn`, `pinnedOutputs` |
+| `variables` | Estado y variables persistentes cross-run (get/set/del/inc) | `id`, `type`, `label`, `variableOps` | `dependsOn`, `pinnedOutputs` |
+| `webhook` | Trigger de entrada que procesa peticiones HTTP externas | `id`, `type`, `label` | `webhookId`, `webhookSecret`, `webhookResponseMode`, `dependsOn`, `pinnedOutputs` |
 
 ## 3. Expresiones e Interpolación de Variables
 
@@ -31,11 +34,12 @@ Reglas y estándares inamovibles para el subsistema de workflows en Spaces. Todo
 - **Sandbox de Código (`code`):**
   - Los snippet reciben en scope las variables del workflow y deben retornar un objeto plano o valor serializable JSON.
 
-## 4. Estrategias de Error y Reintentos
+## 4. Estrategias de Error, Timeouts y Reintentos
 
-- `onError: "stop"` (predeterminado): Si un paso falla (`status: "error"`), la ejecución del workflow se detiene inmediatamente marcando el run como `error`.
-- `onError: "continue"`: El fallo de un paso no interrumpe los pasos independientes en otros lotes del DAG.
-- `onError: "retry"`: Si un paso falla, se reintenta automáticamente hasta `retryCount` veces (o 1 reintento por defecto) antes de marcarlo como fallido.
+- **Precedencia de `onError` por Paso:** Todo paso admite `onError` (`stop` | `continue` | `retry`), `retryCount` y `retryDelayMs` a nivel individual, prevaleciendo sobre la configuración del workflow.
+- **Ramas de Error / Fallback (`errorBranch`):** Todo paso admite `errorBranch: string[]` con IDs de pasos contingentes. Si el paso falla tras todos los reintentos, el motor activa y ejecuta la rama de error en lugar de detener o podar el flujo. Si el paso tiene éxito, los pasos de la rama de error se omiten (`skipped`).
+- **Timeout por Paso Individual (`timeoutMs`):** Todo paso admite un campo opcional `timeoutMs`. Si la ejecución supera dicho límite, se cancela y se retorna `status: "error"` con el detalle del timeout.
+- **Recuperación tras Reinicio:** El servidor limpia automáticamente runs en estado `running` huérfanos tras un reinicio, marcándolos como `error` ("Server process restarted during workflow execution").
 
 ## 5. Herramienta `manage_workflow` (Single Tool Pattern)
 
@@ -55,6 +59,8 @@ Todas las interacciones de los agentes con workflows deben realizarse exclusivam
 - `action: "list_runs"` — Lista los historial de ejecuciones de un workflow.
 - `action: "abort"` — Cancela una ejecución en curso por `runId`.
 - `action: "approve"` — Resuelve un paso en pausa de aprobación (`approved: true | false`).
+
+**Requisito Obligatorio de UI Refresh:** Tras ejecutar `action: "save"`, `action: "delete"`, `action: "add_step"`, `action: "update_step"`, `action: "remove_step"` o cualquier mutación de un workflow, el agente DEBE invocar inmediatamente la herramienta `refresh_ui(entityType: "workflow")` para actualizar la interfaz del usuario en tiempo real.
 
 ## 6. Guía de Debugging y Diagnóstico
 

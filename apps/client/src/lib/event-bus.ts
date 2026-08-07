@@ -9,7 +9,8 @@ export type EntityEventType =
   | "skill"
   | "custom-tool"
   | "settings"
-  | "workflow";
+  | "workflow"
+  | "all";
 
 export interface EntityUpdatedEvent {
   type?: EntityEventType;

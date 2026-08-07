@@ -33,9 +33,35 @@ export class WorkflowCrudActions {
     return def;
   }
 
+  private validateBranchDependencies(steps: WorkflowStep[]): void {
+    for (const step of steps) {
+      if ((step.type === "if" || step.type === "switch") && step.branches) {
+        for (const targets of Object.values(step.branches)) {
+          for (const targetId of targets) {
+            const target = steps.find((s) => s.id === targetId);
+            if (target && !target.dependsOn?.includes(step.id)) {
+              throw new Error(
+                `Step '${targetId}' is a branch target of '${step.id}' but missing dependsOn: ['${step.id}']. Without this, branch steps execute speculatively before the condition is evaluated.`,
+              );
+            }
+          }
+        }
+      }
+    }
+  }
+
   async save(definition: WorkflowDefinition): Promise<WorkflowDefinition> {
     const engine = this.checkEngine();
-    const parsed = WorkflowDefinitionSchema.parse(definition);
+    const now = new Date().toISOString();
+    const withDefaults = {
+      ...definition,
+      createdAt: (definition as any).createdAt || now,
+      updatedAt: now,
+    };
+    if (withDefaults.steps) {
+      this.validateBranchDependencies(withDefaults.steps);
+    }
+    const parsed = WorkflowDefinitionSchema.parse(withDefaults);
     return engine.save(this.opts.username, parsed);
   }
 

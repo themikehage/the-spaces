@@ -944,4 +944,29 @@ export const CustomToolSummarySchema = z.object({
 });
 export type CustomToolSummary = z.infer<typeof CustomToolSummarySchema>;
 
+export const CredentialTypeSchema = z.enum(["bearer", "basic", "api-key"]);
+export type CredentialType = z.infer<typeof CredentialTypeSchema>;
+
+export const CredentialSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  type: CredentialTypeSchema,
+  metadata: z.record(z.string()).optional(),
+  username: z.string(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type Credential = z.infer<typeof CredentialSchema>;
+
+export const CredentialCreateSchema = z.object({
+  name: z.string().min(1).max(100),
+  type: CredentialTypeSchema,
+  secret: z.string().min(1),
+  metadata: z.record(z.string()).optional(),
+});
+export type CredentialCreate = z.infer<typeof CredentialCreateSchema>;
+
+export const CredentialListItemSchema = CredentialSchema.omit({ username: true });
+export type CredentialListItem = z.infer<typeof CredentialListItemSchema>;
+
 export * from "./schemas/schedules";

@@ -18,7 +18,7 @@ export const AG_UI_INSTRUCTIONS =
   `- render_images: When generating images, drawings, or mockups, use this tool to display them dynamically in a responsive grid in the chat stream.\n` +
   `- render_html: When you produce a complete HTML document (web pages, mockups, dashboards, or any visual HTML output), use this tool to render it directly in the chat as a live interactive preview. Always prefer this over writing HTML to a file and expecting the user to open it manually.\n` +
   `- share_file: When you generate any file artifact that the user should download (PDF reports, Excel spreadsheets, PowerPoint presentations, Word documents, ZIP archives, etc.), use this tool to share it directly in the chat. The user will see a download card and can click to download. Always prefer this over telling the user to manually find the file in the workspace.\n` +
-  `- refresh_ui: Call this tool immediately after creating, updating, or deleting a project/repository, agent, channel, custom skill, or experiment to trigger a reactive refresh of the UI sidebar and lists on the user's interface.\n` +
+  `- refresh_ui: Call this tool immediately after creating, updating, or deleting a project/repository, agent, channel, custom skill, workflow, or experiment to trigger a reactive refresh of the UI sidebar and lists on the user's interface.\n` +
   `- generate_image: Generate a graphic/image from a text description. The image is saved to the workspace and displayed in the chat.\n` +
   `- vision: Analyze local image files (e.g. uploaded screenshots or generated designs) located in the workspace, providing answers to questions about them.\n`;
 
@@ -56,7 +56,7 @@ export const TASK_DELEGATION_INSTRUCTIONS =
 export const WORKFLOW_INSTRUCTIONS =
   `\n\nWorkflow Management & Execution (manage_workflow tool):\n` +
   `You have a manage_workflow tool to create, edit, run, debug, abort, and approve automated workflows.\n` +
-  `- manage_workflow(action: "contract"): Returns the full declarative schema of workflows and step types (agent, if, switch, merge, approval, code).\n` +
+  `- manage_workflow(action: "contract"): Returns the full declarative schema of workflows and step types (agent, if, switch, merge, approval, code, http, variables, webhook).\n` +
   `- manage_workflow(action: "list", scopeType?: string, entityId?: string): Lists available workflows.\n` +
   `- manage_workflow(action: "get", workflowId: "..."): Retrieves a workflow definition.\n` +
   `- manage_workflow(action: "save", definition: {...}): Saves/updates a workflow definition.\n` +
@@ -65,5 +65,6 @@ export const WORKFLOW_INSTRUCTIONS =
   `- manage_workflow(action: "get_run", runId: "..."): Inspects execution status and step outputs/errors for debugging.\n` +
   `- manage_workflow(action: "abort", runId: "..."): Cancels an active workflow execution.\n` +
   `- manage_workflow(action: "approve", runId: "...", stepId: "...", approved: boolean): Resolves a step waiting for human approval.\n` +
+  `- CRITICAL: Immediately after saving, creating, updating, or deleting a workflow via manage_workflow, you MUST call refresh_ui(entityType: "workflow") to trigger a reactive refresh of the UI interface.\n` +
   `When designing or debugging workflows, use action "contract" to inspect supported step fields and action "get_run" to inspect failed step states.\n`;
 

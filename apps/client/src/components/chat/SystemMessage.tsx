@@ -342,43 +342,38 @@ export function ToolApprovalCard({
   const args = msg.args || {};
 
   return (
-    <div className="flex justify-start my-3 w-full">
-      <div className="bg-[#171717] border border-yellow-500/30 border-l-2 border-l-yellow-500 text-text-secondary text-sm rounded-xl px-4 py-3.5 max-w-[85%] sm:max-w-[70%] shadow-lg flex flex-col gap-3">
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-yellow-500 animate-pulse shrink-0" />
-          <span className="text-[10px] font-mono uppercase font-bold tracking-wider text-yellow-500">
-            Security Permission Request
+    <div className="flex justify-start my-2 w-full">
+      <div className="bg-[#171717] border border-yellow-500/30 border-l-2 border-l-yellow-500 text-text-secondary text-sm rounded-xl px-3 py-2.5 max-w-[85%] sm:max-w-[70%] shadow-lg flex flex-col gap-2">
+        <div className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse shrink-0" />
+          <span className="text-[10px] font-mono font-semibold text-yellow-400 bg-yellow-500/10 px-1.5 py-0.5 rounded">
+            {toolName}
+          </span>
+          <span className="text-[10px] font-mono uppercase font-bold tracking-wider text-yellow-500/60">
+            Approval
           </span>
         </div>
 
-        <div className="space-y-1">
-          <h4 className="text-text-primary font-semibold text-sm">
-            Agent wants to run{" "}
-            <code className="font-mono text-xs px-1.5 py-0.5 rounded bg-[#121212] text-yellow-400">
-              {toolName}
-            </code>
-          </h4>
-          <p className="text-xs text-text-secondary leading-relaxed">{reason}</p>
-        </div>
+        <p className="text-[11px] text-text-secondary leading-snug">{reason}</p>
 
         {Object.keys(args).length > 0 && (
-          <div className="p-2.5 bg-[#121212] border border-border/50 rounded-lg text-xs font-mono overflow-x-auto max-w-full text-text-primary">
+          <div className="p-2 bg-[#121212] border border-border/50 rounded-lg text-[11px] font-mono overflow-x-auto max-w-full text-text-primary max-h-20 overflow-y-auto">
             {toolName === "bash" && args.command ? (
-              <pre className="whitespace-pre-wrap break-words text-xs text-green-400">
+              <pre className="whitespace-pre-wrap break-words text-[11px] text-green-400">
                 $ {args.command}
               </pre>
             ) : (
-              <pre className="whitespace-pre-wrap break-words text-xs">
+              <pre className="whitespace-pre-wrap break-words text-[11px]">
                 {JSON.stringify(args, null, 2)}
               </pre>
             )}
           </div>
         )}
 
-        <div className="flex items-center gap-2 mt-1">
+        <div className="flex items-center gap-1.5">
           {settledAction ? (
             <div
-              className={`text-xs font-semibold px-3 py-1.5 rounded-lg border font-mono ${
+              className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg border font-mono ${
                 settledAction === "confirm"
                   ? "bg-green-500/10 text-green-400 border-green-500/20"
                   : "bg-red-500/10 text-red-400 border-red-500/20"
@@ -391,14 +386,14 @@ export function ToolApprovalCard({
               <button
                 type="button"
                 onClick={() => onResolve?.(toolCallId, "confirm")}
-                className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-[#4ade80] text-[#121212] hover:opacity-90 active:scale-95 transition-all cursor-pointer font-sans"
+                className="px-3 py-1 text-[11px] font-semibold rounded-lg bg-[#4ade80] text-[#121212] hover:opacity-90 active:scale-95 transition-all cursor-pointer font-sans"
               >
                 Approve
               </button>
               <button
                 type="button"
                 onClick={() => onResolve?.(toolCallId, "deny")}
-                className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-[#202020] hover:bg-[#2a2a2a] text-text-primary border border-border hover:border-border-hover active:scale-95 transition-all cursor-pointer font-sans"
+                className="px-3 py-1 text-[11px] font-semibold rounded-lg bg-[#202020] hover:bg-[#2a2a2a] text-text-primary border border-border hover:border-border-hover active:scale-95 transition-all cursor-pointer font-sans"
               >
                 Deny
               </button>

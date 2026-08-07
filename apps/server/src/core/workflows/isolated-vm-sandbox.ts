@@ -47,6 +47,35 @@ export class IsolatedVmSandbox implements ICodeSandbox {
           const $inputs = $scope.$inputs || {};
           const $steps = $scope.$steps || {};
           const $run = $scope.$run || {};
+
+          function registerAlias(target, key, val) {
+            if (!target || typeof target !== 'object') return;
+            target[key] = val;
+            const raw = key.startsWith("$") ? key.slice(1) : key;
+            target[raw] = val;
+            target['$' + raw] = val;
+            if (raw.includes("-")) {
+              const snake = raw.replace(/-/g, "_");
+              target[snake] = val;
+              target['$' + snake] = val;
+              const camel = raw.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+              target[camel] = val;
+              target['$' + camel] = val;
+              const prefix = raw.split("-")[0];
+              if (prefix && !(prefix in target)) target[prefix] = val;
+              if (prefix && !('$' + prefix in target)) target['$' + prefix] = val;
+            }
+          }
+
+          for (const [k, v] of Object.entries($scope)) {
+            registerAlias(globalThis, k, v);
+            if (v && typeof v === 'object' && ('outputs' in v || 'status' in v) && !k.startsWith('$')) {
+              registerAlias($steps, k, v);
+            }
+          }
+          for (const [k, v] of Object.entries($steps)) {
+            registerAlias($steps, k, v);
+          }
           
           function __userCode() {
             ${code}
@@ -55,29 +84,60 @@ export class IsolatedVmSandbox implements ICodeSandbox {
           JSON.stringify(__result || {});
         `;
 
-        const script = await isolate.compileScript(scriptCode);
-        const resultJson = await script.run(vmContext, { timeout: timeoutMs });
-        const parsed = JSON.parse(resultJson);
-        return typeof parsed === "object" && parsed !== null
-          ? (parsed as Record<string, unknown>)
-          : { result: parsed };
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        throw new CodeExecutionError(`Isolated VM execution failed: ${msg}`);
-      } finally {
-        isolate.dispose();
+          const script = await isolate.compileScript(scriptCode);
+          const resultJson = await script.run(vmContext, { timeout: timeoutMs });
+          const parsed = JSON.parse(resultJson);
+          return typeof parsed === "object" && parsed !== null
+            ? (parsed as Record<string, unknown>)
+            : { result: parsed };
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : String(err);
+          throw new CodeExecutionError(`Isolated VM execution failed: ${msg}`);
+        } finally {
+          isolate.dispose();
+        }
       }
-    }
     }
 
     const vm = await import("node:vm");
-    const sandbox = {
+    const sandbox: Record<string, unknown> = {
       $scope: context,
       $inputs: context.$inputs || {},
       $steps: context.$steps || {},
       $run: context.$run || {},
       outputs: {} as Record<string, unknown>,
     };
+
+    const registerAlias = (target: Record<string, unknown>, key: string, val: unknown) => {
+      if (!target || typeof target !== "object") return;
+      target[key] = val;
+      const raw = key.startsWith("$") ? key.slice(1) : key;
+      target[raw] = val;
+      target[`$${raw}`] = val;
+      if (raw.includes("-")) {
+        const snake = raw.replace(/-/g, "_");
+        target[snake] = val;
+        target[`$${snake}`] = val;
+        const camel = raw.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+        target[camel] = val;
+        target[`$${camel}`] = val;
+        const prefix = raw.split("-")[0];
+        if (prefix && !(prefix in target)) target[prefix] = val;
+        if (prefix && !(`$${prefix}` in target)) target[`$${prefix}`] = val;
+      }
+    };
+
+    for (const [k, v] of Object.entries(context)) {
+      registerAlias(sandbox, k, v);
+      if (v && typeof v === "object" && ("outputs" in v || "status" in v) && !k.startsWith("$")) {
+        registerAlias(sandbox.$steps as Record<string, unknown>, k, v);
+      }
+    }
+    const stepsObj = (context.$steps || context.steps || {}) as Record<string, unknown>;
+    for (const [k, v] of Object.entries(stepsObj)) {
+      registerAlias(sandbox.$steps as Record<string, unknown>, k, v);
+    }
+
     const vmContext = vm.createContext(sandbox);
 
     const wrappedCode = `
@@ -91,7 +151,7 @@ export class IsolatedVmSandbox implements ICodeSandbox {
       const res = vm.runInContext(wrappedCode, vmContext, { timeout: timeoutMs });
       return typeof res === "object" && res !== null
         ? (res as Record<string, unknown>)
-        : sandbox.outputs;
+        : (sandbox.outputs as Record<string, unknown>);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       throw new CodeExecutionError(`Sandbox execution failed: ${msg}`);

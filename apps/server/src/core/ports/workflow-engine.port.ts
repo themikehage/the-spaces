@@ -1,6 +1,20 @@
 // SPDX-License-Identifier: MIT
 import type { WorkflowDefinition, WorkflowRun, WorkflowRunOptions } from "shared";
 
+export interface IWorkflowSessionBootstrapResult {
+  workflowSessionId: string;
+  cleanup: () => Promise<void>;
+}
+
+export interface IWorkflowSessionBootstrap {
+  bootstrap(
+    username: string,
+    runId: string,
+    workflowId: string,
+    workspaceDir: string,
+  ): Promise<IWorkflowSessionBootstrapResult>;
+}
+
 export interface IWorkflowEngine {
   save(username: string, def: WorkflowDefinition): Promise<WorkflowDefinition>;
   delete(username: string, workflowId: string): Promise<void>;
