@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: MIT
 import { RichMarkdown } from "@/components/chat/RichMarkdown";
-import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { HeaderWithActions } from "@/components/ui/HeaderWithActions";
+import { LoadingState } from "@/components/ui/LoadingState";
 import { useToast } from "@/contexts/ToastContext";
 import { useLiterals } from "@/lib";
 import { skillsService } from "@/lib/api/skills.service";
 import { EntityEventBus } from "@/lib/event-bus";
-import { BookOpen, ChevronLeft, RefreshCw, Search } from "lucide-react";
+import { BookOpen, ChevronLeft, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { literals as u } from "./SkillsPage.literals";
 
@@ -66,7 +69,7 @@ export function SkillsPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [l.loadError]);
 
   useEffect(() => {
     fetchSkills();
@@ -88,60 +91,38 @@ export function SkillsPage() {
 
   return (
     <div className="h-full flex flex-col bg-background text-foreground">
+      <HeaderWithActions
+        title="Skills & Instructions"
+        subtitle="Agent capabilities, instruction files, and tool definitions"
+        icon={BookOpen}
+        count={skills.length}
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder={l.searchPlaceholder}
+        onRefresh={fetchSkills}
+        isRefreshing={loading}
+        secondaryActions={[
+          {
+            label: "Reset Skills",
+            icon: RefreshCw,
+            onClick: handleResetSkills,
+            loading: resetting,
+            title: l.resetTooltip,
+          },
+        ]}
+      />
+
       {error ? (
-        <div className="flex-1 flex items-center justify-center p-4">
-          <div className="max-w-md w-full p-4 bg-card border border-input rounded-lg text-center">
-            <p className="text-destructive text-sm font-semibold mb-2">{l.errorTitle}</p>
-            <p className="text-muted-foreground text-xs mb-4">{error}</p>
-            <Button onClick={fetchSkills} size="sm">
-              Retry
-            </Button>
-          </div>
-        </div>
+        <ErrorState title={l.errorTitle} error={error} onRetry={fetchSkills} />
       ) : loading ? (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-        </div>
+        <LoadingState size="lg" />
       ) : (
         <div className="flex-1 flex min-h-0">
           <div
-            className={`w-full md:w-80 lg:w-96 border-r border-border flex flex-col flex-shrink-0 bg-background ${mobileShowDetails ? "hidden md:flex" : "flex"}`}
+            className={`w-full md:w-80 lg:w-96 border-r border-border flex flex-col flex-shrink-0 bg-background ${
+              mobileShowDetails ? "hidden md:flex" : "flex"
+            }`}
           >
-            <div className="p-3 border-b border-border flex flex-col gap-2">
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <Search
-                    size={16}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
-                  />
-                  <input
-                    type="text"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder={l.searchPlaceholder}
-                    className="w-full pl-9 pr-3 py-2 bg-card border border-input rounded-lg
-                               text-foreground placeholder-text-secondary outline-none
-                               focus:border-primary transition-colors text-xs font-sans"
-                  />
-                </div>
-                <button
-                  onClick={handleResetSkills}
-                  disabled={resetting || loading}
-                  title={l.resetTooltip}
-                  className="p-2 bg-card hover:bg-card-hover border border-input text-muted-foreground hover:text-primary rounded-lg transition-colors flex items-center justify-center flex-shrink-0 cursor-pointer disabled:opacity-50"
-                >
-                  {resetting ? (
-                    <div className="w-3.5 h-3.5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <RefreshCw size={14} />
-                  )}
-                </button>
-              </div>
-              <div className="text-xs text-muted-foreground select-none font-medium px-0.5">
-                {skills.length} {l.skillCount}
-                {skills.length !== 1 ? "s" : ""} loaded
-              </div>
-            </div>
             <div className="flex-1 overflow-y-auto p-2 space-y-1">
               {filteredSkills.map((s, idx) => (
                 <button
@@ -160,15 +141,9 @@ export function SkillsPage() {
                     <span className="font-mono font-bold text-xs truncate max-w-[70%]">
                       {s.name}
                     </span>
-                    <span
-                      className={`text-xs px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider ${
-                        s.scope === "project"
-                          ? "bg-primary/10 text-primary"
-                          : "bg-highlight/10 text-highlight"
-                      }`}
-                    >
+                    <Badge variant={s.scope === "project" ? "primary" : "secondary"} size="xs">
                       {s.scope === "project" ? l.scopeProject : l.scopeUser}
-                    </span>
+                    </Badge>
                   </div>
                   <p className="text-[11px] text-muted-foreground/80 line-clamp-2 leading-relaxed">
                     {s.description}
@@ -182,7 +157,9 @@ export function SkillsPage() {
           </div>
 
           <div
-            className={`flex-1 overflow-y-auto bg-card/10 flex flex-col min-w-0 ${!mobileShowDetails ? "hidden md:flex" : "flex"}`}
+            className={`flex-1 overflow-y-auto bg-card/10 flex flex-col min-w-0 ${
+              !mobileShowDetails ? "hidden md:flex" : "flex"
+            }`}
           >
             {selectedSkill ? (
               <div className="p-4 sm:p-6 max-w-4xl w-full mx-auto space-y-4">
@@ -203,19 +180,11 @@ export function SkillsPage() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <span
-                      className={`text-xs px-2 py-0.5 rounded font-semibold uppercase ${
-                        selectedSkill.scope === "project"
-                          ? "bg-primary/20 text-primary"
-                          : "bg-highlight/20 text-highlight"
-                      }`}
-                    >
+                    <Badge variant={selectedSkill.scope === "project" ? "primary" : "secondary"}>
                       {selectedSkill.scope === "project" ? l.scopeProjectDetail : l.scopeUserDetail}
-                    </span>
+                    </Badge>
                     {selectedSkill.disableModelInvocation && (
-                      <span className="text-xs px-2 py-0.5 rounded font-semibold uppercase bg-warning/20 text-warning">
-                        {l.explicitOnly}
-                      </span>
+                      <Badge variant="warning">{l.explicitOnly}</Badge>
                     )}
                   </div>
                 </div>

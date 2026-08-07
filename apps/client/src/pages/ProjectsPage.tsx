@@ -1,13 +1,18 @@
+// SPDX-License-Identifier: MIT
 import { ProjectCreateModal } from "@/components/projects/ProjectCreateModal";
 import { EntityCustomToolsEditor } from "@/components/settings/EntityCustomToolsEditor";
 import { EntityAvatar } from "@/components/shared/EntityAvatar";
 import { EntitySkillsEditor } from "@/components/shared/EntitySkillsEditor";
-import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { HeaderWithActions } from "@/components/ui/HeaderWithActions";
+import { LoadingState } from "@/components/ui/LoadingState";
+import { IconButton } from "@/components/ui/IconButton";
 import { Modal } from "@/components/ui/Modal";
 import { useLiterals } from "@/lib";
 import { projectsService } from "@/lib/api/projects.service";
 import { EntityEventBus } from "@/lib/event-bus";
-import { Settings2 } from "lucide-react";
+import { Folder, Plus, Settings2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { literals as l } from "./DashboardPage.literals";
 
@@ -93,45 +98,34 @@ export function ProjectsPage({ onNavigate: _onNavigate, onSelectProject }: Props
 
   return (
     <div className="flex-1 flex flex-col h-full bg-background overflow-hidden relative font-sans">
-      <div className="h-14 px-6 border-b border-border flex items-center justify-between flex-shrink-0 bg-card/10">
-        <div>
-          <h1 className="text-sm font-semibold text-foreground tracking-wide Outfit">
-            {literals.title}
-          </h1>
-          <p className="text-[11px] text-muted-foreground hidden sm:block">{literals.subtitle}</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={fetchRepos} size="sm" className="cursor-pointer">
-            Refresh
-          </Button>
-          <Button onClick={() => setShowModal(true)} size="sm" className="cursor-pointer">
-            {literals.newProject}
-          </Button>
-        </div>
-      </div>
+      <HeaderWithActions
+        title={literals.title}
+        subtitle={literals.subtitle}
+        icon={Folder}
+        count={repos.length}
+        onRefresh={fetchRepos}
+        isRefreshing={loading}
+        primaryAction={{
+          label: literals.newProject,
+          icon: Plus,
+          onClick: () => setShowModal(true),
+        }}
+      />
 
       <div className="flex-1 overflow-y-auto p-6">
         {loading ? (
-          <div className="h-full flex items-center justify-center">
-            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          </div>
+          <LoadingState />
         ) : error ? (
-          <div className="h-full flex items-center justify-center text-destructive text-xs font-semibold">
-            {error}
-          </div>
+          <ErrorState error={error} onRetry={fetchRepos} />
         ) : repos.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-muted-foreground text-sm gap-3 pt-20">
-            <div className="w-12 h-12 rounded-2xl bg-card border border-input flex items-center justify-center">
-              <span className="text-primary font-bold text-lg">P</span>
-            </div>
-            <div className="text-center">
-              <p className="font-medium text-foreground text-sm">{literals.emptyTitle}</p>
-              <p className="text-xs text-muted-foreground mt-1">{literals.emptyDescription}</p>
-            </div>
-            <Button onClick={() => setShowModal(true)} size="sm" className="mt-2 cursor-pointer">
-              {literals.emptyButton}
-            </Button>
-          </div>
+          <EmptyState
+            icon={Folder}
+            title={literals.emptyTitle}
+            description={literals.emptyDescription}
+            actionLabel={literals.emptyButton}
+            onAction={() => setShowModal(true)}
+            actionIcon={Plus}
+          />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {repos.map((repo) => (
@@ -166,15 +160,15 @@ export function ProjectsPage({ onNavigate: _onNavigate, onSelectProject }: Props
                   >
                     {literals.open}
                   </button>
-                  <button
+                  <IconButton
+                    icon={Settings2}
+                    variant="solid"
+                    size="sm"
+                    tooltip="Configure Skills & Custom Tools"
                     onClick={() =>
                       setSelectedProjectForConfig({ id: repo.id || repo.name, name: repo.name })
                     }
-                    className="p-1.5 bg-bg hover:bg-card-hover text-muted-foreground hover:text-foreground border border-input rounded-lg transition-all cursor-pointer"
-                    title="Configure Skills & Custom Tools"
-                  >
-                    <Settings2 size={13} />
-                  </button>
+                  />
                 </div>
               </div>
             ))}

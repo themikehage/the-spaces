@@ -2,6 +2,7 @@
 import { EnvVarsTab } from "@/components/settings/EnvVarsTab";
 import { GeneralTab } from "@/components/settings/GeneralTab";
 import { ProvidersTab } from "@/components/settings/ProvidersTab";
+import { TabsNav } from "@/components/ui/TabsNav";
 import { useLiterals } from "@/lib";
 import { envService } from "@/lib/api/env.service";
 import { storage } from "@/lib/storage";
@@ -16,9 +17,9 @@ interface EnvVar {
 
 export function SettingsPage() {
   const l = useLiterals(u);
-  const [activeTab, setActiveTab] = useState<"general" | "providers" | "env" | "mcp">(() => {
-    return (storage.get("settingsActiveTab") as any) || "general";
-  });
+  const [activeTab, setActiveTab] = useState<"general" | "providers" | "env" | "mcp">(
+    () => (storage.get("settingsActiveTab") as any) || "general",
+  );
   const [envVars, setEnvVars] = useState<EnvVar[]>([]);
   const [envLoading, setEnvLoading] = useState(true);
   const [envError, setEnvError] = useState("");
@@ -39,9 +40,10 @@ export function SettingsPage() {
     fetchEnvVars();
   }, [fetchEnvVars]);
 
-  const handleTabChange = (tabId: "general" | "providers" | "env" | "mcp") => {
-    setActiveTab(tabId);
-    storage.set("settingsActiveTab", tabId);
+  const handleTabChange = (tabId: string) => {
+    const valid = tabId as "general" | "providers" | "env" | "mcp";
+    setActiveTab(valid);
+    storage.set("settingsActiveTab", valid);
   };
 
   const tabs = [
@@ -49,34 +51,20 @@ export function SettingsPage() {
     { id: "providers", label: l.tabProviders },
     { id: "env", label: l.tabEnv },
     { id: "mcp", label: l.tabMcp || "MCP Servers" },
-  ] as const;
+  ];
 
   return (
     <div className="h-full flex flex-col bg-background">
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Tab selector */}
-        <div className="max-w-2xl w-full mx-auto px-3 sm:px-6 pt-3 sm:pt-6 flex-shrink-0">
-          <div className="flex border-b border-input/30 mb-6 gap-2 pb-1.5 w-full overflow-x-auto scrollbar-none flex-nowrap">
-            {tabs.map((tab) => {
-              const active = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => handleTabChange(tab.id)}
-                  className={`flex-none px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all whitespace-nowrap cursor-pointer ${
-                    active
-                      ? "text-primary bg-primary/10 border border-primary/25"
-                      : "text-muted-foreground hover:text-foreground hover:bg-card-hover/20 border border-transparent"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
+        <div className="max-w-2xl mx-auto px-3 sm:px-6 pt-3 sm:pt-6 pb-4 flex-shrink-0">
+          <TabsNav
+            tabs={tabs}
+            activeTab={activeTab}
+            onChange={handleTabChange}
+            variant="line"
+          />
         </div>
 
-        {/* Content Area */}
         <div className="flex-1 min-h-0 overflow-y-auto">
           {activeTab === "mcp" ? (
             <MCPMarketplacePage />

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+import { TabsNav } from "@/components/ui/TabsNav";
 import { MCPCard } from "@/components/mcp/MCPCard";
 import { MCPCustomForm } from "@/components/mcp/MCPCustomForm";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
@@ -10,47 +10,28 @@ import type { McpServerConfig } from "shared";
 export function MCPMarketplacePage() {
   const state = useMCPMarketplaceState();
 
+  const handleTabChange = (id: string) => {
+    const tab = id as "gallery" | "custom" | "raw";
+    state.setActiveTab(tab);
+    if (tab === "custom") {
+      state.setIsAddingCustom(false);
+      state.setEditingCustomId(null);
+    }
+  };
+
   return (
     <div className="flex-1 flex flex-col min-h-0 h-full overflow-hidden bg-background text-foreground relative">
-      {/* Navigation tabs */}
       <div className="flex items-center border-b border-border/80 px-6 py-3 flex-shrink-0 bg-card/10">
-        <div className="flex items-center gap-1.5 p-0.5 bg-card/60 rounded-xl border border-input/10">
-          <button
-            onClick={() => state.setActiveTab("gallery")}
-            className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
-              state.activeTab === "gallery"
-                ? "bg-card text-primary shadow-sm border border-primary/20"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {state.l.tabGallery}
-          </button>
-          <button
-            onClick={() => {
-              state.setActiveTab("custom");
-              state.setIsAddingCustom(false);
-              state.setEditingCustomId(null);
-            }}
-            className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
-              state.activeTab === "custom"
-                ? "bg-card text-primary shadow-sm border border-primary/20"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {state.l.tabCustom}
-          </button>
-          <button
-            onClick={() => state.setActiveTab("raw")}
-            className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
-              state.activeTab === "raw"
-                ? "bg-card text-primary shadow-sm border border-primary/20"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Code size={12} className="inline mr-1.5 -mt-0.5" />
-            {state.l.rawEditor}
-          </button>
-        </div>
+        <TabsNav
+          variant="pills"
+          tabs={[
+            { id: "gallery", label: state.l.tabGallery },
+            { id: "custom", label: state.l.tabCustom },
+            { id: "raw", label: state.l.rawEditor, icon: Code },
+          ]}
+          activeTab={state.activeTab}
+          onChange={handleTabChange}
+        />
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 min-h-0">

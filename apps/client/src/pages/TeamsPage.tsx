@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: MIT
 import { TeamCard } from "@/components/teams/TeamCard";
 import { TeamCreateModal } from "@/components/teams/TeamCreateModal";
-import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { HeaderWithActions } from "@/components/ui/HeaderWithActions";
+import { LoadingState } from "@/components/ui/LoadingState";
 import { useAgents } from "@/hooks/useAgents";
 import { useTeams } from "@/hooks/useTeams";
 import { useLiterals } from "@/lib";
 import { buildContextPath } from "@/router/paths";
 import { AnimatePresence, motion } from "framer-motion";
+import { Plus, Users } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { literals as u } from "./TeamsPage.literals";
@@ -28,49 +32,34 @@ export function TeamsPage() {
 
   return (
     <div className="flex-1 flex flex-col h-full bg-background overflow-hidden relative font-sans">
-      <div className="h-14 px-6 border-b border-border flex items-center justify-between flex-shrink-0 bg-card/10">
-        <div>
-          <h1 className="text-sm font-semibold text-foreground tracking-wide Outfit">
-            {l.pageTitle}
-          </h1>
-          <p className="text-[11px] text-muted-foreground hidden sm:block">{l.pageSubtitle}</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={fetchTeams} size="sm" className="cursor-pointer">
-            {l.refresh}
-          </Button>
-          <Button onClick={() => setShowCreateModal(true)} size="sm" className="cursor-pointer">
-            {l.createTeam}
-          </Button>
-        </div>
-      </div>
+      <HeaderWithActions
+        title={l.pageTitle}
+        subtitle={l.pageSubtitle}
+        icon={Users}
+        count={teams.length}
+        onRefresh={fetchTeams}
+        isRefreshing={loading}
+        primaryAction={{
+          label: l.createTeam,
+          icon: Plus,
+          onClick: () => setShowCreateModal(true),
+        }}
+      />
 
       <div className="flex-1 overflow-y-auto p-6">
         {loading ? (
-          <div className="h-full flex items-center justify-center">
-            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          </div>
+          <LoadingState />
         ) : error ? (
-          <div className="h-full flex items-center justify-center text-destructive text-xs font-semibold">
-            {error}
-          </div>
+          <ErrorState error={error} onRetry={fetchTeams} />
         ) : teams.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-muted-foreground text-sm gap-3 pt-20">
-            <div className="w-12 h-12 rounded-2xl bg-card border border-input flex items-center justify-center">
-              <span className="text-primary font-bold text-lg">#</span>
-            </div>
-            <div className="text-center">
-              <p className="font-medium text-foreground text-sm">{l.emptyTitle}</p>
-              <p className="text-xs text-muted-foreground mt-1">{l.emptyDescription}</p>
-            </div>
-            <Button
-              onClick={() => setShowCreateModal(true)}
-              size="sm"
-              className="mt-2 cursor-pointer"
-            >
-              {l.emptyButton}
-            </Button>
-          </div>
+          <EmptyState
+            icon={Users}
+            title={l.emptyTitle}
+            description={l.emptyDescription}
+            actionLabel={l.emptyButton}
+            onAction={() => setShowCreateModal(true)}
+            actionIcon={Plus}
+          />
         ) : (
           <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <AnimatePresence mode="popLayout">

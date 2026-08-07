@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+import { TabsNav } from "@/components/ui/TabsNav";
 import { useLiterals } from "@/lib";
 import { workspaceService } from "@/lib/api/workspace.service";
 import { Check, Download, ExternalLink, File, Maximize } from "lucide-react";
@@ -298,28 +298,17 @@ export function WorkspaceFileEditor({
 
           {/* HTML Tab Switcher */}
           {isHtml && (
-            <div className="flex bg-background rounded p-0.5 border border-border ml-2">
-              <button
-                onClick={() => setActiveTab("code")}
-                className={`px-2 py-0.5 rounded text-xs font-semibold transition-all cursor-pointer ${
-                  activeTab === "code"
-                    ? "bg-surfaceHover text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Code
-              </button>
-              <button
-                onClick={() => setActiveTab("preview")}
-                className={`px-2 py-0.5 rounded text-xs font-semibold transition-all cursor-pointer ${
-                  activeTab === "preview"
-                    ? "bg-surfaceHover text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Preview
-              </button>
-            </div>
+            <TabsNav
+              variant="segmented"
+              size="sm"
+              tabs={[
+                { id: "code", label: "Code" },
+                { id: "preview", label: "Preview" },
+              ]}
+              activeTab={activeTab}
+              onChange={(t) => setActiveTab(t as "code" | "preview")}
+              className="ml-2"
+            />
           )}
         </div>
 

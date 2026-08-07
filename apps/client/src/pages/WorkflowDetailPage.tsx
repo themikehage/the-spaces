@@ -1,4 +1,5 @@
-// SPDX-License-Identifier: MIT
+import { IconButton } from "@/components/ui/IconButton";
+import { LoadingState } from "@/components/ui/LoadingState";
 import { TabsNav } from "@/components/ui/TabsNav";
 import { WorkflowCanvas } from "@/components/workflows/WorkflowCanvas";
 import { WorkflowExecutionsTab } from "@/components/workflows/WorkflowExecutionsTab";
@@ -38,11 +39,7 @@ export const WorkflowDetailPage: React.FC = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex-1 flex items-center justify-center h-full bg-background text-muted-foreground text-xs">
-        Loading Workflow...
-      </div>
-    );
+    return <LoadingState label="Loading Workflow..." />;
   }
 
   if (!selectedWorkflow) {
@@ -51,7 +48,7 @@ export const WorkflowDetailPage: React.FC = () => {
         <p>Workflow not found or deleted.</p>
         <button
           onClick={() => navigate("/workflows")}
-          className="px-3 py-1.5 rounded-lg bg-accent text-foreground hover:bg-accent/80 transition"
+          className="px-3 py-1.5 rounded-lg bg-accent text-foreground hover:bg-accent/80 transition cursor-pointer"
         >
           Back to Workflows
         </button>
@@ -61,36 +58,36 @@ export const WorkflowDetailPage: React.FC = () => {
 
   return (
     <div className="flex-1 flex flex-col h-full bg-background overflow-hidden select-none">
-      {/* First-Level Tabs Bar with Action Icons on the Right */}
       <div className="px-6 bg-card/20 border-b border-border flex items-center justify-between flex-shrink-0">
         <TabsNav tabs={tabs} activeTab={tab} onChange={handleTabChange} />
 
-        <div className="flex items-center gap-1.5 py-2">
+        <div className="flex items-center gap-1.5">
           {tab === "editor" && (
-            <button
-              onClick={actions.handleSaveWorkflow}
+            <IconButton
+              icon={Save}
+              variant="accent"
+              size="sm"
+              loading={isSaving}
               disabled={isSaving || !isDirty}
-              className="p-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground transition disabled:opacity-40 shadow-sm cursor-pointer"
-              title={
+              tooltip={
                 isSaving ? "Saving..." : isDirty ? "Save Workflow (Unsaved changes)" : "Save Workflow"
               }
-            >
-              <Save className="w-4 h-4" />
-            </button>
+              onClick={actions.handleSaveWorkflow}
+            />
           )}
 
-          <button
+          <IconButton
+            icon={Trash2}
+            variant="ghost-destructive"
+            size="sm"
+            tooltip="Delete Workflow"
             onClick={async () => {
               if (confirm("Delete this workflow?")) {
                 await actions.handleDeleteWorkflow(selectedWorkflow.id);
                 navigate("/workflows");
               }
             }}
-            className="p-2 rounded-xl bg-accent hover:bg-destructive/10 text-muted-foreground hover:text-destructive border border-border transition cursor-pointer"
-            title="Delete Workflow"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+          />
         </div>
       </div>
 
@@ -101,7 +98,6 @@ export const WorkflowDetailPage: React.FC = () => {
         </div>
       )}
 
-      {/* Main Tab Content */}
       <div className="flex-1 flex overflow-hidden">
         {tab === "playground" && (
           <WorkflowPlayground
