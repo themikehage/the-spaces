@@ -33,7 +33,6 @@ export interface WorkflowEngineOptions {
   getSessionManager?: () => SessionManager;
   getDelegationRegistry?: () => DelegationRegistry;
   modelRegistry?: ModelRegistry;
-  getModelRegistry?: () => ModelRegistry;
   eventBus?: EventBus;
   workspaceDir?: string;
   getWorkspaceDir?: (username: string, projectId?: string, workflowId?: string) => string;
@@ -57,7 +56,6 @@ export class WorkflowEngine implements IWorkflowEngine {
       if (!sm || !dr) {
         throw new Error("WorkflowEngine requires sessionManager and delegationRegistry");
       }
-      const mr = this.opts.modelRegistry || this.opts.getModelRegistry?.();
       this._stepExecutor = new StepExecutor({
         sessionManager: sm,
         delegationRegistry: dr,
@@ -65,7 +63,7 @@ export class WorkflowEngine implements IWorkflowEngine {
         httpClient: this.opts.httpClient,
         credentialStore: this.opts.credentialStore,
         workflowEngine: this,
-        modelRegistry: mr,
+        modelRegistry: this.opts.modelRegistry,
       });
     }
     return this._stepExecutor;

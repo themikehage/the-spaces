@@ -117,4 +117,38 @@ describe("llm-executor", () => {
 
     expect(state.status).toBe("skipped");
   });
+
+  it("resolves the per-user model registry via sessionManager.userConfig", async () => {
+    const registryReached = new Error("registry reached");
+    const fakeModelRegistry = {
+      getAvailable: () => {
+        throw registryReached;
+      },
+    } as any;
+
+    const executor = new StepExecutor({
+      sessionManager: {
+        userConfig: {
+          getUserContext: (username: string) => {
+            expect(username).toBe(fakeRun.username);
+            return { modelRegistry: fakeModelRegistry };
+          },
+        },
+      } as any,
+      delegationRegistry: {} as any,
+    });
+
+    const step: WorkflowStep = {
+      id: "step_llm_registry",
+      type: "llm",
+      label: "Registry Resolution",
+      llmPrompt: "Test prompt",
+    };
+
+    const state = await executor.execute(step, fakeRun, {}, "/tmp");
+
+    expect(state.status).toBe("error");
+    expect(state.error).toContain("registry reached");
+    expect(state.error).not.toContain("ModelProvider is not available");
+  });
 });

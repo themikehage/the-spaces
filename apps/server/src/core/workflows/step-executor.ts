@@ -39,6 +39,11 @@ export class StepExecutor {
     this.credentialStore = deps.credentialStore ?? credentialStore;
   }
 
+  private resolveModelRegistry(run: WorkflowRun): ModelRegistry | undefined {
+    if (this.deps.modelRegistry) return this.deps.modelRegistry;
+    return this.deps.sessionManager.userConfig?.getUserContext(run.username)?.modelRegistry;
+  }
+
   async execute(
     step: WorkflowStep,
     run: WorkflowRun,
@@ -173,7 +178,7 @@ export class StepExecutor {
               run,
               scope,
               startedAt,
-              { modelRegistry: this.deps.modelRegistry },
+              { modelRegistry: this.resolveModelRegistry(run) },
               stepController.signal,
             );
           default:
