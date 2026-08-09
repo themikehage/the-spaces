@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { getTeamWorkspaceDir } from "shared";
-import { agentRegistry } from "../../agents";
-import { teamStore } from "../../teams/team-store";
-import { sessionManager } from "./session-manager";
+import { createServerContext, type ServerContext } from "../infra/server-context";
+import { teamStore as defaultTeamStore } from "../../teams/team-store";
 import { resolveCanonicalProjectId } from "./workspace-resolver";
 
 export class SessionDomainError extends Error {
@@ -45,6 +44,7 @@ export interface CreateUserSessionInput {
   tools?: string[];
   skills?: string[];
   executionMode?: "readonly" | "standard" | "autonomous";
+  context?: ServerContext;
 }
 
 export interface CreatedSessionDto {
@@ -60,19 +60,26 @@ export interface CreatedSessionDto {
 }
 
 export async function createUserSession(input: CreateUserSessionInput): Promise<CreatedSessionDto> {
-  const { username, name, projectId, agentId, teamId, tools, skills, executionMode } = input;
+  const { username, name, projectId, agentId, teamId, tools, skills, executionMode, context } = input;
+  const serverCtx = context ?? createServerContext();
+  const sessionManager = serverCtx.sessionManager as any;
+  const agentRegistry = serverCtx.agentRegistry;
+  const teamStore = defaultTeamStore;
+
   const newSessionId = crypto.randomUUID();
 
   let ownerAgentId = agentId;
   let workspaceDirOverride: string | undefined;
 
   if (teamId) {
-    const team = teamStore.getTeam(username, teamId);
-    if (!team) {
+    const teamDef = agentRegistry.getTeamDefinition(username, teamId);
+    const legacyTeam = !teamDef ? teamStore.getTeam(username, teamId) : null;
+    if (!teamDef && !legacyTeam) {
       throw new TeamNotFoundError(teamId);
     }
 
-    const leader = team.members.find((member) => member.role === "lead");
+    const members = teamDef?.capabilities?.group?.members || legacyTeam?.members || [];
+    const leader = members.find((member) => member.role === "lead");
     if (!leader) {
       throw new LeaderRequiredError();
     }

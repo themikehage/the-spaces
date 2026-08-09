@@ -5,9 +5,7 @@ import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { readdir } from "node:fs/promises";
 import { join, relative } from "node:path";
 import { getUserDir } from "shared";
-import { agentRegistry } from "../agents";
 import { safeExtractZip } from "../core/backup/safe-zip-extract";
-import { sessionManager } from "../core/session/session-manager";
 import { authMiddleware, getAuthPayload } from "../middleware/auth";
 
 export const backupRouter = new Hono();
@@ -113,6 +111,7 @@ backupRouter.get("/export", async (c) => {
 });
 
 backupRouter.post("/import", async (c) => {
+  const { agentRegistry, sessionManager } = c.get("serverContext");
   const { username } = getAuthPayload(c);
   const mode = c.req.query("mode") === "overwrite" ? "overwrite" : "merge";
 
@@ -126,7 +125,9 @@ backupRouter.post("/import", async (c) => {
 
   try {
     // 1. Safe shutdown of active user sessions
-    await sessionManager.destroyAllSessions(username);
+    if (sessionManager.destroyAllSessions) {
+      await sessionManager.destroyAllSessions(username);
+    }
     sessionManager.userConfig.clearUserContext(username);
 
     // 2. Stop programmatic agents for this user

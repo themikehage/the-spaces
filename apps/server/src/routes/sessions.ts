@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
+import { z } from "zod";
 import { streamSSE } from "hono/streaming";
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -12,13 +13,10 @@ import {
   ToolPermissionsSchema,
   getExecutionMessagesPath,
 } from "shared";
-import { z } from "zod";
-import { sessionManager } from "../core/session/session-manager";
+import { createServerContext } from "../core/infra/server-context";
 import { authMiddleware, getAuthPayload } from "../middleware/auth";
 
 import { getAgentWorkspaceDir, getProjectWorkspaceDir, getTeamWorkspaceDir } from "shared";
-import { agentRegistry } from "../agents";
-import { delegationRegistry } from "../core/delegation/delegation-registry";
 import { broadcastToSession } from "../ws/handler";
 
 const STORAGE_KEY = "spaces-sessions";
@@ -28,6 +26,7 @@ export const sessionsRouter = new Hono();
 sessionsRouter.use("/*", authMiddleware);
 
 sessionsRouter.get("/analytics", async (c) => {
+  const { sessionManager } = c.get("serverContext");
   const { username } = getAuthPayload(c);
   const from = c.req.query("from");
   const to = c.req.query("to");
@@ -172,6 +171,7 @@ sessionsRouter.post(
     }),
   ),
   async (c) => {
+    const { sessionManager } = c.get("serverContext");
     const { action, sessionIds } = c.req.valid("json");
     const { username } = getAuthPayload(c);
 
@@ -199,6 +199,7 @@ sessionsRouter.post(
 );
 
 sessionsRouter.post("/:id/archive", async (c) => {
+  const { sessionManager } = c.get("serverContext");
   const sessionId = c.req.param("id");
   const { username } = getAuthPayload(c);
   if (sessionId.startsWith(SessionPrefix.EXEC)) {
@@ -212,6 +213,7 @@ sessionsRouter.post("/:id/archive", async (c) => {
 });
 
 sessionsRouter.post("/:id/unarchive", async (c) => {
+  const { sessionManager } = c.get("serverContext");
   const sessionId = c.req.param("id");
   const { username } = getAuthPayload(c);
   if (sessionId.startsWith(SessionPrefix.EXEC)) {
@@ -225,6 +227,7 @@ sessionsRouter.post("/:id/unarchive", async (c) => {
 });
 
 sessionsRouter.post("/:id/prompt", zValidator("json", PromptSchema), async (c) => {
+  const { sessionManager } = c.get("serverContext");
   const sessionId = c.req.param("id");
   const { message } = c.req.valid("json");
   const { username } = getAuthPayload(c);
@@ -318,6 +321,7 @@ sessionsRouter.post("/:id/prompt", zValidator("json", PromptSchema), async (c) =
 });
 
 sessionsRouter.post("/:id/prompt/stream", zValidator("json", PromptSchema), async (c) => {
+  const { sessionManager } = c.get("serverContext");
   const sessionId = c.req.param("id");
   const { message } = c.req.valid("json");
   const { username } = getAuthPayload(c);
@@ -421,6 +425,7 @@ sessionsRouter.post("/:id/prompt/stream", zValidator("json", PromptSchema), asyn
 });
 
 sessionsRouter.get("/projects/:projectName/executions", async (c) => {
+  const { sessionManager } = c.get("serverContext");
   const { username } = getAuthPayload(c);
   const projectName = c.req.param("projectName");
 
@@ -445,6 +450,7 @@ sessionsRouter.get("/projects/:projectName/executions", async (c) => {
 });
 
 sessionsRouter.get("/projects/:projectName/executions/:execId", async (c) => {
+  const { sessionManager } = c.get("serverContext");
   const { username } = getAuthPayload(c);
   const projectName = c.req.param("projectName");
   const execId = c.req.param("execId");
@@ -491,6 +497,7 @@ sessionsRouter.get("/projects/:projectName/executions/:execId", async (c) => {
 });
 
 sessionsRouter.get("/:id/messages", async (c) => {
+  const { sessionManager } = c.get("serverContext");
   const sessionId = c.req.param("id");
   const { username } = getAuthPayload(c);
 
@@ -566,7 +573,7 @@ sessionsRouter.get("/:id/messages", async (c) => {
   }
 
   const activeMessages = session.messages;
-  const allEntries = session.sessionManager.getEntries();
+  const allEntries = (session as any).sessionManager.getEntries();
 
   const childrenByParent = new Map<string | null, string[]>();
   for (const entry of allEntries) {
@@ -606,6 +613,7 @@ sessionsRouter.post(
   "/:id/navigate",
   zValidator("json", z.object({ targetId: z.string() })),
   async (c) => {
+    const { sessionManager } = c.get("serverContext");
     const sessionId = c.req.param("id");
     const { targetId } = c.req.valid("json");
     const { username } = getAuthPayload(c);
@@ -617,7 +625,7 @@ sessionsRouter.post(
 
     try {
       const result = await session.navigateTree(targetId, { summarize: false });
-      return c.json({ success: true, editorText: result?.editorText ?? "" });
+      return c.json({ success: true, editorText: (result as any)?.editorText ?? "" });
     } catch (error) {
       return c.json({ success: false, error: String(error) }, 500);
     }
@@ -625,6 +633,7 @@ sessionsRouter.post(
 );
 
 sessionsRouter.post("/:id/abort", async (c) => {
+  const { sessionManager } = c.get("serverContext");
   const sessionId = c.req.param("id");
   const { username } = getAuthPayload(c);
 
@@ -643,6 +652,7 @@ sessionsRouter.post("/:id/abort", async (c) => {
 });
 
 sessionsRouter.delete("/:id", async (c) => {
+  const { sessionManager } = c.get("serverContext");
   const sessionId = c.req.param("id");
   const { username } = getAuthPayload(c);
 
@@ -659,6 +669,7 @@ sessionsRouter.patch(
   "/:id",
   zValidator("json", z.object({ name: z.string().min(1).max(100) })),
   async (c) => {
+    const { sessionManager } = c.get("serverContext");
     const sessionId = c.req.param("id");
     const { name } = c.req.valid("json");
     const { username } = getAuthPayload(c);
@@ -674,6 +685,7 @@ sessionsRouter.patch(
 );
 
 sessionsRouter.post("/:id/model", zValidator("json", ModelSettingsSchema), async (c) => {
+  const { sessionManager } = c.get("serverContext");
   const sessionId = c.req.param("id");
   const { provider, modelId, thinkingLevel } = c.req.valid("json");
   const { username } = getAuthPayload(c);
@@ -752,6 +764,7 @@ sessionsRouter.post("/:id/model", zValidator("json", ModelSettingsSchema), async
 });
 
 sessionsRouter.get("/:id/context", async (c) => {
+  const { sessionManager } = c.get("serverContext");
   const sessionId = c.req.param("id");
   const { username } = getAuthPayload(c);
 
@@ -773,6 +786,7 @@ sessionsRouter.get("/:id/context", async (c) => {
 });
 
 sessionsRouter.get("/:id/skills", async (c) => {
+  const { sessionManager } = c.get("serverContext");
   const sessionId = c.req.param("id");
   const { username } = getAuthPayload(c);
 
@@ -782,8 +796,8 @@ sessionsRouter.get("/:id/skills", async (c) => {
 
   try {
     const session = await sessionManager.getOrCreateSession(username, sessionId);
-    await session.resourceLoader.reload();
-    const { skills, diagnostics } = session.resourceLoader.getSkills();
+    await (session as any).resourceLoader.reload();
+    const { skills, diagnostics } = (session as any).resourceLoader.getSkills();
 
     const skillsWithContent = (skills as any[]).map((skill: any) => {
       let content = "";
@@ -811,6 +825,7 @@ sessionsRouter.get("/:id/skills", async (c) => {
 });
 
 sessionsRouter.post("/:id/tools", zValidator("json", ToolPermissionsSchema), async (c) => {
+  const { sessionManager } = c.get("serverContext");
   const sessionId = c.req.param("id");
   const { tools, executionMode, autonomyLevel } = c.req.valid("json");
   const { username } = getAuthPayload(c);
@@ -931,6 +946,7 @@ sessionsRouter.post("/:id/tools", zValidator("json", ToolPermissionsSchema), asy
 });
 
 function getGatedToolStatus(username: string): Record<string, "available" | "missing_key"> {
+  const { sessionManager } = createServerContext();
   const env = sessionManager.userConfig.getUserEnv(username);
   return {
     exa_search: env.EXA_API_KEY || process.env.EXA_API_KEY ? "available" : "missing_key",
@@ -939,6 +955,7 @@ function getGatedToolStatus(username: string): Record<string, "available" | "mis
 }
 
 sessionsRouter.get("/:id/tools", async (c) => {
+  const { sessionManager, agentRegistry } = c.get("serverContext");
   const sessionId = c.req.param("id");
   const { username } = getAuthPayload(c);
 
@@ -973,6 +990,7 @@ sessionsRouter.get("/:id/tools", async (c) => {
 });
 
 sessionsRouter.get("/:id/export", async (c) => {
+  const { sessionManager } = c.get("serverContext");
   const sessionId = c.req.param("id");
   const { username } = getAuthPayload(c);
   const format = c.req.query("format") || "json";
@@ -1198,6 +1216,7 @@ sessionsRouter.get("/:id/export", async (c) => {
 });
 
 sessionsRouter.get("/:id/tasks", async (c) => {
+  const { sessionManager } = c.get("serverContext");
   const sessionId = c.req.param("id");
   const { username } = getAuthPayload(c);
 
@@ -1218,6 +1237,7 @@ sessionsRouter.get("/:id/tasks", async (c) => {
 });
 
 sessionsRouter.post("/:id/tasks/status", async (c) => {
+  const { sessionManager } = c.get("serverContext");
   const sessionId = c.req.param("id");
   const { username } = getAuthPayload(c);
   try {
@@ -1250,6 +1270,7 @@ sessionsRouter.post("/:id/tasks/status", async (c) => {
 });
 
 sessionsRouter.get("/:parentId/subagents/:subagentId/messages", async (c) => {
+  const { sessionManager } = c.get("serverContext");
   const parentId = c.req.param("parentId");
   const subagentId = c.req.param("subagentId");
   const { username } = getAuthPayload(c);
@@ -1300,6 +1321,7 @@ sessionsRouter.get("/:parentId/subagents/:subagentId/messages", async (c) => {
 });
 
 sessionsRouter.post("/:parentId/subagents/:subagentId/abort", async (c) => {
+  const { sessionManager } = c.get("serverContext");
   const parentId = c.req.param("parentId");
   const subagentId = c.req.param("subagentId");
   const { username } = getAuthPayload(c);
@@ -1318,20 +1340,18 @@ sessionsRouter.post("/:parentId/subagents/:subagentId/abort", async (c) => {
 });
 
 sessionsRouter.get("/:id/delegations", async (c) => {
+  const { delegationRegistry: registry } = c.get("serverContext");
   const sessionId = c.req.param("id");
   const { username } = getAuthPayload(c);
-  const serverCtx = (c as any).get?.("serverContext");
-  const registry = serverCtx?.delegationRegistry || delegationRegistry;
   const list = registry.getAll(username, sessionId);
   return c.json({ delegations: list });
 });
 
 sessionsRouter.get("/:id/delegations/:toolCallId", async (c) => {
+  const { delegationRegistry: registry } = c.get("serverContext");
   const sessionId = c.req.param("id");
   const toolCallId = c.req.param("toolCallId");
   const { username } = getAuthPayload(c);
-  const serverCtx = (c as any).get?.("serverContext");
-  const registry = serverCtx?.delegationRegistry || delegationRegistry;
   const delegation = registry.getByToolCallId(username, sessionId, toolCallId);
   if (!delegation) {
     return c.json({ error: "Delegation not found" }, 404);
@@ -1340,17 +1360,16 @@ sessionsRouter.get("/:id/delegations/:toolCallId", async (c) => {
 });
 
 sessionsRouter.post("/:id/delegations/:toolCallId/abort", async (c) => {
+  const { delegationRegistry: registry } = c.get("serverContext");
   const sessionId = c.req.param("id");
   const toolCallId = c.req.param("toolCallId");
   const { username } = getAuthPayload(c);
-  const serverCtx = (c as any).get?.("serverContext");
-  const registry = serverCtx?.delegationRegistry || delegationRegistry;
 
   const delegation = registry.getByToolCallId(username, sessionId, toolCallId);
   if (!delegation) {
     return c.json({ error: "Delegation not found" }, 404);
   }
 
-  registry.abortAllRecursive(delegation.subagentSessionId);
+  registry.abortAllRecursive((delegation as any).subagentSessionId);
   return c.json({ success: true });
 });

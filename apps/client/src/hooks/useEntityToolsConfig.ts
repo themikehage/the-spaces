@@ -22,10 +22,10 @@ export function useEntityToolsConfig(
   entityId?: string,
   sessionId?: string | null,
 ) {
-  const { resolvedConfig, patchConfig, isLoading } = useEntityConfig(
-    entityType || "global",
-    entityId || "global",
-  );
+  const { resolvedConfig, patchConfig, isLoading } = useEntityConfig({
+    type: (entityType || "global") as any,
+    id: entityId || "global",
+  });
 
   const activeTools: string[] =
     resolvedConfig.toolOverrides?.add && resolvedConfig.toolOverrides.add.length > 0

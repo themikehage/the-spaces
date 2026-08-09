@@ -43,8 +43,10 @@ export function SkillsPopover({
   const [viewingSkill, setViewingSkill] = useState<SkillInfo | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Hook for persistent entity skills if entity context is provided
-  const entitySkills = useEntitySkills(entityType || "global", entityId || "");
+  const entitySkills = useEntitySkills({
+    type: (entityType || "global") as any,
+    id: entityId || "global",
+  });
 
   const useEntityHook = Boolean(entityType && entityId);
 

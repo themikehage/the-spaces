@@ -7,6 +7,7 @@ import type {
   IWorkflowSessionBootstrapResult,
 } from "../ports/workflow-engine.port";
 import { sessionMetadataStore } from "../session/metadata-store";
+import { coreEventBus } from "../infra/event-bus";
 
 export class WorkflowSessionBootstrap implements IWorkflowSessionBootstrap {
   async bootstrap(
@@ -30,7 +31,7 @@ export class WorkflowSessionBootstrap implements IWorkflowSessionBootstrap {
       if (!existing) {
         const workflowDef = (await import("./workflow-store")).workflowStore.get(username, workflowId);
         if (workflowDef) {
-          await agentRegistry.syncWorkflowAgent(username, workflowDef);
+          coreEventBus.emit({ type: "workflow:saved", username, workflowDef });
         }
       }
     } catch (err) {

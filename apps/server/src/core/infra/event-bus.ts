@@ -2,14 +2,28 @@
 import type { IEventBus } from "../ports/event-bus.port";
 import type { AgentSessionEvent } from "../session/agent-session";
 
-export type EventListener<T = unknown> = (evt: T) => void;
+export type EventListener<T = unknown> = (evt: T) => void | Promise<void>;
+
+export type WorkflowSavedEvent = {
+  type: "workflow:saved";
+  username: string;
+  workflowDef: { id: string; name: string; description?: string; systemPrompt?: string };
+};
+
+export type WorkflowDeletedEvent = {
+  type: "workflow:deleted";
+  username: string;
+  workflowId: string;
+};
+
+export type CoreEvent = AgentSessionEvent | WorkflowSavedEvent | WorkflowDeletedEvent;
 
 export class TypedEventEmitter<
-  T extends { type: string } = AgentSessionEvent,
+  T extends { type: string } = CoreEvent,
 > implements IEventBus<T> {
   private listeners: Set<EventListener<T>> = new Set();
 
-  on<K extends T["type"]>(type: K, handler: (event: Extract<T, { type: K }>) => void): () => void;
+  on<K extends T["type"]>(type: K, handler: (event: Extract<T, { type: K }>) => void | Promise<void>): () => void;
   on(handler: EventListener<T>): () => void;
   on(typeOrHandler: string | EventListener<T>, handler?: any): () => void {
     if (typeof typeOrHandler === "function") {
@@ -18,9 +32,9 @@ export class TypedEventEmitter<
 
     const type = typeOrHandler;
     const targetHandler = handler!;
-    const wrapper = (evt: T) => {
+    const wrapper = async (evt: T) => {
       if (evt.type === type) {
-        targetHandler(evt as Extract<T, { type: typeof type }>);
+        await targetHandler(evt as Extract<T, { type: typeof type }>);
       }
     };
     this.listeners.add(wrapper);
@@ -40,10 +54,10 @@ export class TypedEventEmitter<
     this.listeners.delete(listener);
   }
 
-  emit(event: T): void {
+  async emit(event: T): Promise<void> {
     for (const listener of this.listeners) {
       try {
-        listener(event);
+        await listener(event);
       } catch (err) {
         console.error("[TypedEventEmitter] Listener error:", err);
       }
@@ -58,3 +72,6 @@ export class TypedEventEmitter<
     return this.listeners.size;
   }
 }
+
+export const coreEventBus = new TypedEventEmitter<CoreEvent>();
+

@@ -6,7 +6,7 @@ import {
   type UpdateScheduleJob,
 } from "shared";
 import { createUserSession } from "../session/create-user-session";
-import { sessionManager } from "../session/session-manager";
+import { createServerContext } from "../infra/server-context";
 import {
   deleteJob as dbDeleteJob,
   getJob as dbGetJob,
@@ -143,6 +143,7 @@ export class ScheduleService {
   }
 
   private async executeJobRun(job: ScheduleJob, run: ScheduleRun): Promise<void> {
+    const { sessionManager } = createServerContext();
     let createdSessionId: string | null = null;
     try {
       const sessionDto = await createUserSession({
@@ -237,7 +238,7 @@ export class ScheduleService {
       if (createdSessionId && job.preserveSession === false) {
         sessionManager
           .destroySession(job.username, createdSessionId)
-          .catch((e) =>
+          .catch((e: any) =>
             console.error(`[ScheduleService] Error destroying session ${createdSessionId}:`, e),
           );
       }
@@ -245,6 +246,7 @@ export class ScheduleService {
   }
 
   async cancelRun(username: string, jobId: string, runId: string): Promise<boolean> {
+    const { sessionManager } = createServerContext();
     const run = dbGetRun(username, jobId, runId);
     if (!run || run.status !== "running") {
       return false;

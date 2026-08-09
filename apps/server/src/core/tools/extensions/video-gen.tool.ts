@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { sessionManager } from "../../session/session-manager";
+import { createServerContext } from "../../infra/server-context";
 
 export async function runVideoGenModel(
   username: string,
@@ -11,6 +11,7 @@ export async function runVideoGenModel(
   duration: number,
   workspaceDir: string,
 ): Promise<string> {
+  const { sessionManager } = createServerContext();
   const isQwen =
     modelId.includes("wan") || modelId.includes("qwen") || modelId.includes("dashscope");
   const userEnv = sessionManager.userConfig.getUserEnv(username);
@@ -210,6 +211,7 @@ export function createVideoGenTool(workspaceDir: string, username: string) {
       required: ["prompt"],
     },
     execute: async (toolCallId: string, args: any) => {
+      const { sessionManager } = createServerContext();
       const settings = sessionManager.userConfig.getUserSettings(username);
       if (settings.videoGenEnabled === false) {
         return {

@@ -2,7 +2,6 @@
 import { describe, expect, it } from "bun:test";
 import { CascadeConfigLoader, deepMerge, type EntityConfig } from "../core/config";
 import type { WorkspaceConfigPort } from "../core/ports/workspace-config.port";
-import type { ScopeConfigManager } from "../core/scope/scope-config-manager";
 
 describe("deepMerge", () => {
   it("should merge base and override configs correctly", () => {
@@ -43,14 +42,8 @@ describe("CascadeConfigLoader", () => {
       },
     };
 
-    const mockScopeResolver = {
-      getAgentMembership() {
-        return null;
-      },
-    } as unknown as ScopeConfigManager;
-
-    const loader = new CascadeConfigLoader(mockLoader, mockScopeResolver);
-    const config = await loader.load("testuser", { agentId: "agent-123" });
+    const loader = new CascadeConfigLoader(mockLoader);
+    const config = await loader.load("testuser", { type: "custom", id: "agent-123" });
 
     expect(config.defaultModel).toBe("agent-model");
     expect(config.skills).toEqual(["global-skill", "agent-skill"]);

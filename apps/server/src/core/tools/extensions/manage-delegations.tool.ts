@@ -1,5 +1,4 @@
-// SPDX-License-Identifier: MIT
-import { agentRegistry } from "@/agents";
+import { createServerContext, type ServerContext } from "../../infra/server-context";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { SessionPrefix } from "shared";
@@ -20,7 +19,8 @@ import {
 import { AuthStorage } from "../../session/auth-storage";
 import { DefaultResourceLoader } from "../../session/resource-loader";
 import { getSubagentDepth } from "../../session/session-depth";
-import { sessionManager } from "../../session/session-manager";
+import { resolveParentRef } from "../../session/resolve-parent-ref";
+import type { SessionManager } from "../../session/session-manager";
 import { sessionToolFactory } from "../../session/tool-factory";
 import { createBashToolDefinition } from "../base/bash.tool";
 import { createUiTools } from "./ui.tool";
@@ -35,12 +35,13 @@ export interface ManageDelegationsOptions {
   inheritedWorkspaceDir?: string;
   permittedAgentIds?: Set<string>;
   parentModel?: any;
-  delegationRegistry?: typeof delegationRegistry;
-  agentRegistry?: typeof agentRegistry;
-  sessionManager?: typeof sessionManager;
+  delegationRegistry?: any;
+  agentRegistry?: any;
+  sessionManager?: any;
 }
 
 export function createManageDelegationsTool(opts: ManageDelegationsOptions) {
+  const serverCtx = createServerContext();
   const {
     workspaceDir,
     username,
@@ -51,9 +52,9 @@ export function createManageDelegationsTool(opts: ManageDelegationsOptions) {
     inheritedWorkspaceDir,
     permittedAgentIds,
     parentModel,
-    delegationRegistry: activeDelegationRegistry = delegationRegistry,
-    agentRegistry: activeAgentRegistry = agentRegistry,
-    sessionManager: activeSessionManager = sessionManager,
+    delegationRegistry: activeDelegationRegistry = opts.delegationRegistry || serverCtx.delegationRegistry,
+    agentRegistry: activeAgentRegistry = opts.agentRegistry || serverCtx.agentRegistry,
+    sessionManager: activeSessionManager = opts.sessionManager || serverCtx.sessionManager,
   } = opts;
 
   return {
@@ -172,15 +173,9 @@ Use 'delegate' to delegate to a specific target.`,
               ? "autonomous"
               : "standard";
 
-        let parentEntityType = "global";
-        let parentEntityId: string | null = null;
-        if (parentMeta.agentId) {
-          parentEntityType = "agent";
-          parentEntityId = parentMeta.agentId;
-        } else if (parentMeta.projectId || parentMeta.projectName) {
-          parentEntityType = "project";
-          parentEntityId = parentMeta.projectId || parentMeta.projectName;
-        }
+        const parentRef = resolveParentRef(parentMeta);
+        const parentEntityType = parentRef.type;
+        const parentEntityId: string | null = parentRef.id !== "global" ? parentRef.id : null;
 
         const metadata = {
           subagentId: subagentSessionId,
@@ -223,7 +218,7 @@ Use 'delegate' to delegate to a specific target.`,
           },
           outputFilter: (output: string) => {
             const userEnv = activeSessionManager.userConfig.getUserEnv(username);
-            const secrets = Object.values(userEnv).filter(Boolean);
+            const secrets = (Object.values(userEnv).filter(Boolean) as string[]);
             const injectToken = process.env.SPACES_BASH_INJECT_TOKEN !== "0";
             if (injectToken) {
               try {
@@ -359,7 +354,7 @@ Use 'delegate' to delegate to a specific target.`,
               lastText,
             });
           })
-          .catch(async (err) => {
+          .catch(async (err: any) => {
             console.error(`[Subagent Execution Error] ${subagentSessionId}:`, err);
             const envelope = {
               status: "error" as const,

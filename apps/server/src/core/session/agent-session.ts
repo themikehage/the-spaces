@@ -13,7 +13,6 @@ import { HookRunner } from "../infra/hook-runner";
 import { PermissionEngine } from "../infra/permission-engine";
 import { ToolRegistry } from "../infra/tool-registry";
 import type { AvailableModel, ModelRegistry } from "../model/model-registry";
-import type { IAgentRuntime } from "../ports/agent-runtime.port";
 import type { IEventBus } from "../ports/event-bus.port";
 import type { Hook, IHookRunner } from "../ports/hook.port";
 import type { IPermissionEngine } from "../ports/permission.port";
@@ -29,6 +28,8 @@ import { PromptBuilder } from "./prompt-builder-core";
 import type { DefaultResourceLoader } from "./resource-loader";
 import { handleAgentEvent as processAgentEvent } from "./session-event-handler";
 import { calculateSessionStats } from "./session-stats-calculator";
+import type { AgentSessionEvent, IAgentRuntime } from "../ports/agent-runtime.port";
+export type { AgentSessionEvent };
 
 export interface AgentSessionDeps {
   cwd: string;
@@ -49,35 +50,6 @@ export interface AgentSessionDeps {
 }
 
 export type CreateAgentSessionOptions = AgentSessionDeps;
-
-export type AgentSessionEvent =
-  | { type: "agent_start" }
-  | { type: "agent_end"; messages: AgentMessage[]; willRetry: boolean }
-  | { type: "message_start"; message: AgentMessage }
-  | { type: "message_end"; message: AgentMessage }
-  | { type: "message_update"; assistantMessageEvent: any; message: AgentMessage }
-  | {
-      type: "tool_execution_start";
-      toolName: string;
-      args: Record<string, unknown>;
-      toolCallId: string;
-      toolCall: { id: string; name: string; arguments: Record<string, unknown> };
-    }
-  | {
-      type: "tool_execution_end";
-      toolName: string;
-      result: unknown;
-      isError: boolean;
-      toolCallId: string;
-      toolCall: { id: string; name: string };
-    }
-  | {
-      type: "tool_execution_update";
-      toolCallId: string;
-      toolName: string;
-      partialResult: unknown;
-    }
-  | { type: "agent_error"; error: string };
 
 export class AgentSession implements IAgentRuntime {
   cwd: string;

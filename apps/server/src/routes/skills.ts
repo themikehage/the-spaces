@@ -3,13 +3,12 @@ import { Hono } from "hono";
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
-  getAgentWorkspaceDir,
-  getProjectWorkspaceDir,
-  getTeamWorkspaceDir,
   getUserDir,
   getWorkspaceDir,
   getWorkspaceSkillsDir,
+  type AgentType,
 } from "shared";
+import { agentTypeRegistry } from "../core/entities/agent-type-registry";
 import { loadSkills } from "../core/session/load-skills";
 import { getResolvedSkillPaths } from "../core/session/session-manager";
 import { authMiddleware, getAuthPayload } from "../middleware/auth";
@@ -26,9 +25,7 @@ skillsRouter.get("/", async (c) => {
   try {
     let workspaceDir = getWorkspaceDir(username);
     if (entityType && entityId) {
-      if (entityType === "agent") workspaceDir = getAgentWorkspaceDir(username, entityId);
-      else if (entityType === "project") workspaceDir = getProjectWorkspaceDir(username, entityId);
-      else if (entityType === "team") workspaceDir = getTeamWorkspaceDir(username, entityId);
+      workspaceDir = agentTypeRegistry.get(entityType as AgentType).getWorkspaceDir(username, entityId);
     }
 
     const skillPaths = getResolvedSkillPaths(workspaceDir, username);

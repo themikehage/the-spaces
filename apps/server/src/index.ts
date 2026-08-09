@@ -12,6 +12,7 @@ import { createServerContext } from "./core/infra/server-context";
 import { memoryRegistry } from "./core/memory/registry";
 import { globalErrorHandler } from "./core/middleware/error-handler";
 import { requestIdMiddleware } from "./core/middleware/request-id";
+import { serverContextMiddleware } from "./core/middleware/server-context.middleware";
 import { scheduleRunner } from "./core/schedules/index";
 import { sessionMetadataStore } from "./core/session/metadata-store";
 import { handleRequest as previewRequest, startPreviewServer } from "./preview-server";
@@ -78,6 +79,7 @@ const { upgradeWebSocket, websocket } = createBunWebSocket();
 const serverContext = createServerContext();
 const app = new Hono();
 
+app.use("/*", serverContextMiddleware(serverContext));
 app.use("/*", requestIdMiddleware());
 app.use("/*", securityHeadersMiddleware());
 app.use("/*", generalRateLimiter());
@@ -141,7 +143,7 @@ app.get(
   "/ws",
   upgradeWebSocket((c) => {
     const rawHeaders = c.req.raw.headers;
-    const wsContext = createWsContext();
+    const wsContext = createWsContext(serverContext);
     return {
       onOpen: (evt: Event, ws: any) => wsContext.onOpen(evt, ws, rawHeaders),
       onMessage: (evt: any, ws: any) => wsContext.onMessage(evt, ws),

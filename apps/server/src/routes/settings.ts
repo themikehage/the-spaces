@@ -12,7 +12,6 @@ import { join } from "node:path";
 import { getGlobalAgentsMdPath, getUserDir, getWorkspaceDir } from "shared";
 import { getAppConfig } from "../config/app-config";
 import { applyCacheHeaders } from "../core/middleware/cache-headers";
-import { sessionManager } from "../core/session/session-manager";
 import { runImageGenModel } from "../core/tools/extensions/image-gen.tool";
 import { runVideoGenModel } from "../core/tools/extensions/video-gen.tool";
 import { runVisionModel } from "../core/tools/extensions/vision.tool";
@@ -51,6 +50,7 @@ settingsRouter.get("/avatar", async (c) => {
 settingsRouter.use("/*", authMiddleware);
 
 settingsRouter.get("/", (c) => {
+  const { sessionManager } = c.get("serverContext");
   const { username } = getAuthPayload(c);
   const settings = sessionManager.userConfig.getUserSettings(username);
   const appConfig = getAppConfig();
@@ -85,6 +85,7 @@ settingsRouter.get("/", (c) => {
 });
 
 settingsRouter.patch("/", async (c) => {
+  const { sessionManager } = c.get("serverContext");
   const { username } = getAuthPayload(c);
   try {
     const body = await c.req.json<{
@@ -202,6 +203,7 @@ settingsRouter.post("/avatar", async (c) => {
   const buffer = await file.arrayBuffer();
   writeFileSync(avatarPath, Buffer.from(buffer));
 
+  const { sessionManager } = c.get("serverContext");
   const avatarUrl = `/api/settings/avatar`;
   sessionManager.userConfig.saveUserSettings(username, { factoryAvatarUrl: avatarUrl });
 
@@ -209,6 +211,7 @@ settingsRouter.post("/avatar", async (c) => {
 });
 
 settingsRouter.delete("/avatar", async (c) => {
+  const { sessionManager } = c.get("serverContext");
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
 
@@ -259,6 +262,7 @@ settingsRouter.post("/test-vision", async (c) => {
 });
 
 settingsRouter.post("/test-image-gen", async (c) => {
+  const { sessionManager } = c.get("serverContext");
   const { username } = getAuthPayload(c);
   try {
     const body = await c.req.json<{
@@ -300,6 +304,7 @@ settingsRouter.post("/test-image-gen", async (c) => {
 });
 
 settingsRouter.post("/test-video-gen", async (c) => {
+  const { sessionManager } = c.get("serverContext");
   const { username } = getAuthPayload(c);
   try {
     const body = await c.req.json<{

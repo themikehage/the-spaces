@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: MIT
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
-import { CreateSessionSchema } from "shared";
-import { sessionManager } from "../../core/session/session-manager";
+import { CreateSessionSchema, type AgentRef } from "shared";
 import { authMiddleware, getAuthPayload } from "../../middleware/auth";
-
 import { createUserSession, SessionDomainError } from "../../core/session/create-user-session";
 
 export const sessionCrudRouter = new Hono();
@@ -12,6 +10,7 @@ export const sessionCrudRouter = new Hono();
 sessionCrudRouter.use("/*", authMiddleware);
 
 sessionCrudRouter.get("/", async (c) => {
+  const { sessionManager } = c.get("serverContext");
   const { username } = getAuthPayload(c);
   const search = c.req.query("search");
   const agentId = c.req.query("agentId");
@@ -56,6 +55,7 @@ sessionCrudRouter.get("/", async (c) => {
 });
 
 sessionCrudRouter.get("/statuses", async (c) => {
+  const { sessionManager } = c.get("serverContext");
   const { username } = getAuthPayload(c);
   const statuses = sessionManager.getLiveStatuses(username);
   return c.json({ statuses });
@@ -87,6 +87,7 @@ sessionCrudRouter.post("/", zValidator("json", CreateSessionSchema), async (c) =
 });
 
 sessionCrudRouter.delete("/:id", async (c) => {
+  const { sessionManager } = c.get("serverContext");
   const { username } = getAuthPayload(c);
   const id = c.req.param("id");
   await sessionManager.destroySession(username, id);
@@ -100,10 +101,14 @@ sessionCrudRouter.get("/:id/config", async (c) => {
   const { cascadeConfigLoader } = await import("../../core/config");
 
   const meta = sessionMetadataStore.getSessionMetadata(username, id);
-  const resolved = await cascadeConfigLoader.load(username, {
-    agentId: meta?.agentId,
-    projectId: meta?.projectId,
-    teamId: meta?.teamId,
-  });
+  const ref: AgentRef = meta?.agentId
+    ? { type: "custom", id: meta.agentId }
+    : meta?.teamId
+      ? { type: "team", id: meta.teamId }
+      : meta?.projectId
+        ? { type: "project", id: meta.projectId }
+        : { type: "global", id: "global" };
+
+  const resolved = await cascadeConfigLoader.load(username, ref);
   return c.json(resolved);
 });

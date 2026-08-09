@@ -1,5 +1,4 @@
-// SPDX-License-Identifier: MIT
-import { sessionManager } from "../../session/session-manager";
+import { createServerContext } from "../../infra/server-context";
 
 export interface ExaSearchOptions {
   username: string;
@@ -245,6 +244,7 @@ export function createExaSearchTool(opts: ExaSearchOptions) {
 
 function getExaApiKey(username: string): string | null {
   try {
+    const { sessionManager } = createServerContext();
     const env = sessionManager.userConfig.getUserEnv(username);
     if (env.EXA_API_KEY) return env.EXA_API_KEY;
   } catch {

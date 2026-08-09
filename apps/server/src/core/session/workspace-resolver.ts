@@ -14,7 +14,7 @@ import {
   SessionPrefix,
 } from "shared";
 import { DEFAULT_AGENTS_MD, DEFAULT_FACTORY_SKILLS } from "../prompts/default-factory-skills";
-import { scopeConfigManager } from "../scope";
+import { resolveEntityParent } from "../config/entity-membership";
 import { sessionMetadataStore } from "./metadata-store";
 import { userConfigManager } from "./user-config";
 
@@ -256,9 +256,9 @@ export function resolveSessionWorkspace(
   let resolvedProjectId = projectId;
   if (!resolvedProjectId && agentId) {
     try {
-      const membership = scopeConfigManager.getAgentMembership(username, agentId);
-      if (membership?.type === "project") {
-        resolvedProjectId = membership.id;
+      const parent = resolveEntityParent(username, agentId);
+      if (parent?.type === "project") {
+        resolvedProjectId = parent.id;
       }
     } catch (e) {
       console.error("[resolveSessionWorkspace] Failed to check agent membership:", e);
@@ -302,9 +302,9 @@ export function resolveSessionAllowedWriteDir(username: string, sessionId: strin
   let resolvedProjectId = metadata.projectId ?? metadata.projectName;
   if (!resolvedProjectId && metadata.agentId) {
     try {
-      const membership = scopeConfigManager.getAgentMembership(username, metadata.agentId);
-      if (membership?.type === "project") {
-        resolvedProjectId = membership.id;
+      const parent = resolveEntityParent(username, metadata.agentId);
+      if (parent?.type === "project") {
+        resolvedProjectId = parent.id;
       }
     } catch {
       /* noop */

@@ -127,9 +127,9 @@ export function useEntityCustomTools(entityType: EntityType, entityId?: string) 
     } else if (entityType === "team") {
       if (!entityId) return false;
       target = { type: "team", id: entityId };
-    } else if (entityType === "agent") {
+    } else if (entityType === "agent" || (entityType as string) === "custom") {
       if (!entityId) return false;
-      target = { type: "agent", id: entityId };
+      target = { type: "custom", id: entityId };
     } else {
       return false;
     }

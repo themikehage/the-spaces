@@ -9,8 +9,7 @@ import {
   getWorkspaceSkillsDir,
 } from "shared";
 import { loadSkills } from "../..";
-import { agentRegistry } from "../../../agents";
-import { sessionManager } from "../../session/session-manager";
+import { createServerContext, type ServerContext } from "../../infra/server-context";
 import { FACTORY_CONTRACTS } from "./factory-contracts";
 
 export interface FactoryToolOptions {
@@ -100,6 +99,7 @@ function err(text: string) {
 }
 
 async function handleAgents(action: string, id: string | undefined, params: any, username: string) {
+  const { agentRegistry } = createServerContext();
   if (action === "get") {
     if (id) {
       const entry = agentRegistry.get(id, username);
@@ -382,6 +382,7 @@ async function handleSessions(
   _params: any,
   username: string,
 ) {
+  const { sessionManager } = createServerContext();
   if (action === "get") {
     if (id) {
       const meta = sessionManager.metadataStore.getSessionMetadata(username, id);
@@ -413,6 +414,7 @@ async function handleSessions(
 }
 
 async function handleEnv(action: string, key: string | undefined, params: any, username: string) {
+  const { sessionManager } = createServerContext();
   if (action === "get") {
     if (key) {
       const userEnv = sessionManager.userConfig.getUserEnv(username);
@@ -451,6 +453,7 @@ async function handleProviders(
   params: any,
   username: string,
 ) {
+  const { sessionManager } = createServerContext();
   const { modelRegistry, authStorage } = sessionManager.userConfig.getUserContext(username);
 
   if (action === "get") {
@@ -521,6 +524,7 @@ function getTargetSkillsDir(
 
   if (parentSessionId) {
     try {
+      const { sessionManager } = createServerContext();
       const meta = sessionManager.metadataStore.getSessionMetadata(username, parentSessionId);
       if (meta) {
         let entityDir: string | null = null;
@@ -613,6 +617,7 @@ async function handleSkills(
 }
 
 async function handleTeams(action: string, id: string | undefined, params: any, username: string) {
+  const { sessionManager } = createServerContext();
   const { teamStore, teamOrchestrator } = await import("../../../teams");
 
   if (action === "get") {
@@ -665,7 +670,7 @@ async function handleTeams(action: string, id: string | undefined, params: any, 
 
     try {
       const sessions = await sessionManager.listSessions(username).catch(() => []);
-      for (const session of sessions.filter((item) => item.teamId === id)) {
+      for (const session of sessions.filter((item: any) => item.teamId === id)) {
         await sessionManager.destroySession(username, session.id).catch(() => {});
       }
     } catch {
@@ -701,7 +706,7 @@ async function handleTeams(action: string, id: string | undefined, params: any, 
           workspaceDir: getTeamWorkspaceDir(username, team.id),
         },
       );
-      session.prompt(message).catch((err) => {
+      session.prompt(message).catch((err: any) => {
         console.error(`[manage_factory] Persistent session prompt error:`, err);
       });
     } else {
@@ -752,6 +757,7 @@ async function handleSettings(
   params: any,
   username: string,
 ) {
+  const { sessionManager } = createServerContext();
   if (action === "get") {
     const settings = sessionManager.userConfig.getUserSettings(username);
     return ok(JSON.stringify(settings, null, 2), { entity: "settings", data: settings });

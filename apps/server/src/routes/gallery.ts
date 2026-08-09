@@ -3,7 +3,6 @@ import { Hono } from "hono";
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { getAgentDir, getWorkspaceSkillsDir } from "shared";
-import { agentRegistry } from "../agents";
 import { getUsername } from "../lib/auth-helpers";
 import { authMiddleware } from "../middleware/auth";
 
@@ -73,6 +72,7 @@ galleryRouter.get("/blueprints/:id/icon", (c) => {
 });
 
 galleryRouter.post("/blueprints/:id/install", async (c) => {
+  const { agentRegistry } = c.get("serverContext");
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
 

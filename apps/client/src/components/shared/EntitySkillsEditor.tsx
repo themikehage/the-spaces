@@ -22,7 +22,7 @@ export function EntitySkillsEditor({ entityType, entityId, title }: Props) {
     error,
     toggleSkill,
     refresh,
-  } = useEntitySkills(entityType, entityId);
+  } = useEntitySkills({ type: entityType as any, id: entityId });
 
   const [viewingSkill, setViewingSkill] = useState<SkillInfo | null>(null);
 

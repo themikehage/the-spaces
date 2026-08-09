@@ -3,15 +3,15 @@ import type { IAgentRuntime } from "./agent-runtime.port";
 
 export interface SessionOverrides {
   model?: { provider: string; modelId: string };
-  resourceLoader?: any;
-  customTools?: any[];
+  resourceLoader?: unknown;
+  customTools?: unknown[];
   workspaceDir?: string;
   skipMcpTools?: boolean;
   skipMemory?: boolean;
 }
 
 export interface ISessionManager {
-  getSession?(username: string, sessionId: string): IAgentRuntime | null;
+  getSession(username: string, sessionId: string): IAgentRuntime | null;
   getOrCreateSession(
     username: string,
     sessionId: string,
@@ -20,30 +20,35 @@ export interface ISessionManager {
     overrides?: SessionOverrides,
   ): Promise<IAgentRuntime>;
   destroySession(username: string, sessionId: string): Promise<void>;
+  destroyAllSessions?(username?: string): Promise<void>;
+  listSessions(username: string, query?: any): Promise<any[]>;
+  getLiveStatuses(username: string): Record<string, "streaming" | "active" | "sleeping">;
+  userConfig: any;
+  metadataStore: any;
 }
 
 export interface IMcpRegistry {
-  getSessionMcpTools(username: string, sessionId: string, workspaceDir?: string): Promise<any[]>;
+  getSessionMcpTools(username: string, sessionId: string, workspaceDir?: string): Promise<unknown[]>;
   loadMcpToolsForUserSession?(
     username: string,
     sessionId: string,
     workspaceDir: string,
-  ): Promise<any[]>;
+  ): Promise<unknown[]>;
   stopAll(): void;
 }
 
 export interface IDelegationRegistry {
-  onEvent(listener: (username: string, event: any) => void): () => void;
-  register(username: string, parentSessionId: string, d: any, abortFn: () => void): void;
+  onEvent(listener: (username: string, event: unknown) => void): () => void;
+  register(username: string, parentSessionId: string, d: unknown, abortFn: () => void): void;
   complete(
     username: string,
     parentSessionId: string,
     toolCallId: string,
-    status: any,
-    result: any,
+    status: unknown,
+    result: unknown,
   ): void;
-  getAll(username: string, parentSessionId: string): any[];
-  getByToolCallId(username: string, parentSessionId: string, toolCallId: string): any;
+  getAll(username: string, parentSessionId: string): unknown[];
+  getByToolCallId(username: string, parentSessionId: string, toolCallId: string): unknown;
   abortAllRecursive(rootSessionId: string): void;
   abortAll?(parentSessionId: string): void;
 }
@@ -53,7 +58,7 @@ export interface IMemoryRegistry {
 }
 
 export interface IUiApprovalRegistry {
-  register(toolCallId: string): Promise<any>;
-  resolve(toolCallId: string, result: any): boolean;
-  reject(toolCallId: string, error: any): boolean;
+  register(toolCallId: string): Promise<unknown>;
+  resolve(toolCallId: string, result: unknown): boolean;
+  reject(toolCallId: string, error: unknown): boolean;
 }

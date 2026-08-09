@@ -1,6 +1,5 @@
-// SPDX-License-Identifier: MIT
 import type { SearchResult } from "shared";
-import { sessionManager } from "../../../session/session-manager";
+import { createServerContext } from "../../../infra/server-context";
 
 export interface ISearchProvider {
   readonly name: string;
@@ -198,6 +197,7 @@ export class SearchProviderChain {
 
 function getExaApiKey(username: string): string | null {
   try {
+    const { sessionManager } = createServerContext();
     const env = sessionManager.userConfig.getUserEnv(username);
     if (env.EXA_API_KEY) return env.EXA_API_KEY;
   } catch {
@@ -208,6 +208,7 @@ function getExaApiKey(username: string): string | null {
 
 function getSearxngUrl(username: string): string | null {
   try {
+    const { sessionManager } = createServerContext();
     const env = sessionManager.userConfig.getUserEnv(username);
     if (env.SEARXNG_URL) return env.SEARXNG_URL;
   } catch {

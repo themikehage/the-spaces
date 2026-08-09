@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 import { Hono } from "hono";
-import { sessionManager } from "../core/session/session-manager";
 import { authMiddleware, getAuthPayload } from "../middleware/auth";
 
 import { IMAGE_MODELS } from "../vendor/ai/src/image-models.generated.ts";
@@ -101,6 +100,7 @@ const QWEN_IMAGE_MODELS = [
 ];
 
 modelsRouter.get("/images", authMiddleware, (c) => {
+  const { sessionManager } = c.get("serverContext");
   const { username } = getAuthPayload(c);
   const { authStorage } = sessionManager.userConfig.getUserContext(username);
   const userEnv = sessionManager.userConfig.getUserEnv(username);
@@ -145,6 +145,7 @@ modelsRouter.get("/images", authMiddleware, (c) => {
 });
 
 modelsRouter.get("/videos", authMiddleware, async (c) => {
+  const { sessionManager } = c.get("serverContext");
   const { username } = getAuthPayload(c);
   const { authStorage } = sessionManager.userConfig.getUserContext(username);
   const userEnv = sessionManager.userConfig.getUserEnv(username);
@@ -189,12 +190,13 @@ modelsRouter.get("/videos", authMiddleware, async (c) => {
 });
 
 modelsRouter.get("/", authMiddleware, (c) => {
+  const { sessionManager } = c.get("serverContext");
   const { username } = getAuthPayload(c);
   const { modelRegistry } = sessionManager.userConfig.getUserContext(username);
 
   const available = modelRegistry.getAvailable();
 
-  const models = available.map((m) => ({
+  const models = available.map((m: any) => ({
     id: m.id,
     name: m.name,
     provider: m.provider as string,

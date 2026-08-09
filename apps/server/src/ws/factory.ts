@@ -9,9 +9,9 @@ import {
   getSessionMetadataPath,
 } from "shared";
 import { approvalManager } from "../core/approvals/approval-manager";
-import { uiApprovalRegistry } from "../core/approvals/ui-approval-registry";
+import { createServerContext, type ServerContext } from "../core/infra/server-context";
+import type { ISessionManager } from "../core/ports/core-services.port";
 import { ensureWatcher, setBuilding, setError, setReady } from "../core/preview/preview-watcher";
-import { sessionManager } from "../core/session/session-manager";
 import {
   resolveUsernameFromCookieHeader,
   resolveUsernameFromToken,
@@ -47,6 +47,7 @@ async function subscribeWsToSession(
   ws: WSContext,
   user: AuthPayload,
   sessionId: string,
+  sessionManager: ISessionManager,
 ): Promise<void> {
   if (sessionId.startsWith(SessionPrefix.EXEC)) {
     return;
@@ -208,7 +209,10 @@ export interface WsConnectionContext {
   getId: () => string;
 }
 
-export function createWsContext(): WsConnectionContext {
+export function createWsContext(serverContext?: ServerContext): WsConnectionContext {
+  const ctx = serverContext ?? createServerContext();
+  const sessionManager = ctx.sessionManager;
+  const uiApprovalRegistry = ctx.uiApprovalRegistry;
   const id = crypto.randomUUID();
 
   const onOpen = async (_evt: Event, ws: WSContext, rawHeaders?: Headers | null) => {
@@ -345,7 +349,7 @@ export function createWsContext(): WsConnectionContext {
           const sessionId = data.sessionId as string;
           if (sessionId) {
             wsLogger.info(`Auto-subscribing to sessionId: ${sessionId}`, { wsId: id });
-            await subscribeWsToSession(id, ws, user, sessionId);
+            await subscribeWsToSession(id, ws, user, sessionId, sessionManager);
           }
 
           safeSend(
@@ -385,7 +389,7 @@ export function createWsContext(): WsConnectionContext {
           wsId: id,
           username: user.username,
         });
-        await subscribeWsToSession(id, ws, user, sessionId);
+        await subscribeWsToSession(id, ws, user, sessionId, sessionManager);
         safeSend(ws, JSON.stringify({ type: "session_subscribed", sessionId }));
         return;
       }
@@ -434,7 +438,7 @@ export function createWsContext(): WsConnectionContext {
           const existingMeta = wsRegistry.getMeta(id);
           if (!existingMeta?.sessionId || existingMeta.sessionId !== sessionId) {
             wsLogger.info(`Auto-subscribing on prompt session=${sessionId}`, { wsId: id });
-            await subscribeWsToSession(id, ws, user, sessionId);
+            await subscribeWsToSession(id, ws, user, sessionId, sessionManager);
           }
         } catch (e) {
           wsLogger.error("Failed to auto-subscribe on prompt", { wsId: id, error: e });

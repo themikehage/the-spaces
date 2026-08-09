@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { AVAILABLE_TOOLS } from "shared";
 import { sessionMetadataStore } from "../session/metadata-store";
-import { sessionManager } from "../session/session-manager";
+import { createServerContext } from "../infra/server-context";
 import { userPermissionStore } from "./user-permission-store";
 
 export interface ToolPermissionRule {
@@ -138,6 +138,7 @@ export function buildSubagentRules(
 
   // 2. Parent constraints
   if (parentSessionId) {
+    const { sessionManager } = createServerContext();
     const parentSession = sessionManager.getSession(username, parentSessionId);
     const parentTools = parentSession
       ? parentSession.getActiveToolNames()

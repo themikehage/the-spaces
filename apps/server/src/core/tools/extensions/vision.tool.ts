@@ -2,7 +2,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { complete } from "../../../vendor/ai/src/compat.ts";
-import { sessionManager } from "../../session/session-manager";
+import { createServerContext } from "../../infra/server-context";
 
 export async function runVisionModel(
   username: string,
@@ -11,10 +11,11 @@ export async function runVisionModel(
   base64Data: string,
   mimeType: string,
 ): Promise<string> {
+  const { sessionManager } = createServerContext();
   const { modelRegistry } = sessionManager.userConfig.getUserContext(username);
   const available = modelRegistry.getAvailable();
   const visionModel = available.find(
-    (m) => `${m.provider}/${m.id}` === modelId || m.id === modelId,
+    (m: any) => `${m.provider}/${m.id}` === modelId || m.id === modelId,
   );
 
   if (!visionModel) {
@@ -90,6 +91,7 @@ export function createVisionTool(workspaceDir: string, username: string) {
       required: ["imagePath", "prompt"],
     },
     execute: async (toolCallId: string, args: any) => {
+      const { sessionManager } = createServerContext();
       const settings = sessionManager.userConfig.getUserSettings(username);
       const modelId = settings.visionModel;
 

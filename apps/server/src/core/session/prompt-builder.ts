@@ -9,9 +9,13 @@ import {
   getWorkspaceDir,
   SessionPrefix,
 } from "shared";
+import { agentRegistry } from "../../agents/agent-registry";
+import { teamStore } from "../../teams/team-store";
 import { loadSkills } from "..";
 import type { EntityConfig } from "../config";
 import { CUSTOM_TOOL_INSTRUCTIONS } from "../custom-tools";
+import { agentTypeRegistry } from "../entities/agent-type-registry";
+import type { AgentRef } from "../ports/agent-type-registry.port";
 import { promptComposer } from "../prompts/composer";
 import { DEFAULT_AGENTS_MD } from "../prompts/default-factory-skills";
 import { buildProjectContextPrompt } from "../prompts/project-context";
@@ -120,7 +124,6 @@ export class SessionPromptBuilder {
               const { assignment } = projectMeta;
               if (assignment.leaderId) {
                 try {
-                  const { agentRegistry } = await import("../../agents");
                   const leaderEntry = agentRegistry.get(assignment.leaderId, username);
                   if (leaderEntry?.server.definition.systemPrompt) {
                     appendPrompts.push(
@@ -188,7 +191,6 @@ export class SessionPromptBuilder {
         teamId = sessionId.slice(SessionPrefix.TEAM.length);
       }
       if (teamId) {
-        const { teamStore } = await import("../../teams/team-store");
         const team = teamStore.getTeam(username, teamId);
         if (team && team.context && team.context.length > 0) {
           const contextSnippet =
@@ -270,8 +272,6 @@ export class SessionPromptBuilder {
       const meta = sessionMetadataStore.getSessionMetadata(username, sessionId);
 
       if (meta?.teamId) {
-        const { teamStore } = await import("../../teams/team-store");
-        const { agentRegistry } = await import("../../agents");
         const team = teamStore.getTeam(username, meta.teamId);
         const ownerId = params.resolvedAgentId || "";
         if (
@@ -307,7 +307,8 @@ export class SessionPromptBuilder {
 
   async previewSystemPrompt(params: {
     username: string;
-    entityType: "global" | "agent" | "project" | "team" | "subagent";
+    agentRef?: AgentRef;
+    entityType?: string;
     agentId?: string;
     projectId?: string;
     teamId?: string;
@@ -318,7 +319,10 @@ export class SessionPromptBuilder {
     estimatedTokens: number;
   }> {
     const { username, entityType, agentId, projectId, teamId, subagentId } = params;
-    const settings = userConfig.getUserSettings(username);
+    const ref: AgentRef = params.agentRef || {
+      type: (entityType as any) || "global",
+      id: agentId || subagentId || projectId || teamId || "global",
+    };
     const workspaceDir = getWorkspaceDir(username);
     const sections: Array<{ title: string; content: string }> = [];
 
@@ -340,28 +344,17 @@ export class SessionPromptBuilder {
       console.error("[PromptBuilder] Failed to read AGENTS.md for preview:", e);
     }
 
-    // 2. Agent Specific Persona (if agent or subagent)
-    const targetAgentId = agentId || subagentId;
-    let agentDef: any = null;
-    if (targetAgentId) {
-      try {
-        const { agentRegistry } = await import("../../agents");
-        const entry = agentRegistry.get(targetAgentId, username);
-        if (entry?.server?.definition) {
-          agentDef = entry.server.definition;
-          let promptContent = agentDef.systemPrompt || "";
-          const agentMdPath = getAgentAgentsMdPath(username, targetAgentId);
-          if (existsSync(agentMdPath)) {
-            promptContent = readFileSync(agentMdPath, "utf-8");
-          }
-          sections.push({
-            title: `Agent Specific Persona (${agentDef.name || targetAgentId})`,
-            content: promptContent || "No custom system prompt defined.",
-          });
+    // 2. Type-Specific Persona / Strategy Section (Polymorphic Delegation)
+    try {
+      const strategy = agentTypeRegistry.get(ref.type);
+      if (strategy.buildPromptSection) {
+        const section = await strategy.buildPromptSection(ref, username);
+        if (section) {
+          sections.push(section);
         }
-      } catch (e) {
-        console.error("[PromptBuilder] Failed to load preview agent persona:", e);
       }
+    } catch (e) {
+      console.error("[PromptBuilder] Failed to load strategy prompt section:", e);
     }
 
     // 3. Standard Spaces Platform Protocols
@@ -378,110 +371,6 @@ export class SessionPromptBuilder {
       title: "Standard Spaces Platform Protocols",
       content: platformProtocols,
     });
-
-    // 4. Project Context
-    const targetProjectId = projectId;
-    if (targetProjectId) {
-      try {
-        const projectDir = resolveProjectDir(username, targetProjectId);
-        if (projectDir) {
-          const projectJsonPath = join(projectDir, "project.json");
-          if (existsSync(projectJsonPath)) {
-            const projectMeta = JSON.parse(readFileSync(projectJsonPath, "utf-8"));
-            const { getPreviewState } = await import("../preview/preview-watcher");
-            const previewState = getPreviewState(username, projectMeta.name);
-            const previewUrl = `/api/preview/${encodeURIComponent(username)}/${encodeURIComponent(projectMeta.name)}/index.html`;
-
-            const projectPrompt = buildProjectContextPrompt({
-              projectId: projectMeta.id,
-              projectName: projectMeta.name,
-              projectDir,
-              cloneUrl: projectMeta.cloneUrl,
-              previewState,
-              previewUrl,
-            });
-
-            let projectContextFull = projectPrompt;
-
-            const projectAgentsMd = getProjectAgentsMdPath(username, targetProjectId);
-            if (existsSync(projectAgentsMd)) {
-              projectContextFull +=
-                `\n\n## Project Directives (.spaces/AGENTS.md)\n` +
-                readFileSync(projectAgentsMd, "utf-8");
-            }
-
-            if (projectMeta.assignment) {
-              const { assignment } = projectMeta;
-              if (assignment.leaderId) {
-                try {
-                  const { agentRegistry } = await import("../../agents");
-                  const leaderEntry = agentRegistry.get(assignment.leaderId, username);
-                  if (leaderEntry?.server.definition.systemPrompt) {
-                    projectContextFull +=
-                      `\n\n## Project Lead Agent Persona & Directives\n` +
-                      `This project has an assigned Lead Agent (${leaderEntry.server.definition.name || assignment.leaderId}). Incorporate the following lead instructions into your reasoning and execution:\n\n` +
-                      leaderEntry.server.definition.systemPrompt;
-                  }
-                } catch (err) {
-                  console.error(
-                    "[PromptBuilder] Failed to load leader agent prompt in preview:",
-                    err,
-                  );
-                }
-              }
-
-              if (Array.isArray(assignment.members) && assignment.members.length > 0) {
-                const roster = assignment.members
-                  .map(
-                    (m: { id: string; name: string; role: string }) =>
-                      `- **${m.name}** (ID: \`${m.id}\`, Role: ${m.role})`,
-                  )
-                  .join("\n");
-                projectContextFull +=
-                  `\n\n## Project Assigned Team Roster\n` +
-                  `The following team members are assigned to work on this project:\n` +
-                  roster;
-              }
-            }
-
-            sections.push({
-              title: `Project Context (${projectMeta.name})`,
-              content: projectContextFull,
-            });
-          }
-        }
-      } catch (e) {
-        console.error("[PromptBuilder] Failed to load project preview prompt:", e);
-      }
-    }
-
-    // 5. Team Context
-    const targetTeamId = teamId;
-    if (targetTeamId) {
-      try {
-        const { teamStore } = await import("../../teams/team-store");
-        const team = teamStore.getTeam(username, targetTeamId);
-        if (team) {
-          let teamContent = `Team: ${team.name} (Type: ${team.teamType || "General"})\nDescription: ${team.description || "N/A"}`;
-          if (team.context && team.context.length > 0) {
-            teamContent +=
-              `\n\n## Team Context Variables\n` +
-              team.context.map((it: any) => `- ${it.key}: ${it.value}`).join("\n");
-          }
-          const teamAgentsMd = getTeamAgentsMdPath(username, targetTeamId);
-          if (existsSync(teamAgentsMd)) {
-            teamContent +=
-              `\n\n## Team Directives (.spaces/AGENTS.md)\n` + readFileSync(teamAgentsMd, "utf-8");
-          }
-          sections.push({
-            title: `Team Context (${team.name})`,
-            content: teamContent,
-          });
-        }
-      } catch (e) {
-        console.error("[PromptBuilder] Failed to load team preview prompt:", e);
-      }
-    }
 
     // 7. Registered Tools & MCP Extensions
     try {

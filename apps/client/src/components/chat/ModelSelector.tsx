@@ -57,10 +57,10 @@ export function ModelSelector({
   const controlled = onChange !== undefined;
   const l = useLiterals(u);
 
-  const { resolvedConfig, patchConfig } = useEntityConfig(
-    entityType || "global",
-    entityId || "global",
-  );
+  const { resolvedConfig, patchConfig } = useEntityConfig({
+    type: (entityType || "global") as any,
+    id: entityId || "global",
+  });
 
   const [providers, setProviders] = useState<ProviderInfo[]>([]);
   const [selected, setSelected] = useState<SelectedModel | null>(() => {

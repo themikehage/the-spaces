@@ -5,30 +5,16 @@ import { join } from "node:path";
 import {
   EntityConfigSchema,
   EntityTypeSchema,
-  getAgentWorkspaceDir,
-  getProjectWorkspaceDir,
-  getTeamWorkspaceDir,
-  getWorkspaceDir,
+  type AgentType,
 } from "shared";
 import { cascadeConfigLoader } from "../core/config";
+import { agentTypeRegistry } from "../core/entities/agent-type-registry";
 import { workspaceConfigLoader } from "../core/session/workspace-config-loader";
 import { authMiddleware, getAuthPayload } from "../middleware/auth";
 
 export const configRouter = new Hono();
 
 configRouter.use("/*", authMiddleware);
-
-function resolveTargetWorkspace(
-  username: string,
-  entityType: string,
-  entityId: string,
-): string | null {
-  if (entityType === "global") return getWorkspaceDir(username);
-  if (entityType === "agent") return getAgentWorkspaceDir(username, entityId);
-  if (entityType === "project") return getProjectWorkspaceDir(username, entityId);
-  if (entityType === "team") return getTeamWorkspaceDir(username, entityId);
-  return null;
-}
 
 configRouter.get("/:entityType/:entityId", async (c) => {
   const { username } = getAuthPayload(c);
@@ -40,7 +26,7 @@ configRouter.get("/:entityType/:entityId", async (c) => {
     return c.json({ error: "Invalid entity type" }, 400);
   }
 
-  const workspaceDir = resolveTargetWorkspace(username, entityType, entityId);
+  const workspaceDir = agentTypeRegistry.get(parsedType.data as AgentType).getWorkspaceDir(username, entityId);
   if (!workspaceDir) {
     return c.json({ error: "Invalid target entity" }, 400);
   }
@@ -59,7 +45,7 @@ configRouter.put("/:entityType/:entityId", async (c) => {
     return c.json({ error: "Invalid entity type" }, 400);
   }
 
-  const workspaceDir = resolveTargetWorkspace(username, entityType, entityId);
+  const workspaceDir = agentTypeRegistry.get(parsedType.data as AgentType).getWorkspaceDir(username, entityId);
   if (!workspaceDir) {
     return c.json({ error: "Invalid target entity" }, 400);
   }
@@ -79,21 +65,7 @@ configRouter.put("/:entityType/:entityId", async (c) => {
     const configPath = join(dotSpacesDir, "config.json");
     writeFileSync(configPath, JSON.stringify(parsed.data, null, 2), "utf-8");
 
-    if (parsed.data.toolOverrides) {
-      try {
-        const { scopeConfigManager } = await import("../core/scope");
-        const target =
-          entityType === "global"
-            ? { type: "global" as const }
-            : { type: entityType as "agent" | "project" | "team", id: entityId };
-        await scopeConfigManager.setScopeTools(username, target, {
-          add: parsed.data.toolOverrides.add ?? [],
-          remove: parsed.data.toolOverrides.remove ?? [],
-        });
-      } catch (err) {
-        console.error("[configRouter] Failed to sync scopeConfigManager:", err);
-      }
-    }
+
 
     return c.json({ success: true, config: parsed.data });
   } catch (e: unknown) {
@@ -112,15 +84,9 @@ configRouter.get("/:entityType/:entityId/resolved", async (c) => {
     return c.json({ error: "Invalid entity type" }, 400);
   }
 
-  const entityRef =
-    entityType === "agent"
-      ? { agentId: entityId }
-      : entityType === "project"
-        ? { projectId: entityId }
-        : entityType === "team"
-          ? { teamId: entityId }
-          : {};
-
-  const resolved = await cascadeConfigLoader.load(username, entityRef);
+  const resolved = await cascadeConfigLoader.load(username, {
+    type: parsedType.data as AgentType,
+    id: entityId,
+  });
   return c.json(resolved);
 });

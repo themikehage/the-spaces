@@ -12,9 +12,7 @@ import {
   getTeamWorkspaceDir,
 } from "shared";
 import { z } from "zod";
-import { agentRegistry } from "../agents";
 import { applyCacheHeaders } from "../core/middleware/cache-headers";
-import { sessionManager } from "../core/session/session-manager";
 import { getUsername } from "../lib/auth-helpers";
 import { authMiddleware } from "../middleware/auth";
 import { teamOrchestrator, teamStore } from "../teams";
@@ -56,7 +54,7 @@ teamsRouter.get("/:id/avatar", async (c) => {
 
 teamsRouter.use("/*", authMiddleware);
 
-function cleanTeamGhostMembers(team: any, username: string): any {
+function cleanTeamGhostMembers(team: any, username: string, agentRegistry: any): any {
   if (!team || !team.members) return team;
 
   const cleanedMembers = team.members.filter((m: any) => {
@@ -81,11 +79,12 @@ function validateTeamMembers(members: any[]): string | null {
 }
 
 teamsRouter.get("/", (c) => {
+  const { agentRegistry } = c.get("serverContext");
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
 
   const teams = teamStore.listTeams(username);
-  const cleanedTeams = teams.map((t) => cleanTeamGhostMembers(t, username));
+  const cleanedTeams = teams.map((t) => cleanTeamGhostMembers(t, username, agentRegistry));
   return c.json({ teams: cleanedTeams });
 });
 
@@ -104,6 +103,7 @@ teamsRouter.post("/", zValidator("json", CreateTeamSchema), (c) => {
 });
 
 teamsRouter.post("/:id/orchestration-session", async (c) => {
+  const { agentRegistry, sessionManager } = c.get("serverContext");
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
 
@@ -120,9 +120,9 @@ teamsRouter.post("/:id/orchestration-session", async (c) => {
   const sessionId = `${SessionPrefix.TEAM}${team.id}`;
   const now = new Date().toISOString();
 
-  const meta = sessionManager.metadataStore.getSessionMetadata(username, sessionId);
+  const meta = (sessionManager as any).metadataStore.getSessionMetadata(username, sessionId);
   if (!meta) {
-    sessionManager.metadataStore.saveSessionMetadata(username, sessionId, {
+    (sessionManager as any).metadataStore.saveSessionMetadata(username, sessionId, {
       name: `${team.name} — Orchestration`,
       createdAt: now,
       updatedAt: now,
@@ -156,13 +156,14 @@ teamsRouter.get("/:id/orchestration-session", async (c) => {
 });
 
 teamsRouter.get("/:id", (c) => {
+  const { agentRegistry } = c.get("serverContext");
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
 
   const id = c.req.param("id");
   const team = teamStore.getTeam(username, id);
   if (!team) return c.json({ error: "Team not found" }, 404);
-  return c.json(cleanTeamGhostMembers(team, username));
+  return c.json(cleanTeamGhostMembers(team, username, agentRegistry));
 });
 
 teamsRouter.patch("/:id", zValidator("json", UpdateTeamSchema), (c) => {
@@ -196,6 +197,7 @@ teamsRouter.patch("/:id", zValidator("json", UpdateTeamSchema), (c) => {
 });
 
 teamsRouter.delete("/:id", async (c) => {
+  const { sessionManager } = c.get("serverContext");
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
 
@@ -203,8 +205,8 @@ teamsRouter.delete("/:id", async (c) => {
   const team = teamStore.getTeam(username, id);
   if (!team) return c.json({ error: "Team not found" }, 404);
 
-  const sessions = await sessionManager.listSessions(username).catch(() => []);
-  for (const session of sessions.filter((item) => item.teamId === id)) {
+  const sessions = await (sessionManager as any).listSessions(username).catch(() => []);
+  for (const session of (sessions as any[]).filter((item) => item.teamId === id)) {
     await sessionManager.destroySession(username, session.id).catch(() => {});
   }
 
@@ -214,6 +216,7 @@ teamsRouter.delete("/:id", async (c) => {
 });
 
 teamsRouter.post("/:id/members", zValidator("json", TeamMemberSchema), (c) => {
+  const { agentRegistry } = c.get("serverContext");
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
 
@@ -373,6 +376,7 @@ teamsRouter.post(
   "/:id/send",
   zValidator("json", z.object({ message: z.string().min(1), sessionId: z.string().optional() })),
   async (c) => {
+    const { sessionManager } = c.get("serverContext");
     const username = getUsername(c);
     if (!username) return c.json({ error: "Unauthorized" }, 401);
 
@@ -396,7 +400,7 @@ teamsRouter.post(
           workspaceDir: getTeamWorkspaceDir(username, team.id),
         },
       );
-      session.prompt(message).catch((err) => {
+      session.prompt(message).catch((err: any) => {
         console.error(`[TeamsRoute] Persistent session prompt error:`, err);
       });
     } else {
@@ -416,6 +420,7 @@ teamsRouter.post(
   "/:id/abort",
   zValidator("json", z.object({ sessionId: z.string().optional() }).optional()),
   async (c) => {
+    const { sessionManager } = c.get("serverContext");
     const username = getUsername(c);
     if (!username) return c.json({ error: "Unauthorized" }, 401);
 
@@ -439,6 +444,7 @@ teamsRouter.post(
 );
 
 teamsRouter.get("/:id/agents", (c) => {
+  const { agentRegistry } = c.get("serverContext");
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
   return c.json({ agents: agentRegistry.list(username) });
@@ -527,6 +533,7 @@ teamsRouter.delete("/:id/avatar", async (c) => {
 });
 
 teamsRouter.get("/:id/analytics", async (c) => {
+  const { sessionManager } = c.get("serverContext");
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
 

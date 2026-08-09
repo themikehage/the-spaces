@@ -3,7 +3,6 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { SetApiKeySchema } from "shared";
 import { clearProviderModels, saveProviderModels } from "../core/providers/provider-persistence";
-import { sessionManager } from "../core/session/session-manager";
 import { authMiddleware, getAuthPayload } from "../middleware/auth";
 
 export const providersRouter = new Hono();
@@ -11,7 +10,7 @@ export const providersRouter = new Hono();
 providersRouter.use("/*", authMiddleware);
 
 function buildAuthStatus(
-  authStorage: ReturnType<typeof sessionManager.userConfig.getUserContext>["authStorage"],
+  authStorage: any,
   provider: string,
 ) {
   const base = authStorage.getAuthStatus(provider);
@@ -19,6 +18,7 @@ function buildAuthStatus(
 }
 
 providersRouter.get("/", (c) => {
+  const { sessionManager } = c.get("serverContext");
   const { username } = getAuthPayload(c);
   const { authStorage, modelRegistry } = sessionManager.userConfig.getUserContext(username);
 
@@ -44,7 +44,7 @@ providersRouter.get("/", (c) => {
     providersMap.set(id, {
       name: config.name,
       authStatus: buildAuthStatus(authStorage, id),
-      models: config.models.map((model) => ({
+      models: config.models.map((model: any) => ({
         id: model.id,
         name: model.name,
         reasoning: !!model.reasoning,
@@ -65,14 +65,15 @@ providersRouter.get("/", (c) => {
 });
 
 providersRouter.get("/:id/models", (c) => {
+  const { sessionManager } = c.get("serverContext");
   const providerId = c.req.param("id");
   const { username } = getAuthPayload(c);
   const { modelRegistry } = sessionManager.userConfig.getUserContext(username);
 
-  const models = modelRegistry.getAll().filter((m) => (m.provider as string) === providerId);
+  const models = modelRegistry.getAll().filter((m: any) => (m.provider as string) === providerId);
 
   return c.json({
-    models: models.map((m) => ({
+    models: models.map((m: any) => ({
       id: m.id,
       name: m.name,
       reasoning: m.reasoning,
@@ -85,6 +86,7 @@ providersRouter.get("/:id/models", (c) => {
 });
 
 providersRouter.post("/:id/key", zValidator("json", SetApiKeySchema), (c) => {
+  const { sessionManager } = c.get("serverContext");
   const providerId = c.req.param("id");
   const { apiKey } = c.req.valid("json");
   const { username } = getAuthPayload(c);
@@ -97,10 +99,10 @@ providersRouter.post("/:id/key", zValidator("json", SetApiKeySchema), (c) => {
   if (modelRegistry.isDynamic(providerId)) {
     modelRegistry
       .refreshProviderModels(providerId)
-      .then((models) => {
+      .then((models: any) => {
         saveProviderModels(username, providerId, models);
       })
-      .catch((err) => {
+      .catch((err: any) => {
         console.error(`[AutoSync] Failed to sync models for provider ${providerId}:`, err);
       });
   }
@@ -110,6 +112,7 @@ providersRouter.post("/:id/key", zValidator("json", SetApiKeySchema), (c) => {
 });
 
 providersRouter.delete("/:id/key", (c) => {
+  const { sessionManager } = c.get("serverContext");
   const providerId = c.req.param("id");
   const { username } = getAuthPayload(c);
   const { authStorage, modelRegistry } = sessionManager.userConfig.getUserContext(username);
@@ -126,6 +129,7 @@ providersRouter.delete("/:id/key", (c) => {
 });
 
 providersRouter.post("/:id/refresh", async (c) => {
+  const { sessionManager } = c.get("serverContext");
   const providerId = c.req.param("id");
   const { username } = getAuthPayload(c);
   const { modelRegistry } = sessionManager.userConfig.getUserContext(username);
@@ -135,7 +139,7 @@ providersRouter.post("/:id/refresh", async (c) => {
     saveProviderModels(username, providerId, models);
     return c.json({
       success: true,
-      models: modelRegistry.getAll().filter((m) => (m.provider as string) === providerId),
+      models: modelRegistry.getAll().filter((m: any) => (m.provider as string) === providerId),
     });
   } catch (err: any) {
     return c.json({ success: false, error: err.message || "Failed to refresh models" }, 500);

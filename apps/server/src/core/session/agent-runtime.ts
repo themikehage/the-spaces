@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { SessionPrefix, type AgentDefinition, type BaseTool } from "shared";
+import { SessionPrefix, type AgentDefinition, type AgentRef, type BaseTool } from "shared";
 import { createAgentSession, DefaultResourceLoader, type AgentSession } from "..";
-import { agentRegistry } from "../../agents";
+import { createServerContext } from "../infra/server-context";
 import { cascadeConfigLoader } from "../config";
 import { mcpRegistry } from "../mcp/mcp-registry";
 import { memoryRegistry } from "../memory/registry";
@@ -95,6 +95,7 @@ export async function createAgentRuntime(
 
   let agentDef = config.agentDef;
   if (!agentDef && agentId) {
+    const { agentRegistry } = createServerContext();
     const agentEntry = agentRegistry.get(agentId);
     agentDef = agentEntry?.server.definition;
   }
@@ -138,11 +139,15 @@ export async function createAgentRuntime(
     }
   }
 
-  const entityConfig = await cascadeConfigLoader.load(username, {
-    agentId,
-    projectId: resolvedProjectId,
-    teamId,
-  });
+  const entityRef: AgentRef = agentId
+    ? { type: "custom", id: agentId }
+    : teamId
+      ? { type: "team", id: teamId }
+      : resolvedProjectId
+        ? { type: "project", id: resolvedProjectId }
+        : { type: "global", id: "global" };
+
+  const entityConfig = await cascadeConfigLoader.load(username, entityRef);
 
   const metadata = sessionMetadataStore.getSessionMetadata(username, sessionId);
 

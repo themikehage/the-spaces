@@ -15,6 +15,7 @@ import {
   type WorkflowDefinition,
 } from "shared";
 import { webhookStore } from "./webhook-store";
+import { coreEventBus } from "../infra/event-bus";
 
 export class WorkflowStore {
   async save(username: string, def: WorkflowDefinition): Promise<WorkflowDefinition> {
@@ -34,12 +35,7 @@ export class WorkflowStore {
     writeFileSync(filePath, JSON.stringify(validated, null, 2), "utf-8");
     webhookStore.syncWorkflowWebhooks(username, validated);
 
-    try {
-      const { agentRegistry } = await import("../../agents/agent-registry");
-      await agentRegistry.syncWorkflowAgent(username, validated);
-    } catch (err) {
-      console.error(`[WorkflowStore] Failed to sync workflow agent for ${validated.id}:`, err);
-    }
+    await coreEventBus.emit({ type: "workflow:saved", username, workflowDef: validated });
 
     return validated;
   }
@@ -51,14 +47,7 @@ export class WorkflowStore {
     }
     webhookStore.removeWorkflowWebhooks(username, workflowId);
 
-    try {
-      const { agentRegistry } = await import("../../agents/agent-registry");
-      const sanitizedId = workflowId.toLowerCase().replace(/[^a-z0-9-]/g, "-");
-      const agentId = sanitizedId.startsWith("wf-") ? sanitizedId : `wf-${sanitizedId}`;
-      await agentRegistry.stop(agentId);
-    } catch {
-      /* noop */
-    }
+    await coreEventBus.emit({ type: "workflow:deleted", username, workflowId });
   }
 
   get(username: string, workflowId: string): WorkflowDefinition | null {

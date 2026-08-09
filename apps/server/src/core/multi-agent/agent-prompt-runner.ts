@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 import { type TeamMember, type TeamMessage } from "shared";
-import { agentRegistry } from "../../agents";
+import { createServerContext } from "../infra/server-context";
 
 export function buildAgentNameMap(members: TeamMember[]): Map<string, string> {
+  const { agentRegistry } = createServerContext();
   const map = new Map<string, string>();
   for (const member of members) {
     const entry = agentRegistry.get(member.agentId);

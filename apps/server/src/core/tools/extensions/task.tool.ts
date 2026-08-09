@@ -1,7 +1,6 @@
-// SPDX-License-Identifier: MIT
 import { join } from "node:path";
 import { broadcastToSession } from "../../../ws/handler";
-import { sessionManager } from "../../session/session-manager";
+import { createServerContext } from "../../infra/server-context";
 import { TaskStateManager } from "./task-state-manager";
 
 export interface TaskToolOptions {
@@ -10,6 +9,7 @@ export interface TaskToolOptions {
 }
 
 export function createTaskTool(opts: TaskToolOptions) {
+  const { sessionManager } = createServerContext();
   const { username, parentSessionId } = opts;
 
   return {

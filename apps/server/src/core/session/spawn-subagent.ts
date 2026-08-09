@@ -15,6 +15,7 @@ import {
 } from "./agent-utils";
 import { DefaultResourceLoader } from "./resource-loader";
 import { getSubagentDepth } from "./session-depth";
+import { resolveParentRef } from "./resolve-parent-ref";
 import type { SessionManager } from "./session-manager";
 
 export interface SpawnSubagentParams {
@@ -85,15 +86,9 @@ export async function spawnSubagent(params: SpawnSubagentParams): Promise<Envelo
         ? "autonomous"
         : "standard";
 
-  let parentEntityType = "global";
-  let parentEntityId: string | null = null;
-  if (parentMeta.agentId) {
-    parentEntityType = "agent";
-    parentEntityId = parentMeta.agentId;
-  } else if (parentMeta.projectId || parentMeta.projectName) {
-    parentEntityType = "project";
-    parentEntityId = parentMeta.projectId || parentMeta.projectName;
-  }
+  const parentRef = resolveParentRef(parentMeta);
+  const parentEntityType = parentRef.type;
+  const parentEntityId: string | null = parentRef.id !== "global" ? parentRef.id : null;
 
   const metadata = {
     subagentId: subagentSessionId,

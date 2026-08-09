@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { getImageModel } from "../../../vendor/ai/src/image-models.ts";
 import { generateImages } from "../../../vendor/ai/src/images.ts";
-import { sessionManager } from "../../session/session-manager";
+import { createServerContext } from "../../infra/server-context";
 
 export async function runImageGenModel(
   username: string,
@@ -12,6 +12,7 @@ export async function runImageGenModel(
   size: string,
   workspaceDir: string,
 ): Promise<string> {
+  const { sessionManager } = createServerContext();
   const isQwen =
     modelId.startsWith("wan") ||
     modelId.startsWith("qwen-image") ||
@@ -221,6 +222,7 @@ export function createImageGenTool(workspaceDir: string, username: string) {
       required: ["prompt"],
     },
     execute: async (toolCallId: string, args: any) => {
+      const { sessionManager } = createServerContext();
       const settings = sessionManager.userConfig.getUserSettings(username);
       const modelId = settings.imageGenModel;
 

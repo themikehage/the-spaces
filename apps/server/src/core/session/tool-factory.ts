@@ -23,7 +23,6 @@ import type { ModelRegistry } from "../model/model-registry";
 import type { AgentDirectoryPort } from "../ports/spaces-host.port";
 import type { IWorkflowEngine } from "../ports/workflow-engine.port";
 import { filterSecretsFromOutput } from "../sandbox/bash-output-filter";
-import { scopeConfigManager } from "../scope";
 import { createAgentDirectoryTools } from "../tools/extensions/agents-directory.tool";
 import { createDeepResearchTool } from "../tools/extensions/deep-research";
 import { createExaSearchTool } from "../tools/extensions/exa-search.tool";
@@ -166,15 +165,9 @@ export class SessionToolFactory {
       sessionId,
     });
 
-    const resolvedToolNames = contextAgentId
-      ? new Set(scopeConfigManager.resolveToolsForAgent(username, contextAgentId))
-      : null;
-
     const activeCustomDefs = customToolStorage
       .loadAll(username)
-      .filter(
-        (d: any) => d.enabled && (resolvedToolNames === null || resolvedToolNames.has(d.name)),
-      );
+      .filter((d: any) => d.enabled !== false);
     const activeCustomTools = activeCustomDefs.map((def: any) =>
       createCustomToolRuntime(def, {
         cwd: workspaceDir,

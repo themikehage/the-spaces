@@ -226,11 +226,25 @@ export interface FileUploadResult {
   mimeType: string;
 }
 
-export const AgentScopeTargetSchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("global") }),
-  z.object({ type: z.literal("project"), id: z.string() }),
+import { AgentCapabilitiesSchema } from "./agent-capabilities";
+
+export const AgentTypeSchema = z.enum([
+  "global",
+  "project",
+  "team",
+  "workspace",
+  "subagent",
+  "workflow",
+  "custom",
+  "user", // retrocompatibility alias for standard agents
 ]);
-export type AgentScopeTarget = z.infer<typeof AgentScopeTargetSchema>;
+export type AgentType = z.infer<typeof AgentTypeSchema>;
+
+export const AgentRefSchema = z.object({
+  type: AgentTypeSchema,
+  id: z.string(),
+});
+export type AgentRef = z.infer<typeof AgentRefSchema>;
 
 export const AgentDefinitionSchema = z.object({
   id: z
@@ -242,11 +256,13 @@ export const AgentDefinitionSchema = z.object({
   serialTools: z.array(z.string()).optional(),
   avatarUrl: z.string().optional(),
   blueprintId: z.string().optional(),
-  scope: AgentScopeTargetSchema.optional(),
+  /** @deprecated Use agent type and capabilities instead */
+  scope: AgentRefSchema.optional(),
   tags: z.array(z.string()).optional(),
   description: z.string().max(500).optional(),
-  type: z.enum(["user", "workflow"]).optional(),
+  type: AgentTypeSchema.optional(),
   workflowId: z.string().optional(),
+  capabilities: AgentCapabilitiesSchema.optional(),
 });
 export type AgentDefinition = z.infer<typeof AgentDefinitionSchema>;
 
@@ -265,8 +281,9 @@ export const AgentInfoSchema = z.object({
   blueprintId: z.string().optional(),
   tags: z.array(z.string()).optional(),
   description: z.string().optional(),
-  type: z.enum(["user", "workflow"]).optional(),
+  type: AgentTypeSchema.optional(),
   workflowId: z.string().optional(),
+  capabilities: AgentCapabilitiesSchema.optional(),
 });
 export type AgentInfo = z.infer<typeof AgentInfoSchema>;
 
@@ -572,27 +589,32 @@ export const GalleryMetadataSchema = z.object({
 export type GalleryMetadata = z.infer<typeof GalleryMetadataSchema>;
 
 // --- TEAMS SCHEMAS ---
-export const TeamTypeSchema = z.enum(["Orchestration", "Negotiation"]);
-export type TeamType = z.infer<typeof TeamTypeSchema>;
+import {
+  TeamTypeSchema,
+  type TeamType,
+  TeamModeSchema,
+  type TeamMode,
+  TeamRoleSchema,
+  type TeamRole,
+  TeamContextItemSchema,
+  type TeamContextItem,
+  TeamMemberSchema,
+  type TeamMember,
+} from "./agent-capabilities";
 
-export const TeamModeSchema = z.enum(["debate"]);
-export type TeamMode = z.infer<typeof TeamModeSchema>;
+export {
+  TeamTypeSchema,
+  type TeamType,
+  TeamModeSchema,
+  type TeamMode,
+  TeamRoleSchema,
+  type TeamRole,
+  TeamContextItemSchema,
+  type TeamContextItem,
+  TeamMemberSchema,
+  type TeamMember,
+};
 
-export const TeamRoleSchema = z.enum(["lead", "member", "observer"]);
-export type TeamRole = z.infer<typeof TeamRoleSchema>;
-
-export const TeamContextItemSchema = z.object({
-  key: z.string().min(1),
-  value: z.string(),
-});
-export type TeamContextItem = z.infer<typeof TeamContextItemSchema>;
-
-export const TeamMemberSchema = z.object({
-  agentId: z.string(),
-  role: TeamRoleSchema.default("member"),
-  outputMode: z.enum(["full-proposal", "diff-suggestion", "normal"]).optional(),
-});
-export type TeamMember = z.infer<typeof TeamMemberSchema>;
 
 export const TeamSchema = z.object({
   id: z.string(),
@@ -836,17 +858,12 @@ export type Project = z.infer<typeof ProjectSchema>;
 export const AutonomyLevelSchema = z.enum(["auto", "propose", "suggest"]);
 export type AutonomyLevel = z.infer<typeof AutonomyLevelSchema>;
 
-export const PromptPreviewEntityTypeSchema = z.enum([
-  "global",
-  "agent",
-  "project",
-  "team",
-  "subagent",
-]);
+export const PromptPreviewEntityTypeSchema = AgentTypeSchema;
 export type PromptPreviewEntityType = z.infer<typeof PromptPreviewEntityTypeSchema>;
 
 export const PromptPreviewRequestSchema = z.object({
-  entityType: PromptPreviewEntityTypeSchema,
+  agentRef: AgentRefSchema.optional(),
+  entityType: PromptPreviewEntityTypeSchema.optional(),
   agentId: z.string().optional(),
   projectId: z.string().optional(),
   teamId: z.string().optional(),
@@ -867,7 +884,7 @@ export const PromptPreviewResponseSchema = z.object({
 });
 export type PromptPreviewResponse = z.infer<typeof PromptPreviewResponseSchema>;
 
-export const EntityTypeSchema = z.enum(["global", "agent", "project", "team"]);
+export const EntityTypeSchema = AgentTypeSchema.extract(["global", "project", "team"]).or(z.literal("agent"));
 export type EntityType = z.infer<typeof EntityTypeSchema>;
 
 export const EntityConfigSchema = z
@@ -906,12 +923,10 @@ export const SpacesAgentConfigSchema = z.object({
 export type SpacesAgentConfig = z.input<typeof SpacesAgentConfigSchema>;
 export type ResolvedSpacesAgentConfig = z.output<typeof SpacesAgentConfigSchema>;
 
-export const ToolScopeTargetSchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("global") }),
-  z.object({ type: z.literal("project"), id: z.string() }),
-  z.object({ type: z.literal("team"), id: z.string() }),
-  z.object({ type: z.literal("agent"), id: z.string() }),
-]);
+export const ToolScopeTargetSchema = z.object({
+  type: AgentTypeSchema,
+  id: z.string().optional(),
+});
 export type ToolScopeTarget = z.infer<typeof ToolScopeTargetSchema>;
 
 export const PatchScopeToolsSchema = z.object({

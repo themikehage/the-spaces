@@ -86,7 +86,7 @@ export function useChatAreaState({
         : "global";
   const entityId =
     activeTeam?.id || activeAgent?.id || activeProjectId || activeProjectName || "global";
-  const { resolvedConfig } = useEntityConfig(entityType, entityId);
+  const { resolvedConfig } = useEntityConfig({ type: entityType as any, id: entityId });
 
   const [welcomeTools, setWelcomeTools] = useState<string[]>([]);
   const [welcomeSkills, setWelcomeSkills] = useState<string[]>([]);

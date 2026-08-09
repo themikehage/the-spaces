@@ -5,19 +5,18 @@ import { existsSync, readdirSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   AgentDefinitionSchema,
-  AgentScopeTargetSchema,
+  AgentRefSchema,
   EntityType,
   PatchScopeToolsSchema,
   UpdateAgentDefinitionSchema,
   getAgentDir,
 } from "shared";
 import { z } from "zod";
-import { agentRegistry } from "../agents";
+import { mkdirSync, readFileSync } from "node:fs";
+import { cascadeConfigLoader } from "../core/config";
+import { agentTypeRegistry } from "../core/entities/agent-type-registry";
 import { applyCacheHeaders } from "../core/middleware/cache-headers";
-import { scopeConfigManager } from "../core/scope";
-
 import { serverSpacesHost } from "../core/infra/spaces-host";
-import { sessionManager } from "../core/session/session-manager";
 import { getUsername } from "../lib/auth-helpers";
 import { authMiddleware } from "../middleware/auth";
 
@@ -26,6 +25,7 @@ export const agentsRouter = new Hono();
 // Avatar GET must be before authMiddleware so browser <img> tags can authenticate
 // via ?token= query param (supported by getUsername())
 agentsRouter.get("/:id/avatar", async (c) => {
+  const { agentRegistry } = c.get("serverContext");
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
   const id = c.req.param("id");
@@ -61,6 +61,7 @@ agentsRouter.get("/:id/avatar", async (c) => {
 agentsRouter.use("/*", authMiddleware);
 
 agentsRouter.get("/", (c) => {
+  const { agentRegistry } = c.get("serverContext");
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
   return c.json({ agents: agentRegistry.list(username) });
@@ -99,6 +100,7 @@ agentsRouter.get("/:id/capabilities", async (c) => {
 });
 
 agentsRouter.post("/", zValidator("json", AgentDefinitionSchema), async (c) => {
+  const { agentRegistry } = c.get("serverContext");
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
   const definition = c.req.valid("json");
@@ -125,6 +127,7 @@ agentsRouter.post("/", zValidator("json", AgentDefinitionSchema), async (c) => {
 });
 
 agentsRouter.get("/:id", (c) => {
+  const { agentRegistry } = c.get("serverContext");
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
   const id = c.req.param("id");
@@ -143,6 +146,7 @@ agentsRouter.get("/:id", (c) => {
 });
 
 agentsRouter.delete("/:id", async (c) => {
+  const { agentRegistry, sessionManager } = c.get("serverContext");
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
   const id = c.req.param("id");
@@ -164,6 +168,7 @@ agentsRouter.delete("/:id", async (c) => {
 });
 
 agentsRouter.patch("/:id", zValidator("json", UpdateAgentDefinitionSchema), async (c) => {
+  const { agentRegistry } = c.get("serverContext");
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
   const id = c.req.param("id");
@@ -189,51 +194,16 @@ agentsRouter.get("/scope/tools", async (c) => {
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
 
-  const entityType = c.req.query("entityType") as EntityType | undefined;
-  const entityId = c.req.query("entityId");
+  const entityType = (c.req.query("entityType") as EntityType) || "global";
+  const entityId = c.req.query("entityId") || "global";
 
-  const config = await scopeConfigManager.load(username);
+  const resolvedConfig = await cascadeConfigLoader.load(username, { type: entityType as any, id: entityId });
+  const resolved = resolvedConfig.toolOverrides?.add ?? [];
 
-  if (!entityType || entityType === "global") {
-    return c.json({ global: config.global.tools, resolved: config.global.tools });
-  }
-
-  if (entityType === "project" && entityId) {
-    const projectTools = config.projects[entityId]?.tools ?? [];
-    return c.json({
-      global: config.global.tools,
-      project: projectTools,
-      resolved: [...new Set([...config.global.tools, ...projectTools])],
-    });
-  }
-
-  if (entityType === "team" && entityId) {
-    const teamTools = config.teams?.[entityId]?.tools ?? [];
-    return c.json({
-      global: config.global.tools,
-      team: teamTools,
-      resolved: [...new Set([...config.global.tools, ...teamTools])],
-    });
-  }
-
-  if (entityType === "agent" && entityId) {
-    const resolved = scopeConfigManager.resolveToolsForAgent(username, entityId);
-    const membership = scopeConfigManager.getAgentMembership(username, entityId);
-    const teamId = scopeConfigManager.getAgentTeamMembership(username, entityId);
-    const projectTools =
-      membership?.type === "project" ? (config.projects[membership.id]?.tools ?? []) : undefined;
-    const teamTools = teamId ? config.teams?.[teamId]?.tools : undefined;
-
-    return c.json({
-      global: config.global.tools,
-      ...(teamTools !== undefined ? { team: teamTools } : {}),
-      ...(projectTools !== undefined ? { project: projectTools } : {}),
-      agent: config.agentTools[entityId] ?? { add: [], remove: [] },
-      resolved,
-    });
-  }
-
-  return c.json({ error: "Invalid entityType" }, 400);
+  return c.json({
+    global: resolved,
+    resolved,
+  });
 });
 
 agentsRouter.patch("/scope/tools", zValidator("json", PatchScopeToolsSchema), async (c) => {
@@ -242,7 +212,26 @@ agentsRouter.patch("/scope/tools", zValidator("json", PatchScopeToolsSchema), as
   const { target, add, remove } = c.req.valid("json");
 
   try {
-    await scopeConfigManager.setScopeTools(username, target, { add, remove: remove ?? [] });
+    const targetType = target.type;
+    const targetId = ("id" in target && target.id) ? target.id : "global";
+    const workspaceDir = agentTypeRegistry.get(targetType as any).getWorkspaceDir(username, targetId);
+    
+    const dotSpacesDir = join(workspaceDir, ".spaces");
+    if (!existsSync(dotSpacesDir)) {
+      mkdirSync(dotSpacesDir, { recursive: true });
+    }
+    const configPath = join(dotSpacesDir, "config.json");
+    let existing: Record<string, any> = {};
+    if (existsSync(configPath)) {
+      try {
+        existing = JSON.parse(readFileSync(configPath, "utf-8"));
+      } catch {
+        existing = {};
+      }
+    }
+    existing.toolOverrides = { add, remove: remove ?? [] };
+    writeFileSync(configPath, JSON.stringify(existing, null, 2), "utf-8");
+
     const { broadcastToUser } = await import("../ws/handler");
     broadcastToUser(username, {
       type: "entity-updated",
@@ -257,8 +246,9 @@ agentsRouter.patch("/scope/tools", zValidator("json", PatchScopeToolsSchema), as
 
 agentsRouter.patch(
   "/:id/scope",
-  zValidator("json", z.object({ scope: AgentScopeTargetSchema })),
+  zValidator("json", z.object({ scope: AgentRefSchema })),
   async (c) => {
+    const { agentRegistry } = c.get("serverContext");
     const username = getUsername(c);
     if (!username) return c.json({ error: "Unauthorized" }, 401);
     const id = c.req.param("id");
@@ -268,7 +258,7 @@ agentsRouter.patch(
     if (!entry) return c.json({ error: "Agent not found" }, 404);
 
     try {
-      await scopeConfigManager.setAgentScope(username, id, scope);
+      await agentRegistry.update(username, id, { scope });
       return c.json({ ok: true });
     } catch (err) {
       return c.json({ error: String(err) }, 500);
@@ -280,6 +270,7 @@ agentsRouter.post(
   "/:id/prompt",
   zValidator("json", z.object({ message: z.string().min(1), stream: z.boolean().optional() })),
   async (c) => {
+    const { agentRegistry } = c.get("serverContext");
     const username = getUsername(c);
     if (!username) return c.json({ error: "Unauthorized" }, 401);
     const id = c.req.param("id");
@@ -287,7 +278,7 @@ agentsRouter.post(
 
     const entry = agentRegistry.get(id, username);
     if (!entry) return c.json({ error: "Agent not found" }, 404);
-    if (entry.status === "stopped") return c.json({ error: "Agent is stopped" }, 409);
+    if ((entry.status as string) === "stopped") return c.json({ error: "Agent is stopped" }, 409);
 
     return entry.server.app.fetch(
       new Request(`http://internal/prompt`, {
@@ -301,6 +292,7 @@ agentsRouter.post(
 );
 
 agentsRouter.get("/:id/messages", async (c) => {
+  const { agentRegistry } = c.get("serverContext");
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
   const id = c.req.param("id");
@@ -311,6 +303,7 @@ agentsRouter.get("/:id/messages", async (c) => {
 });
 
 agentsRouter.post("/:id/abort", async (c) => {
+  const { agentRegistry } = c.get("serverContext");
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
   const id = c.req.param("id");
@@ -324,6 +317,7 @@ agentsRouter.post("/:id/abort", async (c) => {
 });
 
 agentsRouter.get("/:id/observe", async (c) => {
+  const { agentRegistry } = c.get("serverContext");
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
   const id = c.req.param("id");
@@ -339,6 +333,7 @@ agentsRouter.get("/:id/observe", async (c) => {
 });
 
 agentsRouter.get("/:id/executions", async (c) => {
+  const { agentRegistry } = c.get("serverContext");
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
   const id = c.req.param("id");
@@ -354,6 +349,7 @@ agentsRouter.get("/:id/executions", async (c) => {
 });
 
 agentsRouter.get("/:id/executions/:execId", async (c) => {
+  const { agentRegistry } = c.get("serverContext");
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
   const id = c.req.param("id");
@@ -370,6 +366,7 @@ agentsRouter.get("/:id/executions/:execId", async (c) => {
 });
 
 agentsRouter.post("/:id/avatar", async (c) => {
+  const { agentRegistry } = c.get("serverContext");
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
   const id = c.req.param("id");
@@ -409,6 +406,7 @@ agentsRouter.post("/:id/avatar", async (c) => {
 });
 
 agentsRouter.delete("/:id/avatar", async (c) => {
+  const { agentRegistry } = c.get("serverContext");
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
   const id = c.req.param("id");

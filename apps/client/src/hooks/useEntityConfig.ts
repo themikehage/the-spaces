@@ -2,9 +2,12 @@
 import { configService } from "@/lib/api/config.service";
 import { EntityEventBus } from "@/lib/event-bus";
 import { useCallback, useEffect, useState } from "react";
-import type { EntityConfigType, EntityType } from "shared";
+import type { AgentRef, EntityConfigType, EntityType } from "shared";
 
-export function useEntityConfig(entityType: EntityType, entityId: string) {
+export function useEntityConfig(agentRef: AgentRef) {
+  const entityType: EntityType = agentRef.type as EntityType;
+  const targetId: string = agentRef.id;
+
   const [config, setConfig] = useState<EntityConfigType>({});
   const [resolvedConfig, setResolvedConfig] = useState<EntityConfigType>({});
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -12,13 +15,13 @@ export function useEntityConfig(entityType: EntityType, entityId: string) {
   const [error, setError] = useState<string | null>(null);
 
   const fetchConfig = useCallback(async () => {
-    if (!entityId) return;
+    if (!targetId) return;
     setIsLoading(true);
     setError(null);
     try {
       const [rawData, resolvedData] = await Promise.all([
-        configService.fetchEntityConfig(entityType, entityId).catch(() => null),
-        configService.fetchResolvedConfig(entityType, entityId).catch(() => null),
+        configService.fetchEntityConfig(entityType, targetId).catch(() => null),
+        configService.fetchResolvedConfig(entityType, targetId).catch(() => null),
       ]);
 
       if (rawData) setConfig(rawData);
@@ -29,7 +32,7 @@ export function useEntityConfig(entityType: EntityType, entityId: string) {
     } finally {
       setIsLoading(false);
     }
-  }, [entityType, entityId]);
+  }, [entityType, targetId]);
 
   useEffect(() => {
     fetchConfig();
@@ -48,7 +51,7 @@ export function useEntityConfig(entityType: EntityType, entityId: string) {
     setIsSaving(true);
     setError(null);
     try {
-      await configService.updateEntityConfig(entityType, entityId, newConfig);
+      await configService.updateEntityConfig(entityType, targetId, newConfig);
       await fetchConfig();
       EntityEventBus.emit({ type: "config" });
       return true;
@@ -65,7 +68,7 @@ export function useEntityConfig(entityType: EntityType, entityId: string) {
     setIsSaving(true);
     setError(null);
     try {
-      await configService.patchEntityConfig(entityType, entityId, patch);
+      await configService.patchEntityConfig(entityType, targetId, patch);
       await fetchConfig();
       EntityEventBus.emit({ type: "config" });
       return true;

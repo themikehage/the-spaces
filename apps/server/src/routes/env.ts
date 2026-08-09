@@ -3,7 +3,6 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { SetEnvVarSchema } from "shared";
 import { z } from "zod";
-import { sessionManager } from "../core/session/session-manager";
 import { auditLog } from "../core/stores/audit-log";
 import { authMiddleware, getAuthPayload } from "../middleware/auth";
 
@@ -12,6 +11,7 @@ export const envRouter = new Hono();
 envRouter.use("/*", authMiddleware);
 
 envRouter.get("/", (c) => {
+  const { sessionManager } = c.get("serverContext");
   const { username } = getAuthPayload(c);
   const userEnv = sessionManager.userConfig.getUserEnv(username);
 
@@ -24,6 +24,7 @@ envRouter.get("/", (c) => {
 });
 
 envRouter.get("/reveal/:key", (c) => {
+  const { sessionManager } = c.get("serverContext");
   const key = c.req.param("key").trim().toUpperCase();
   const { username } = getAuthPayload(c);
   const userEnv = sessionManager.userConfig.getUserEnv(username);
@@ -38,6 +39,7 @@ envRouter.get("/reveal/:key", (c) => {
 });
 
 envRouter.post("/", zValidator("json", SetEnvVarSchema), (c) => {
+  const { sessionManager } = c.get("serverContext");
   const { key, value } = c.req.valid("json");
   const { username } = getAuthPayload(c);
 
@@ -55,6 +57,7 @@ envRouter.put(
     }),
   ),
   (c) => {
+    const { sessionManager } = c.get("serverContext");
     const { variables } = c.req.valid("json");
     const { username } = getAuthPayload(c);
     const current = sessionManager.userConfig.getUserEnv(username);
@@ -83,6 +86,7 @@ envRouter.put(
 );
 
 envRouter.delete("/:key", (c) => {
+  const { sessionManager } = c.get("serverContext");
   const key = c.req.param("key");
   const { username } = getAuthPayload(c);
 

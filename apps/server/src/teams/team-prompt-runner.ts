@@ -1,9 +1,6 @@
-// SPDX-License-Identifier: MIT
 import { type Team, type TeamMember, type TeamMessage } from "shared";
-import { agentRegistry } from "../agents";
+import { createServerContext, type ServerContext } from "../core/infra/server-context";
 import { resolveModelWithFallback } from "../core/session/agent-utils";
-import { sessionManager } from "../core/session/session-manager";
-import { teamStore } from "./team-store";
 
 import { buildAgentPrompt } from "../core/multi-agent/agent-prompt-runner";
 import { parseMentions } from "../core/multi-agent/mention-parser";
@@ -89,11 +86,28 @@ export class TeamPromptRunner {
   ): Promise<{ agentMsg: TeamMessage | null }> {
     if (signal.aborted) return { agentMsg: null };
 
-    const team = teamStore.getTeam(username, teamId);
-    if (!team) return { agentMsg: null };
+    const { agentRegistry, sessionManager } = createServerContext();
+    const teamDef = agentRegistry.getTeamDefinition(username, teamId);
+    if (!teamDef) return { agentMsg: null };
+    const members = teamDef.capabilities?.group?.members || [];
+    const now = new Date().toISOString();
+    const team = {
+      id: teamDef.id,
+      name: teamDef.name,
+      members,
+      mode: teamDef.capabilities?.group?.mode || "debate",
+      teamType: teamDef.capabilities?.group?.teamType || "Orchestration",
+      maxRounds: teamDef.capabilities?.group?.maxRounds ?? 5,
+      showThinking: teamDef.capabilities?.group?.showThinking ?? false,
+      showTools: teamDef.capabilities?.group?.showTools ?? false,
+      streamingEnabled: teamDef.capabilities?.group?.streamingEnabled ?? true,
+      context: teamDef.capabilities?.group?.context || [],
+      createdAt: now,
+      updatedAt: now,
+    };
 
     // Pre-LLM silent bypass
-    if (team.members.length > 1) {
+    if (members.length > 1) {
       const isObserver = member.role === "observer";
       if (isObserver) {
         return { agentMsg: null };
@@ -101,7 +115,7 @@ export class TeamPromptRunner {
     }
 
     const agentEntry = agentRegistry.get(member.agentId);
-    if (!agentEntry || agentEntry.status === "stopped") {
+    if (!agentEntry || (agentEntry.status as string) === "stopped") {
       this.broadcastFn(teamId, {
         type: "team_agent_error",
         teamId,
@@ -123,7 +137,7 @@ export class TeamPromptRunner {
         model =
           modelRegistry
             .getAvailable()
-            .find((m) => m.id === resolved || `${m.provider}/${m.id}` === resolved) || null;
+            .find((m: any) => m.id === resolved || `${m.provider}/${m.id}` === resolved) || null;
         if (model) {
           try {
             await agentEntry.server.session.setModel(model);

@@ -8,10 +8,11 @@ import {
   getUserDir,
   type AgentDefinition,
   type AgentInfo,
-  type AgentScopeTarget,
+  type AgentRef,
   type AgentStatus,
 } from "shared";
-import { scopeConfigManager } from "../core/scope";
+import { agentTypeRegistry } from "../core/entities/agent-type-registry";
+import { coreEventBus } from "../core/infra/event-bus";
 import { getAgentStopCallback } from "./agent-stop-callback";
 import { createAgentServer } from "./create-agent-server";
 import type { AgentEntry } from "./types";
@@ -19,7 +20,22 @@ import type { AgentEntry } from "./types";
 class AgentRegistry {
   private agents = new Map<string, AgentEntry>();
 
-  constructor() {}
+  constructor() {
+    coreEventBus.on("workflow:saved", async (evt) => {
+      try {
+        await this.handleWorkflowSaved(evt.username, evt.workflowDef);
+      } catch (err) {
+        console.error(`[AgentRegistry] Failed to handle workflow:saved for ${evt.workflowDef.id}:`, err);
+      }
+    });
+    coreEventBus.on("workflow:deleted", async (evt) => {
+      try {
+        await this.handleWorkflowDeleted(evt.username, evt.workflowId);
+      } catch (err) {
+        console.error(`[AgentRegistry] Failed to handle workflow:deleted for ${evt.workflowId}:`, err);
+      }
+    });
+  }
 
   private getBaseDir(username: string): string {
     return join(getUserDir(username), "agents");
@@ -78,7 +94,7 @@ class AgentRegistry {
     username: string,
     definition: AgentDefinition,
     saveToDisk = true,
-    scope?: AgentScopeTarget,
+    scope?: AgentRef,
   ): Promise<AgentEntry> {
     if (this.agents.has(definition.id)) {
       throw new Error(`Agent "${definition.id}" is already registered`);
@@ -116,7 +132,6 @@ class AgentRegistry {
           if (!existsSync(dotSpacesDir)) mkdirSync(dotSpacesDir, { recursive: true });
           writeFileSync(agentsMdPath, systemPrompt, "utf-8");
         }
-        await scopeConfigManager.registerAgent(username, definition.id, scope || defScope);
       }
 
       return entry;
@@ -135,11 +150,11 @@ class AgentRegistry {
   }
 
   list(username: string): AgentInfo[] {
-    const globalIds = new Set(scopeConfigManager.getGlobalAgentIds(username));
     const result: AgentInfo[] = [];
     for (const [id, entry] of this.agents) {
-      if (entry.server.definition.type === "workflow") continue;
-      if (entry.username === username && globalIds.has(id)) {
+      const type = entry.server.definition.type;
+      if (!agentTypeRegistry.get(type).isListable()) continue;
+      if (entry.username === username) {
         result.push({
           id,
           name: entry.server.definition.name,
@@ -158,11 +173,11 @@ class AgentRegistry {
   }
 
   listScoped(username: string, parentType: "projects", parentId: string): AgentInfo[] {
-    const scopedIds = new Set(scopeConfigManager.getScopedAgentIds(username, parentType, parentId));
     const result: AgentInfo[] = [];
     for (const [id, entry] of this.agents) {
-      if (entry.server.definition.type === "workflow") continue;
-      if (entry.username === username && scopedIds.has(id)) {
+      const type = entry.server.definition.type;
+      if (!agentTypeRegistry.get(type).isListable()) continue;
+      if (entry.username === username) {
         result.push({
           id,
           name: entry.server.definition.name,
@@ -186,7 +201,7 @@ class AgentRegistry {
     return this.get(agentId);
   }
 
-  async syncWorkflowAgent(
+  private async handleWorkflowSaved(
     username: string,
     def: { id: string; name: string; description?: string; systemPrompt?: string },
   ): Promise<AgentEntry> {
@@ -215,13 +230,19 @@ class AgentRegistry {
     }
 
     try {
-      return await this.register(username, definition, true, { type: "global" });
+      return await this.register(username, definition, true, { type: "global", id: "global" });
     } catch (err: any) {
       if (this.agents.has(agentId)) {
         return this.agents.get(agentId)!;
       }
       throw err;
     }
+  }
+
+  private async handleWorkflowDeleted(_username: string, workflowId: string): Promise<void> {
+    const sanitizedId = workflowId.toLowerCase().replace(/[^a-z0-9-]/g, "-");
+    const agentId = sanitizedId.startsWith("wf-") ? sanitizedId : `wf-${sanitizedId}`;
+    await this.stop(agentId);
   }
 
   getAvatarPath(username: string, id: string): string | null {
@@ -245,6 +266,28 @@ class AgentRegistry {
     writeFileSync(defPath, JSON.stringify(entry.server.definition, null, 2), "utf-8");
   }
 
+  getTeamDefinition(username: string, teamId: string): AgentDefinition | undefined {
+    const entry = this.agents.get(teamId);
+    if (!entry || entry.username !== username) return undefined;
+    if (entry.server?.definition?.type === "team" || teamId.startsWith("team-")) {
+      return entry.server.definition;
+    }
+    return undefined;
+  }
+
+  listTeamDefinitions(username: string): AgentDefinition[] {
+    const results: AgentDefinition[] = [];
+    for (const entry of this.agents.values()) {
+      if (
+        entry.username === username &&
+        (entry.server?.definition?.type === "team" || entry.server?.definition?.id?.startsWith("team-"))
+      ) {
+        results.push(entry.server.definition);
+      }
+    }
+    return results;
+  }
+
   async stop(id: string, removeDisk = true): Promise<void> {
     const entry = this.agents.get(id);
     if (!entry) return;
@@ -253,7 +296,9 @@ class AgentRegistry {
     if (cb) {
       cb(id);
     }
-    await entry.server.stop();
+    if (entry.server) {
+      await entry.server.stop();
+    }
     this.agents.delete(id);
 
     if (removeDisk) {
@@ -261,7 +306,6 @@ class AgentRegistry {
       if (existsSync(agentDir)) {
         rmSync(agentDir, { recursive: true, force: true });
       }
-      await scopeConfigManager.removeAgentFromScope(entry.username, id);
     }
   }
 
@@ -281,24 +325,11 @@ class AgentRegistry {
       ...updates,
     };
 
-    const currentMembership = scopeConfigManager.getAgentMembership(username, id);
-    let targetScope: AgentScopeTarget | undefined = updates.scope;
-    if (!targetScope && currentMembership) {
-      if (currentMembership.type === "global") {
-        targetScope = { type: "global" };
-      } else {
-        targetScope = {
-          type: "project",
-          id: currentMembership.id,
-        };
-      }
-    }
-
     // Stop active instance without removing disk
     await this.stop(id, false);
 
     // Save updated definition to disk and re-register
-    const newEntry = await this.register(username, newDefinition, true, targetScope);
+    const newEntry = await this.register(username, newDefinition, true, updates.scope);
     newEntry.createdAt = oldCreatedAt;
 
     return newEntry;

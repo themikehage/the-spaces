@@ -1,7 +1,5 @@
-// SPDX-License-Identifier: MIT
 import { type TeamMessage, SessionPrefix, getTeamWorkspaceDir } from "shared";
-import { agentRegistry } from "../../agents";
-import { sessionManager } from "../../core/session/session-manager";
+import { createServerContext, type ServerContext } from "../../core/infra/server-context";
 import { teamStore } from "../team-store";
 
 type BroadcastFn = (teamId: string, data: any) => void;
@@ -26,10 +24,12 @@ export class OrchestrationRunner {
     userContent: string,
     conversationSessionId?: string,
   ): Promise<void> {
-    const team = teamStore.getTeam(username, teamId);
-    if (!team) throw new Error("Team not found");
+    const { agentRegistry, sessionManager } = createServerContext();
+    const teamDef = agentRegistry.getTeamDefinition(username, teamId);
+    if (!teamDef) throw new Error("Team not found");
 
-    const leader = team.members.find((m) => m.role === "lead");
+    const members = teamDef.capabilities?.group?.members || [];
+    const leader = members.find((m) => m.role === "lead");
     if (!leader) throw new Error("Orchestration leader not found");
 
     const leaderEntry = agentRegistry.get(leader.agentId);
@@ -41,7 +41,7 @@ export class OrchestrationRunner {
     const metaStore = sessionManager.metadataStore;
     if (!metaStore.getSessionMetadata(username, ownerSessionId)) {
       metaStore.saveSessionMetadata(username, ownerSessionId, {
-        name: `${team.name} — Orchestration`,
+        name: `${teamDef.name} — Orchestration`,
         createdAt: now,
         updatedAt: now,
         agentId: leader.agentId,
@@ -217,6 +217,7 @@ export class OrchestrationRunner {
     this.activeBridges.delete(teamId);
 
     const ownerSessionId = `${SessionPrefix.TEAM}${teamId}`;
+    const { sessionManager } = createServerContext();
     const session = sessionManager.getSession(username, ownerSessionId);
     if (session) {
       session.abort().catch(() => {});

@@ -1,6 +1,5 @@
-// SPDX-License-Identifier: MIT
 import { ZodError } from "zod";
-import { sessionManager } from "../session/session-manager";
+import { createServerContext } from "../infra/server-context";
 import { createCustomToolRuntime } from "./runtime";
 import { type CustomToolDefinition, CustomToolDefinitionSchema } from "./schemas";
 import { customToolStorage } from "./storage";
@@ -11,6 +10,7 @@ export interface ManageCustomToolsOptions {
 }
 
 export function createManageCustomToolsTool(options: ManageCustomToolsOptions) {
+  const { sessionManager } = createServerContext();
   const { username, sessionId } = options;
 
   return {

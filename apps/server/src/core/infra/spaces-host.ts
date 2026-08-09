@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { agentRegistry } from "../../agents";
+import { agentRegistry as defaultAgentRegistry } from "../../agents";
 import { teamStore } from "../../teams/team-store";
 import { uiApprovalRegistry } from "../approvals/ui-approval-registry";
 import { delegationRegistry } from "../delegation/delegation-registry";
 import { mcpRegistry } from "../mcp/mcp-registry";
 import type { AgentCapabilities, AgentDirectoryEntry, SpacesHost } from "../ports/spaces-host.port";
-import { scopeConfigManager } from "../scope";
 import type { WorkspaceConfig } from "../ports/workspace-config.port";
 import { workspaceConfigLoader } from "../session/workspace-config-loader";
 import { resolveProjectDir } from "../session/workspace-resolver";
@@ -117,7 +116,7 @@ export class ServerSpacesHost implements SpacesHost {
 
   agents = {
     async getAgentDef(agentId: string) {
-      const entry = agentRegistry.get(agentId);
+      const entry = defaultAgentRegistry.get(agentId);
       if (!entry) return null;
       return {
         name: entry.server.definition.name,
@@ -129,14 +128,14 @@ export class ServerSpacesHost implements SpacesHost {
       username: string,
       filter?: { tags?: string[]; hasCapability?: string },
     ): Promise<AgentDirectoryEntry[]> {
-      const allAgents = agentRegistry.list(username);
+      const allAgents = defaultAgentRegistry.list(username);
       const result: AgentDirectoryEntry[] = [];
 
       for (const info of allAgents) {
-        const entry = agentRegistry.get(info.id, username);
+        const entry = defaultAgentRegistry.get(info.id, username);
         if (!entry) continue;
         const def = entry.server.definition;
-        const activeTools = scopeConfigManager.resolveToolsForAgent(username, info.id);
+        const activeTools = def.serialTools ?? [];
         const isActive = entry.status !== "idle" && entry.status !== "stopped";
 
         const tags: string[] = def.tags ?? [];
@@ -163,10 +162,10 @@ export class ServerSpacesHost implements SpacesHost {
     },
 
     async getAgentCapabilities(username: string, agentId: string): Promise<AgentCapabilities | null> {
-      const entry = agentRegistry.get(agentId, username);
+      const entry = defaultAgentRegistry.get(agentId, username);
       if (!entry) return null;
       const def = entry.server.definition;
-      const activeTools = scopeConfigManager.resolveToolsForAgent(username, agentId);
+      const activeTools = def.serialTools ?? [];
       return {
         model: (def as any).model,
         activeTools,

@@ -21,12 +21,10 @@ import {
   getWorkspaceDir,
   UpdateProjectAssignmentSchema,
 } from "shared";
-import { sessionMiddleware } from "../auth/middleware";
 import { applyCacheHeaders } from "../core/middleware/cache-headers";
-import { scopeConfigManager } from "../core/scope";
-import { sessionManager } from "../core/session/session-manager";
 import { resolveProjectDir } from "../core/session/workspace-resolver";
 import { getUsername } from "../lib/auth-helpers";
+import { authMiddleware } from "../middleware/auth";
 
 export const filesRouter = new Hono();
 
@@ -64,7 +62,7 @@ filesRouter.use("/*", async (c, next) => {
   if (c.req.path.startsWith("/api/preview/") || c.req.path.startsWith("/api/auth/")) {
     return next();
   }
-  return sessionMiddleware(c, next);
+  return authMiddleware(c, next);
 });
 
 function validateWorkspacePath(
@@ -450,6 +448,7 @@ filesRouter.post("/workspace-projects", async (c) => {
 });
 
 filesRouter.delete("/workspace-projects/:id", async (c) => {
+  const { sessionManager } = c.get("serverContext");
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
   const id = c.req.param("id");
@@ -469,7 +468,6 @@ filesRouter.delete("/workspace-projects/:id", async (c) => {
       }
     }
 
-    await scopeConfigManager.removeProjectScope(username, id);
     rmSync(projectPath, { recursive: true, force: true });
     return c.body(null, 204);
   } catch (err: any) {
@@ -478,10 +476,10 @@ filesRouter.delete("/workspace-projects/:id", async (c) => {
 });
 
 filesRouter.get("/workspace-projects/:id/agents", async (c) => {
+  const { agentRegistry } = c.get("serverContext");
   const username = getUsername(c);
   if (!username) return c.json({ error: "Unauthorized" }, 401);
   const id = c.req.param("id");
-  const { agentRegistry } = await import("../agents/agent-registry");
   return c.json({ agents: agentRegistry.listScoped(username, "projects", id) });
 });
 

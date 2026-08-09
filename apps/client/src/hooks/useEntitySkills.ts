@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: MIT
 import { skillsService, type SkillInfo } from "@/lib/api/skills.service";
 import { useCallback, useEffect, useState } from "react";
-import type { EntityType } from "shared";
+import type { AgentRef, EntityType } from "shared";
 import { useEntityConfig } from "./useEntityConfig";
 
 export type { SkillInfo };
 
-export function useEntitySkills(entityType: EntityType, entityId: string) {
+export function useEntitySkills(agentRef: AgentRef) {
+  const entityType: EntityType = agentRef.type as EntityType;
+  const targetId: string = agentRef.id;
+
   const {
     config,
     resolvedConfig,
@@ -15,18 +18,18 @@ export function useEntitySkills(entityType: EntityType, entityId: string) {
     error: configError,
     updateConfig,
     refresh: refreshConfig,
-  } = useEntityConfig(entityType, entityId);
+  } = useEntityConfig(agentRef);
 
   const [installedSkills, setInstalledSkills] = useState<SkillInfo[]>([]);
   const [skillsLoading, setSkillsLoading] = useState<boolean>(true);
   const [skillsError, setSkillsError] = useState<string | null>(null);
 
   const fetchSkills = useCallback(async () => {
-    if (!entityId) return;
+    if (!targetId) return;
     setSkillsLoading(true);
     setSkillsError(null);
     try {
-      const skills = await skillsService.fetchSkills(entityType, entityId);
+      const skills = await skillsService.fetchSkills(entityType, targetId);
       setInstalledSkills(skills);
     } catch (e) {
       const message = e instanceof Error ? e.message : "Failed to load skills";
@@ -34,7 +37,7 @@ export function useEntitySkills(entityType: EntityType, entityId: string) {
     } finally {
       setSkillsLoading(false);
     }
-  }, [entityType, entityId]);
+  }, [entityType, targetId]);
 
   useEffect(() => {
     fetchSkills();
