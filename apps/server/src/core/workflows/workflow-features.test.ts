@@ -440,4 +440,34 @@ describe("Workflow Engine Robustness - Core Features", () => {
       expect(state.outputs).toEqual({ name: "Alice", score: 95 });
     });
   });
+
+  describe("Feature: First-Class Workflow Agent Entities", () => {
+    it("should automatically sync a workflow agent with type='workflow' on save and filter it out of regular agent lists", async () => {
+      const { agentRegistry } = await import("../../agents/agent-registry");
+      const username = "wfagent-testuser";
+      const wfDef = {
+        id: "wf-agent-test",
+        name: "Workflow Agent Pipeline",
+        description: "Test workflow agent creation",
+        steps: [{ id: "step1", type: "code" as const, label: "Code", codeSnippet: "return {};" }],
+        onError: "stop" as const,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      await workflowStore.save(username, wfDef);
+
+      const wfAgentEntry = agentRegistry.getWorkflowAgent(username, wfDef.id);
+      expect(wfAgentEntry).toBeDefined();
+      expect(wfAgentEntry?.server.definition.id).toBe("wf-agent-test");
+      expect(wfAgentEntry?.server.definition.type).toBe("workflow");
+      expect(wfAgentEntry?.server.definition.workflowId).toBe(wfDef.id);
+
+      const regularAgents = agentRegistry.list(username);
+      expect(regularAgents.some((a) => a.id === `wf-${wfDef.id}`)).toBe(false);
+
+      await workflowStore.delete(username, wfDef.id);
+      expect(agentRegistry.getWorkflowAgent(username, wfDef.id)).toBeUndefined();
+    });
+  });
 });

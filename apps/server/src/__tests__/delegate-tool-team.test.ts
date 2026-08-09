@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import { beforeAll, describe, expect, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { agentRegistry } from "../agents";
 import { sessionManager } from "../core/session/session-manager";
 import { createManageDelegationsTool } from "../core/tools/extensions/manage-delegations.tool";
@@ -10,6 +10,8 @@ describe("delegate_task Tool Team Integration Tests", () => {
   const specialistId = "specialist-agent";
   const unauthorizedId = "unauthorized-agent";
   const teamWorkspace = "/tmp/team-shared-workspace";
+
+  const originalGet = agentRegistry.get;
 
   beforeAll(() => {
     // Override agentRegistry.get to mock specialist and unauthorized agents
@@ -43,15 +45,17 @@ describe("delegate_task Tool Team Integration Tests", () => {
       }
       if (id === unauthorizedId) {
         return {
-          username,
+          username: "other-user",
           status: "idle",
-          server: {
-            definition: { id: unauthorizedId, name: "Unauthorized" },
-          },
+          server: { definition: { id: unauthorizedId } },
         } as any;
       }
-      return undefined;
+      return originalGet.call(agentRegistry, id, user);
     };
+  });
+
+  afterAll(() => {
+    agentRegistry.get = originalGet;
   });
 
   test("Should allow delegation to permitted agent and pass inherited workspace", async () => {

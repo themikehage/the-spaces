@@ -1,9 +1,8 @@
 import type { WorkflowRun, WorkflowStep, WorkflowStepState } from "shared";
-import { SessionPrefix } from "shared";
 import type { DelegationRegistry } from "../../delegation/delegation-registry";
 import type { EventBus } from "../../ports/spaces-host.port";
+import { getLastAssistantText, parseEnvelope } from "../../session/agent-utils";
 import type { SessionManager } from "../../session/session-manager";
-import { spawnSubagent } from "../../session/spawn-subagent";
 import { interpolateString } from "../variable-interpolator";
 import { workflowRunStore } from "../workflow-run-store";
 
@@ -24,9 +23,8 @@ export async function executeAgentStep(
 ): Promise<WorkflowStepState> {
   const taskTemplate = step.taskTemplate || `Execute step ${step.label}`;
   const task = String(interpolateString(taskTemplate, scope));
-  const toolCallId = `wf-${run.id.slice(0, 8)}-${step.id}`;
-  const parentSessionId = run.workflowSessionId || run.parentSessionId || `wf-run-${run.id}`;
-  const agentSessionId = `${SessionPrefix.SUBAGENT}${toolCallId}`;
+  const agentSessionId = run.workflowSessionId || run.parentSessionId || `wf-run-${run.id}`;
+  const agentId = step.agentId || `wf-${run.workflowId}`;
 
   workflowRunStore.updateStepState(run.username, run.id, step.id, {
     status: "running",
@@ -41,19 +39,42 @@ export async function executeAgentStep(
     agentSessionId,
   });
 
-  const envelope = await spawnSubagent({
-    toolCallId,
-    username: run.username,
-    parentSessionId,
-    agentId: step.agentId || undefined,
-    task,
-    subagentType: step.subagentType || "builder",
-    maxSteps: step.maxSteps,
-    sessionManager: deps.sessionManager,
-    delegationRegistry: deps.delegationRegistry,
-    workspaceDir,
-    signal,
-  });
+  let envelope: ReturnType<typeof parseEnvelope>;
+  try {
+    const session = await deps.sessionManager.getOrCreateSession(
+      run.username,
+      agentSessionId,
+      undefined,
+      agentId,
+      { workspaceDir },
+    );
+
+    if (signal?.aborted) {
+      return {
+        stepId: step.id,
+        status: "error",
+        startedAt,
+        completedAt: new Date().toISOString(),
+        error: "Execution was aborted",
+        agentSessionId,
+      };
+    }
+
+    await session.prompt(task);
+
+    const lastText = getLastAssistantText(session.messages);
+    envelope = parseEnvelope(lastText);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return {
+      stepId: step.id,
+      status: "error",
+      startedAt,
+      completedAt: new Date().toISOString(),
+      error: `Agent step failed: ${msg}`,
+      agentSessionId,
+    };
+  }
 
   if (envelope.status === "error" || envelope.status === "blocked") {
     return {

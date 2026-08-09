@@ -96,6 +96,7 @@ export const WorkflowDefinitionSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string().optional(),
+  systemPrompt: z.string().optional(),
   scope: WorkflowScopeSchema.optional(),
   inputs: z.record(WorkflowInputParamSchema).optional(),
   schedule: z.string().optional(),

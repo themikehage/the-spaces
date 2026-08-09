@@ -16,31 +16,48 @@ export class WorkflowSessionBootstrap implements IWorkflowSessionBootstrap {
     workspaceDir: string,
   ): Promise<IWorkflowSessionBootstrapResult> {
     const workflowSessionId = `wf-run-${runId}`;
+    const agentId = `wf-${workflowId}`;
     const runDir = getWorkflowRunDir(username, workflowId, runId);
     const sessionDir = join(runDir, "session");
-    const subagentsDir = join(sessionDir, "subagents");
 
-    if (!existsSync(subagentsDir)) {
-      mkdirSync(subagentsDir, { recursive: true });
+    if (!existsSync(sessionDir)) {
+      mkdirSync(sessionDir, { recursive: true });
+    }
+
+    try {
+      const { agentRegistry } = await import("../../agents/agent-registry");
+      const existing = agentRegistry.getWorkflowAgent(username, workflowId);
+      if (!existing) {
+        const workflowDef = (await import("./workflow-store")).workflowStore.get(username, workflowId);
+        if (workflowDef) {
+          await agentRegistry.syncWorkflowAgent(username, workflowDef);
+        }
+      }
+    } catch (err) {
+      console.warn(`[WorkflowSessionBootstrap] Failed to sync agent ${agentId}:`, err);
+    }
+
+    try {
+      const { sessionManager } = await import("../session/session-manager");
+      await sessionManager.getOrCreateSession(username, workflowSessionId, undefined, agentId, {
+        workspaceDir,
+      });
+    } catch (err) {
+      console.error(`[WorkflowSessionBootstrap] Failed to create session ${workflowSessionId}:`, err);
     }
 
     sessionMetadataStore.saveSessionMetadata(username, workflowSessionId, {
       isWorkflowSession: true,
       workflowRunId: runId,
       workflowId,
+      agentId,
       executionMode: "standard",
       workspaceDir,
       startedAt: new Date().toISOString(),
     });
 
     const cleanup = async () => {
-      if (existsSync(sessionDir)) {
-        try {
-          rmSync(sessionDir, { recursive: true, force: true });
-        } catch (e) {
-          console.error(`[WorkflowSessionBootstrap] Failed to cleanup ${sessionDir}:`, e);
-        }
-      }
+      // Sessions are preserved post-run for user inspection & conversation audit
     };
 
     return {

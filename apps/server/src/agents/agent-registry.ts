@@ -138,6 +138,7 @@ class AgentRegistry {
     const globalIds = new Set(scopeConfigManager.getGlobalAgentIds(username));
     const result: AgentInfo[] = [];
     for (const [id, entry] of this.agents) {
+      if (entry.server.definition.type === "workflow") continue;
       if (entry.username === username && globalIds.has(id)) {
         result.push({
           id,
@@ -148,6 +149,8 @@ class AgentRegistry {
           blueprintId: entry.server.definition.blueprintId,
           tags: entry.server.definition.tags ?? [],
           description: entry.server.definition.description,
+          type: entry.server.definition.type,
+          workflowId: entry.server.definition.workflowId,
         });
       }
     }
@@ -158,6 +161,7 @@ class AgentRegistry {
     const scopedIds = new Set(scopeConfigManager.getScopedAgentIds(username, parentType, parentId));
     const result: AgentInfo[] = [];
     for (const [id, entry] of this.agents) {
+      if (entry.server.definition.type === "workflow") continue;
       if (entry.username === username && scopedIds.has(id)) {
         result.push({
           id,
@@ -168,10 +172,56 @@ class AgentRegistry {
           blueprintId: entry.server.definition.blueprintId,
           tags: entry.server.definition.tags ?? [],
           description: entry.server.definition.description,
+          type: entry.server.definition.type,
+          workflowId: entry.server.definition.workflowId,
         });
       }
     }
     return result;
+  }
+
+  getWorkflowAgent(username: string, workflowId: string): AgentEntry | undefined {
+    const sanitizedId = workflowId.toLowerCase().replace(/[^a-z0-9-]/g, "-");
+    const agentId = sanitizedId.startsWith("wf-") ? sanitizedId : `wf-${sanitizedId}`;
+    return this.get(agentId);
+  }
+
+  async syncWorkflowAgent(
+    username: string,
+    def: { id: string; name: string; description?: string; systemPrompt?: string },
+  ): Promise<AgentEntry> {
+    const sanitizedId = def.id.toLowerCase().replace(/[^a-z0-9-]/g, "-");
+    const agentId = sanitizedId.startsWith("wf-") ? sanitizedId : `wf-${sanitizedId}`;
+
+    const definition: AgentDefinition = {
+      id: agentId,
+      name: `[Workflow] ${def.name}`,
+      type: "workflow",
+      workflowId: def.id,
+      systemPrompt:
+        def.systemPrompt ||
+        `You are the execution agent for workflow "${def.name}". ${def.description || ""}`.trim(),
+      description: def.description,
+    };
+
+    if (this.agents.has(agentId)) {
+      const existing = this.agents.get(agentId)!;
+      if (existing.status === "starting") return existing;
+      try {
+        return await this.update(existing.username, agentId, definition);
+      } catch {
+        return existing;
+      }
+    }
+
+    try {
+      return await this.register(username, definition, true, { type: "global" });
+    } catch (err: any) {
+      if (this.agents.has(agentId)) {
+        return this.agents.get(agentId)!;
+      }
+      throw err;
+    }
   }
 
   getAvatarPath(username: string, id: string): string | null {

@@ -266,7 +266,7 @@ export function EnvVarsTab({
                 <div className="text-foreground text-sm font-mono font-semibold truncate">
                   {v.key}
                 </div>
-                <div className="text-muted-foreground text-xs font-mono mt-0.5">
+                <div className="text-muted-foreground text-xs font-mono mt-0.5 break-all">
                   {revealedVars[v.key] ?? "••••••••"}
                 </div>
               </div>

@@ -67,14 +67,14 @@ export class WorkflowEngine implements IWorkflowEngine {
   }
 
   async save(username: string, def: WorkflowDefinition): Promise<WorkflowDefinition> {
-    const saved = workflowStore.save(username, def);
+    const saved = await workflowStore.save(username, def);
     workflowScheduler.syncWorkflow(username, saved);
     return saved;
   }
 
   async delete(username: string, workflowId: string): Promise<void> {
     workflowScheduler.unregisterWorkflow(workflowId);
-    workflowStore.delete(username, workflowId);
+    await workflowStore.delete(username, workflowId);
   }
 
   list(username: string, filter?: { scopeType?: string; entityId?: string }): WorkflowDefinition[] {

@@ -245,6 +245,8 @@ export const AgentDefinitionSchema = z.object({
   scope: AgentScopeTargetSchema.optional(),
   tags: z.array(z.string()).optional(),
   description: z.string().max(500).optional(),
+  type: z.enum(["user", "workflow"]).optional(),
+  workflowId: z.string().optional(),
 });
 export type AgentDefinition = z.infer<typeof AgentDefinitionSchema>;
 
@@ -263,6 +265,8 @@ export const AgentInfoSchema = z.object({
   blueprintId: z.string().optional(),
   tags: z.array(z.string()).optional(),
   description: z.string().optional(),
+  type: z.enum(["user", "workflow"]).optional(),
+  workflowId: z.string().optional(),
 });
 export type AgentInfo = z.infer<typeof AgentInfoSchema>;
 

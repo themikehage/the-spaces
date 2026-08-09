@@ -3,6 +3,7 @@ import { Database } from "bun:sqlite";
 import { existsSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import {
+  getWorkflowRunDir,
   getWorkflowsDbPath,
   WorkflowRunSchema,
   type WorkflowRun,
@@ -141,6 +142,11 @@ export class SqliteWorkflowRunStore implements IWorkflowRunStore {
     const { username, workflowId, workflowName, inputs, stepIds, parentSessionId } = params;
     const runId = crypto.randomUUID();
     const now = new Date().toISOString();
+
+    const runDir = getWorkflowRunDir(username, workflowId, runId);
+    if (!existsSync(runDir)) {
+      mkdirSync(runDir, { recursive: true });
+    }
 
     const stepStates: Record<string, WorkflowStepState> = {};
     for (const stepId of stepIds) {

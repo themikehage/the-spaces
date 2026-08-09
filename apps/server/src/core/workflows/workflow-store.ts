@@ -17,7 +17,7 @@ import {
 import { webhookStore } from "./webhook-store";
 
 export class WorkflowStore {
-  save(username: string, def: WorkflowDefinition): WorkflowDefinition {
+  async save(username: string, def: WorkflowDefinition): Promise<WorkflowDefinition> {
     const validated = WorkflowDefinitionSchema.parse(def);
     const dir = getWorkflowDir(username, validated.id);
     const workspaceDir = join(dir, "workspace");
@@ -33,15 +33,32 @@ export class WorkflowStore {
     const filePath = join(dir, "definition.json");
     writeFileSync(filePath, JSON.stringify(validated, null, 2), "utf-8");
     webhookStore.syncWorkflowWebhooks(username, validated);
+
+    try {
+      const { agentRegistry } = await import("../../agents/agent-registry");
+      await agentRegistry.syncWorkflowAgent(username, validated);
+    } catch (err) {
+      console.error(`[WorkflowStore] Failed to sync workflow agent for ${validated.id}:`, err);
+    }
+
     return validated;
   }
 
-  delete(username: string, workflowId: string): void {
+  async delete(username: string, workflowId: string): Promise<void> {
     const dir = getWorkflowDir(username, workflowId);
     if (existsSync(dir)) {
       rmSync(dir, { recursive: true, force: true });
     }
     webhookStore.removeWorkflowWebhooks(username, workflowId);
+
+    try {
+      const { agentRegistry } = await import("../../agents/agent-registry");
+      const sanitizedId = workflowId.toLowerCase().replace(/[^a-z0-9-]/g, "-");
+      const agentId = sanitizedId.startsWith("wf-") ? sanitizedId : `wf-${sanitizedId}`;
+      await agentRegistry.stop(agentId);
+    } catch {
+      /* noop */
+    }
   }
 
   get(username: string, workflowId: string): WorkflowDefinition | null {
