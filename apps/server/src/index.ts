@@ -48,12 +48,15 @@ import { authRateLimiter, generalRateLimiter } from "./core/middleware/rate-limi
 import { securityHeadersMiddleware } from "./core/middleware/security-headers";
 import { resolveCorsOrigin } from "./core/security/cors";
 
+import { resolveSubagentSessionDir } from "./core/session/workspace-resolver";
+
 sessionMetadataStore.setTeamReader({
   getTeamType(username: string, teamId: string): string | null {
     const team = teamStore.getTeam(username, teamId);
     return team?.teamType ?? null;
   },
 });
+sessionMetadataStore.setSessionDirResolver(resolveSubagentSessionDir);
 
 const PREVIEW_HOST = (process.env.PREVIEW_HOST ?? "").toLowerCase();
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? "").split(",");

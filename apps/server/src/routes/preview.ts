@@ -7,7 +7,7 @@ import { sessionMiddleware } from "../auth/middleware";
 import { abortBuild, runBuild } from "../core/preview/preview-builder";
 import { loadPreviewConfig, savePreviewConfig } from "../core/preview/preview-config";
 import { getPreviewState } from "../core/preview/preview-watcher";
-import { resolveProjectDir } from "../core/session/workspace-resolver";
+import * as defaultWorkspaceResolver from "../core/session/workspace-resolver";
 import { getUsername } from "../lib/auth-helpers";
 
 export const previewRouter = new Hono();
@@ -59,7 +59,7 @@ function isAssetPath(path: string): boolean {
 const BUILD_DIRS = ["dist", "build", ".output"] as const;
 
 function resolveBuildDir(username: string, projectName: string): string {
-  const resolved = resolveProjectDir(username, projectName);
+  const resolved = defaultWorkspaceResolver.resolveProjectDir(username, projectName);
   const projectDir = resolved
     ? join(resolved, "workspace")
     : getProjectWorkspaceDir(username, projectName);
@@ -81,7 +81,7 @@ function validatePreviewPath(username: string, projectName: string, reqPath: str
   }
 
   // Fallback to raw project workspace if file is not found in buildDir
-  const resolved = resolveProjectDir(username, projectName);
+  const resolved = defaultWorkspaceResolver.resolveProjectDir(username, projectName);
   const workspaceDir = resolved
     ? join(resolved, "workspace")
     : getProjectWorkspaceDir(username, projectName);

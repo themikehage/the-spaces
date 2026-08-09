@@ -20,4 +20,5 @@ export interface IWorkspaceResolver {
     agentId?: string,
     teamId?: string,
   ): ResolvedWorkspaceSession;
+  resolveSessionAllowedWriteDir(username: string, sessionId: string): string;
 }

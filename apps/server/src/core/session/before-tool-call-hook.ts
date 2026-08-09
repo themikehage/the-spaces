@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 import { SessionPrefix } from "shared";
 import { approvalManager } from "../approvals/approval-manager";
+import type { IWorkspaceResolver } from "../ports/workspace-resolver.port";
 import { extractSubject, permissionEngine, userPermissionStore } from "../sandbox";
 import { sessionMetadataStore } from "./metadata-store";
-import { resolveSessionAllowedWriteDir } from "./workspace-resolver";
+import * as defaultWorkspaceResolver from "./workspace-resolver";
 
 export interface CreateBeforeToolCallHookParams {
   sessionId: string;
@@ -12,6 +13,7 @@ export interface CreateBeforeToolCallHookParams {
   username?: string;
   executionMode?: "readonly" | "standard" | "autonomous";
   permissionOverrides?: Record<string, "allow" | "deny" | "ask">;
+  workspaceResolver?: IWorkspaceResolver;
 }
 
 export function createBeforeToolCallHook({
@@ -21,6 +23,7 @@ export function createBeforeToolCallHook({
   username,
   executionMode,
   permissionOverrides,
+  workspaceResolver = defaultWorkspaceResolver,
 }: CreateBeforeToolCallHookParams) {
   const resolvedIsSubagent =
     isSubagent ||
@@ -51,7 +54,7 @@ export function createBeforeToolCallHook({
       }
     }
 
-    const allowedWriteDir = resolveSessionAllowedWriteDir(resolvedUsername, sessionId);
+    const allowedWriteDir = workspaceResolver.resolveSessionAllowedWriteDir(resolvedUsername, sessionId);
 
     const verdict = permissionEngine.evaluate(toolName, args as Record<string, unknown>, {
       isSubagent: resolvedIsSubagent,

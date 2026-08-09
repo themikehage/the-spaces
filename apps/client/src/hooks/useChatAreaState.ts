@@ -179,6 +179,18 @@ export function useChatAreaState({
     [sessionId],
   );
 
+  const handleCancelTasks = useCallback(async () => {
+    if (!sessionId) return;
+    try {
+      await sessionsService.updateSessionTaskStatus(sessionId, "", "cancelled");
+      send({ type: "abort", sessionId });
+      const data = await sessionsService.fetchSessionTasks(sessionId);
+      setTasksState(data);
+    } catch (e) {
+      console.error("Failed to cancel task runner:", e);
+    }
+  }, [sessionId, send]);
+
   const loadMessages = useCallback(
     async (silent = false) => {
       if (!sessionId) {
@@ -682,6 +694,7 @@ export function useChatAreaState({
     handleCompact,
     handleResolveApproval,
     handleToggleTasksStatus,
+    handleCancelTasks,
     handleSend,
     handleAbort,
     handleNavigate,

@@ -1242,8 +1242,11 @@ sessionsRouter.post("/:id/tasks/status", async (c) => {
   const { username } = getAuthPayload(c);
   try {
     const { status } = await c.req.json();
-    if (status !== "running" && status !== "paused") {
-      return c.json({ error: "Invalid status value. Must be 'running' or 'paused'." }, 400);
+    if (status !== "running" && status !== "paused" && status !== "cancelled") {
+      return c.json(
+        { error: "Invalid status value. Must be 'running', 'paused', or 'cancelled'." },
+        400,
+      );
     }
 
     const userDir = sessionManager.userConfig.ensureUserDir(username);
@@ -1256,6 +1259,17 @@ sessionsRouter.post("/:id/tasks/status", async (c) => {
 
     const state = JSON.parse(readFileSync(tasksPath, "utf-8"));
     state.status = status;
+    if (status === "cancelled") {
+      state.currentTaskId = null;
+      if (Array.isArray(state.tasks)) {
+        for (const task of state.tasks) {
+          if (task.status === "pending" || task.status === "running") {
+            task.status = "cancelled";
+            task.log = "Task execution cancelled by user.";
+          }
+        }
+      }
+    }
     writeFileSync(tasksPath, JSON.stringify(state, null, 2), "utf-8");
 
     broadcastToSession(sessionId, {

@@ -37,7 +37,9 @@ export class SessionManager {
   private sessions = new Map<string, UserSessionEntry>();
   private pendingSessions = new Map<string, Promise<IAgentRuntime>>();
 
-  readonly userConfig = userConfigManager;
+  get userConfig() {
+    return userConfigManager;
+  }
   readonly metadataStore = sessionMetadataStore;
   readonly lister = sessionLister;
 

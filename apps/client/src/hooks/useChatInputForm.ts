@@ -225,7 +225,7 @@ export function useChatInputForm({
   };
 
   const handleSendAction = async (option?: "steer" | "follow_up") => {
-    if ((!input.trim() && attachments.length === 0) || runnerActive) return;
+    if (!input.trim() && attachments.length === 0) return;
 
     try {
       const files = attachments.map((a) => a.file);
@@ -464,6 +464,6 @@ export function useChatInputForm({
     handleKeyDown,
     handleToolsChange,
     placeholderText,
-    disabled: runnerActive || disabled,
+    disabled: disabled,
   };
 }

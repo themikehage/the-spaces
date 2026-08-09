@@ -1,16 +1,18 @@
 // SPDX-License-Identifier: MIT
 import ignore from "ignore";
-import { execSync, spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { readdir, readFile, stat } from "node:fs/promises";
 import { basename, join, relative } from "node:path";
 import type { ITool, ToolContext } from "../../ports/tool.port";
+import { LocalSandbox } from "../../sandbox/local.sandbox";
 import { resolveSafePath } from "./path-safety";
 
-function isFdAvailable(): boolean {
+async function isFdAvailable(): Promise<boolean> {
   try {
-    execSync(process.platform === "win32" ? "where fd" : "which fd", { stdio: "ignore" });
-    return true;
+    const res = await new LocalSandbox().execute(
+      process.platform === "win32" ? "where fd" : "which fd",
+    );
+    return res.exitCode === 0;
   } catch {
     return false;
   }
@@ -67,7 +69,7 @@ export class FindTool implements ITool {
       throw new Error("Operation aborted");
     }
 
-    if (isFdAvailable()) {
+    if (await isFdAvailable()) {
       try {
         return await runFd(searchPath, pattern, { limit: effectiveLimit, signal });
       } catch {
@@ -99,79 +101,42 @@ async function runFd(
   pattern: string,
   opts: { limit: number; signal?: AbortSignal },
 ): Promise<any> {
-  return new Promise((resolve, reject) => {
-    const args = ["--glob", "--color=never", "--max-results", String(opts.limit)];
+  const args = ["--glob", "--color=never", "--max-results", String(opts.limit)];
 
-    let effectivePattern = pattern;
-    if (pattern.includes("/")) {
-      args.push("--full-path");
-      if (!pattern.startsWith("/") && !pattern.startsWith("**/") && pattern !== "**") {
-        effectivePattern = `**/${pattern}`;
-      }
+  let effectivePattern = pattern;
+  if (pattern.includes("/")) {
+    args.push("--full-path");
+    if (!pattern.startsWith("/") && !pattern.startsWith("**/") && pattern !== "**") {
+      effectivePattern = `**/${pattern}`;
     }
-    args.push("--", effectivePattern, searchPath);
+  }
+  args.push("--", `"${effectivePattern}"`, `"${searchPath}"`);
 
-    const child = spawn("fd", args, { stdio: ["ignore", "pipe", "pipe"] });
-    let stdout = "";
-    let stderr = "";
+  const cmd = `fd ${args.join(" ")}`;
+  const sandbox = new LocalSandbox();
+  const res = await sandbox.execute(cmd, { signal: opts.signal });
 
-    const onAbort = () => {
-      child.kill();
-      reject(new Error("Operation aborted"));
-    };
+  if (res.exitCode !== 0) {
+    throw new Error(res.stderr.trim() || `fd exited with code ${res.exitCode}`);
+  }
 
-    if (opts.signal) {
-      if (opts.signal.aborted) {
-        onAbort();
-        return;
-      }
-      opts.signal.addEventListener("abort", onAbort, { once: true });
-    }
-
-    child.stdout.on("data", (data) => {
-      stdout += data.toString();
-    });
-
-    child.stderr.on("data", (data) => {
-      stderr += data.toString();
-    });
-
-    child.on("close", (code) => {
-      if (opts.signal) {
-        opts.signal.removeEventListener("abort", onAbort);
-      }
-
-      if (code !== 0) {
-        reject(new Error(stderr.trim() || `fd exited with code ${code}`));
-        return;
-      }
-
-      const lines = stdout.split("\n").filter(Boolean);
-      const results = lines.slice(0, opts.limit).map((line) => {
-        const relativePath = relative(searchPath, line) || basename(line);
-        return relativePath.replace(/\\/g, "/");
-      });
-
-      if (results.length === 0) {
-        resolve({
-          content: [{ type: "text", text: "No files found matching pattern" }],
-          details: { count: 0 },
-        });
-      } else {
-        resolve({
-          content: [{ type: "text", text: results.join("\n") }],
-          details: { count: results.length },
-        });
-      }
-    });
-
-    child.on("error", (err) => {
-      if (opts.signal) {
-        opts.signal.removeEventListener("abort", onAbort);
-      }
-      reject(err);
-    });
+  const lines = res.stdout.split("\n").filter(Boolean);
+  const results = lines.slice(0, opts.limit).map((line) => {
+    const relativePath = relative(searchPath, line) || basename(line);
+    return relativePath.replace(/\\/g, "/");
   });
+
+  if (results.length === 0) {
+    return {
+      content: [{ type: "text", text: "No files found matching pattern" }],
+      details: { count: 0 },
+    };
+  } else {
+    return {
+      content: [{ type: "text", text: results.join("\n") }],
+      details: { count: results.length },
+    };
+  }
 }
 
 async function runNativeFind(

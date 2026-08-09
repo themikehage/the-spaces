@@ -22,7 +22,7 @@ import {
   UpdateProjectAssignmentSchema,
 } from "shared";
 import { applyCacheHeaders } from "../core/middleware/cache-headers";
-import { resolveProjectDir } from "../core/session/workspace-resolver";
+import * as defaultWorkspaceResolver from "../core/session/workspace-resolver";
 import { getUsername } from "../lib/auth-helpers";
 import { authMiddleware } from "../middleware/auth";
 
@@ -72,21 +72,13 @@ function validateWorkspacePath(
   agentId?: string,
   teamId?: string,
 ): string {
-  const workspaceBase = getWorkspaceDir(username);
-  let workspaceDir = workspaceBase;
-
-  if (teamId) {
-    workspaceDir = getTeamWorkspaceDir(username, teamId);
-  } else if (agentId) {
-    workspaceDir = getAgentWorkspaceDir(username, agentId);
-  } else if (projectName) {
-    const resolved = resolveProjectDir(username, projectName);
-    if (resolved) {
-      workspaceDir = join(resolved, "workspace");
-    } else {
-      workspaceDir = getProjectWorkspaceDir(username, projectName);
-    }
-  }
+  const workspaceDir = defaultWorkspaceResolver.resolveSessionWorkspace(
+    username,
+    "files-route",
+    projectName,
+    agentId,
+    teamId,
+  ).workspaceDir;
 
   // Resolve the workspace directory to avoid drive letter/case mismatch on Windows
   const resolvedWorkspaceDir = resolve(workspaceDir);
@@ -856,20 +848,13 @@ const handlePostWorkspace = async (c: any) => {
 
     // Validate the final resolved file save path
     const resolvedSavePath = resolve(savePath);
-    const workspaceBase = getWorkspaceDir(username);
-    let workspaceDir = workspaceBase;
-    if (teamId) {
-      workspaceDir = getTeamWorkspaceDir(username, teamId);
-    } else if (agentId) {
-      workspaceDir = getAgentWorkspaceDir(username, agentId);
-    } else if (projectName) {
-      const resolved = resolveProjectDir(username, projectName);
-      if (resolved) {
-        workspaceDir = join(resolved, "workspace");
-      } else {
-        workspaceDir = getProjectWorkspaceDir(username, projectName);
-      }
-    }
+    const workspaceDir = defaultWorkspaceResolver.resolveSessionWorkspace(
+      username,
+      "files-route",
+      projectName,
+      agentId,
+      teamId,
+    ).workspaceDir;
     const resolvedWorkspaceDir = resolve(workspaceDir);
     if (
       !resolvedSavePath.startsWith(resolvedWorkspaceDir + sep) &&

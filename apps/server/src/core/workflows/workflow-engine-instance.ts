@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+import * as defaultWorkspaceResolver from "../session/workspace-resolver";
 import type { EventBus } from "../ports/spaces-host.port";
 import { WorkflowEngine } from "./workflow-engine";
 
@@ -76,18 +76,14 @@ export function getWorkflowEngineInstance(): WorkflowEngine {
       },
       getWorkspaceDir: (username: string, projectId?: string, workflowId?: string) => {
         if (projectId) {
-          // eslint-disable-next-line @typescript-eslint/no-require-imports
-          const { resolveSessionWorkspace } = require("../session/workspace-resolver");
-          return resolveSessionWorkspace(username, "wf-session", projectId).workspaceDir;
+          return defaultWorkspaceResolver.resolveSessionWorkspace(username, "wf-session", projectId).workspaceDir;
         }
         if (workflowId) {
           // eslint-disable-next-line @typescript-eslint/no-require-imports
           const { getWorkflowWorkspaceDir } = require("shared");
           return getWorkflowWorkspaceDir(username, workflowId);
         }
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const { ensureWorkspaceStructure } = require("../session/workspace-resolver");
-        return ensureWorkspaceStructure(username);
+        return defaultWorkspaceResolver.ensureWorkspaceStructure(username);
       },
       eventBus,
     });

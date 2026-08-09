@@ -12,6 +12,14 @@ export class LocalSandbox implements ISandbox {
   }
 
   async execute(cmd: string, opts?: SandboxOptions): Promise<SandboxResult> {
+    if (opts?.signal?.aborted) {
+      return {
+        stdout: "",
+        stderr: "Command aborted by user",
+        exitCode: 1,
+      };
+    }
+
     if (!this.isAllowed(cmd, opts?.cwd)) {
       return {
         stdout: "",
@@ -25,12 +33,57 @@ export class LocalSandbox implements ISandbox {
       {
         cwd: opts?.cwd || process.cwd(),
         env: { ...process.env, ...opts?.env },
+        stdin: opts?.stdin ? "pipe" : undefined,
+        stdout: "pipe",
+        stderr: "pipe",
       },
     );
 
-    const stdout = await new Response(proc.stdout).text();
-    const stderr = await new Response(proc.stderr).text();
+    const onAbort = () => {
+      try {
+        proc.kill();
+      } catch {
+        /* noop */
+      }
+    };
+
+    if (opts?.signal) {
+      opts.signal.addEventListener("abort", onAbort, { once: true });
+    }
+
+    if (opts?.stdin && proc.stdin) {
+      proc.stdin.write(opts.stdin);
+      proc.stdin.end();
+    }
+
+    const readStream = async (
+      stream: ReadableStream<Uint8Array>,
+      onChunk?: (chunk: string) => void,
+    ): Promise<string> => {
+      const reader = stream.getReader();
+      const decoder = new TextDecoder();
+      let accumulated = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        accumulated += chunk;
+        if (onChunk) {
+          onChunk(chunk);
+        }
+      }
+      return accumulated;
+    };
+
+    const [stdout, stderr] = await Promise.all([
+      readStream(proc.stdout as ReadableStream<Uint8Array>, opts?.onStdout),
+      readStream(proc.stderr as ReadableStream<Uint8Array>, opts?.onStderr),
+    ]);
+
     const exitCode = await proc.exited;
+    if (opts?.signal) {
+      opts.signal.removeEventListener("abort", onAbort);
+    }
 
     return { stdout, stderr, exitCode };
   }

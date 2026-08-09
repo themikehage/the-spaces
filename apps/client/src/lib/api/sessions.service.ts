@@ -195,7 +195,7 @@ async function fetchSessionTasks(sessionId: string): Promise<any> {
 async function updateSessionTaskStatus(
   sessionId: string,
   taskId: string,
-  status: string,
+  status: "running" | "paused" | "cancelled" | string,
 ): Promise<void> {
   const res = await apiFetch(`/api/sessions/${sessionId}/tasks/status`, {
     method: "POST",

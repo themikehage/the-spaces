@@ -1,16 +1,18 @@
 // SPDX-License-Identifier: MIT
 import ignore from "ignore";
-import { execSync, spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { readFile, readdir, stat } from "node:fs/promises";
 import { basename, join, relative } from "node:path";
 import type { ITool, ToolContext } from "../../ports/tool.port";
+import { LocalSandbox } from "../../sandbox/local.sandbox";
 import { resolveSafePath } from "./path-safety";
 
-function isRipgrepAvailable(): boolean {
+async function isRipgrepAvailable(): Promise<boolean> {
   try {
-    execSync(process.platform === "win32" ? "where rg" : "which rg", { stdio: "ignore" });
-    return true;
+    const res = await new LocalSandbox().execute(
+      process.platform === "win32" ? "where rg" : "which rg",
+    );
+    return res.exitCode === 0;
   } catch {
     return false;
   }
@@ -80,7 +82,7 @@ export class GrepTool implements ITool {
       throw new Error("Operation aborted");
     }
 
-    if (isRipgrepAvailable()) {
+    if (await isRipgrepAvailable()) {
       try {
         return await runRipgrep(searchPath, pattern, {
           globPattern,
@@ -130,79 +132,42 @@ async function runRipgrep(
     signal?: AbortSignal;
   },
 ): Promise<any> {
-  return new Promise((resolve, reject) => {
-    const args = ["--line-number", "--color=never", "--with-filename", "--no-heading"];
-    if (opts.ignoreCase) args.push("-i");
-    if (opts.literal) args.push("-F");
-    if (opts.globPattern) args.push("-g", opts.globPattern);
-    args.push("--max-count", String(opts.limit));
-    args.push("--", pattern, searchPath);
+  const args = ["--line-number", "--color=never", "--with-filename", "--no-heading"];
+  if (opts.ignoreCase) args.push("-i");
+  if (opts.literal) args.push("-F");
+  if (opts.globPattern) args.push("-g", opts.globPattern);
+  args.push("--max-count", String(opts.limit));
+  args.push("--", `"${pattern}"`, `"${searchPath}"`);
 
-    const child = spawn("rg", args, { stdio: ["ignore", "pipe", "pipe"] });
-    let stdout = "";
-    let stderr = "";
+  const cmd = `rg ${args.join(" ")}`;
+  const sandbox = new LocalSandbox();
+  const res = await sandbox.execute(cmd, { signal: opts.signal });
 
-    const onAbort = () => {
-      child.kill();
-      reject(new Error("Operation aborted"));
-    };
+  if (res.exitCode !== 0 && res.exitCode !== 1) {
+    throw new Error(res.stderr.trim() || `rg exited with code ${res.exitCode}`);
+  }
 
-    if (opts.signal) {
-      if (opts.signal.aborted) {
-        onAbort();
-        return;
-      }
-      opts.signal.addEventListener("abort", onAbort, { once: true });
+  const lines = res.stdout.split("\n").filter(Boolean);
+  const matches = lines.slice(0, opts.limit).map((line) => {
+    const parts = line.split(":");
+    if (parts.length >= 3) {
+      const filePath = parts.slice(0, parts.length - 2).join(":");
+      const lineNum = parts[parts.length - 2];
+      const text = parts.slice(parts.length - 1).join(":");
+      const relativePath = relative(searchPath, filePath) || basename(filePath);
+      return `${relativePath.replace(/\\/g, "/")}:${lineNum}: ${text}`;
     }
-
-    child.stdout.on("data", (data) => {
-      stdout += data.toString();
-    });
-
-    child.stderr.on("data", (data) => {
-      stderr += data.toString();
-    });
-
-    child.on("close", (code) => {
-      if (opts.signal) {
-        opts.signal.removeEventListener("abort", onAbort);
-      }
-
-      if (code !== 0 && code !== 1) {
-        reject(new Error(stderr.trim() || `rg exited with code ${code}`));
-        return;
-      }
-
-      const lines = stdout.split("\n").filter(Boolean);
-      const matches = lines.slice(0, opts.limit).map((line) => {
-        const parts = line.split(":");
-        if (parts.length >= 3) {
-          const filePath = parts.slice(0, parts.length - 2).join(":");
-          const lineNum = parts[parts.length - 2];
-          const text = parts.slice(parts.length - 1).join(":");
-          const relativePath = relative(searchPath, filePath) || basename(filePath);
-          return `${relativePath.replace(/\\/g, "/")}:${lineNum}: ${text}`;
-        }
-        return line;
-      });
-
-      if (matches.length === 0) {
-        resolve({ content: [{ type: "text", text: "No matches found" }], details: { count: 0 } });
-      } else {
-        resolve({
-          content: [{ type: "text", text: matches.join("\n") }],
-          details: { count: matches.length },
-        });
-      }
-    });
-
-    child.on("error", (err) => {
-      if (opts.signal) {
-        opts.signal.removeEventListener("abort", onAbort);
-      }
-      reject(err);
-    });
+    return line;
   });
+
+  if (matches.length === 0) {
+    return { content: [{ type: "text", text: "No matches found" }], details: { count: 0 } };
+  } else {
+    return {
+      content: [{ type: "text", text: matches.join("\n") }],
+      details: { count: matches.length },
+    };
+  }
 }
 
 async function runNativeGrep(

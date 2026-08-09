@@ -9,7 +9,6 @@ import {
 } from "shared";
 import { cascadeConfigLoader } from "../core/config";
 import { agentTypeRegistry } from "../core/entities/agent-type-registry";
-import { workspaceConfigLoader } from "../core/session/workspace-config-loader";
 import { authMiddleware, getAuthPayload } from "../middleware/auth";
 
 export const configRouter = new Hono();
@@ -31,7 +30,7 @@ configRouter.get("/:entityType/:entityId", async (c) => {
     return c.json({ error: "Invalid target entity" }, 400);
   }
 
-  const config = await workspaceConfigLoader.load(workspaceDir);
+  const config = await c.get("serverContext").workspaceConfig.load(workspaceDir);
   return c.json(config ?? {});
 });
 

@@ -9,78 +9,111 @@ import type { ModelRegistry } from "..";
  */
 export function parseEnvelope(text: string): EnvelopeResult {
   const cleanText = text.trim();
+  const validStatuses = ["success", "partial", "blocked", "error"] as const;
 
-  const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
-  if (jsonMatch) {
+  const tryBuildEnvelope = (parsed: any): EnvelopeResult | null => {
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+
+    if (parsed.status || parsed.executive_summary) {
+      let outputs: Record<string, unknown> =
+        typeof parsed.outputs === "object" && parsed.outputs !== null
+          ? (parsed.outputs as Record<string, unknown>)
+          : {};
+
+      if (Object.keys(outputs).length === 0) {
+        const envelopeKeys = new Set(["status", "executive_summary", "artifacts", "risks", "outputs"]);
+        const extraKeys: Record<string, unknown> = {};
+        for (const [key, value] of Object.entries(parsed)) {
+          if (!envelopeKeys.has(key)) {
+            extraKeys[key] = value;
+          }
+        }
+        if (Object.keys(extraKeys).length > 0) {
+          outputs = extraKeys;
+        }
+      }
+
+      return {
+        status: validStatuses.includes(parsed.status) ? parsed.status : "success",
+        executive_summary: String(parsed.executive_summary ?? cleanText.slice(0, 300)),
+        artifacts: String(parsed.artifacts ?? "none"),
+        risks: String(parsed.risks ?? "None"),
+        outputs,
+      };
+    }
+
+    if (Object.keys(parsed).length > 0) {
+      return {
+        status: "success",
+        executive_summary: cleanText.slice(0, 300),
+        artifacts: "none",
+        risks: "None",
+        outputs: parsed as Record<string, unknown>,
+      };
+    }
+
+    return null;
+  };
+
+  const fencedMatches = Array.from(cleanText.matchAll(/```(?:json)?\s*([\s\S]*?)\s*```/gi));
+  for (let i = fencedMatches.length - 1; i >= 0; i--) {
+    const candidateStr = fencedMatches[i][1].trim();
     try {
-      const parsed = JSON.parse(jsonMatch[0]);
-      if (parsed.status || parsed.executive_summary) {
-        const validStatuses = ["success", "partial", "blocked", "error"] as const;
-        let outputs: Record<string, unknown> =
-          typeof parsed.outputs === "object" && parsed.outputs !== null
-            ? (parsed.outputs as Record<string, unknown>)
-            : {};
-
-        // If outputs is empty, collect extra top-level keys that aren't metadata
-        if (Object.keys(outputs).length === 0) {
-          const envelopeKeys = new Set(["status", "executive_summary", "artifacts", "risks", "outputs"]);
-          const extraKeys: Record<string, unknown> = {};
-          for (const [key, value] of Object.entries(parsed)) {
-            if (!envelopeKeys.has(key)) {
-              extraKeys[key] = value;
-            }
-          }
-          if (Object.keys(extraKeys).length > 0) {
-            outputs = extraKeys;
-          }
-        }
-
-        // Also check if there's a separate pure JSON block in the text
-        const allJsonBlocks = Array.from(cleanText.matchAll(/\{[\s\S]*?\}/g));
-        if (allJsonBlocks.length > 1) {
-          for (const block of allJsonBlocks) {
-            try {
-              const bParsed = JSON.parse(block[0]);
-              if (
-                typeof bParsed === "object" &&
-                bParsed !== null &&
-                !Array.isArray(bParsed) &&
-                !bParsed.status &&
-                !bParsed.executive_summary
-              ) {
-                outputs = { ...bParsed, ...outputs };
-              }
-            } catch {
-              // ignore invalid block parse
-            }
-          }
-        }
-
-        return {
-          status: validStatuses.includes(parsed.status) ? parsed.status : "success",
-          executive_summary: parsed.executive_summary ?? cleanText.slice(0, 300),
-          artifacts: parsed.artifacts ?? "none",
-          risks: parsed.risks ?? "None",
-          outputs,
-        };
-      }
-
-      if (
-        typeof parsed === "object" &&
-        parsed !== null &&
-        !Array.isArray(parsed) &&
-        Object.keys(parsed).length > 0
-      ) {
-        return {
-          status: "success",
-          executive_summary: cleanText.slice(0, 300),
-          artifacts: "none",
-          risks: "None",
-          outputs: parsed as Record<string, unknown>,
-        };
-      }
+      const parsed = JSON.parse(candidateStr);
+      const envelope = tryBuildEnvelope(parsed);
+      if (envelope) return envelope;
     } catch {
-      // ignore json parse error, fallback to line parsing
+      /* ignore */
+    }
+  }
+
+  const findBalancedJsonObjects = (str: string): string[] => {
+    const results: string[] = [];
+    let depth = 0;
+    let startIdx = -1;
+    let inString = false;
+    let escape = false;
+
+    for (let i = 0; i < str.length; i++) {
+      const char = str[i];
+      if (escape) {
+        escape = false;
+        continue;
+      }
+      if (char === "\\") {
+        escape = true;
+        continue;
+      }
+      if (char === '"') {
+        inString = !inString;
+        continue;
+      }
+      if (inString) continue;
+
+      if (char === "{") {
+        if (depth === 0) startIdx = i;
+        depth++;
+      } else if (char === "}") {
+        if (depth > 0) {
+          depth--;
+          if (depth === 0 && startIdx !== -1) {
+            results.push(str.slice(startIdx, i + 1));
+            startIdx = -1;
+          }
+        }
+      }
+    }
+    return results;
+  };
+
+  const jsonBlocks = findBalancedJsonObjects(cleanText);
+  for (let i = jsonBlocks.length - 1; i >= 0; i--) {
+    try {
+      const parsed = JSON.parse(jsonBlocks[i]);
+      const envelope = tryBuildEnvelope(parsed);
+      if (envelope) return envelope;
+    } catch {
+      /* ignore */
     }
   }
 
@@ -105,7 +138,6 @@ export function parseEnvelope(text: string): EnvelopeResult {
       const key = match[1].toLowerCase();
       const val = match[2].trim();
       if (key === "status") {
-        const validStatuses = ["success", "partial", "blocked", "error"] as const;
         result.status = validStatuses.includes(val as (typeof validStatuses)[number])
           ? (val as (typeof validStatuses)[number])
           : "success";

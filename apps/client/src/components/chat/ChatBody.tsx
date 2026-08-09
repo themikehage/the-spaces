@@ -25,6 +25,7 @@ interface ChatBodyProps {
   chatInputRef: React.RefObject<HTMLTextAreaElement | null>;
   tasksState: TaskRunnerState;
   handleToggleTasksStatus: (newStatus: "running" | "paused") => Promise<void>;
+  handleCancelTasks?: () => Promise<void>;
   serialTools: string[];
   settledApprovals: Record<string, "confirm" | "deny">;
   handleResolveApproval: (toolCallId: string, action: "confirm" | "deny") => void;
@@ -61,6 +62,7 @@ export function ChatBody({
   chatInputRef,
   tasksState,
   handleToggleTasksStatus,
+  handleCancelTasks,
   serialTools,
   settledApprovals,
   handleResolveApproval,
@@ -153,7 +155,11 @@ export function ChatBody({
               />
             ) : (
               <>
-                <FloatingTasks tasksState={tasksState} onToggleStatus={handleToggleTasksStatus} />
+                <FloatingTasks
+                  tasksState={tasksState}
+                  onToggleStatus={handleToggleTasksStatus}
+                  onCancelTasks={handleCancelTasks}
+                />
                 <MessageList
                   messages={messages}
                   onNavigate={handleNavigate}

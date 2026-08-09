@@ -20,15 +20,27 @@ import { userConfigManager } from "./user-config";
 
 export function getResolvedSkillPaths(cwd: string, username?: string): string[] {
   const paths: string[] = [];
+  const resolvedCwd = resolve(cwd);
 
-  if (username) {
-    const factorySkillsDir = resolve(getWorkspaceSkillsDir(username));
-    if (existsSync(factorySkillsDir) && !paths.includes(factorySkillsDir)) {
-      paths.push(factorySkillsDir);
+  const addCandidate = (candidatePath: string) => {
+    const resolvedCandidate = resolve(candidatePath);
+    if (existsSync(resolvedCandidate) && !paths.includes(resolvedCandidate)) {
+      paths.push(resolvedCandidate);
     }
+  };
+
+  const cwdCandidates = [
+    resolve(resolvedCwd, ".spaces/skills"),
+    resolve(resolvedCwd, ".pi/skills"),
+    resolve(resolvedCwd, ".agents/skills"),
+    resolve(resolvedCwd, "pi/.pi/skills"),
+    resolve(resolvedCwd, "pi/.agents/skills"),
+  ];
+  for (const candidate of cwdCandidates) {
+    addCandidate(candidate);
   }
 
-  let current = resolve(cwd);
+  let current = resolvedCwd;
   let workspaceRoot = current;
   while (true) {
     if (existsSync(resolve(current, "package.json")) || existsSync(resolve(current, "bun.lock"))) {
@@ -40,19 +52,25 @@ export function getResolvedSkillPaths(cwd: string, username?: string): string[] 
     }
     current = parent;
   }
-  const localCandidates = [
-    resolve(workspaceRoot, ".spaces/skills"),
-    resolve(workspaceRoot, ".pi/skills"),
-    resolve(workspaceRoot, ".agents/skills"),
-    resolve(workspaceRoot, "pi/.pi/skills"),
-    resolve(workspaceRoot, "pi/.agents/skills"),
-  ];
-  for (const candidate of localCandidates) {
-    const resolvedCandidate = resolve(candidate);
-    if (existsSync(resolvedCandidate) && !paths.includes(resolvedCandidate)) {
-      paths.push(resolvedCandidate);
+
+  if (workspaceRoot !== resolvedCwd) {
+    const rootCandidates = [
+      resolve(workspaceRoot, ".spaces/skills"),
+      resolve(workspaceRoot, ".pi/skills"),
+      resolve(workspaceRoot, ".agents/skills"),
+      resolve(workspaceRoot, "pi/.pi/skills"),
+      resolve(workspaceRoot, "pi/.agents/skills"),
+    ];
+    for (const candidate of rootCandidates) {
+      addCandidate(candidate);
     }
   }
+
+  if (username) {
+    const factorySkillsDir = resolve(getWorkspaceSkillsDir(username));
+    addCandidate(factorySkillsDir);
+  }
+
   return paths;
 }
 
@@ -183,60 +201,13 @@ export function resolveSubagentSessionDir(username: string, sessionId: string): 
   return null;
 }
 
-function readProjectJson(projectPath: string): Record<string, unknown> | null {
-  const filePath = join(projectPath, "project.json");
-  if (!existsSync(filePath)) return null;
-  try {
-    return JSON.parse(readFileSync(filePath, "utf-8"));
-  } catch {
-    return null;
-  }
-}
+import {
+  resolveCanonicalProjectId,
+  resolveProjectDir,
+  resolveProjectId,
+} from "./project-resolver";
 
-export function resolveProjectDir(username: string, nameOrId: string): string | null {
-  const projectsDir = getProjectsDir(username);
-  if (!existsSync(projectsDir)) return null;
-  const entries = readdirSync(projectsDir, { withFileTypes: true });
-  for (const entry of entries) {
-    if (!entry.isDirectory()) continue;
-    const projPath = join(projectsDir, entry.name);
-    const proj = readProjectJson(projPath);
-    if (proj && (proj.id === nameOrId || proj.name === nameOrId)) {
-      return projPath;
-    }
-  }
-  return null;
-}
-
-export function resolveProjectId(username: string, nameOrId: string): string | null {
-  const projectsDir = getProjectsDir(username);
-  if (!existsSync(projectsDir)) return null;
-  const entries = readdirSync(projectsDir, { withFileTypes: true });
-  for (const entry of entries) {
-    if (!entry.isDirectory()) continue;
-    const projPath = join(projectsDir, entry.name);
-    const proj = readProjectJson(projPath);
-    if (proj && (proj.id === nameOrId || proj.name === nameOrId)) {
-      return entry.name;
-    }
-  }
-  return null;
-}
-
-export function resolveCanonicalProjectId(username: string, projectId: string): string {
-  try {
-    const projectDir = resolveProjectDir(username, projectId);
-    if (projectDir) {
-      const meta = readProjectJson(projectDir);
-      if (meta?.id && typeof meta.id === "string") {
-        return meta.id;
-      }
-    }
-  } catch (e) {
-    console.error("[WorkspaceResolver] Failed to resolve canonical projectId:", e);
-  }
-  return projectId;
-}
+export { resolveCanonicalProjectId, resolveProjectDir, resolveProjectId };
 
 export function resolveSessionWorkspace(
   username: string,

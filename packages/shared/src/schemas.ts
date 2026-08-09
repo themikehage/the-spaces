@@ -87,7 +87,7 @@ export const SetEnvVarSchema = z.object({
   value: z.string().min(1),
 });
 
-export const TaskStatusSchema = z.enum(["pending", "running", "done", "failed"]);
+export const TaskStatusSchema = z.enum(["pending", "running", "done", "failed", "cancelled"]);
 export type TaskStatus = z.infer<typeof TaskStatusSchema>;
 
 export const RunnerStatusSchema = z.enum([
@@ -97,6 +97,7 @@ export const RunnerStatusSchema = z.enum([
   "paused",
   "completed",
   "failed",
+  "cancelled",
 ]);
 export type RunnerStatus = z.infer<typeof RunnerStatusSchema>;
 

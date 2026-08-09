@@ -2,7 +2,7 @@
 import { existsSync } from "node:fs";
 import { extname, join, normalize, resolve, sep } from "node:path";
 import { getProjectWorkspaceDir } from "shared";
-import { resolveProjectDir } from "./core/session/workspace-resolver";
+import * as defaultWorkspaceResolver from "./core/session/workspace-resolver";
 
 const MIME_MAP: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -44,7 +44,7 @@ function isAsset(filePath: string): boolean {
 const BUILD_DIRS = ["dist", "build", ".output", "public", "out"] as const;
 
 function resolveBuildDir(username: string, project: string): string {
-  const resolved = resolveProjectDir(username, project);
+  const resolved = defaultWorkspaceResolver.resolveProjectDir(username, project);
   const projectDir = resolved
     ? join(resolved, "workspace")
     : getProjectWorkspaceDir(username, project);
@@ -184,7 +184,7 @@ export async function handleRequest(req: Request): Promise<Response> {
   let fullPath = resolve(buildDir, normalized);
 
   if (!existsSync(fullPath)) {
-    const resolved = resolveProjectDir(username, project);
+    const resolved = defaultWorkspaceResolver.resolveProjectDir(username, project);
     const workspaceDir = resolved
       ? join(resolved, "workspace")
       : getProjectWorkspaceDir(username, project);

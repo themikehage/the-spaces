@@ -2,7 +2,7 @@
 import { abortBuild, runBuild } from "../../preview/preview-builder";
 import { loadPreviewConfig, savePreviewConfig } from "../../preview/preview-config";
 import { getPreviewState } from "../../preview/preview-watcher";
-import { resolveProjectId } from "../../session/workspace-resolver";
+import * as defaultWorkspaceResolver from "../../session/workspace-resolver";
 
 export interface ManagePreviewArgs {
   action: "status" | "configure" | "build" | "abort";
@@ -58,7 +58,7 @@ export function createPreviewTools(username: string, projectName: string) {
       execute: async (toolCallId: string, rawArgs: unknown) => {
         try {
           const args = rawArgs as ManagePreviewArgs;
-          const projectId = resolveProjectId(username, projectName) || projectName;
+          const projectId = defaultWorkspaceResolver.resolveProjectId(username, projectName) || projectName;
           const previewPagePath = `/projects/${projectId}/preview`;
 
           switch (args.action) {

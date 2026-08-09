@@ -1,21 +1,21 @@
-// SPDX-License-Identifier: MIT
 import { AnimatePresence, motion } from "framer-motion";
-import { CheckCircle, ChevronDown, Pause, Play, XCircle } from "lucide-react";
+import { CheckCircle, ChevronDown, Pause, Play, Square, XCircle } from "lucide-react";
 import { useState } from "react";
 import type { TaskRunnerState } from "shared";
 
 interface Props {
   tasksState: TaskRunnerState;
   onToggleStatus: (newStatus: "running" | "paused") => Promise<void>;
+  onCancelTasks?: () => Promise<void>;
 }
 
-export function FloatingTasks({ tasksState, onToggleStatus }: Props) {
+export function FloatingTasks({ tasksState, onToggleStatus, onCancelTasks }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const { tasks = [], currentTaskId, status } = tasksState;
 
-  if (tasks.length === 0 || status === "idle" || status === "completed") {
+  if (tasks.length === 0 || status === "idle" || status === "completed" || status === "cancelled") {
     return null;
   }
 
@@ -29,6 +29,18 @@ export function FloatingTasks({ tasksState, onToggleStatus }: Props) {
     setLoading(true);
     try {
       await onToggleStatus(isRunning ? "paused" : "running");
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancel = async () => {
+    if (!onCancelTasks) return;
+    setLoading(true);
+    try {
+      await onCancelTasks();
     } catch (e) {
       console.error(e);
     } finally {
@@ -65,6 +77,17 @@ export function FloatingTasks({ tasksState, onToggleStatus }: Props) {
             >
               {isRunning ? <Pause size={11} /> : <Play size={11} />}
             </button>
+
+            {onCancelTasks && (
+              <button
+                onClick={handleCancel}
+                disabled={loading}
+                className="p-1 rounded-md border border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/20 transition-all cursor-pointer flex-shrink-0"
+                title="Cancelar plan"
+              >
+                <Square size={11} className="fill-current" />
+              </button>
+            )}
 
             <button
               onClick={() => setExpanded(!expanded)}

@@ -91,9 +91,8 @@ Use 'delegate' to delegate to a specific target.`,
         },
         subagentType: {
           type: "string",
-          enum: ["explorer", "builder", "autonomous"],
           description:
-            "Optional execution mode for subagent. explorer is read-only, builder requires confirmation, autonomous runs autonomously. Defaults to builder.",
+            "Optional execution mode or role for subagent (e.g. explorer, builder, autonomous, or custom registered role). Defaults to builder.",
         },
         maxSteps: {
           type: "number",
@@ -398,7 +397,6 @@ Use 'delegate' to delegate to a specific target.`,
             },
           ],
           details: { status: "delegated", subagentSessionId, task },
-          terminate: true,
         };
       } else if (action === "delegate") {
         if (!targetType || !targetId) {
@@ -745,7 +743,6 @@ Use 'delegate' to delegate to a specific target.`,
             },
           ],
           details: { status: "delegated", subagentSessionId: delegateSessionId, task },
-          terminate: true,
         };
       } else {
         throw new Error(`Unsupported manage_delegations action: ${action}`);

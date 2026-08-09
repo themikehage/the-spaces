@@ -1,26 +1,32 @@
-// SPDX-License-Identifier: MIT
+import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import {
   getUserDir,
   getWorkspaceDir,
   getWorkspaceSkillsDir,
   type AgentType,
 } from "shared";
+import { z } from "zod";
 import { agentTypeRegistry } from "../core/entities/agent-type-registry";
+import { InternalError } from "../core/infra/errors";
 import { loadSkills } from "../core/session/load-skills";
-import { getResolvedSkillPaths } from "../core/session/session-manager";
+import { getResolvedSkillPaths } from "../core/session/workspace-resolver";
 import { authMiddleware, getAuthPayload } from "../middleware/auth";
+
+const GetSkillsQuerySchema = z.object({
+  entityType: z.string().optional(),
+  entityId: z.string().optional(),
+});
 
 export const skillsRouter = new Hono();
 
 skillsRouter.use("/*", authMiddleware);
 
-skillsRouter.get("/", async (c) => {
+skillsRouter.get("/", zValidator("query", GetSkillsQuerySchema), async (c) => {
   const { username } = getAuthPayload(c);
-  const entityType = c.req.query("entityType");
-  const entityId = c.req.query("entityId");
+  const { entityType, entityId } = c.req.valid("query");
 
   try {
     let workspaceDir = getWorkspaceDir(username);
@@ -39,11 +45,16 @@ skillsRouter.get("/", async (c) => {
 
     const userGlobalWorkspaceDir = getWorkspaceDir(username);
 
+    const normalizePath = (p: string) => resolve(p).replaceAll("\\", "/").toLowerCase();
+    const normalizedWorkspaceDir = normalizePath(workspaceDir);
+    const normalizedGlobalWorkspaceDir = normalizePath(userGlobalWorkspaceDir);
+
     const skillsWithContent = result.skills.map((skill) => {
+      const normalizedSkillPath = skill.filePath ? normalizePath(skill.filePath) : "";
       const isEntityLocal =
-        entityType && entityType !== "global" && entityId && skill.filePath
-          ? skill.filePath.startsWith(workspaceDir) &&
-            !skill.filePath.startsWith(userGlobalWorkspaceDir)
+        entityType && entityType !== "global" && entityId && normalizedSkillPath
+          ? normalizedSkillPath.startsWith(normalizedWorkspaceDir) &&
+            !normalizedSkillPath.startsWith(normalizedGlobalWorkspaceDir)
           : false;
 
       return {
@@ -58,7 +69,7 @@ skillsRouter.get("/", async (c) => {
 
     return c.json({ skills: skillsWithContent, diagnostics: result.diagnostics });
   } catch (error) {
-    return c.json({ error: String(error) }, 500);
+    throw new InternalError("SKILLS_FETCH_FAILED", String(error));
   }
 });
 
@@ -99,6 +110,6 @@ skillsRouter.post("/reset", async (c) => {
 
     return c.json({ success: true });
   } catch (error) {
-    return c.json({ error: String(error) }, 500);
+    throw new InternalError("SKILLS_RESET_FAILED", String(error));
   }
 });

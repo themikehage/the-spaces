@@ -15,9 +15,11 @@ import {
 import type { IPermissionEngine } from "../ports/permission.port";
 import type { ISandbox } from "../ports/sandbox.port";
 import { type SpacesHost } from "../ports/spaces-host.port";
+import type { WorkspaceConfigPort } from "../ports/workspace-config.port";
 import type { IWorkspaceResolver } from "../ports/workspace-resolver.port";
 import { LocalSandbox } from "../sandbox/local.sandbox";
 import { sessionManager as defaultSessionManager } from "../session/session-manager";
+import { FileWorkspaceConfigLoader } from "../session/workspace-config-loader";
 import * as defaultWorkspaceResolver from "../session/workspace-resolver";
 import { PermissionEngine } from "./permission-engine";
 import { serverSpacesHost as defaultServerSpacesHost } from "./spaces-host";
@@ -26,6 +28,7 @@ export interface ServerContext {
   sessionManager: ISessionManager;
   agentRegistry: IAgentRegistry;
   workspaceResolver: IWorkspaceResolver;
+  workspaceConfig: WorkspaceConfigPort;
   mcpRegistry: IMcpRegistry;
   delegationRegistry: IDelegationRegistry;
   memoryRegistry: IMemoryRegistry;
@@ -39,6 +42,7 @@ export interface ServerContextOptions {
   sessionManager?: ISessionManager;
   agentRegistry?: IAgentRegistry;
   workspaceResolver?: IWorkspaceResolver;
+  workspaceConfig?: WorkspaceConfigPort;
   mcpRegistry?: IMcpRegistry;
   delegationRegistry?: IDelegationRegistry;
   memoryRegistry?: IMemoryRegistry;
@@ -53,6 +57,7 @@ export function createServerContext(options?: ServerContextOptions): ServerConte
     sessionManager: options?.sessionManager ?? defaultSessionManager,
     agentRegistry: options?.agentRegistry ?? (defaultAgentRegistry as unknown as IAgentRegistry),
     workspaceResolver: options?.workspaceResolver ?? defaultWorkspaceResolver,
+    workspaceConfig: options?.workspaceConfig ?? new FileWorkspaceConfigLoader(),
     mcpRegistry: options?.mcpRegistry ?? defaultMcpRegistry,
     delegationRegistry: options?.delegationRegistry ?? defaultDelegationRegistry,
     memoryRegistry: options?.memoryRegistry ?? defaultMemoryRegistry,

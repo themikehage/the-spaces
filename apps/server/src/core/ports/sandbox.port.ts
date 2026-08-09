@@ -5,6 +5,9 @@ export interface SandboxOptions {
   env?: Record<string, string>;
   timeout?: number;
   signal?: AbortSignal;
+  stdin?: string;
+  onStdout?: (chunk: string) => void;
+  onStderr?: (chunk: string) => void;
 }
 
 export interface SandboxResult {

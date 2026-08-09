@@ -248,13 +248,12 @@ async function handleProjects(
 
     if (params.cloneUrl) {
       try {
-        const { spawn } = await import("bun");
-        const proc = spawn(["git", "clone", params.cloneUrl, workspaceDir], {
+        const { LocalSandbox } = await import("../../sandbox/local.sandbox");
+        const sandbox = new LocalSandbox();
+        const res = await sandbox.execute(`git clone ${params.cloneUrl} "${workspaceDir}"`, {
           cwd: projectsDir,
-          stdout: "pipe",
-          stderr: "pipe",
         });
-        await proc.exited;
+        if (res.exitCode !== 0) throw new Error(res.stderr);
       } catch {
         return ok(`Project "${params.name}" created but clone failed. Workspace is empty.`, {
           entity: "projects",

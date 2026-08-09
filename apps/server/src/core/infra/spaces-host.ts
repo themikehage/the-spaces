@@ -7,8 +7,8 @@ import { delegationRegistry } from "../delegation/delegation-registry";
 import { mcpRegistry } from "../mcp/mcp-registry";
 import type { AgentCapabilities, AgentDirectoryEntry, SpacesHost } from "../ports/spaces-host.port";
 import type { WorkspaceConfig } from "../ports/workspace-config.port";
-import { workspaceConfigLoader } from "../session/workspace-config-loader";
-import { resolveProjectDir } from "../session/workspace-resolver";
+import { FileWorkspaceConfigLoader } from "../session/workspace-config-loader";
+import * as defaultWorkspaceResolver from "../session/workspace-resolver";
 
 import { FileArtifactStore } from "../stores/file-artifact-store";
 import { FileSessionStore } from "../stores/file-session-store";
@@ -110,7 +110,7 @@ export class ServerSpacesHost implements SpacesHost {
 
   config = {
     async load(workspaceDir: string): Promise<WorkspaceConfig | null> {
-      return workspaceConfigLoader.load(workspaceDir);
+      return new FileWorkspaceConfigLoader().load(workspaceDir);
     },
   };
 
@@ -210,7 +210,7 @@ export class ServerSpacesHost implements SpacesHost {
   scope = {
     resolveProjectDir(username: string, projectId?: string): string | null {
       if (!projectId) return null;
-      return resolveProjectDir(username, projectId);
+      return defaultWorkspaceResolver.resolveProjectDir(username, projectId);
     },
   };
 }

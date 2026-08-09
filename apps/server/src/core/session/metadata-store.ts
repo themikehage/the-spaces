@@ -9,24 +9,25 @@ export interface TeamConfigReader {
 
 export class SessionMetadataStore {
   private teamReader?: TeamConfigReader;
+  private sessionDirResolver?: (username: string, sessionId: string) => string | null;
 
   setTeamReader(reader: TeamConfigReader): void {
     this.teamReader = reader;
   }
 
+  setSessionDirResolver(resolver: (username: string, sessionId: string) => string | null): void {
+    this.sessionDirResolver = resolver;
+  }
+
   private getMetadataPath(username: string, sessionId: string): string {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { resolveSubagentSessionDir } = require("./workspace-resolver");
     const sessionDir =
-      resolveSubagentSessionDir(username, sessionId) ?? getSessionDir(username, sessionId);
+      this.sessionDirResolver?.(username, sessionId) ?? getSessionDir(username, sessionId);
     return join(sessionDir, "metadata.json");
   }
 
   ensureSessionDir(username: string, sessionId: string): string {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { resolveSubagentSessionDir } = require("./workspace-resolver");
     const sessionDir =
-      resolveSubagentSessionDir(username, sessionId) ?? getSessionDir(username, sessionId);
+      this.sessionDirResolver?.(username, sessionId) ?? getSessionDir(username, sessionId);
     if (!existsSync(sessionDir)) {
       mkdirSync(sessionDir, { recursive: true });
     }

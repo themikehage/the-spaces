@@ -150,6 +150,7 @@
   - [x] WF-07: Paso `delay` / sleep (pausa configurable de 1ms a 15 min `durationMs` en `executeDelayStep`).
   - [x] WF-08: Paso Sub-Workflow (`type:"workflow"`) para modularización con `subWorkflowId`, passing de inputs y protección anti-recursión (`maxDepth: 3`).
   - [x] Actualizar esquemas Zod en `@shared`, contrato `manage_workflow`, documentación `.agents/rules/workflow.rules.md` y suite de pruebas `workflow-engine-enhancements.test.ts`.
+- [x] Modificaciones en la Tool de Task: UI no bloqueante durante la ejecución de planes y botón de cancelación total en la barra flotante `FloatingTasks`.
 
 ## Criterio de cierre del sprint
 

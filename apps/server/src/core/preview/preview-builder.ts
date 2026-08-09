@@ -1,9 +1,9 @@
-// SPDX-License-Identifier: MIT
-import { spawn } from "node:child_process";
 import { join } from "node:path";
 import { type PreviewConfig, getProjectWorkspaceDir } from "shared";
 import { broadcastToUser } from "../../ws/handler";
-import { resolveProjectDir } from "../session/workspace-resolver";
+import type { ISandbox } from "../ports/sandbox.port";
+import { LocalSandbox } from "../sandbox/local.sandbox";
+import * as defaultWorkspaceResolver from "../session/workspace-resolver";
 import { getBuildCommand } from "./preview-config";
 
 const activeBuilds = new Map<string, AbortController>();
@@ -20,6 +20,7 @@ export async function runBuild(
   username: string,
   projectName: string,
   config: PreviewConfig,
+  sandbox: ISandbox = new LocalSandbox(),
 ): Promise<{ success: boolean; exitCode: number | null }> {
   const key = buildKey(username, projectName);
 
@@ -33,7 +34,7 @@ export async function runBuild(
     return { success: false, exitCode: null };
   }
 
-  const resolved = resolveProjectDir(username, projectName);
+  const resolved = defaultWorkspaceResolver.resolveProjectDir(username, projectName);
   const projectDir = resolved
     ? join(resolved, "workspace")
     : getProjectWorkspaceDir(username, projectName);
@@ -63,91 +64,62 @@ export async function runBuild(
     line: `$ ${command}`,
   });
 
-  return new Promise((resolve_) => {
-    const proc = spawn("bash", ["-c", command], {
+  const onData = (chunk: string) => {
+    const lines = chunk.split("\n").filter(Boolean);
+    for (const line of lines) {
+      broadcastToUser(username, {
+        type: "preview_build_log",
+        projectName,
+        line: line.replace(/\r$/, ""),
+      });
+    }
+  };
+
+  try {
+    const result = await sandbox.execute(command, {
       cwd: projectDir,
       signal: abortController.signal,
-      stdio: ["ignore", "pipe", "pipe"],
+      onStdout: onData,
+      onStderr: onData,
     });
 
-    const onData = (chunk: Buffer) => {
-      const lines = chunk.toString("utf-8").split("\n").filter(Boolean);
-      for (const line of lines) {
-        broadcastToUser(username, {
-          type: "preview_build_log",
-          projectName,
-          line: line.replace(/\r$/, ""),
-        });
-      }
-    };
+    activeBuilds.delete(key);
+    const success = result.exitCode === 0;
 
-    proc.stdout?.on("data", onData);
-    proc.stderr?.on("data", onData);
-
-    proc.on("close", (exitCode) => {
-      activeBuilds.delete(key);
-
-      const success = exitCode === 0;
-
-      broadcastToUser(username, {
-        type: "preview_build_log",
-        projectName,
-        line: success
-          ? `Build completed successfully (exit code 0)`
-          : `Build failed (exit code ${exitCode})`,
-      });
-
-      broadcastToUser(username, {
-        type: "preview_build_end",
-        projectName,
-        success,
-        exitCode,
-      });
-
-      if (success) {
-        broadcastToUser(username, {
-          type: "preview_status",
-          projectName,
-          status: "ready",
-        });
-      } else {
-        broadcastToUser(username, {
-          type: "preview_status",
-          projectName,
-          status: "error",
-          error: `Build failed with exit code ${exitCode}`,
-        });
-      }
-
-      resolve_({ success, exitCode });
+    broadcastToUser(username, {
+      type: "preview_build_log",
+      projectName,
+      line: success
+        ? `Build completed successfully (exit code 0)`
+        : `Build failed (exit code ${result.exitCode})`,
     });
 
-    proc.on("error", (err) => {
-      activeBuilds.delete(key);
-
-      broadcastToUser(username, {
-        type: "preview_build_log",
-        projectName,
-        line: `Failed to start build: ${err.message}`,
-      });
-
-      broadcastToUser(username, {
-        type: "preview_build_end",
-        projectName,
-        success: false,
-        exitCode: -1,
-      });
-
-      broadcastToUser(username, {
-        type: "preview_status",
-        projectName,
-        status: "error",
-        error: err.message,
-      });
-
-      resolve_({ success: false, exitCode: -1 });
+    broadcastToUser(username, {
+      type: "preview_status",
+      projectName,
+      status: success ? "ready" : "error",
     });
-  });
+
+    return { success, exitCode: result.exitCode };
+  } catch (err: any) {
+    activeBuilds.delete(key);
+    const isAborted = abortController.signal.aborted;
+    const msg = isAborted ? "Build aborted by user" : (err?.message || "Build execution failed");
+
+    broadcastToUser(username, {
+      type: "preview_build_log",
+      projectName,
+      line: msg,
+    });
+
+    broadcastToUser(username, {
+      type: "preview_status",
+      projectName,
+      status: "error",
+    });
+
+    return { success: false, exitCode: null };
+  }
 }
 
 export function abortBuild(username: string, projectName: string) {

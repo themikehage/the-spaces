@@ -3,6 +3,7 @@ import { AVAILABLE_TOOLS } from "shared";
 import { sessionMetadataStore } from "../session/metadata-store";
 import { createServerContext } from "../infra/server-context";
 import { userPermissionStore } from "./user-permission-store";
+import { subagentTypeRegistry } from "../session/subagent-type-registry";
 
 export interface ToolPermissionRule {
   /** Name of the tool (e.g., "bash", "write", "*") */
@@ -82,26 +83,33 @@ export function matchWildcard(value: string, pattern: string): boolean {
  * Helper to get base rules depending on subagent type (explorer vs builder).
  */
 function getBaseRulesForType(subagentType?: string): ToolPermissionRule[] {
+  const typeDef = subagentTypeRegistry.get(subagentType);
   const defaults = DEFAULT_SUBAGENT_PERMISSIONS.rules;
-  if (subagentType === "explorer") {
-    // Explorer is read-only, deny modification tools
-    return defaults.map((rule) => {
+  const profile = typeDef.permissionProfile;
+
+  let baseRules: ToolPermissionRule[] = defaults;
+
+  if (profile === "explorer") {
+    baseRules = defaults.map((rule) => {
       if (["write", "edit", "bash"].includes(rule.toolName)) {
         return { ...rule, action: "deny" as const };
       }
       return rule;
     });
-  }
-  if (subagentType === "autonomous") {
-    // Autonomous allows modification tools without asking
-    return defaults.map((rule) => {
+  } else if (profile === "autonomous") {
+    baseRules = defaults.map((rule) => {
       if (["write", "edit", "bash"].includes(rule.toolName)) {
         return { ...rule, action: "allow" as const };
       }
       return rule;
     });
   }
-  return defaults;
+
+  if (typeDef.customRules && typeDef.customRules.length > 0) {
+    return [...baseRules, ...typeDef.customRules];
+  }
+
+  return baseRules;
 }
 
 /**

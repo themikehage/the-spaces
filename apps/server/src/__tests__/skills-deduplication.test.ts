@@ -15,6 +15,22 @@ describe("Skills Deduplication & Path Resolution", () => {
     }
   });
 
+  it("should resolve local cwd skill paths even when cwd is inside a parent repo with package.json", () => {
+    const testRepoDir = join(tmpdir(), `spaces-repo-test-${Date.now()}`);
+    const agentWorkspaceDir = join(testRepoDir, "data", "users", "testuser", "agents", "benchmark-writer", "workspace");
+    const localSkillsDir = join(agentWorkspaceDir, ".spaces", "skills");
+
+    mkdirSync(localSkillsDir, { recursive: true });
+    writeFileSync(join(testRepoDir, "package.json"), "{}", "utf-8");
+
+    try {
+      const paths = getResolvedSkillPaths(agentWorkspaceDir);
+      expect(paths).toContain(resolve(localSkillsDir));
+    } finally {
+      rmSync(testRepoDir, { recursive: true, force: true });
+    }
+  });
+
   it("should deduplicate skills with same name or resolved filePath in loadSkills", () => {
     const testDir = join(tmpdir(), `spaces-skill-test-${Date.now()}`);
     const skillDir1 = join(testDir, "path1", "my-skill");

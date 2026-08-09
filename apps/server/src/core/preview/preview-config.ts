@@ -2,10 +2,10 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { type FrameworkPreset, getProjectWorkspaceDir, type PreviewConfig } from "shared";
-import { resolveProjectDir } from "../session/workspace-resolver";
+import * as defaultWorkspaceResolver from "../session/workspace-resolver";
 
-function getResolvedProjectWorkspaceDir(username: string, projectName: string): string {
-  const resolved = resolveProjectDir(username, projectName);
+function getResolvedProjectWorkspaceDir(username: string, projectName: string, resolver = defaultWorkspaceResolver): string {
+  const resolved = resolver.resolveProjectDir(username, projectName);
   return resolved ? join(resolved, "workspace") : getProjectWorkspaceDir(username, projectName);
 }
 

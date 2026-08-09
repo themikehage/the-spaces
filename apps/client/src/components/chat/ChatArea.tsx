@@ -95,6 +95,7 @@ export function ChatArea({
         chatInputRef={state.chatInputRef}
         tasksState={state.tasksState}
         handleToggleTasksStatus={state.handleToggleTasksStatus}
+        handleCancelTasks={state.handleCancelTasks}
         serialTools={state.serialTools}
         settledApprovals={state.settledApprovals}
         handleResolveApproval={state.handleResolveApproval}

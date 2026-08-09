@@ -24,7 +24,7 @@ export interface SpawnSubagentParams {
   parentSessionId: string;
   agentId?: string;
   task: string;
-  subagentType: "explorer" | "builder" | "autonomous";
+  subagentType?: string;
   maxSteps?: number;
   sessionManager: SessionManager;
   delegationRegistry: DelegationRegistry;
@@ -69,8 +69,12 @@ export async function spawnSubagent(params: SpawnSubagentParams): Promise<Envelo
   const parentMeta =
     sessionManager.metadataStore.getSessionMetadata(username, parentSessionId) || {};
   const parentExecutionMode = parentMeta.executionMode;
-  const resolvedSubagentType =
+  const rawSubagentType =
     subagentType || (parentExecutionMode === "autonomous" ? "autonomous" : "builder");
+
+  const { subagentTypeRegistry } = await import("./subagent-type-registry");
+  const typeDef = subagentTypeRegistry.get(rawSubagentType);
+  const resolvedSubagentType = typeDef.id;
 
   const effectiveRules = buildSubagentRules(
     username,
@@ -80,9 +84,9 @@ export async function spawnSubagent(params: SpawnSubagentParams): Promise<Envelo
   );
 
   const derivedExecutionMode =
-    resolvedSubagentType === "explorer"
+    typeDef.permissionProfile === "explorer"
       ? "readonly"
-      : resolvedSubagentType === "autonomous"
+      : typeDef.permissionProfile === "autonomous"
         ? "autonomous"
         : "standard";
 

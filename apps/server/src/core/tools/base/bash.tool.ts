@@ -1,9 +1,8 @@
-// SPDX-License-Identifier: MIT
-import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { logBashExecution } from "../../middleware/bash-audit-logger";
 import type { ISandbox } from "../../ports/sandbox.port";
 import type { ITool, ToolContext } from "../../ports/tool.port";
+import { LocalSandbox } from "../../sandbox/local.sandbox";
 import { isRestrictedPath } from "../../sandbox/restricted-paths";
 
 const MAX_OUTPUT_BYTES = 50 * 1024; // 50 KB output limit
@@ -194,57 +193,63 @@ export class BashTool implements ITool {
       spawnContext = this.options.spawnHook(spawnContext);
     }
 
-    return new Promise((resolve) => {
-      const child = spawn(spawnContext.command, spawnContext.args, {
+    const sandbox = this.options?.sandbox ?? new LocalSandbox();
+
+    let output = "";
+    let errorOutput = "";
+    let truncated = false;
+
+    const appendData = (dataStr: string, isStderr: boolean) => {
+      const currentTotal = output.length + errorOutput.length;
+      if (currentTotal >= MAX_OUTPUT_BYTES) {
+        truncated = true;
+        return;
+      }
+      if (currentTotal + dataStr.length > MAX_OUTPUT_BYTES) {
+        const allowed = MAX_OUTPUT_BYTES - currentTotal;
+        const slice = dataStr.slice(0, allowed);
+        if (isStderr) errorOutput += slice;
+        else output += slice;
+        truncated = true;
+      } else {
+        if (isStderr) errorOutput += dataStr;
+        else output += dataStr;
+      }
+    };
+
+    if (abortSignal?.aborted) {
+      const finalOutput = (output + errorOutput + "\n[Command aborted by user]").trim();
+      const endTime = Date.now();
+      logBashExecution({
+        command,
+        cwd: this.cwd,
+        startTime,
+        endTime,
+        durationMs: endTime - startTime,
+        exitCode: null,
+        outputLength: finalOutput.length,
+        truncated,
+        cancelled: true,
+      });
+      return {
+        exitCode: null,
+        output: finalOutput,
+        cancelled: true,
+      };
+    }
+
+    try {
+      const res = await sandbox.execute(command, {
         cwd: spawnContext.cwd,
         env: spawnContext.env,
-        windowsHide: true,
+        signal: abortSignal,
+        timeout: effectiveTimeout * 1000,
+        onStdout: (chunk) => appendData(chunk, false),
+        onStderr: (chunk) => appendData(chunk, true),
       });
 
-      let output = "";
-      let errorOutput = "";
-      let truncated = false;
-
-      const appendData = (dataStr: string, isStderr: boolean) => {
-        const currentTotal = output.length + errorOutput.length;
-        if (currentTotal >= MAX_OUTPUT_BYTES) {
-          truncated = true;
-          return;
-        }
-        if (currentTotal + dataStr.length > MAX_OUTPUT_BYTES) {
-          const allowed = MAX_OUTPUT_BYTES - currentTotal;
-          const slice = dataStr.slice(0, allowed);
-          if (isStderr) errorOutput += slice;
-          else output += slice;
-          truncated = true;
-        } else {
-          if (isStderr) errorOutput += dataStr;
-          else output += dataStr;
-        }
-      };
-
-      child.stdout.on("data", (data) => {
-        appendData(data.toString(), false);
-      });
-
-      child.stderr.on("data", (data) => {
-        appendData(data.toString(), true);
-      });
-
-      const sig = abortSignal;
-      const onAbort = () => {
-        try {
-          child.kill();
-        } catch {
-          /* noop */
-        }
-        let finalOutput = output + errorOutput + "\n[Command aborted by user]";
-        if (truncated) {
-          finalOutput += "\n[...output truncated at 50KB limit]";
-        }
-        if (this.options?.outputFilter) {
-          finalOutput = this.options.outputFilter(finalOutput);
-        }
+      if (abortSignal?.aborted) {
+        const finalOutput = (output + errorOutput + "\n[Command aborted by user]").trim();
         const endTime = Date.now();
         logBashExecution({
           command,
@@ -257,112 +262,72 @@ export class BashTool implements ITool {
           truncated,
           cancelled: true,
         });
-        resolve({
+        return {
           exitCode: null,
           output: finalOutput,
           cancelled: true,
-        });
-      };
-
-      if (sig) {
-        if (sig.aborted) {
-          onAbort();
-          return;
-        }
-        sig.addEventListener("abort", onAbort);
+        };
       }
 
-      const timeoutHandle = setTimeout(() => {
-        try {
-          child.kill();
-        } catch {
-          /* noop */
-        }
-        let finalOutput =
-          output + errorOutput + `\n[Command timed out after ${effectiveTimeout} seconds]`;
-        if (truncated) {
-          finalOutput += "\n[...output truncated at 50KB limit]";
-        }
-        if (this.options?.outputFilter) {
-          finalOutput = this.options.outputFilter(finalOutput);
-        }
-        const endTime = Date.now();
-        logBashExecution({
-          command,
-          cwd: this.cwd,
-          startTime,
-          endTime,
-          durationMs: endTime - startTime,
-          exitCode: null,
-          outputLength: finalOutput.length,
-          truncated,
-          timedOut: true,
-        });
-        resolve({
-          exitCode: null,
-          output: finalOutput,
-          timedOut: true,
-        });
-      }, effectiveTimeout * 1000);
+      let finalOutput = output + errorOutput;
+      if (truncated) {
+        finalOutput += "\n[...output truncated at 50KB limit]";
+      }
+      if (this.options?.outputFilter) {
+        finalOutput = this.options.outputFilter(finalOutput);
+      }
 
-      child.on("close", (code) => {
-        if (timeoutHandle) clearTimeout(timeoutHandle);
-        if (abortSignal) {
-          abortSignal.removeEventListener("abort", onAbort);
-        }
-
-        let finalOutput = output + errorOutput;
-        if (truncated) {
-          finalOutput += "\n[...output truncated at 50KB limit]";
-        }
-        if (this.options?.outputFilter) {
-          finalOutput = this.options.outputFilter(this.options.outputFilter(finalOutput));
-        }
-
-        const endTime = Date.now();
-        logBashExecution({
-          command,
-          cwd: this.cwd,
-          startTime,
-          endTime,
-          durationMs: endTime - startTime,
-          exitCode: code,
-          outputLength: finalOutput.length,
-          truncated,
-        });
-
-        resolve({
-          exitCode: code,
-          output: finalOutput,
-          cancelled: false,
-        });
+      const endTime = Date.now();
+      logBashExecution({
+        command,
+        cwd: this.cwd,
+        startTime,
+        endTime,
+        durationMs: endTime - startTime,
+        exitCode: res.exitCode,
+        outputLength: finalOutput.length,
+        truncated,
       });
 
-      child.on("error", (err) => {
-        if (timeoutHandle) clearTimeout(timeoutHandle);
-        if (abortSignal) {
-          abortSignal.removeEventListener("abort", onAbort);
-        }
-        const finalOutput = `Failed to spawn shell process: ${err.message}`;
-        const endTime = Date.now();
-        logBashExecution({
-          command,
-          cwd: this.cwd,
-          startTime,
-          endTime,
-          durationMs: endTime - startTime,
-          exitCode: 1,
-          outputLength: finalOutput.length,
-          truncated: false,
-          isError: true,
-        });
-        resolve({
-          exitCode: 1,
-          output: finalOutput,
-          isError: true,
-        });
+      return {
+        exitCode: res.exitCode,
+        output: finalOutput,
+        cancelled: false,
+      };
+    } catch (err: any) {
+      const isAborted = abortSignal?.aborted;
+      let finalOutput = output + errorOutput;
+      if (isAborted) {
+        finalOutput += "\n[Command aborted by user]";
+      } else {
+        finalOutput += `\n[Command failed: ${err?.message || "Execution error"}]`;
+      }
+      if (truncated) {
+        finalOutput += "\n[...output truncated at 50KB limit]";
+      }
+      if (this.options?.outputFilter) {
+        finalOutput = this.options.outputFilter(finalOutput);
+      }
+
+      const endTime = Date.now();
+      logBashExecution({
+        command,
+        cwd: this.cwd,
+        startTime,
+        endTime,
+        durationMs: endTime - startTime,
+        exitCode: null,
+        outputLength: finalOutput.length,
+        truncated,
+        cancelled: isAborted,
       });
-    });
+
+      return {
+        exitCode: null,
+        output: finalOutput,
+        cancelled: isAborted,
+      };
+    }
   }
 }
 
