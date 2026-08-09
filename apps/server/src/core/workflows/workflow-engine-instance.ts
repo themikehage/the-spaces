@@ -74,6 +74,11 @@ export function getWorkflowEngineInstance(): WorkflowEngine {
         const { delegationRegistry } = require("../delegation/delegation-registry");
         return delegationRegistry;
       },
+      getModelRegistry: () => {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { modelRegistry } = require("../model/model-registry");
+        return modelRegistry;
+      },
       getWorkspaceDir: (username: string, projectId?: string, workflowId?: string) => {
         if (projectId) {
           return defaultWorkspaceResolver.resolveSessionWorkspace(username, "wf-session", projectId).workspaceDir;

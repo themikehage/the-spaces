@@ -7,6 +7,7 @@ import { ApprovalStepForm } from "./editors/ApprovalStepForm";
 import { CodeStepForm } from "./editors/CodeStepForm";
 import { ControlStepForm } from "./editors/ControlStepForm";
 import { HttpStepForm } from "./editors/HttpStepForm";
+import { LlmStepForm } from "./editors/LlmStepForm";
 import { WorkflowVariablePicker } from "./WorkflowVariablePicker";
 
 interface WorkflowStepEditorProps {
@@ -19,6 +20,7 @@ interface WorkflowStepEditorProps {
 
 const STEP_TYPE_OPTIONS: DropdownOption<WorkflowStepType>[] = [
   { value: "agent", label: "Agent Task" },
+  { value: "llm", label: "LLM Call (Simple)" },
   { value: "if", label: "If Condition" },
   { value: "switch", label: "Switch Branch" },
   { value: "merge", label: "Merge Flow" },
@@ -35,7 +37,7 @@ export const WorkflowStepEditor: React.FC<WorkflowStepEditorProps> = ({
   onClose,
 }) => {
   const [activeField, setActiveField] = useState<
-    "taskTemplate" | "condition" | "codeSnippet" | "approvalMessage" | "httpUrl" | "httpBody"
+    "taskTemplate" | "condition" | "codeSnippet" | "approvalMessage" | "httpUrl" | "httpBody" | "llmPrompt" | "llmSystemPrompt"
   >(
     step.type === "if" || step.type === "switch"
       ? "condition"
@@ -45,7 +47,9 @@ export const WorkflowStepEditor: React.FC<WorkflowStepEditorProps> = ({
           ? "approvalMessage"
           : step.type === "http"
             ? "httpUrl"
-            : "taskTemplate",
+            : step.type === "llm"
+              ? "llmPrompt"
+              : "taskTemplate",
   );
 
   const availableDependsOn = workflow.steps.map((s) => s.id).filter((id) => id !== step.id);
@@ -64,21 +68,26 @@ export const WorkflowStepEditor: React.FC<WorkflowStepEditorProps> = ({
       codeSnippet: type === "code" && !step.codeSnippet ? "return { outputs: {} };" : step.codeSnippet,
       condition: (type === "if" || type === "switch") && !step.condition ? "$inputs.amount > 0" : step.condition,
       httpMethod: type === "http" && !step.httpMethod ? "GET" : step.httpMethod,
+      llmPrompt: type === "llm" && !step.llmPrompt ? "Summarize the input text: {{ $inputs.text }}" : step.llmPrompt,
     });
   };
 
   const handleInsertVariable = (varExpr: string) => {
-    if (activeField === "condition" && (step.type === "if" || step.type === "switch")) {
+    if (activeField === "condition") {
       onUpdate({ ...step, condition: `${step.condition || ""} ${varExpr}`.trim() });
-    } else if (activeField === "codeSnippet" && step.type === "code") {
-      onUpdate({ ...step, codeSnippet: `${step.codeSnippet || ""}\n${varExpr}`.trim() });
-    } else if (activeField === "approvalMessage" && step.type === "approval") {
+    } else if (activeField === "codeSnippet") {
+      onUpdate({ ...step, codeSnippet: `${step.codeSnippet || ""} ${varExpr}`.trim() });
+    } else if (activeField === "approvalMessage") {
       onUpdate({ ...step, approvalMessage: `${step.approvalMessage || ""} ${varExpr}`.trim() });
-    } else if (activeField === "httpUrl" && step.type === "http") {
-      onUpdate({ ...step, httpUrl: `${step.httpUrl || ""}${varExpr}` });
-    } else if (activeField === "httpBody" && step.type === "http") {
+    } else if (activeField === "httpUrl") {
+      onUpdate({ ...step, httpUrl: `${step.httpUrl || ""}${varExpr}`.trim() });
+    } else if (activeField === "httpBody") {
       const current = typeof step.httpBody === "object" ? JSON.stringify(step.httpBody) : String(step.httpBody || "");
       onUpdate({ ...step, httpBody: `${current} ${varExpr}`.trim() });
+    } else if (activeField === "llmPrompt") {
+      onUpdate({ ...step, llmPrompt: `${step.llmPrompt || ""} ${varExpr}`.trim() });
+    } else if (activeField === "llmSystemPrompt") {
+      onUpdate({ ...step, llmSystemPrompt: `${step.llmSystemPrompt || ""} ${varExpr}`.trim() });
     } else {
       onUpdate({ ...step, taskTemplate: `${step.taskTemplate || ""} ${varExpr}`.trim() });
     }
@@ -94,6 +103,8 @@ export const WorkflowStepEditor: React.FC<WorkflowStepEditorProps> = ({
     switch (step.type) {
       case "agent":
         return <AgentStepForm step={step} onUpdate={onUpdate} onFocusField={setActiveField} />;
+      case "llm":
+        return <LlmStepForm step={step} onUpdate={onUpdate} onFocusField={setActiveField} />;
       case "if":
       case "switch":
       case "merge":

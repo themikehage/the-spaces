@@ -13,6 +13,7 @@ export const WorkflowStepTypeSchema = z.enum([
   "webhook",
   "delay",
   "workflow",
+  "llm",
 ]);
 export type WorkflowStepType = z.infer<typeof WorkflowStepTypeSchema>;
 
@@ -63,6 +64,12 @@ export const WorkflowStepSchema = z.object({
   durationMs: z.number().min(1).max(900_000).optional(),
   subWorkflowId: z.string().optional(),
   subWorkflowInputs: z.record(z.unknown()).optional(),
+  llmPrompt: z.string().optional(),
+  llmSystemPrompt: z.string().optional(),
+  llmModelId: z.string().optional(),
+  llmTemperature: z.number().min(0).max(2).optional(),
+  llmMaxTokens: z.number().int().positive().optional(),
+  llmResponseFormat: z.enum(["text", "json"]).optional(),
 });
 export type WorkflowStep = z.infer<typeof WorkflowStepSchema>;
 

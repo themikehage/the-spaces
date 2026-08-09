@@ -25,12 +25,15 @@ import { workflowStore } from "./workflow-store";
 
 import type { ICredentialStore } from "../ports/credential-store.port";
 import type { IHttpClient } from "../ports/http-client.port";
+import type { ModelRegistry } from "../model/model-registry";
 
 export interface WorkflowEngineOptions {
   sessionManager?: SessionManager;
   delegationRegistry?: DelegationRegistry;
   getSessionManager?: () => SessionManager;
   getDelegationRegistry?: () => DelegationRegistry;
+  modelRegistry?: ModelRegistry;
+  getModelRegistry?: () => ModelRegistry;
   eventBus?: EventBus;
   workspaceDir?: string;
   getWorkspaceDir?: (username: string, projectId?: string, workflowId?: string) => string;
@@ -54,6 +57,7 @@ export class WorkflowEngine implements IWorkflowEngine {
       if (!sm || !dr) {
         throw new Error("WorkflowEngine requires sessionManager and delegationRegistry");
       }
+      const mr = this.opts.modelRegistry || this.opts.getModelRegistry?.();
       this._stepExecutor = new StepExecutor({
         sessionManager: sm,
         delegationRegistry: dr,
@@ -61,6 +65,7 @@ export class WorkflowEngine implements IWorkflowEngine {
         httpClient: this.opts.httpClient,
         credentialStore: this.opts.credentialStore,
         workflowEngine: this,
+        modelRegistry: mr,
       });
     }
     return this._stepExecutor;

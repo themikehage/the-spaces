@@ -24,6 +24,7 @@ Reglas y estándares inamovibles para el subsistema de workflows en Spaces. Todo
 | `webhook` | Trigger de entrada que procesa peticiones HTTP externas | `id`, `type`, `label` | `webhookId`, `webhookSecret`, `webhookResponseMode`, `dependsOn`, `pinnedOutputs` |
 | `delay` | Pausa en milisegundos (mín: 1, máx: 900,000 / 15 min) | `id`, `type`, `label`, `durationMs` | `dependsOn`, `pinnedOutputs` |
 | `workflow` | Sub-workflow modular (profundidad máx: 3) | `id`, `type`, `label`, `subWorkflowId` | `subWorkflowInputs`, `dependsOn`, `pinnedOutputs` |
+| `llm` | Llamada directa a LLM sin tools ni agente | `id`, `type`, `label`, `llmPrompt` | `llmSystemPrompt`, `llmModelId`, `llmTemperature`, `llmMaxTokens`, `llmResponseFormat`, `captureOutputs`, `dependsOn`, `pinnedOutputs` |
 
 ## 3. Expresiones e Interpolación de Variables
 

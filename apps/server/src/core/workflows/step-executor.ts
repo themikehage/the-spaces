@@ -7,12 +7,14 @@ import type { EventBus } from "../ports/spaces-host.port";
 import type { SessionManager } from "../session/session-manager";
 import type { DelegationRegistry } from "../delegation/delegation-registry";
 import type { IWorkflowEngine } from "../ports/workflow-engine.port";
+import type { ModelRegistry } from "../model/model-registry";
 import { executeAgentStep } from "./executors/agent-executor";
 import { executeApprovalStep } from "./executors/approval-executor";
 import { executeCodeStep } from "./executors/code-executor";
 import { executeIfStep, executeMergeStep, executeSwitchStep } from "./executors/control-executor";
 import { executeDelayStep } from "./executors/delay-executor";
 import { executeHttpStep } from "./executors/http-executor";
+import { executeLlmStep } from "./executors/llm-executor";
 import { executeSubWorkflowStep } from "./executors/subworkflow-executor";
 import { executeVariableStep } from "./executors/variable-executor";
 import { executeWebhookStep } from "./executors/webhook-executor";
@@ -25,6 +27,7 @@ export interface StepExecutorDeps {
   httpClient?: IHttpClient;
   credentialStore?: ICredentialStore;
   workflowEngine?: IWorkflowEngine;
+  modelRegistry?: ModelRegistry;
 }
 
 export class StepExecutor {
@@ -75,6 +78,7 @@ export class StepExecutor {
         case "http":
         case "workflow":
         case "delay":
+        case "llm":
           return {
             stepId: step.id,
             status: "skipped",
@@ -161,6 +165,15 @@ export class StepExecutor {
               scope,
               startedAt,
               { workflowEngine: this.deps.workflowEngine },
+              stepController.signal,
+            );
+          case "llm":
+            return await executeLlmStep(
+              step,
+              run,
+              scope,
+              startedAt,
+              { modelRegistry: this.deps.modelRegistry },
               stepController.signal,
             );
           default:

@@ -3,6 +3,7 @@ import type { DelegationRegistry } from "../../delegation/delegation-registry";
 import type { EventBus } from "../../ports/spaces-host.port";
 import { getLastAssistantText, parseEnvelope } from "../../session/agent-utils";
 import type { SessionManager } from "../../session/session-manager";
+import { sessionMetadataStore } from "../../session/metadata-store";
 import { interpolateString } from "../variable-interpolator";
 import { workflowRunStore } from "../workflow-run-store";
 
@@ -23,8 +24,18 @@ export async function executeAgentStep(
 ): Promise<WorkflowStepState> {
   const taskTemplate = step.taskTemplate || `Execute step ${step.label}`;
   const task = String(interpolateString(taskTemplate, scope));
-  const agentSessionId = run.workflowSessionId || run.parentSessionId || `wf-run-${run.id}`;
+  const agentSessionId = `wf-${run.id}-${step.id}`;
   const agentId = step.agentId || `wf-${run.workflowId}`;
+
+  sessionMetadataStore.saveSessionMetadata(run.username, agentSessionId, {
+    isWorkflowSession: true,
+    workflowRunId: run.id,
+    workflowId: run.workflowId,
+    agentId,
+    executionMode: "standard",
+    workspaceDir,
+    startedAt,
+  });
 
   workflowRunStore.updateStepState(run.username, run.id, step.id, {
     status: "running",
