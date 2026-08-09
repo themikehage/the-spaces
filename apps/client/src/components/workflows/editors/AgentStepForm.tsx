@@ -1,6 +1,6 @@
 import { Dropdown, type DropdownOption } from "@/components/ui/Dropdown";
 import React from "react";
-import type { WorkflowStep } from "shared";
+import { AGENT_OUTPUT_MAX_CHARS, type WorkflowStep } from "shared";
 
 type SubagentType = "builder" | "explorer" | "autonomous";
 
@@ -47,6 +47,29 @@ export const AgentStepForm: React.FC<AgentStepFormProps> = ({
           placeholder="Leave blank for anonymous subagent"
           className="w-full px-3 py-1.5 rounded-lg bg-accent/50 border border-border text-foreground text-xs font-mono focus:outline-none focus:border-primary"
         />
+      </div>
+
+      <div>
+        <label className="block text-xs font-medium text-muted-foreground mb-1">
+          Max Output Chars (Optional)
+        </label>
+        <input
+          type="number"
+          min={1}
+          value={step.agentOutputMaxChars ?? AGENT_OUTPUT_MAX_CHARS}
+          onChange={(e) => {
+            const v = Number(e.target.value);
+            onUpdate({
+              ...step,
+              agentOutputMaxChars: Number.isFinite(v) && v > 0 ? v : undefined,
+            });
+          }}
+          placeholder={`Default: ${AGENT_OUTPUT_MAX_CHARS}`}
+          className="w-full px-3 py-1.5 rounded-lg bg-accent/50 border border-border text-foreground text-xs font-mono focus:outline-none focus:border-primary"
+        />
+        <p className="text-[10px] text-muted-foreground mt-1">
+          Maximum chars for the step output summary. Default {AGENT_OUTPUT_MAX_CHARS}.
+        </p>
       </div>
 
       <div>

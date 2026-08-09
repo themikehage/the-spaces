@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: MIT
 import type { DelegationNotificationDetails, EnvelopeResult } from "shared";
-import { DELEGATION_NOTIFICATION_TYPE } from "shared";
+import { AGENT_OUTPUT_MAX_CHARS, DELEGATION_NOTIFICATION_TYPE } from "shared";
 import type { ModelRegistry } from "..";
 
 /**
  * Parses the structured output envelope (status, executive_summary, artifacts, risks)
  * from an agent's response text.
  */
-export function parseEnvelope(text: string): EnvelopeResult {
+export function parseEnvelope(text: string, maxChars?: number): EnvelopeResult {
+  const limit = maxChars ?? AGENT_OUTPUT_MAX_CHARS;
   const cleanText = text.trim();
   const validStatuses = ["success", "partial", "blocked", "error"] as const;
 
@@ -35,7 +36,7 @@ export function parseEnvelope(text: string): EnvelopeResult {
 
       return {
         status: validStatuses.includes(parsed.status) ? parsed.status : "success",
-        executive_summary: String(parsed.executive_summary ?? cleanText.slice(0, 300)),
+        executive_summary: String(parsed.executive_summary ?? cleanText.slice(0, limit)),
         artifacts: String(parsed.artifacts ?? "none"),
         risks: String(parsed.risks ?? "None"),
         outputs,
@@ -45,7 +46,7 @@ export function parseEnvelope(text: string): EnvelopeResult {
     if (Object.keys(parsed).length > 0) {
       return {
         status: "success",
-        executive_summary: cleanText.slice(0, 300),
+        executive_summary: cleanText.slice(0, limit),
         artifacts: "none",
         risks: "None",
         outputs: parsed as Record<string, unknown>,
@@ -125,7 +126,7 @@ export function parseEnvelope(text: string): EnvelopeResult {
     outputs: {},
   };
 
-  result.executive_summary = cleanText.slice(0, 500);
+  result.executive_summary = cleanText.slice(0, limit);
 
   const lines = cleanText.split("\n");
   let hasStatus = false;
@@ -154,7 +155,7 @@ export function parseEnvelope(text: string): EnvelopeResult {
   }
 
   if (!hasStatus && !hasSummary) {
-    const cleanSummary = cleanText.replace(/---/g, "").trim().slice(0, 300);
+    const cleanSummary = cleanText.replace(/---/g, "").trim().slice(0, limit);
     result.executive_summary = cleanSummary;
   }
 

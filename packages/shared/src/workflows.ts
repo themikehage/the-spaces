@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 import { z } from "zod";
 
+export const AGENT_OUTPUT_MAX_CHARS = 3000;
+
 export const WorkflowStepTypeSchema = z.enum([
   "agent",
   "if",
@@ -37,6 +39,7 @@ export const WorkflowStepSchema = z.object({
   subagentType: z.enum(["explorer", "builder", "autonomous"]).optional(),
   maxSteps: z.number().optional(),
   captureOutputs: z.array(z.string()).optional(),
+  agentOutputMaxChars: z.number().int().positive().optional(),
   condition: z.string().optional(),
   branches: z.record(z.array(z.string())).optional(),
   defaultBranch: z.string().optional(),

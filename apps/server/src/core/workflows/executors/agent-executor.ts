@@ -74,7 +74,7 @@ export async function executeAgentStep(
     await session.prompt(task);
 
     const lastText = getLastAssistantText(session.messages);
-    envelope = parseEnvelope(lastText);
+    envelope = parseEnvelope(lastText, step.agentOutputMaxChars);
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     return {
