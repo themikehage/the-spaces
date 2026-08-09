@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import type { WorkflowRun, WorkflowStep, WorkflowStepState } from "shared";
-import type { ModelRegistry } from "../../model/model-registry";
+import type { AvailableModel, ModelRegistry } from "../../model/model-registry";
 import { ModelProviderAdapter } from "../../model/model-provider-adapter";
 import type { IModelProvider } from "../../ports/model.port";
 import { interpolateString } from "../variable-interpolator";
@@ -9,6 +9,59 @@ import { workflowRunStore } from "../workflow-run-store";
 export interface LlmExecutorDeps {
   modelRegistry?: ModelRegistry;
   modelProvider?: IModelProvider;
+  getUserDefaultModel?: (username: string) => string | null;
+}
+
+function resolveLlmTarget(
+  available: AvailableModel[],
+  modelId?: string,
+): AvailableModel | undefined {
+  if (modelId) {
+    return available.find(
+      (m) => m.id === modelId || `${m.provider}/${m.id}` === modelId,
+    );
+  }
+  return undefined;
+}
+
+async function resolveLlmConnection(
+  step: WorkflowStep,
+  username: string,
+  deps: LlmExecutorDeps,
+): Promise<{ baseUrl?: string; apiKey?: string; modelId?: string }> {
+  if (!deps.modelRegistry) {
+    return { modelId: step.llmModelId };
+  }
+
+  const available = deps.modelRegistry.getAvailable() ?? [];
+  if (available.length === 0) {
+    return { modelId: step.llmModelId };
+  }
+
+  const explicit = resolveLlmTarget(available, step.llmModelId);
+  if (explicit) {
+    const keyResult = await deps.modelRegistry.getApiKeyAndHeaders(explicit);
+    return {
+      baseUrl: explicit.baseUrl,
+      apiKey: keyResult.ok ? keyResult.apiKey : undefined,
+      modelId: explicit.id,
+    };
+  }
+
+  let defaultModel: AvailableModel | undefined;
+  if (deps.getUserDefaultModel) {
+    const composite = deps.getUserDefaultModel(username);
+    if (composite) {
+      defaultModel = available.find((m) => `${m.provider}/${m.id}` === composite);
+    }
+  }
+  const connection = defaultModel ?? available[0];
+  const keyResult = await deps.modelRegistry.getApiKeyAndHeaders(connection);
+  return {
+    baseUrl: connection.baseUrl,
+    apiKey: keyResult.ok ? keyResult.apiKey : undefined,
+    modelId: step.llmModelId ?? connection.id,
+  };
 }
 
 export async function executeLlmStep(
@@ -52,13 +105,15 @@ export async function executeLlmStep(
     throw new Error(`LLM step '${step.label}' failed: ModelProvider is not available.`);
   }
 
+  const connection = await resolveLlmConnection(step, run.username, deps);
+
   const result = await provider.streamComplete({
     messages: [{ role: "user", content: prompt }],
     system: systemPrompt,
-    modelId: step.llmModelId,
     temperature: step.llmTemperature,
     maxTokens: step.llmMaxTokens,
     signal,
+    ...connection,
   });
 
   const outputs: Record<string, unknown> = {

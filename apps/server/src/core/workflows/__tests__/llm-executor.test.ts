@@ -2,6 +2,7 @@
 import { describe, expect, it } from "bun:test";
 import type { WorkflowRun, WorkflowStep } from "shared";
 import type { IModelProvider, StreamCompleteOptions, StreamCompleteResult } from "../../ports/model.port";
+import { ModelRegistry } from "../../model/model-registry";
 import { executeLlmStep } from "../executors/llm-executor";
 import { StepExecutor } from "../step-executor";
 
@@ -29,6 +30,44 @@ const fakeRun: WorkflowRun = {
 };
 
 describe("llm-executor", () => {
+  function createLlmTestRegistry() {
+    const fakeAuthStorage = {
+      getApiKey: () => undefined,
+      hasAuth: () => true,
+      get: () => ({ type: "apiKey", key: "" }),
+      set: () => {},
+      remove: () => {},
+    } as any;
+
+    const registry = ModelRegistry.create(
+      fakeAuthStorage,
+      () =>
+        ({
+          OPENROUTER_API_KEY: "or-key-123",
+          OPENAI_API_KEY: "sk-invalid-openai",
+        }) as Record<string, string>,
+    );
+
+    registry.registerProvider("openrouter", {
+      name: "OpenRouter",
+      baseUrl: "https://openrouter.ai/api/v1",
+      apiKey: "$OPENROUTER_API_KEY",
+      api: "openai-completions",
+      defaultModel: "gpt-5.6-luna",
+      models: [{ id: "gpt-5.6-luna", name: "GPT 5.6 Luna" }],
+    });
+
+    registry.registerProvider("openai", {
+      name: "OpenAI",
+      baseUrl: "https://api.openai.com/v1",
+      apiKey: "$OPENAI_API_KEY",
+      api: "openai-completions",
+      defaultModel: "gpt-4o",
+      models: [{ id: "gpt-4o", name: "GPT-4o" }],
+    });
+
+    return registry;
+  }
   it("interpolates prompt and executes LLM step successfully", async () => {
     const mockProvider = new MockModelProvider("Generated summary text");
     const step: WorkflowStep = {
@@ -150,5 +189,72 @@ describe("llm-executor", () => {
     expect(state.status).toBe("error");
     expect(state.error).toContain("registry reached");
     expect(state.error).not.toContain("ModelProvider is not available");
+  });
+
+  it("routes an unmatched composite llmModelId through the user default provider", async () => {
+    const mockProvider = new MockModelProvider("ok");
+    const registry = createLlmTestRegistry();
+    const step: WorkflowStep = {
+      id: "step_llm_route",
+      type: "llm",
+      label: "Route",
+      llmPrompt: "Hi",
+      llmModelId: "openai/gpt-5.6-luna",
+    };
+
+    const result = await executeLlmStep(step, fakeRun, {}, new Date().toISOString(), {
+      modelProvider: mockProvider,
+      modelRegistry: registry,
+      getUserDefaultModel: () => "openrouter/gpt-5.6-luna",
+    });
+
+    expect(result.status).toBe("success");
+    expect(mockProvider.lastOpts?.baseUrl).toBe("https://openrouter.ai/api/v1");
+    expect(mockProvider.lastOpts?.apiKey).toBe("or-key-123");
+    expect(mockProvider.lastOpts?.modelId).toBe("openai/gpt-5.6-luna");
+  });
+
+  it("uses the matched registry model connection when llmModelId resolves", async () => {
+    const mockProvider = new MockModelProvider("ok");
+    const registry = createLlmTestRegistry();
+    const step: WorkflowStep = {
+      id: "step_llm_match",
+      type: "llm",
+      label: "Match",
+      llmPrompt: "Hi",
+      llmModelId: "openrouter/gpt-5.6-luna",
+    };
+
+    await executeLlmStep(step, fakeRun, {}, new Date().toISOString(), {
+      modelProvider: mockProvider,
+      modelRegistry: registry,
+      getUserDefaultModel: () => "openrouter/gpt-5.6-luna",
+    });
+
+    expect(mockProvider.lastOpts?.baseUrl).toBe("https://openrouter.ai/api/v1");
+    expect(mockProvider.lastOpts?.apiKey).toBe("or-key-123");
+    expect(mockProvider.lastOpts?.modelId).toBe("gpt-5.6-luna");
+  });
+
+  it("routes a matching openai composite through the openai connection", async () => {
+    const mockProvider = new MockModelProvider("ok");
+    const registry = createLlmTestRegistry();
+    const step: WorkflowStep = {
+      id: "step_llm_openai",
+      type: "llm",
+      label: "OpenAI",
+      llmPrompt: "Hi",
+      llmModelId: "openai/gpt-4o",
+    };
+
+    await executeLlmStep(step, fakeRun, {}, new Date().toISOString(), {
+      modelProvider: mockProvider,
+      modelRegistry: registry,
+      getUserDefaultModel: () => "openrouter/gpt-5.6-luna",
+    });
+
+    expect(mockProvider.lastOpts?.baseUrl).toBe("https://api.openai.com/v1");
+    expect(mockProvider.lastOpts?.apiKey).toBe("sk-invalid-openai");
+    expect(mockProvider.lastOpts?.modelId).toBe("gpt-4o");
   });
 });

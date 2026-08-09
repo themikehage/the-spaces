@@ -178,7 +178,11 @@ export class StepExecutor {
               run,
               scope,
               startedAt,
-              { modelRegistry: this.resolveModelRegistry(run) },
+              {
+                modelRegistry: this.resolveModelRegistry(run),
+                getUserDefaultModel: (username) =>
+                  this.deps.sessionManager.userConfig?.getUserDefaultModel(username) ?? null,
+              },
               stepController.signal,
             );
           default:

@@ -4,35 +4,69 @@ import type {
   StreamCompleteOptions,
   StreamCompleteResult,
 } from "../ports/model.port";
-import { OpenAICompatibleProvider } from "../providers/openai-compatible";
-import type { ModelRegistry } from "./model-registry";
+import { OpenAICompatibleProvider, type FetchFunction } from "../providers/openai-compatible";
+import type { AvailableModel, ModelRegistry } from "./model-registry";
 
 export class ModelProviderAdapter implements IModelProvider {
-  constructor(private modelRegistry: ModelRegistry) {}
+  constructor(
+    private modelRegistry: ModelRegistry,
+    private fetchFn?: FetchFunction,
+  ) {}
 
-  createModel(modelId?: string): unknown {
-    const available = this.modelRegistry.getAvailable();
+  private resolveTargetModel(modelId?: string): AvailableModel | undefined {
+    const available = this.modelRegistry.getAvailable() ?? [];
     if (modelId) {
-      return available.find((m) => m.id === modelId) ?? available[0];
+      const match = available.find(
+        (m) => m.id === modelId || `${m.provider}/${m.id}` === modelId,
+      );
+      if (match) return match;
     }
     return available[0];
   }
 
+  createModel(modelId?: string): unknown {
+    return this.resolveTargetModel(modelId);
+  }
+
   async getApiKey(provider?: string): Promise<string | undefined> {
-    const available = this.modelRegistry.getAvailable();
-    const target = available.find((m) => m.provider === (provider ?? "openai")) ?? available[0];
+    const available = this.modelRegistry.getAvailable() ?? [];
+    const target = provider
+      ? available.find((m) => m.provider === provider)
+      : this.resolveTargetModel();
     if (!target) return undefined;
     const result = await this.modelRegistry.getApiKeyAndHeaders(target);
     return result.ok ? result.apiKey : undefined;
   }
 
   async streamComplete(opts: StreamCompleteOptions): Promise<StreamCompleteResult> {
-    const apiKey = opts.apiKey ?? (await this.getApiKey());
+    const target = this.resolveTargetModel(opts.modelId);
+    let apiKey = opts.apiKey;
+    let baseUrl = opts.baseUrl;
+    let modelId = opts.modelId;
+
+    if (target) {
+      if (!apiKey) {
+        const keyResult = await this.modelRegistry.getApiKeyAndHeaders(target);
+        if (keyResult.ok) {
+          apiKey = keyResult.apiKey;
+        }
+      }
+      if (!baseUrl) {
+        baseUrl = target.baseUrl;
+      }
+      if (!modelId) {
+        modelId = target.id;
+      } else if (modelId === `${target.provider}/${target.id}`) {
+        modelId = target.id;
+      }
+    }
+
     const provider = new OpenAICompatibleProvider({
       apiKey,
-      baseUrl: opts.baseUrl,
-      defaultModelId: opts.modelId,
+      baseUrl,
+      defaultModelId: modelId,
+      fetchFn: this.fetchFn,
     });
-    return provider.streamComplete(opts);
+    return provider.streamComplete({ ...opts, apiKey, baseUrl, modelId });
   }
 }
