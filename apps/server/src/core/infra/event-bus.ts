@@ -55,11 +55,12 @@ export class TypedEventEmitter<
   }
 
   async emit(event: T): Promise<void> {
-    for (const listener of this.listeners) {
-      try {
-        await listener(event);
-      } catch (err) {
-        console.error("[TypedEventEmitter] Listener error:", err);
+    const results = await Promise.allSettled(
+      [...this.listeners].map(async (listener) => listener(event)),
+    );
+    for (const result of results) {
+      if (result.status === "rejected") {
+        console.error("[TypedEventEmitter] Listener error:", result.reason);
       }
     }
   }

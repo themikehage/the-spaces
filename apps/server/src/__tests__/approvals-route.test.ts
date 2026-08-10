@@ -1,10 +1,9 @@
-// SPDX-License-Identifier: MIT
 import { describe, expect, it } from "bun:test";
-import { approvalManager } from "../core/approvals/approval-manager";
-import { uiApprovalRegistry } from "../core/approvals/ui-approval-registry";
+import { createServerContext } from "../core/infra/server-context";
 
 describe("routes/approvals", () => {
   it("should format approvals with correct kind discriminators", () => {
+    const { approvalManager, uiApprovalRegistry } = createServerContext();
     approvalManager.request({
       toolCallId: "sec-1",
       username: "testuser",

@@ -1,10 +1,11 @@
+// SPDX-License-Identifier: MIT
 import { TabsNav } from "@/components/ui/TabsNav";
 import { useLiterals } from "@/lib";
-import { workspaceService } from "@/lib/api/workspace.service";
-import { Check, Download, ExternalLink, File, Maximize } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { Check, ChevronLeft, Download, ExternalLink, File, Maximize } from "lucide-react";
+import { useMemo } from "react";
 import type { FileInfo } from "shared";
 import { literals as u } from "./WorkspaceFileEditor.literals";
+import { useWorkspaceEditor } from "./hooks/useWorkspaceEditor";
 
 interface Props {
   file: FileInfo | null;
@@ -13,6 +14,7 @@ interface Props {
   activeChannelId?: string | null;
   activeTeamId?: string | null;
   onSave: (path: string, content: string) => Promise<void>;
+  onBackToFiles?: () => void;
 }
 
 const EXT_LANGUAGE_MAP: Record<string, string> = {
@@ -36,20 +38,6 @@ function getLanguageClass(name: string): string {
   return EXT_LANGUAGE_MAP[ext] || "";
 }
 
-// Decode base64 to unicode string safely
-function decodeBase64Unicode(str: string): string {
-  try {
-    const binary = atob(str);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-      bytes[i] = binary.charCodeAt(i);
-    }
-    return new TextDecoder("utf-8").decode(bytes);
-  } catch {
-    return "";
-  }
-}
-
 export function WorkspaceFileEditor({
   file,
   activeProjectName,
@@ -57,204 +45,61 @@ export function WorkspaceFileEditor({
   activeChannelId = null,
   activeTeamId = null,
   onSave,
+  onBackToFiles,
 }: Props) {
   const l = useLiterals(u);
-  const [content, setContent] = useState("");
-  const [dirty, setDirty] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
-  const [errorMsg, setErrorMsg] = useState("");
-  const [activeTab, setActiveTab] = useState<"code" | "preview">("code");
-  const [isFullscreen, setIsFullscreen] = useState(false);
-
-  const isImage = file?.mimeType?.startsWith("image/") || false;
-  const isHtml = file?.name.endsWith(".html") || file?.name.endsWith(".htm") || false;
-  const isText =
-    file?.mimeType?.startsWith("text/") ||
-    file?.mimeType === "application/json" ||
-    file?.mimeType === "application/javascript" ||
-    file?.mimeType === "application/typescript" ||
-    file?.name.endsWith(".json") ||
-    file?.name.endsWith(".md") ||
-    file?.name.endsWith(".ts") ||
-    file?.name.endsWith(".tsx") ||
-    file?.name.endsWith(".js") ||
-    file?.name.endsWith(".jsx") ||
-    file?.name.endsWith(".html") ||
-    file?.name.endsWith(".css") ||
-    file?.name.endsWith(".env") ||
-    file?.name.endsWith(".yml") ||
-    file?.name.endsWith(".yaml") ||
-    false;
-
-  useEffect(() => {
-    if (file) {
-      if (isText && file.content) {
-        setContent(decodeBase64Unicode(file.content));
-      } else {
-        setContent("");
-      }
-      setDirty(false);
-      setSaveStatus("idle");
-      setErrorMsg("");
-      setActiveTab(isHtml ? "preview" : "code");
-      setIsFullscreen(false);
-    } else {
-      setContent("");
-      setDirty(false);
-      setActiveTab("code");
-      setIsFullscreen(false);
-    }
-  }, [file, isText]);
-
-  const handleSave = useCallback(async () => {
-    if (!file || saving) return;
-    setSaving(true);
-    setSaveStatus("idle");
-    setErrorMsg("");
-    try {
-      await onSave(file.path, content);
-      setDirty(false);
-      setSaveStatus("success");
-      setTimeout(() => setSaveStatus("idle"), 2500);
-    } catch (err: any) {
-      setSaveStatus("error");
-      setErrorMsg(err.message || l.saveError);
-    } finally {
-      setSaving(false);
-    }
-  }, [file, content, onSave, saving]);
-
-  // Handle Ctrl+S keyboard shortcut inside textarea
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
-        e.preventDefault();
-        handleSave();
-      }
-    },
-    [handleSave],
+  const scope = useMemo(
+    () => ({ activeProjectName, activeAgentId, activeChannelId, activeTeamId }),
+    [activeProjectName, activeAgentId, activeChannelId, activeTeamId],
   );
 
-  const [previewBlobUrl, setPreviewBlobUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!file) {
-      setPreviewBlobUrl(null);
-      return;
-    }
-    let active = true;
-    let url = "";
-
-    const loadBlob = async () => {
-      if (!isHtml && !isImage) {
-        setPreviewBlobUrl(null);
-        return;
-      }
-      try {
-        const params = new URLSearchParams();
-        if (activeProjectName) params.append("project", activeProjectName);
-        if (activeAgentId) params.append("agentId", activeAgentId);
-        if (activeChannelId) params.append("channelId", activeChannelId);
-        if (activeTeamId) params.append("teamId", activeTeamId);
-        const contextQuery = params.toString() ? `&${params.toString()}` : "";
-        const res = await workspaceService.fetchWorkspaceUrl(
-          `/api/workspace/${file.path}?raw=true${contextQuery}`,
-        );
-        if (!res.ok) return;
-        const blob = await res.blob();
-        if (active) {
-          url = URL.createObjectURL(blob);
-          setPreviewBlobUrl(url);
-        }
-      } catch (err) {
-        console.error("Failed to load preview blob:", err);
-      }
-    };
-
-    loadBlob();
-
-    return () => {
-      active = false;
-      if (url) {
-        URL.revokeObjectURL(url);
-      }
-    };
-  }, [
-    file?.path,
-    activeProjectName,
-    activeAgentId,
-    activeChannelId,
-    activeTeamId,
-    isHtml,
-    isImage,
+  const {
+    content,
+    setContent,
+    dirty,
+    setDirty,
+    saving,
     saveStatus,
-  ]);
+    errorMsg,
+    activeTab,
+    setActiveTab,
+    isFullscreen,
+    setIsFullscreen,
+    previewBlobUrl,
+    isImage,
+    isHtml,
+    isText,
+    handleSave,
+    handleKeyDown,
+    handleOpenRaw,
+    handleDownload,
+  } = useWorkspaceEditor(file, scope, onSave, l.saveError);
+
+  const breadcrumbs = useMemo(() => {
+    if (!file?.path) return [];
+    return file.path.split("/");
+  }, [file?.path]);
 
   if (!file) {
     return (
-      <div className="h-full flex flex-col items-center justify-center text-muted-foreground font-sans border-t border-border sm:border-t-0 sm:border-l border-border">
+      <div className="h-full flex flex-col items-center justify-center text-muted-foreground font-sans border-t border-border sm:border-t-0 sm:border-l border-border p-4 text-center">
+        {onBackToFiles && (
+          <button
+            onClick={onBackToFiles}
+            className="mb-4 md:hidden inline-flex items-center gap-1 text-xs text-primary font-semibold hover:underline cursor-pointer"
+          >
+            <ChevronLeft size={14} />
+            Back to files
+          </button>
+        )}
         <File size={32} className="mb-2" />
         <p className="text-xs">Select a file to inspect or edit</p>
       </div>
     );
   }
 
-  const handleOpenRaw = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (previewBlobUrl) {
-      window.open(previewBlobUrl, "_blank");
-    } else {
-      try {
-        const params = new URLSearchParams();
-        if (activeProjectName) params.append("project", activeProjectName);
-        if (activeAgentId) params.append("agentId", activeAgentId);
-        if (activeChannelId) params.append("channelId", activeChannelId);
-        if (activeTeamId) params.append("teamId", activeTeamId);
-        const contextQuery = params.toString() ? `&${params.toString()}` : "";
-        const res = await workspaceService.fetchWorkspaceUrl(
-          `/api/workspace/${file.path}?raw=true${contextQuery}`,
-        );
-        if (!res.ok) throw new Error("Failed to load raw file");
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        window.open(url, "_blank");
-      } catch (err) {
-        console.error("Error opening file:", err);
-      }
-    }
-  };
-
-  const handleDownload = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    try {
-      const params = new URLSearchParams();
-      if (activeProjectName) params.append("project", activeProjectName);
-      if (activeAgentId) params.append("agentId", activeAgentId);
-      if (activeChannelId) params.append("channelId", activeChannelId);
-      if (activeTeamId) params.append("teamId", activeTeamId);
-      const contextQuery = params.toString() ? `&${params.toString()}` : "";
-      const res = await workspaceService.fetchWorkspaceUrl(
-        `/api/workspace/${file.path}?download=true${contextQuery}`,
-      );
-      if (!res.ok) throw new Error("Failed to download");
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = file.name;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error("Error downloading file:", err);
-    }
-  };
-
   return (
     <div className="h-full flex flex-col bg-background border-t border-border sm:border-t-0 sm:border-l border-border">
-      {/* Fullscreen HTML Preview Overlay */}
       {isFullscreen && (
         <div className="fixed inset-0 z-50 bg-background flex flex-col font-sans select-none animate-fade-in">
           <div className="h-10 px-4 border-b border-border flex items-center justify-between bg-background flex-shrink-0">
@@ -286,17 +131,29 @@ export function WorkspaceFileEditor({
         </div>
       )}
 
-      {/* Editor Header Bar */}
       <div className="h-9 px-3 border-b border-border flex items-center justify-between flex-shrink-0 bg-background/80">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-xs font-mono font-semibold text-foreground truncate max-w-[100px] sm:max-w-none">
-            {file.name}
-          </span>
+          {onBackToFiles && (
+            <button
+              onClick={onBackToFiles}
+              className="md:hidden p-1 hover:bg-surfaceHover rounded text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+              title="Back to files"
+            >
+              <ChevronLeft size={16} />
+            </button>
+          )}
+          <div className="flex items-center gap-1 text-xs font-mono text-muted-foreground truncate min-w-0">
+            {breadcrumbs.length > 1 && (
+              <span className="hidden sm:inline truncate max-w-[120px] opacity-70">
+                {breadcrumbs.slice(0, -1).join("/")}/
+              </span>
+            )}
+            <span className="font-semibold text-foreground truncate">{file.name}</span>
+          </div>
           {dirty && (
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse flex-shrink-0" />
           )}
 
-          {/* HTML Tab Switcher */}
           {isHtml && (
             <TabsNav
               variant="segmented"
@@ -346,7 +203,6 @@ export function WorkspaceFileEditor({
             </button>
           )}
 
-          {/* HTML Preview Specific Actions */}
           {isHtml && activeTab === "preview" && (
             <>
               <button
@@ -379,7 +235,6 @@ export function WorkspaceFileEditor({
         </div>
       </div>
 
-      {/* Editor Content Area */}
       <div className="flex-1 overflow-hidden min-h-0 relative">
         {isText && activeTab === "code" ? (
           <textarea

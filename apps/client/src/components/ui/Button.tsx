@@ -21,9 +21,9 @@ const variants: Record<Variant, string> = {
 };
 
 const sizes: Record<Size, string> = {
-  xs: "px-2 py-1 text-[10px] rounded-md",
-  sm: "px-2.5 py-1 text-xs rounded-md",
-  md: "px-3 py-1.5 text-xs rounded-lg",
+  xs: "px-2 py-2 text-[10px] rounded-md",
+  sm: "px-2.5 py-2 text-xs rounded-md",
+  md: "px-3 py-2 text-xs rounded-lg",
   lg: "px-4 py-2 text-sm rounded-lg",
   icon: "p-1.5 rounded-lg",
 };

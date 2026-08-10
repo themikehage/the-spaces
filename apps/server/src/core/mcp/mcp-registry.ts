@@ -300,11 +300,11 @@ export class McpRegistry {
               label: `MCP ${name} - ${t.name}`,
               description: `${t.description || ""} (MCP tool from ${name})`,
               parameters: t.inputSchema,
-              execute: async (toolCallId: string, params: any) => {
+              execute: async (toolCallId: string, params: any, signal?: AbortSignal) => {
                 const activeClient = this.globalClients.get(key);
                 if (!activeClient) throw new Error(`MCP Server ${name} is not connected`);
 
-                const res = await activeClient.callTool(t.name, params);
+                const res = await activeClient.callTool(t.name, params, signal);
                 if (res.isError) {
                   const errText = res.content?.[0]?.text || JSON.stringify(res);
                   throw new Error(errText);

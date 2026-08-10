@@ -10,6 +10,7 @@ export async function runVideoGenModel(
   aspectRatio: string,
   duration: number,
   workspaceDir: string,
+  signal?: AbortSignal,
 ): Promise<string> {
   const { sessionManager } = createServerContext();
   const isQwen =
@@ -76,11 +77,13 @@ export async function runVideoGenModel(
     const startTime = Date.now();
     const timeoutMs = 180000; // 3 minutes
     while (Date.now() - startTime < timeoutMs) {
+      if (signal?.aborted) throw new DOMException("Operation aborted", "AbortError");
       await new Promise((resolve) => setTimeout(resolve, 5000));
       const statusRes = await fetch(`https://dashscope-intl.aliyuncs.com/api/v1/tasks/${taskId}`, {
         headers: {
           Authorization: `Bearer ${apiKey}`,
         },
+        signal,
       });
       if (!statusRes.ok) continue;
       const statusData = await statusRes.json();
@@ -151,11 +154,13 @@ export async function runVideoGenModel(
   const startTime = Date.now();
   const timeoutMs = 180000; // 3 minutes
   while (Date.now() - startTime < timeoutMs) {
+    if (signal?.aborted) throw new DOMException("Operation aborted", "AbortError");
     await new Promise((resolve) => setTimeout(resolve, 5000));
     const statusRes = await fetch(pollingUrl, {
       headers: {
         Authorization: `Bearer ${apiKey}`,
       },
+      signal,
     });
     if (!statusRes.ok) continue;
     const statusData = await statusRes.json();
@@ -210,7 +215,7 @@ export function createVideoGenTool(workspaceDir: string, username: string) {
       },
       required: ["prompt"],
     },
-    execute: async (toolCallId: string, args: any) => {
+    execute: async (toolCallId: string, args: any, signal?: AbortSignal) => {
       const { sessionManager } = createServerContext();
       const settings = sessionManager.userConfig.getUserSettings(username);
       if (settings.videoGenEnabled === false) {
@@ -247,6 +252,7 @@ export function createVideoGenTool(workspaceDir: string, username: string) {
           args.aspect_ratio || "16:9",
           args.duration || 5,
           workspaceDir,
+          signal,
         );
 
         return {

@@ -220,7 +220,7 @@ export function ChatBody({
 
       {messages.length > 0 && !isReadOnlyExecution && (
         <div className="absolute bottom-0 left-0 right-0 z-10">
-          <div className="absolute inset-x-0 top-0 h-12 bg-gradient-to-t from-bg to-transparent pointer-events-none" />
+          <div className="absolute inset-x-0 top-0 h-12" />
           <ChatInput
             onSend={handleSend}
             onAbort={handleAbort}

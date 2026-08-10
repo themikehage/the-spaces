@@ -51,6 +51,7 @@ export interface IDelegationRegistry {
   getByToolCallId(username: string, parentSessionId: string, toolCallId: string): unknown;
   abortAllRecursive(rootSessionId: string): void;
   abortAll?(parentSessionId: string): void;
+  abortAllForParentSession?(parentSessionId: string): void;
 }
 
 export interface IMemoryRegistry {
@@ -58,7 +59,11 @@ export interface IMemoryRegistry {
 }
 
 export interface IUiApprovalRegistry {
-  register(toolCallId: string): Promise<unknown>;
+  register(toolCallId: string, options?: unknown): Promise<unknown>;
   resolve(toolCallId: string, result: unknown): boolean;
   reject(toolCallId: string, error: unknown): boolean;
+  cancelSession?(sessionId: string): number;
+  getAll(username: string): any[];
 }
+
+export type { IApprovalManager, RequestApprovalParams } from "./approval-manager.port";

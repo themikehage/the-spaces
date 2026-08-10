@@ -173,6 +173,11 @@ async function runLoop(
 
     // Inner loop: process tool calls and steering messages
     while (hasMoreToolCalls || pendingMessages.length > 0) {
+      if (signal?.aborted) {
+        await emit({ type: "agent_end", messages: newMessages });
+        return;
+      }
+
       if (!firstTurn) {
         await emit({ type: "turn_start" });
       } else {
@@ -678,7 +683,28 @@ async function executePreparedToolCall(
   let acceptingUpdates = true;
 
   try {
-    const result = await prepared.tool.execute(
+    if (signal?.aborted) {
+      return {
+        result: createErrorToolResult("Operation aborted"),
+        isError: true,
+      };
+    }
+
+    const abortPromise = signal
+      ? new Promise<never>((_, reject) => {
+          if (signal.aborted) {
+            reject(new DOMException("Operation aborted", "AbortError"));
+            return;
+          }
+          signal.addEventListener(
+            "abort",
+            () => reject(new DOMException("Operation aborted", "AbortError")),
+            { once: true },
+          );
+        })
+      : null;
+
+    const executePromise = prepared.tool.execute(
       prepared.toolCall.id,
       prepared.args as never,
       signal,
@@ -697,14 +723,19 @@ async function executePreparedToolCall(
         );
       },
     );
+
+    const result = await (abortPromise
+      ? Promise.race([executePromise, abortPromise])
+      : executePromise);
     acceptingUpdates = false;
     await Promise.all(updateEvents);
     return { result, isError: false };
   } catch (error) {
     acceptingUpdates = false;
     await Promise.all(updateEvents);
+    const message = error instanceof Error ? error.message : String(error);
     return {
-      result: createErrorToolResult(error instanceof Error ? error.message : String(error)),
+      result: createErrorToolResult(message),
       isError: true,
     };
   } finally {

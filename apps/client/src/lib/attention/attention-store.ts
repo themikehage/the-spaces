@@ -99,6 +99,14 @@ class AttentionStore {
     this.notify();
   }
 
+  clearBySession(sessionId: string): void {
+    const before = this.items.length;
+    this.items = this.items.filter((i) => i.sessionId !== sessionId);
+    if (this.items.length !== before) {
+      this.notify();
+    }
+  }
+
   async resolveApproval(
     approvalId: string,
     action: ResolveAttention["action"],

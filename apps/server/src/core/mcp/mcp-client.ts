@@ -246,17 +246,42 @@ export class McpClient {
     }
   }
 
-  async request(method: string, params: any = {}, timeoutMs = 15000): Promise<any> {
+  async request(
+    method: string,
+    params: any = {},
+    timeoutMs = 15000,
+    signal?: AbortSignal,
+  ): Promise<any> {
+    if (signal?.aborted) {
+      throw new DOMException("Operation aborted", "AbortError");
+    }
+
     const id = this.nextId++;
     const payload = JSON.stringify({ jsonrpc: "2.0", id, method, params });
 
     let timeoutId: any;
+    let abortListener: (() => void) | undefined;
+
     const timeoutPromise = new Promise((_, reject) => {
       timeoutId = setTimeout(() => {
         this.pendingRequests.delete(id);
         reject(new Error(`MCP request '${method}' timed out after ${timeoutMs}ms`));
       }, timeoutMs);
     });
+
+    const abortPromise = signal
+      ? new Promise<never>((_, reject) => {
+          abortListener = () => {
+            const pending = this.pendingRequests.get(id);
+            if (pending) {
+              this.pendingRequests.delete(id);
+              pending.reject(new DOMException("Operation aborted", "AbortError"));
+            }
+            reject(new DOMException("Operation aborted", "AbortError"));
+          };
+          signal.addEventListener("abort", abortListener, { once: true });
+        })
+      : null;
 
     const requestPromise = (async () => {
       if (this.config.transport === "http") {
@@ -272,6 +297,7 @@ export class McpClient {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: payload,
+                signal,
               });
               if (!res.ok) {
                 this.pendingRequests.delete(id);
@@ -301,9 +327,15 @@ export class McpClient {
     })();
 
     try {
-      return await Promise.race([requestPromise, timeoutPromise]);
+      const racePromises = abortPromise
+        ? [requestPromise, timeoutPromise, abortPromise]
+        : [requestPromise, timeoutPromise];
+      return await Promise.race(racePromises);
     } finally {
       clearTimeout(timeoutId);
+      if (signal && abortListener) {
+        signal.removeEventListener("abort", abortListener);
+      }
     }
   }
 
@@ -339,9 +371,9 @@ export class McpClient {
     }
   }
 
-  async callTool(name: string, args: any): Promise<any> {
+  async callTool(name: string, args: any, signal?: AbortSignal): Promise<any> {
     try {
-      const res = await this.request("tools/call", { name, arguments: args });
+      const res = await this.request("tools/call", { name, arguments: args }, 15000, signal);
       return res;
     } catch (e) {
       console.error(`[MCP] Failed to call tool ${name} on ${this.name}:`, e);

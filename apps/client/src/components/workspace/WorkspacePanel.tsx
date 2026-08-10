@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: MIT
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
-import { workspaceService } from "@/lib/api/workspace.service";
 import { Folder, RefreshCw, UserPlus } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import type { FileInfo } from "shared";
+import { useMemo } from "react";
 import { WorkspaceFileEditor } from "./WorkspaceFileEditor";
 import { WorkspaceFileTree } from "./WorkspaceFileTree";
+import { useWorkspacePanel } from "./hooks/useWorkspacePanel";
 
 interface Props {
   activeProjectName: string | null;
@@ -20,306 +19,40 @@ export function WorkspacePanel({
   activeChannelId = null,
   activeTeamId = null,
 }: Props) {
-  const [files, setFiles] = useState<FileInfo[]>([]);
-  const [selectedFile, setSelectedFile] = useState<FileInfo | null>(null);
-  const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
-  const [pathContents, setPathContents] = useState<Record<string, FileInfo[]>>({});
-  const [searchQuery, setSearchQuery] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [addingRootType, setAddingRootType] = useState<"file" | "folder" | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [pendingDeletePath, setPendingDeletePath] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState(false);
-
-  // Helper centralizado para construir las URLs con scoping de repositorio/agente/canal/equipo
-  const getWorkspaceUrl = useCallback(
-    (path: string) => {
-      const base = `/api/workspace/${path.replace(/^\/+/, "")}`;
-      const params = new URLSearchParams();
-      if (activeProjectName) params.append("project", activeProjectName);
-      if (activeAgentId) params.append("agentId", activeAgentId);
-      if (activeChannelId) params.append("channelId", activeChannelId);
-      if (activeTeamId) params.append("teamId", activeTeamId);
-      const query = params.toString();
-      return query ? `${base}?${query}` : base;
-    },
+  const scope = useMemo(
+    () => ({ activeProjectName, activeAgentId, activeChannelId, activeTeamId }),
     [activeProjectName, activeAgentId, activeChannelId, activeTeamId],
   );
 
-  // Helper for auth headers
-
-  // Fetch file or folder contents
-  const loadWorkspace = useCallback(
-    async (path = "") => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await workspaceService.fetchWorkspaceUrl(getWorkspaceUrl(path), {});
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.error || `HTTP ${res.status}`);
-        }
-        const data = await res.json();
-        if (data.isDirectory) {
-          if (path === "") {
-            setFiles(data.children || []);
-          } else {
-            setPathContents((prev) => ({
-              ...prev,
-              [path]: data.children || [],
-            }));
-          }
-        }
-      } catch (err: any) {
-        setError(err.message || "Failed to load workspace");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [getWorkspaceUrl],
-  );
-
-  // Initial load
-  useEffect(() => {
-    loadWorkspace();
-  }, [loadWorkspace]);
-
-  // Full workspace reload (root + all expanded subdirectories)
-  const reloadWorkspace = useCallback(async () => {
-    await loadWorkspace("");
-    const paths = Array.from(expandedPaths);
-    for (const path of paths) {
-      await loadWorkspace(path);
-    }
-  }, [expandedPaths, loadWorkspace]);
-
-  // Listen for agent workspaceUpdated notifications to reload automatically
-  useEffect(() => {
-    window.addEventListener("workspaceUpdated", reloadWorkspace);
-    return () => {
-      window.removeEventListener("workspaceUpdated", reloadWorkspace);
-    };
-  }, [reloadWorkspace]);
-
-  // Handle expanding/collapsing folders
-  const handleToggleExpand = useCallback(
-    async (path: string) => {
-      setExpandedPaths((prev) => {
-        const next = new Set(prev);
-        if (next.has(path)) {
-          next.delete(path);
-        } else {
-          next.add(path);
-          if (!pathContents[path]) {
-            loadWorkspace(path);
-          }
-        }
-        return next;
-      });
-    },
-    [pathContents, loadWorkspace],
-  );
-
-  // Handle file select
-  const handleSelectFile = useCallback(
-    async (file: FileInfo) => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await workspaceService.fetchWorkspaceUrl(getWorkspaceUrl(file.path), {});
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.error || `HTTP ${res.status}`);
-        }
-        const data = await res.json();
-        setSelectedFile(data);
-      } catch (err: any) {
-        setError(err.message || "Failed to open file");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [getWorkspaceUrl],
-  );
-
-  // Listen for file-click events from Chat messages to open files in editor
-  useEffect(() => {
-    const handleOpenFile = (e: Event) => {
-      const customEvt = e as CustomEvent<{ path: string }>;
-      const targetPath = customEvt.detail.path;
-      if (targetPath) {
-        if (targetPath.includes("/")) {
-          const parts = targetPath.split("/");
-          let current = "";
-          setExpandedPaths((prev) => {
-            const next = new Set(prev);
-            for (let i = 0; i < parts.length - 1; i++) {
-              current = current ? `${current}/${parts[i]}` : parts[i];
-              next.add(current);
-              if (!pathContents[current]) {
-                loadWorkspace(current);
-              }
-            }
-            return next;
-          });
-        }
-
-        handleSelectFile({
-          name: targetPath.split("/").pop() || "",
-          path: targetPath,
-          isDirectory: false,
-          size: 0,
-          lastModified: new Date().toISOString(),
-        });
-      }
-    };
-    window.addEventListener("openWorkspaceFile", handleOpenFile);
-    return () => {
-      window.removeEventListener("openWorkspaceFile", handleOpenFile);
-    };
-  }, [pathContents, loadWorkspace, handleSelectFile]);
-
-  // Save modified text file content
-  const handleSaveFile = useCallback(
-    async (path: string, content: string) => {
-      const res = await workspaceService.fetchWorkspaceUrl(getWorkspaceUrl(path), {
-        method: "PUT",
-
-        body: JSON.stringify({ type: "file", content }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Save operation failed");
-      }
-      const data = await res.json();
-      setSelectedFile(data);
-    },
-    [getWorkspaceUrl],
-  );
-
-  // Create new file or folder
-  const handleCreate = useCallback(
-    async (parentPath: string, name: string, type: "file" | "folder") => {
-      const fullPath = parentPath ? `${parentPath}/${name}` : name;
-      try {
-        const res = await workspaceService.fetchWorkspaceUrl(getWorkspaceUrl(fullPath), {
-          method: "PUT",
-
-          body: JSON.stringify({ type }),
-        });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.error || "Failed to create resource");
-        }
-        await loadWorkspace(parentPath);
-        if (parentPath !== "") {
-          setExpandedPaths((prev) => {
-            const next = new Set(prev);
-            next.add(parentPath);
-            return next;
-          });
-        }
-      } catch (err: any) {
-        setError(err.message || "Create failed");
-      }
-    },
-    [loadWorkspace, getWorkspaceUrl],
-  );
-
-  // Rename file or folder
-  const handleRename = useCallback(
-    async (oldPath: string, newPath: string) => {
-      try {
-        const res = await workspaceService.fetchWorkspaceUrl(getWorkspaceUrl(oldPath), {
-          method: "PATCH",
-
-          body: JSON.stringify({ newPath }),
-        });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.error || "Failed to rename resource");
-        }
-        const parentOfOld = oldPath.includes("/")
-          ? oldPath.substring(0, oldPath.lastIndexOf("/"))
-          : "";
-        const parentOfNew = newPath.includes("/")
-          ? newPath.substring(0, newPath.lastIndexOf("/"))
-          : "";
-        await loadWorkspace(parentOfOld);
-        if (parentOfNew !== parentOfOld) {
-          await loadWorkspace(parentOfNew);
-        }
-        if (selectedFile?.path === oldPath) {
-          const data = await res.json();
-          setSelectedFile(data);
-        }
-      } catch (err: any) {
-        setError(err.message || "Rename failed");
-      }
-    },
-    [selectedFile, loadWorkspace, getWorkspaceUrl],
-  );
-
-  const executeDelete = useCallback(async () => {
-    if (!pendingDeletePath) return;
-    setDeleting(true);
-    try {
-      const res = await workspaceService.fetchWorkspaceUrl(getWorkspaceUrl(pendingDeletePath), {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Failed to delete resource");
-      }
-      const parentPath = pendingDeletePath.includes("/")
-        ? pendingDeletePath.substring(0, pendingDeletePath.lastIndexOf("/"))
-        : "";
-      await loadWorkspace(parentPath);
-      if (selectedFile?.path === pendingDeletePath) {
-        setSelectedFile(null);
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      setError(msg || "Delete failed");
-    } finally {
-      setDeleting(false);
-      setShowDeleteConfirm(false);
-      setPendingDeletePath(null);
-    }
-  }, [pendingDeletePath, selectedFile, loadWorkspace, getWorkspaceUrl]);
-
-  const handleDelete = useCallback((path: string) => {
-    setPendingDeletePath(path);
-    setShowDeleteConfirm(true);
-  }, []);
-
-  // Filter files based on search query recursively or at root level
-  const filteredFiles = useMemo(() => {
-    if (!searchQuery) return files;
-    const query = searchQuery.toLowerCase();
-    const filterRecurse = (items: FileInfo[]): FileInfo[] => {
-      return items
-        .map((item) => {
-          if (item.isDirectory) {
-            const childrenKey = item.path;
-            const children = pathContents[childrenKey] || [];
-            const filteredChildren = filterRecurse(children);
-            if (filteredChildren.length > 0 || item.name.toLowerCase().includes(query)) {
-              return {
-                ...item,
-                children: filteredChildren,
-              };
-            }
-          } else if (item.name.toLowerCase().includes(query)) {
-            return item;
-          }
-          return null;
-        })
-        .filter(Boolean) as FileInfo[];
-    };
-    return filterRecurse(files);
-  }, [files, pathContents, searchQuery]);
+  const {
+    files,
+    selectedFile,
+    expandedPaths,
+    pathContents,
+    searchQuery,
+    loading,
+    error,
+    addingRootType,
+    showDeleteConfirm,
+    pendingDeletePath,
+    deleting,
+    filteredFiles,
+    mobileTab,
+    setMobileTab,
+    loadWorkspace,
+    handleToggleExpand,
+    handleSelectFile,
+    handleSaveFile,
+    handleCreate,
+    handleRename,
+    handleDelete,
+    executeDelete,
+    setSearchQuery,
+    setAddingRootType,
+    setShowDeleteConfirm,
+    setPendingDeletePath,
+    setError,
+  } = useWorkspacePanel(scope);
 
   return (
     <div className="w-full h-full flex flex-col bg-card overflow-hidden border-l border-border select-none">
@@ -336,7 +69,11 @@ export function WorkspacePanel({
       )}
 
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
-        <div className="w-full md:w-64 lg:w-64 border-b md:border-b-0 md:border-r border-border flex flex-col overflow-hidden p-3 bg-card/20 flex-shrink-0 min-h-[250px] md:min-h-0 md:h-full">
+        <div
+          className={`${
+            mobileTab === "tree" ? "flex" : "hidden"
+          } md:flex w-full md:w-64 lg:w-64 border-b md:border-b-0 md:border-r border-border flex-col overflow-hidden p-3 bg-card/20 flex-shrink-0 h-full`}
+        >
           <div className="mb-2.5 flex-shrink-0">
             <input
               type="text"
@@ -348,7 +85,9 @@ export function WorkspacePanel({
           </div>
 
           <div className="flex items-center justify-between pb-2 mb-2 border-b border-border/50 flex-shrink-0 text-muted-foreground">
-            <span className="text-xs uppercase tracking-wider font-semibold">Files</span>
+            <span className="text-xs uppercase tracking-wider font-semibold">
+              Files {files.length > 0 ? `(${filteredFiles.length})` : ""}
+            </span>
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => loadWorkspace("")}
@@ -374,10 +113,14 @@ export function WorkspacePanel({
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto min-h-0">
+          <div className="flex-1 overflow-y-auto min-h-0 touch-pan-y">
             {loading && files.length === 0 ? (
               <div className="h-24 flex items-center justify-center">
                 <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : filteredFiles.length === 0 && searchQuery ? (
+              <div className="py-6 text-center text-xs text-muted-foreground italic font-sans">
+                No matching files found
               </div>
             ) : (
               <WorkspaceFileTree
@@ -397,7 +140,11 @@ export function WorkspacePanel({
           </div>
         </div>
 
-        <div className="flex-1 min-w-0 overflow-hidden flex flex-col bg-background h-full">
+        <div
+          className={`${
+            mobileTab === "editor" ? "flex" : "hidden"
+          } md:flex flex-1 min-w-0 overflow-hidden flex-col bg-background h-full`}
+        >
           <WorkspaceFileEditor
             file={selectedFile}
             activeProjectName={activeProjectName}
@@ -405,6 +152,7 @@ export function WorkspacePanel({
             activeChannelId={activeChannelId}
             activeTeamId={activeTeamId}
             onSave={handleSaveFile}
+            onBackToFiles={() => setMobileTab("tree")}
           />
         </div>
       </div>

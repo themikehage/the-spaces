@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: MIT
 import { SessionPrefix } from "shared";
-import { approvalManager } from "../approvals/approval-manager";
+import { createServerContext } from "../infra/server-context";
+import type { IApprovalManager } from "../ports/core-services.port";
 import type { IWorkspaceResolver } from "../ports/workspace-resolver.port";
 import { extractSubject, permissionEngine, userPermissionStore } from "../sandbox";
 import { sessionMetadataStore } from "./metadata-store";
@@ -14,6 +14,7 @@ export interface CreateBeforeToolCallHookParams {
   executionMode?: "readonly" | "standard" | "autonomous";
   permissionOverrides?: Record<string, "allow" | "deny" | "ask">;
   workspaceResolver?: IWorkspaceResolver;
+  approvalManager?: IApprovalManager;
 }
 
 export function createBeforeToolCallHook({
@@ -24,6 +25,7 @@ export function createBeforeToolCallHook({
   executionMode,
   permissionOverrides,
   workspaceResolver = defaultWorkspaceResolver,
+  approvalManager = createServerContext().approvalManager,
 }: CreateBeforeToolCallHookParams) {
   const resolvedIsSubagent =
     isSubagent ||

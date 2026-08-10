@@ -1,22 +1,8 @@
-// SPDX-License-Identifier: MIT
+import type { ApprovalDecision, ApprovalRequest } from "shared";
 import { broadcastToUser } from "../../ws/handler";
+import type { IApprovalManager, RequestApprovalParams } from "../ports/approval-manager.port";
 
-export interface ApprovalRequest {
-  approvalId: string; // matches toolCallId
-  username: string;
-  sessionId: string;
-  parentSessionId?: string;
-  toolName: string;
-  args: Record<string, unknown>;
-  reason: string;
-  expiresAt: number;
-  status: "pending" | "approved" | "denied" | "timeout";
-}
-
-export interface ApprovalDecision {
-  action: "approve" | "deny";
-  payload?: Record<string, unknown>;
-}
+export type { ApprovalDecision, ApprovalRequest };
 
 type PendingApproval = {
   request: ApprovalRequest;
@@ -25,7 +11,7 @@ type PendingApproval = {
   timeoutId: ReturnType<typeof setTimeout>;
 };
 
-class ApprovalManager {
+export class ApprovalManager implements IApprovalManager {
   private pending = new Map<string, PendingApproval>();
 
   async request(params: {
@@ -152,6 +138,30 @@ class ApprovalManager {
     } catch (e) {
       console.error("Failed to broadcast approval timeout:", e);
     }
+  }
+
+  cancelSession(sessionId: string): number {
+    let cancelledCount = 0;
+    for (const [approvalId, entry] of this.pending.entries()) {
+      if (entry.request.sessionId === sessionId) {
+        clearTimeout(entry.timeoutId);
+        entry.request.status = "denied";
+        entry.resolve({ action: "deny" });
+        this.pending.delete(approvalId);
+        cancelledCount++;
+
+        try {
+          broadcastToUser(entry.request.username, {
+            type: "approval_resolved",
+            approvalId,
+            status: "denied",
+          });
+        } catch (e) {
+          console.error("Failed to broadcast approval cancellation:", e);
+        }
+      }
+    }
+    return cancelledCount;
   }
 
   getAll(username: string): ApprovalRequest[] {

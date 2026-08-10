@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: MIT
 import { useLiterals } from "@/lib";
 import { skillsService } from "@/lib/api/skills.service";
-import { ArrowRight, BookOpen, Plus, Sliders, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { EntityType, ExecutionMode } from "shared";
-import { ModelSelector } from "./ModelSelector";
-import { SkillsPopover } from "./SkillsPopover";
+import type { Attachment } from "./AttachmentPreview";
+import { InputCard } from "./InputCard";
+import { InputToolbar } from "./InputToolbar";
 import type { SkillInfo } from "./SkillsSelector";
-import { ToolsPopover } from "./ToolsPopover";
 import { literals as u } from "./WelcomeChatInput.literals";
 
 export interface SuggestionPill {
@@ -44,11 +43,8 @@ export function WelcomeChatInput({
   title,
   placeholder,
   sessionId,
-  selectedModel,
-  onModelChange,
   onSend,
   suggestions = [],
-  showModelSelector = true,
   activeTools,
   onToolsChange,
   executionMode,
@@ -65,34 +61,28 @@ export function WelcomeChatInput({
 }: Props) {
   const l = useLiterals(u);
   const [internalInput, setInternalInput] = useState("");
-  const [attachments, setAttachments] = useState<File[]>([]);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [allSkills, setAllSkills] = useState<SkillInfo[]>([]);
+  const [skillsLoading, setSkillsLoading] = useState(false);
+
   const localTextareaRef = useRef<HTMLTextAreaElement>(null);
   const textareaRef = externalTextareaRef || localTextareaRef;
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const toolsTriggerRef = useRef<HTMLButtonElement>(null);
-  const skillsTriggerRef = useRef<HTMLButtonElement>(null);
-  const [openTools, setOpenTools] = useState(false);
-  const [openSkills, setOpenSkills] = useState(false);
-  const [allSkills, setAllSkills] = useState<SkillInfo[]>([]);
-  const [skillsLoading, setSkillsLoading] = useState(false);
 
   const input = value !== undefined ? value : internalInput;
   const setInput = onChange || setInternalInput;
 
   useEffect(() => {
-    if (onSkillsChange) {
-      setSkillsLoading(true);
-      skillsService
-        .fetchSkills()
-        .then((data) => {
-          const list = (data as any).skills || data || [];
-          setAllSkills(list);
-        })
-        .catch((e) => console.error("Failed to load skills in WelcomeChatInput:", e))
-        .finally(() => setSkillsLoading(false));
-    }
-  }, [onSkillsChange]);
+    setSkillsLoading(true);
+    skillsService
+      .fetchSkills()
+      .then((data) => {
+        const list = (data as any).skills || data || [];
+        setAllSkills(list);
+      })
+      .catch((e) => console.error("Failed to load skills in WelcomeChatInput:", e))
+      .finally(() => setSkillsLoading(false));
+  }, []);
 
   const handleToggleSkill = (skillName: string) => {
     if (!onSkillsChange) return;
@@ -112,17 +102,10 @@ export function WelcomeChatInput({
     return l.eveningGreeting;
   }, [l]);
 
-  // Handle textarea autosize
-  useEffect(() => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-    textarea.style.height = "auto";
-    textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
-  }, [input]);
-
   const handleSend = () => {
     if (disabled || loading || (!input.trim() && attachments.length === 0)) return;
-    onSend(input, attachments);
+    const files = attachments.map((a) => a.file);
+    onSend(input, files);
     setInput("");
     setAttachments([]);
   };
@@ -137,12 +120,24 @@ export function WelcomeChatInput({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     const files = Array.from(e.target.files);
-    setAttachments((prev) => [...prev, ...files]);
+    const newAttachments: Attachment[] = files.map((file) => ({
+      id: `${file.name}-${file.lastModified}-${Math.random()}`,
+      file,
+      type: file.type.startsWith("image/") ? "image" : "document",
+      previewUrl: file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined,
+    }));
+    setAttachments((prev) => [...prev, ...newAttachments]);
     e.target.value = "";
   };
 
-  const removeAttachment = (index: number) => {
-    setAttachments((prev) => prev.filter((_, i) => i !== index));
+  const removeAttachment = (id: string) => {
+    setAttachments((prev) => {
+      const found = prev.find((a) => a.id === id);
+      if (found?.previewUrl) {
+        URL.revokeObjectURL(found.previewUrl);
+      }
+      return prev.filter((a) => a.id !== id);
+    });
   };
 
   return (
@@ -153,169 +148,46 @@ export function WelcomeChatInput({
       </h1>
 
       {/* Floating Card Container */}
-      <div
-        className={`w-full bg-[#1a1a1a] border rounded-2xl p-4 transition-all duration-300 shadow-xl ${
-          loading
-            ? "border-accent/40 ring-1 ring-accent/20"
-            : "border-border/50 hover:border-border/80 focus-within:border-accent focus-within:ring-1 focus-within:ring-accent/30"
-        }`}
-      >
-        {/* Attachment Preview Grid */}
-        {attachments.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-3 pb-3 border-b border-border/40">
-            {attachments.map((file, idx) => (
-              <div
-                key={idx}
-                className="flex items-center gap-1.5 bg-background/55 border border-border/60 rounded-lg px-2.5 py-1 text-xs text-text-secondary"
-              >
-                <span className="truncate max-w-[150px] font-mono">{file.name}</span>
-                <button
-                  type="button"
-                  onClick={() => removeAttachment(idx)}
-                  className="text-text-secondary/60 hover:text-error transition-colors cursor-pointer"
-                >
-                  <X size={14} />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Text Input area */}
-        <textarea
-          ref={textareaRef}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
+      <div className="w-full">
+        <InputCard
+          streaming={loading}
+          disabled={disabled || loading}
+          focused={false}
+          attachments={attachments}
+          onRemoveAttachment={removeAttachment}
+          input={input}
+          onInputChange={setInput}
           onKeyDown={handleKeyDown}
           placeholder={placeholder || l.defaultPlaceholder}
-          disabled={disabled || loading}
-          rows={2}
-          className="w-full bg-transparent text-text-primary placeholder:text-text-secondary/50 focus:outline-none resize-none text-sm leading-relaxed max-h-[200px]"
+          textareaRef={textareaRef}
+          toolbar={
+            <InputToolbar
+              sessionId={sessionId}
+              streaming={loading}
+              disabled={disabled || loading}
+              activeTools={activeTools || []}
+              onToolsChange={onToolsChange || (() => {})}
+              skills={allSkills}
+              skillsLoading={skillsLoading}
+              onSelectSkill={handleToggleSkill}
+              onFileClick={() => {
+                if (allowAttachments) fileInputRef.current?.click();
+              }}
+              onSend={handleSend}
+              onStop={() => {}}
+              executionMode={executionMode}
+              entityType={entityType}
+              entityId={entityId}
+            />
+          }
         />
-
-        {/* Toolbar Controls */}
-        <div className="flex items-center justify-between mt-3 pt-2 border-t border-border/30">
-          <div className="flex items-center gap-2">
-            {/* Attachment Button */}
-            {allowAttachments && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={disabled || loading}
-                  className="p-2 hover:bg-surface-hover text-text-secondary hover:text-text-primary rounded-lg transition-colors cursor-pointer disabled:opacity-50"
-                >
-                  <Plus size={20} />
-                </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-              </>
-            )}
-
-            {/* Model Selector integration */}
-            {showModelSelector && (
-              <div className="flex items-center gap-1.5 ml-2 border-l border-border/40 pl-2">
-                <ModelSelector
-                  sessionId={sessionId}
-                  disabled={disabled || loading}
-                  value={selectedModel}
-                  onChange={onModelChange}
-                  entityType={entityType}
-                  entityId={entityId}
-                />
-              </div>
-            )}
-
-            {/* Tools Selector Button & Popover */}
-            {(onToolsChange || (entityType && entityId)) && (
-              <div className="relative border-l border-border/40 pl-2">
-                <button
-                  ref={toolsTriggerRef}
-                  type="button"
-                  onClick={() => !disabled && !loading && setOpenTools((prev) => !prev)}
-                  disabled={disabled || loading}
-                  className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border border-border/40 bg-[#171717] hover:bg-[#313131] text-xs font-semibold text-text-secondary hover:text-text-primary transition-all cursor-pointer disabled:opacity-50 ${
-                    openTools ? "text-primary border-primary/45" : ""
-                  }`}
-                  title="Tools configuration"
-                >
-                  <Sliders size={14} />
-                  {activeTools && (
-                    <span className="ml-0.5 px-1.5 py-0.2 rounded-full bg-primary/20 text-primary text-[10px] font-mono font-bold">
-                      {activeTools.length}
-                    </span>
-                  )}
-                </button>
-                <ToolsPopover
-                  activeTools={activeTools || []}
-                  onChange={onToolsChange || (() => {})}
-                  open={openTools}
-                  onClose={() => setOpenTools(false)}
-                  triggerRef={toolsTriggerRef}
-                  disabled={disabled || loading}
-                  executionMode={executionMode}
-                  entityType={entityType}
-                  entityId={entityId}
-                  sessionId={sessionId}
-                />
-              </div>
-            )}
-
-            {/* Skills Selector Button & Popover */}
-            {(onSkillsChange || (entityType && entityId)) && (
-              <div className="relative border-l border-border/40 pl-2">
-                <button
-                  ref={skillsTriggerRef}
-                  type="button"
-                  onClick={() => !disabled && !loading && setOpenSkills((prev) => !prev)}
-                  disabled={disabled || loading}
-                  className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border border-border/40 bg-[#171717] hover:bg-[#313131] text-xs font-semibold text-text-secondary hover:text-text-primary transition-all cursor-pointer disabled:opacity-50 ${
-                    openSkills ? "text-primary border-primary/45" : ""
-                  }`}
-                  title="Skills configuration"
-                >
-                  <BookOpen size={14} />
-                  {activeSkills && (
-                    <span className="ml-0.5 px-1.5 py-0.2 rounded-full bg-primary/20 text-primary text-[10px] font-mono font-bold">
-                      {activeSkills.length}
-                    </span>
-                  )}
-                </button>
-                <SkillsPopover
-                  skills={allSkills}
-                  loading={skillsLoading}
-                  open={openSkills}
-                  onClose={() => setOpenSkills(false)}
-                  onSelectSkill={handleToggleSkill}
-                  triggerRef={skillsTriggerRef}
-                  entityType={entityType}
-                  entityId={entityId}
-                />
-              </div>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2">
-            {/* Submit Prompt Button */}
-            <button
-              type="button"
-              onClick={handleSend}
-              disabled={disabled || loading || (!input.trim() && attachments.length === 0)}
-              className="p-2 bg-foreground hover:opacity-85 disabled:bg-surface-hover disabled:text-text-secondary/40 text-background rounded-lg transition-all cursor-pointer font-semibold shadow-sm"
-            >
-              {loading ? (
-                <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <ArrowRight size={20} />
-              )}
-            </button>
-          </div>
-        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          onChange={handleFileChange}
+          className="hidden"
+        />
       </div>
 
       {/* Suggestion Pills underneath input */}
@@ -342,3 +214,4 @@ export function WelcomeChatInput({
     </div>
   );
 }
+

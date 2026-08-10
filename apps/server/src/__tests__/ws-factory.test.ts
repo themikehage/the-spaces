@@ -113,4 +113,43 @@ describe("ws/factory", () => {
     expect(sentData).toContain("WS_INVALID_MESSAGE");
     ctx.onClose({}, mockWs);
   });
+
+  it("should track unsub count and clean up previous unsub when setUnsub is called again", () => {
+    const wsId = "test-ws-1";
+    let oldUnsubCalled = false;
+    let newUnsubCalled = false;
+
+    wsRegistry.setUnsub(wsId, () => {
+      oldUnsubCalled = true;
+    });
+    expect(wsRegistry.getActiveUnsubCount()).toBe(1);
+
+    wsRegistry.setUnsub(wsId, () => {
+      newUnsubCalled = true;
+    });
+    expect(oldUnsubCalled).toBe(true);
+    expect(newUnsubCalled).toBe(false);
+    expect(wsRegistry.getActiveUnsubCount()).toBe(1);
+
+    wsRegistry.clearUnsub(wsId);
+    expect(newUnsubCalled).toBe(true);
+    expect(wsRegistry.getActiveUnsubCount()).toBe(0);
+  });
+
+  it("should accurately track session socket count", () => {
+    const mockWs1 = {} as any;
+    const mockWs2 = {} as any;
+    const sId = "session-123";
+
+    expect(wsRegistry.getSessionSocketCount(sId)).toBe(0);
+    wsRegistry.addSessionSocket(sId, mockWs1);
+    wsRegistry.addSessionSocket(sId, mockWs2);
+    expect(wsRegistry.getSessionSocketCount(sId)).toBe(2);
+
+    wsRegistry.removeSessionSocket(sId, mockWs1);
+    expect(wsRegistry.getSessionSocketCount(sId)).toBe(1);
+
+    wsRegistry.removeSessionSocket(sId, mockWs2);
+    expect(wsRegistry.getSessionSocketCount(sId)).toBe(0);
+  });
 });

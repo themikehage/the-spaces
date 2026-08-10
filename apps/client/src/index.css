@@ -163,6 +163,11 @@
   --color-text-tertiary: var(--text-tertiary);
   --color-border-strong: var(--border-hover);
 
+  --color-file-js: #f1e05a;
+  --color-file-ts: #3178c6;
+  --color-file-html: #e34c26;
+  --color-file-css: #563d7c;
+
   --font-display: var(--font-display);
   --font-body: var(--font-body);
   --font-sans: var(--font-sans);

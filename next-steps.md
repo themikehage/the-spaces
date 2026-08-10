@@ -684,3 +684,9 @@ Los dos "plugins" actuales:
 7. **#6 — Custom tools con aprobación** (depende de #1)
 8. **#5 — Galería de equipos** (feature nuevo, contenido + backend)
 9. **#2 — Team-scoped agents** (cambio arquitectónico, máxima complejidad)
+
+------
+
+Problemas:
+- Al hacer click en ell boton de cancel en el chat mientras se esta corriendo una tool, es verdad que la ejecucion se cancela, pero en la ui la tool se queda como running para siempre. Si la tool era una pregunta o aprobacion, el attention hub no se reestablece.
+- En la modal de configuracion de agente, al clickar en la tab de ver el prompt, que por cierto se muestra abajo cuando deberia estar arriba, la modal se cierra

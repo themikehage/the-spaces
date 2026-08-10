@@ -2,13 +2,29 @@
 import { wsClient } from "@/lib/ws-client";
 import { useEffect, useRef } from "react";
 
-export function useConnectionAwareEffect(action: () => void, deps: React.DependencyList): void {
+export function useConnectionAwareEffect(
+  action: () => void | (() => void),
+  deps: React.DependencyList,
+): void {
   const actionRef = useRef(action);
   actionRef.current = action;
 
   const lastDepsRef = useRef<string>("");
   const wasConnectedRef = useRef<boolean>(false);
   const hasRunForCurrentDepsRef = useRef<boolean>(false);
+  const cleanupRef = useRef<(() => void) | void>(undefined);
+
+  const runAction = () => {
+    if (typeof cleanupRef.current === "function") {
+      try {
+        cleanupRef.current();
+      } catch (err) {
+        console.error("[useConnectionAwareEffect] Cleanup error:", err);
+      }
+      cleanupRef.current = undefined;
+    }
+    cleanupRef.current = actionRef.current();
+  };
 
   useEffect(() => {
     const depsKey = JSON.stringify(deps);
@@ -22,7 +38,7 @@ export function useConnectionAwareEffect(action: () => void, deps: React.Depende
     const isCurrentlyConnected = wsClient.getState() === "connected";
 
     if (isCurrentlyConnected && (!hasRunForCurrentDepsRef.current || depsChanged)) {
-      actionRef.current();
+      runAction();
       hasRunForCurrentDepsRef.current = true;
       wasConnectedRef.current = true;
     } else if (!isCurrentlyConnected) {
@@ -32,7 +48,7 @@ export function useConnectionAwareEffect(action: () => void, deps: React.Depende
     const unsub = wsClient.onStateChange((state) => {
       if (state === "connected") {
         if (!wasConnectedRef.current || !hasRunForCurrentDepsRef.current) {
-          actionRef.current();
+          runAction();
           hasRunForCurrentDepsRef.current = true;
         }
         wasConnectedRef.current = true;
@@ -42,6 +58,16 @@ export function useConnectionAwareEffect(action: () => void, deps: React.Depende
       }
     });
 
-    return unsub;
+    return () => {
+      unsub();
+      if (typeof cleanupRef.current === "function") {
+        try {
+          cleanupRef.current();
+        } catch {
+          /* noop */
+        }
+        cleanupRef.current = undefined;
+      }
+    };
   }, deps);
 }

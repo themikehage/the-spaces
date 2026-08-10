@@ -1,11 +1,12 @@
-// SPDX-License-Identifier: MIT
 import { agentRegistry as defaultAgentRegistry } from "../../agents/agent-registry";
+import { approvalManager as defaultApprovalManager } from "../approvals/approval-manager";
 import { uiApprovalRegistry as defaultUiApprovalRegistry } from "../approvals/ui-approval-registry";
 import { delegationRegistry as defaultDelegationRegistry } from "../delegation/delegation-registry";
 import { mcpRegistry as defaultMcpRegistry } from "../mcp/mcp-registry";
 import { memoryRegistry as defaultMemoryRegistry } from "../memory/registry";
 import type { IAgentRegistry } from "../ports/agent-registry.port";
 import {
+  type IApprovalManager,
   type IDelegationRegistry,
   type IMcpRegistry,
   type IMemoryRegistry,
@@ -33,6 +34,7 @@ export interface ServerContext {
   delegationRegistry: IDelegationRegistry;
   memoryRegistry: IMemoryRegistry;
   uiApprovalRegistry: IUiApprovalRegistry;
+  approvalManager: IApprovalManager;
   spacesHost: SpacesHost;
   sandbox: ISandbox;
   permissionEngine: IPermissionEngine;
@@ -47,6 +49,7 @@ export interface ServerContextOptions {
   delegationRegistry?: IDelegationRegistry;
   memoryRegistry?: IMemoryRegistry;
   uiApprovalRegistry?: IUiApprovalRegistry;
+  approvalManager?: IApprovalManager;
   spacesHost?: SpacesHost;
   sandbox?: ISandbox;
   permissionEngine?: IPermissionEngine;
@@ -62,6 +65,7 @@ export function createServerContext(options?: ServerContextOptions): ServerConte
     delegationRegistry: options?.delegationRegistry ?? defaultDelegationRegistry,
     memoryRegistry: options?.memoryRegistry ?? defaultMemoryRegistry,
     uiApprovalRegistry: options?.uiApprovalRegistry ?? defaultUiApprovalRegistry,
+    approvalManager: options?.approvalManager ?? defaultApprovalManager,
     spacesHost: options?.spacesHost ?? defaultServerSpacesHost,
     sandbox: options?.sandbox ?? new LocalSandbox(),
     permissionEngine: options?.permissionEngine ?? new PermissionEngine(),

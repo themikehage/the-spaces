@@ -11,6 +11,7 @@ export async function runImageGenModel(
   prompt: string,
   size: string,
   workspaceDir: string,
+  signal?: AbortSignal,
 ): Promise<string> {
   const { sessionManager } = createServerContext();
   const isQwen =
@@ -221,7 +222,7 @@ export function createImageGenTool(workspaceDir: string, username: string) {
       },
       required: ["prompt"],
     },
-    execute: async (toolCallId: string, args: any) => {
+    execute: async (toolCallId: string, args: any, signal?: AbortSignal) => {
       const { sessionManager } = createServerContext();
       const settings = sessionManager.userConfig.getUserSettings(username);
       const modelId = settings.imageGenModel;
@@ -245,6 +246,7 @@ export function createImageGenTool(workspaceDir: string, username: string) {
           args.prompt,
           args.size || "1024x1024",
           workspaceDir,
+          signal,
         );
 
         return {

@@ -7,6 +7,7 @@ import { useChatScroll } from "@/hooks/useChatScroll";
 import { useEntityConfig } from "@/hooks/useEntityConfig";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { useLiterals, type ContextUsage, type MessageUsage } from "@/lib";
+import { attentionStore } from "@/lib/attention/attention-store";
 import { sessionsService } from "@/lib/api/sessions.service";
 import {
   buildCreateSessionBody,
@@ -215,6 +216,7 @@ export function useChatAreaState({
           firstMessageSentRef.current = true;
         }
         scrollToBottom("instant");
+        send({ type: "get_context_usage", sessionId });
       } catch (e) {
         console.error(e);
       } finally {
@@ -283,6 +285,26 @@ export function useChatAreaState({
     const unsubEnd = subscribe("agent_end", () => {
       setStreaming(false);
       window.dispatchEvent(new CustomEvent("workspaceUpdated"));
+    });
+
+    const unsubStatus = subscribe("session_status", (data: unknown) => {
+      const evt = data as Record<string, unknown>;
+      if (evt.sessionId && evt.sessionId !== sessionId) return;
+      if (evt.state === "idle" || evt.status === "sleeping") {
+        setStreaming(false);
+      } else if (evt.state === "running" || evt.status === "streaming") {
+        setStreaming(true);
+      }
+    });
+
+    const unsubAborted = subscribe("aborted", (data: unknown) => {
+      const evt = data as Record<string, unknown>;
+      if (!sessionId || evt.sessionId === sessionId) {
+        setStreaming(false);
+        setCompacting(false);
+        attentionStore.hydrate();
+        loadMessages(true);
+      }
     });
 
     const unsubMsgStart = subscribe("message_start", (data: unknown) => {
@@ -434,6 +456,8 @@ export function useChatAreaState({
     return () => {
       unsubStart();
       unsubEnd();
+      unsubStatus();
+      unsubAborted();
       unsubMsgStart();
       unsubMsg();
       unsubMsgEnd();
@@ -535,8 +559,13 @@ export function useChatAreaState({
 
   const handleAbort = useCallback(() => {
     if (!sessionId) return;
+    attentionStore.clearBySession(sessionId);
     send({ type: "abort", sessionId });
-  }, [sessionId, send]);
+    setStreaming(false);
+    setCompacting(false);
+    attentionStore.hydrate();
+    loadMessages(true);
+  }, [sessionId, send, loadMessages]);
 
   const handleNavigate = useCallback(
     async (targetId: string) => {

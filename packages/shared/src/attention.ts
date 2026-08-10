@@ -35,3 +35,20 @@ export const ResolveAttentionSchema = z.object({
 });
 
 export type ResolveAttention = z.infer<typeof ResolveAttentionSchema>;
+
+export interface ApprovalRequest {
+  approvalId: string;
+  username: string;
+  sessionId: string;
+  parentSessionId?: string;
+  toolName: string;
+  args: Record<string, unknown>;
+  reason: string;
+  expiresAt: number;
+  status: "pending" | "approved" | "denied" | "timeout";
+}
+
+export interface ApprovalDecision {
+  action: "approve" | "deny";
+  payload?: Record<string, unknown>;
+}

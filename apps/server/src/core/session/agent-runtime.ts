@@ -263,6 +263,7 @@ export async function createAgentRuntime(
     isSubagent: toolProfile === "subagent" || toolProfile === "agent-server",
     username,
     permissionOverrides: entityConfig.permissionOverrides,
+    approvalManager: createServerContext().approvalManager,
   });
 
   const afterToolCall = createAfterToolCallHook({

@@ -150,6 +150,14 @@ class WsRegistry {
     }
   }
 
+  getSessionSocketCount(sessionId: string): number {
+    return this.sessionSockets.get(sessionId)?.size ?? 0;
+  }
+
+  getActiveUnsubCount(): number {
+    return this.unsubById.size;
+  }
+
   *allMeta(): IterableIterator<[string, WsSocketMeta]> {
     yield* this.metaById.entries();
   }

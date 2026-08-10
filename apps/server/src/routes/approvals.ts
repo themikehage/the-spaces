@@ -2,8 +2,7 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { ResolveAttentionSchema } from "shared";
-import { approvalManager } from "../core/approvals/approval-manager";
-import { uiApprovalRegistry } from "../core/approvals/ui-approval-registry";
+import { createServerContext } from "../core/infra/server-context";
 import { sessionMetadataStore } from "../core/session/metadata-store";
 import { authMiddleware, getAuthPayload } from "../middleware/auth";
 
@@ -25,6 +24,7 @@ function enrichItem(username: string, item: any) {
 
 approvalsRouter.get("/", async (c) => {
   const { username } = getAuthPayload(c);
+  const { approvalManager, uiApprovalRegistry } = createServerContext();
   const securityApprovals = approvalManager.getAll(username).map((a) => {
     const kind = "approval" as const;
     return enrichItem(username, {
@@ -47,6 +47,7 @@ approvalsRouter.get("/", async (c) => {
 approvalsRouter.post("/:id", zValidator("json", ResolveAttentionSchema), async (c) => {
   const { id } = c.req.param();
   const { action, payload } = c.req.valid("json");
+  const { approvalManager, uiApprovalRegistry } = createServerContext();
   const success =
     approvalManager.resolve(id, { action: action as any, payload }) ||
     uiApprovalRegistry.resolve(id, { action, payload });

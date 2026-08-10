@@ -3,6 +3,10 @@ import { z } from "zod";
 
 export const WS_PROTOCOL_VERSION = 1;
 
+export const WS_SESSION_STATES = ["idle", "running", "waiting_approval", "aborting"] as const;
+export type WsSessionState = (typeof WS_SESSION_STATES)[number];
+export const WsSessionStateSchema = z.enum(WS_SESSION_STATES);
+
 export const SESSION_SCOPED_TYPES = [
   "agent_start",
   "agent_end",
@@ -15,6 +19,7 @@ export const SESSION_SCOPED_TYPES = [
   "agent_error",
   "session_subscribed",
   "session_unsubscribed",
+  "session_status",
   "context_usage",
   "aborted",
   "tasks_update",
@@ -131,6 +136,7 @@ export const WsServerControlMessageSchema = z.discriminatedUnion("type", [
     type: z.literal("session_status"),
     sessionId: z.string(),
     status: z.string(),
+    state: WsSessionStateSchema.optional(),
   }),
   z.object({
     type: z.literal("context_usage"),

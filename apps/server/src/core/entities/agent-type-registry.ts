@@ -207,7 +207,7 @@ export class CustomStrategy implements IAgentTypeStrategy {
 }
 
 export class AgentTypeRegistry implements IAgentTypeRegistry {
-  private strategies = new Map<AgentType, IAgentTypeStrategy>();
+  private strategies = new Map<AgentType | string, IAgentTypeStrategy>();
   private defaultStrategy = new CustomStrategy();
 
   constructor() {
@@ -223,18 +223,19 @@ export class AgentTypeRegistry implements IAgentTypeRegistry {
     this.strategies.set("workflow", new WorkflowStrategy());
     this.strategies.set("custom", new CustomStrategy());
     this.strategies.set("user", new CustomStrategy()); // Alias for retrocompatibility
+    this.strategies.set("agent", new CustomStrategy()); // Alias for custom agent entity
   }
 
-  register(type: AgentType, strategy: IAgentTypeStrategy): void {
+  register(type: AgentType | string, strategy: IAgentTypeStrategy): void {
     this.strategies.set(type, strategy);
   }
 
-  get(type?: AgentType): IAgentTypeStrategy {
+  get(type?: AgentType | string): IAgentTypeStrategy {
     if (!type) return this.defaultStrategy;
     return this.strategies.get(type) ?? this.defaultStrategy;
   }
 
-  has(type: AgentType): boolean {
+  has(type: AgentType | string): boolean {
     return this.strategies.has(type);
   }
 }

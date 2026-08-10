@@ -78,14 +78,14 @@ export function InputToolbar({
   else if (isReadOnly) toolsLabelText = l.readOnly;
 
   return (
-    <div className="flex items-center justify-between px-3 py-2 bg-[#171717] border-t border-border/30">
+    <div className="flex items-center justify-between px-3 py-2">
       {/* Left controls */}
       <div className="flex items-center gap-2">
         <button
           type="button"
           onClick={onFileClick}
           disabled={disabled}
-          className="p-1.5 rounded-lg border border-border/40 bg-[#171717] hover:bg-[#313131] text-muted-foreground hover:text-foreground transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          className="p-1.5 rounded-lg border border-border/40 hover:bg-border text-muted-foreground hover:text-foreground transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           title={l.attachFiles}
         >
           <Paperclip size={14} />
@@ -106,7 +106,7 @@ export function InputToolbar({
             onClick={() => !disabled && setOpenSkills((prev) => !prev)}
             disabled={disabled}
             title={`${l.skillsLabel} (${skills.length})`}
-            className={`p-1.5 rounded-lg border border-border/40 bg-[#171717] hover:bg-[#313131] text-muted-foreground hover:text-foreground transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={`p-1.5 rounded-lg border border-border/40 hover:bg-border text-muted-foreground hover:text-foreground transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
               openSkills ? "text-primary border-primary/45" : ""
             }`}
           >
@@ -131,7 +131,7 @@ export function InputToolbar({
             onClick={() => !disabled && setOpenTools((prev) => !prev)}
             disabled={disabled}
             title={`${l.toolsLabel}: ${toolsLabelText}`}
-            className={`p-1.5 rounded-lg border border-border/40 bg-[#171717] hover:bg-[#313131] text-muted-foreground hover:text-foreground transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={`p-1.5 rounded-lg border border-border/40 hover:bg-border text-muted-foreground hover:text-foreground transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
               openTools ? "text-primary border-primary/45" : ""
             }`}
           >

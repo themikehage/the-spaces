@@ -42,6 +42,7 @@ export function TabsNav({
           const isActive = activeTab === tab.id;
           return (
             <button
+              type="button"
               key={tab.id}
               onClick={() => !tab.disabled && onChange(tab.id)}
               disabled={tab.disabled}
@@ -74,6 +75,7 @@ export function TabsNav({
           const isActive = activeTab === tab.id;
           return (
             <button
+              type="button"
               key={tab.id}
               onClick={() => !tab.disabled && onChange(tab.id)}
               disabled={tab.disabled}
@@ -105,6 +107,7 @@ export function TabsNav({
         const isActive = activeTab === tab.id;
         return (
           <button
+            type="button"
             key={tab.id}
             onClick={() => !tab.disabled && onChange(tab.id)}
             disabled={tab.disabled}

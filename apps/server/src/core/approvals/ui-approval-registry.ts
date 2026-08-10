@@ -130,6 +130,28 @@ export class UiApprovalRegistry {
     return true;
   }
 
+  cancelSession(sessionId: string): number {
+    let cancelledCount = 0;
+    for (const [toolCallId, entry] of this.pending.entries()) {
+      if (entry.item.sessionId === sessionId) {
+        clearTimeout(entry.timeoutId);
+        entry.resolve({ action: "cancel" });
+        this.pending.delete(toolCallId);
+        cancelledCount++;
+
+        try {
+          broadcastToUser(entry.item.username, {
+            type: "attention_item_resolved",
+            approvalId: toolCallId,
+          });
+        } catch {
+          // ignore
+        }
+      }
+    }
+    return cancelledCount;
+  }
+
   getAll(username: string): UiActionItem[] {
     const items: UiActionItem[] = [];
     for (const entry of this.pending.values()) {

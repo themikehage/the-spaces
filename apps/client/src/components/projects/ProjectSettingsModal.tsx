@@ -164,16 +164,15 @@ export function ProjectSettingsModal({
       cancelLabel={l.cancel}
       isSubmitting={saving}
       size="xl"
-      footerExtra={
-        <div className="w-48">
-          <TabsNav
-            tabs={tabs}
-            activeTab={activeTab}
-            onChange={(tab) => setActiveTab(tab as "general" | "prompts")}
-          />
-        </div>
-      }
     >
+      <div className="mb-4">
+        <TabsNav
+          tabs={tabs}
+          activeTab={activeTab}
+          onChange={(tab) => setActiveTab(tab as "general" | "prompts")}
+        />
+      </div>
+
       {activeTab === "general" ? (
         <div className="space-y-4">
           <AvatarUploadField

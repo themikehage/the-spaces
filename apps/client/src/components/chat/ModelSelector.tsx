@@ -217,7 +217,7 @@ export function ModelSelector({
         disabled={disabled}
         className={
           compact
-            ? `flex items-center gap-1.5 px-2 py-1.5 rounded-lg border border-border/40 bg-[#171717] hover:bg-[#313131] text-xs text-muted-foreground hover:text-foreground transition-all cursor-pointer ${
+            ? `flex items-center gap-1.5 px-2 py-1.5 rounded-lg border border-border/40 hover:bg-border text-xs text-muted-foreground hover:text-foreground transition-all cursor-pointer ${
                 disabled ? "opacity-50 cursor-not-allowed" : ""
               }`
             : `flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-1 py-0.5 cursor-pointer ${

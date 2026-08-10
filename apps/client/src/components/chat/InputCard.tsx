@@ -35,7 +35,7 @@ export function InputCard({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
-      className={`max-w-3xl mx-auto bg-card border rounded-2xl shadow-lg overflow-hidden transition-all duration-200 ${
+      className={`max-w-3xl mx-auto bg-card border rounded-3xl shadow-lg overflow-hidden transition-all duration-200 ${
         focused
           ? "border-primary ring-1 ring-primary/20 shadow-md"
           : streaming

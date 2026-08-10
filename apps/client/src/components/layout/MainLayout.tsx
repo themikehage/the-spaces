@@ -82,6 +82,12 @@ export function MainLayout({
     if (!state.isNegotiationTeam) {
       list.push(
         {
+          id: "workspace",
+          label: state.l.tabFiles,
+          path: basePath ? `${basePath}/workspace` : "/workspace",
+          icon: <Folder size={14} />,
+        },
+        {
           id: "delegations",
           label: state.l.tabDelegations || "Delegations",
           path: state.sessionId
@@ -90,12 +96,6 @@ export function MainLayout({
               ? `${basePath}/delegations`
               : "/delegations",
           icon: <Users size={14} />,
-        },
-        {
-          id: "workspace",
-          label: state.l.tabFiles,
-          path: basePath ? `${basePath}/workspace` : "/workspace",
-          icon: <Folder size={14} />,
         },
         {
           id: "timeline",
@@ -330,9 +330,8 @@ export function MainLayout({
           <main
             className={
               isMobile
-                ? `absolute inset-x-0 top-0 ${
-                    state.sidebarOpen ? "bottom-14" : "bottom-0"
-                  } z-30 flex flex-col bg-background`
+                ? `absolute inset-x-0 top-0 ${state.sidebarOpen ? "bottom-14" : "bottom-0"
+                } z-30 flex flex-col bg-background`
                 : "flex-1 min-w-0 flex flex-col h-full bg-background"
             }
           >

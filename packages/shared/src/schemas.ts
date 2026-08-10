@@ -12,6 +12,17 @@ export const PromptSchema = z.object({
 
 export const SessionStatusSchema = z.enum(["active", "streaming", "task-running", "sleeping"]);
 
+export {
+  WS_PROTOCOL_VERSION,
+  WS_SESSION_STATES,
+  WsSessionStateSchema,
+  WsClientMessageSchema,
+  WsServerControlMessageSchema,
+  type WsSessionState,
+  type WsClientMessage,
+  type WsServerMessage,
+} from "./ws-messages";
+
 export const SessionSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -859,7 +870,7 @@ export type Project = z.infer<typeof ProjectSchema>;
 export const AutonomyLevelSchema = z.enum(["auto", "propose", "suggest"]);
 export type AutonomyLevel = z.infer<typeof AutonomyLevelSchema>;
 
-export const PromptPreviewEntityTypeSchema = AgentTypeSchema;
+export const PromptPreviewEntityTypeSchema = AgentTypeSchema.or(z.literal("agent"));
 export type PromptPreviewEntityType = z.infer<typeof PromptPreviewEntityTypeSchema>;
 
 export const PromptPreviewRequestSchema = z.object({
