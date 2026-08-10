@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 import { useEntityToolsConfig } from "@/hooks/useEntityToolsConfig";
+import { useCustomToolsList } from "@/hooks/useCustomToolsList";
 import { useLiterals } from "@/lib";
 import { useEffect, useRef, useState } from "react";
+import { Wrench } from "lucide-react";
 import {
   AVAILABLE_TOOLS,
   GATE_ENV_VARS,
@@ -46,6 +48,7 @@ export function ToolsPopover({
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const entityTools = useEntityToolsConfig(entityType, entityId, sessionId);
+  const { tools: customTools } = useCustomToolsList();
 
   const activeTools = entityType && entityId ? entityTools.activeTools : propActiveTools;
   const executionMode = entityType && entityId ? entityTools.executionMode : propExecutionMode;
@@ -213,6 +216,51 @@ export function ToolsPopover({
               </div>
             );
           })}
+
+          {customTools.length > 0 && (
+            <>
+              <div className="flex items-center gap-1.5 px-2 pt-2 pb-1">
+                <div className="flex-1 h-px bg-border/50" />
+                <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-widest">
+                  Custom
+                </span>
+                <div className="flex-1 h-px bg-border/50" />
+              </div>
+              {customTools.map((ct) => {
+                const checked = activeTools.includes(ct.name);
+                return (
+                  <div
+                    key={ct.name}
+                    onClick={() => !disabled && handleToggleTool(ct.name)}
+                    className={`w-full p-2 rounded-lg transition-colors flex items-start gap-2.5 cursor-pointer text-left hover:bg-card-hover border border-transparent ${
+                      disabled ? "opacity-40 cursor-not-allowed" : ""
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      disabled={disabled}
+                      onChange={() => {}}
+                      className="mt-0.5 accent-accent cursor-pointer"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <Wrench size={10} className="text-muted-foreground shrink-0" />
+                        <span className="font-mono text-xs font-semibold text-foreground truncate">
+                          {ct.label}
+                        </span>
+                      </div>
+                      {ct.description && (
+                        <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">
+                          {ct.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </>
+          )}
         </div>
       </div>
     </PortalPopover>

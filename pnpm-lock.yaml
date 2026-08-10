@@ -154,6 +154,9 @@ importers:
       '@mozilla/readability':
         specifier: ^0.6.0
         version: 0.6.0
+      '@types/handlebars':
+        specifier: ^4.1.0
+        version: 4.1.0
       '@types/turndown':
         specifier: ^5.0.6
         version: 5.0.6
@@ -172,6 +175,9 @@ importers:
       diff:
         specifier: ^9.0.0
         version: 9.0.0
+      handlebars:
+        specifier: ^4.7.9
+        version: 4.7.9
       hono:
         specifier: ^4
         version: 4.12.31
@@ -181,9 +187,6 @@ importers:
       isolated-vm:
         specifier: ^7.0.1
         version: 7.0.1
-      jsonata:
-        specifier: ^2.2.2
-        version: 2.2.2
       jsonwebtoken:
         specifier: ^9
         version: 9.0.3
@@ -224,9 +227,6 @@ importers:
       '@types/diff':
         specifier: ^8.0.0
         version: 8.0.0
-      '@types/jsonata':
-        specifier: ^1.5.1
-        version: 1.5.1
       '@types/jsonwebtoken':
         specifier: ^9
         version: 9.0.10
@@ -1693,6 +1693,10 @@ packages:
   '@types/estree@1.0.9':
     resolution: {integrity: sha512-GhdPgy1el4/ImP05X05Uw4cw2/M93BCUmnEvWZNStlCzEKME4Fkk+YpoA5OiHNQmoS7Cafb8Xa3Pya8m1Qrzeg==}
 
+  '@types/handlebars@4.1.0':
+    resolution: {integrity: sha512-gq9YweFKNNB1uFK71eRqsd4niVkXrxHugqWFQkeLRJvGjnxsLr16bYtcsG4tOFwmYi0Bax+wCkbf1reUfdl4kA==}
+    deprecated: This is a stub types definition. handlebars provides its own type definitions, so you do not need this installed.
+
   '@types/hast@2.3.10':
     resolution: {integrity: sha512-McWspRw8xx8J9HurkVBfYj0xKoE25tOFlHGdx4MJ5xORQrMGZNqJhVQWaIbm6Oyla5kYOXtDiopzKRJzEOkwJw==}
 
@@ -1701,10 +1705,6 @@ packages:
 
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
-
-  '@types/jsonata@1.5.1':
-    resolution: {integrity: sha512-zBVjNYS7FUUIZ4Ckq3p7xOkJKndT6h+kHUeKiud1E6h/OLPkQOagzq8UJYN07QvtkA03XFadQER1zSIWSJj2EA==}
-    deprecated: This is a stub types definition. jsonata provides its own type definitions, so you do not need this installed.
 
   '@types/jsonwebtoken@9.0.10':
     resolution: {integrity: sha512-asx5hIG9Qmf/1oStypjanR7iKTv0gXQ1Ov/jfrX6kS/EO0OFni8orbmGCn0672NHR3kXHwpAwR+B368ZGN/2rA==}
@@ -2631,6 +2631,11 @@ packages:
   graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
 
+  handlebars@4.7.9:
+    resolution: {integrity: sha512-4E71E0rpOaQuJR2A3xDZ+GM1HyWYv1clR58tC8emQNeQe3RH7MAzSbat+V0wG78LQBo6m6bzSG/L4pBuCsgnUQ==}
+    engines: {node: '>=0.4.7'}
+    hasBin: true
+
   has-bigints@1.1.0:
     resolution: {integrity: sha512-R3pbpkcIqv2Pm3dUwgjclDRVmWpTJW2DcMzcIhEXEx1oh/CEMObMm3KLmRJOdvhM7o4uQBnwr8pzRK2sJWIqfg==}
     engines: {node: '>= 0.4'}
@@ -2947,10 +2952,6 @@ packages:
     resolution: {integrity: sha512-XmOWe7eyHYH14cLdVPoyg+GOH3rYX++KpzrylJwSW98t3Nk+U8XOl8FWKOgwtzdb8lXGf6zYwDUzeHMWfxasyg==}
     engines: {node: '>=6'}
     hasBin: true
-
-  jsonata@2.2.2:
-    resolution: {integrity: sha512-XDFH2PuaAXv0AXJEWwElXbqADmKFGKMLMkFb+qOz0EhjQW2EIJ6pgtordLU+4u3IVERyBfqy6bi6kZKEncvRqA==}
-    engines: {node: '>= 8'}
 
   jsonfile@6.2.1:
     resolution: {integrity: sha512-zwOTdL3rFQ/lRdBnntKVOX6k5cKJwEc1HdilT71BWEu7J41gXIB2MRp+vxduPSwZJPWBxEzv4yH1wYLJGUHX4Q==}
@@ -3346,6 +3347,9 @@ packages:
     resolution: {integrity: sha512-7o1wEA2RyMP7Iu7GNba9vc0RWWGACJOCZBJX2GJWip0ikV+wcOsgVuY9uE8CPiyQhkGFSlhuSkZPavN7u1c2Fw==}
     engines: {node: '>=10'}
 
+  minimist@1.2.8:
+    resolution: {integrity: sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==}
+
   minipass@7.1.3:
     resolution: {integrity: sha512-tEBHqDnIoM/1rXME1zgka9g6Q2lcoCkxHLuc7ODJ5BxbP5d4c2Z5cGgtXAku59200Cx7diuHTOYfSBD8n6mm8A==}
     engines: {node: '>=16 || 14 >=14.17'}
@@ -3370,6 +3374,9 @@ packages:
 
   natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
+
+  neo-async@2.6.2:
+    resolution: {integrity: sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==}
 
   node-gyp-build@4.8.4:
     resolution: {integrity: sha512-LA4ZjwlnUblHVgq0oBF3Jl/6h/Nvs5fzBLwdEF4nuxnFdsfajde4WfxtJr3CaiH+F6ewcIB/q4jQ4UzPyid+CQ==}
@@ -4024,6 +4031,11 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
+  uglify-js@3.19.3:
+    resolution: {integrity: sha512-v3Xu+yuwBXisp6QYTcH4UbH+xYJXqnq2m/LtQVWKWzYc1iehYnLixoQDN9FH6/j9/oybfd6W9Ghwkl8+UMKTKQ==}
+    engines: {node: '>=0.8.0'}
+    hasBin: true
+
   uhyphen@0.2.0:
     resolution: {integrity: sha512-qz3o9CHXmJJPGBdqzab7qAYuW8kQGKNEuoHFYrBwV6hWIMcpAmxDLXojcHfFr9US1Pe6zUswEIJIbLI610fuqA==}
 
@@ -4193,6 +4205,9 @@ packages:
   word-wrap@1.2.5:
     resolution: {integrity: sha512-BN22B5eaMMI9UMtjrGd5g5eCYPpCPDUy0FJXbYsaT5zYxjFOckS53SQDE3pWkVoWpHXVb3BrYcEN4Twa55B5cA==}
     engines: {node: '>=0.10.0'}
+
+  wordwrap@1.0.0:
+    resolution: {integrity: sha512-gvVzJFlPycKc5dZN4yPkP8w7Dc37BtP1yczEneOb4uq34pXZcvrtRTmWV8W+Ume+XCxKgbjM+nevkyFPMybd4Q==}
 
   workbox-background-sync@7.4.1:
     resolution: {integrity: sha512-HhT7KE8tOWDm02wRNshXUnUPofMlhenF2DBdUnDPOubhizzPeItkYTmAB6td1Z2cjYPa98vzEiPLEuzn5hN66g==}
@@ -5714,6 +5729,10 @@ snapshots:
 
   '@types/estree@1.0.9': {}
 
+  '@types/handlebars@4.1.0':
+    dependencies:
+      handlebars: 4.7.9
+
   '@types/hast@2.3.10':
     dependencies:
       '@types/unist': 2.0.11
@@ -5723,10 +5742,6 @@ snapshots:
       '@types/unist': 3.0.3
 
   '@types/json-schema@7.0.15': {}
-
-  '@types/jsonata@1.5.1':
-    dependencies:
-      jsonata: 2.2.2
 
   '@types/jsonwebtoken@9.0.10':
     dependencies:
@@ -6747,6 +6762,15 @@ snapshots:
 
   graceful-fs@4.2.11: {}
 
+  handlebars@4.7.9:
+    dependencies:
+      minimist: 1.2.8
+      neo-async: 2.6.2
+      source-map: 0.6.1
+      wordwrap: 1.0.0
+    optionalDependencies:
+      uglify-js: 3.19.3
+
   has-bigints@1.1.0: {}
 
   has-flag@4.0.0: {}
@@ -7049,8 +7073,6 @@ snapshots:
   json-stable-stringify-without-jsonify@1.0.1: {}
 
   json5@2.2.3: {}
-
-  jsonata@2.2.2: {}
 
   jsonfile@6.2.1:
     dependencies:
@@ -7623,6 +7645,8 @@ snapshots:
     dependencies:
       brace-expansion: 2.1.2
 
+  minimist@1.2.8: {}
+
   minipass@7.1.3: {}
 
   motion-dom@11.18.1:
@@ -7638,6 +7662,8 @@ snapshots:
   nanostores@1.4.1: {}
 
   natural-compare@1.4.0: {}
+
+  neo-async@2.6.2: {}
 
   node-gyp-build@4.8.4: {}
 
@@ -8428,6 +8454,9 @@ snapshots:
 
   typescript@5.9.3: {}
 
+  uglify-js@3.19.3:
+    optional: true
+
   uhyphen@0.2.0: {}
 
   unbox-primitive@1.1.0:
@@ -8616,6 +8645,8 @@ snapshots:
       isexe: 2.0.0
 
   word-wrap@1.2.5: {}
+
+  wordwrap@1.0.0: {}
 
   workbox-background-sync@7.4.1:
     dependencies:

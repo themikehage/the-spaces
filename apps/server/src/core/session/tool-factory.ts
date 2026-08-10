@@ -13,9 +13,8 @@ import {
 import { getOrCreateToolSessionToken } from "../../auth/ephemeral-tool-session";
 import { teamStore } from "../../teams/team-store";
 import {
-  createCustomToolRuntime,
   createManageCustomToolsTool,
-  customToolStorage,
+  resolveCustomToolsForSession,
 } from "../custom-tools";
 import { createMemoryTools } from "../memory/memory-tools";
 import type { MemoryProvider } from "../memory/types";
@@ -52,10 +51,10 @@ export interface CreateSessionToolsParams {
 }
 
 export class SessionToolFactory {
-  createSessionTools(params: CreateSessionToolsParams): {
+  async createSessionTools(params: CreateSessionToolsParams): Promise<{
     customTools: BaseTool[];
     hasExaKey: boolean;
-  } {
+  }> {
     const {
       username,
       sessionId,
@@ -165,17 +164,20 @@ export class SessionToolFactory {
       sessionId,
     });
 
-    const activeCustomDefs = customToolStorage
-      .loadAll(username)
-      .filter((d: any) => d.enabled !== false);
-    const activeCustomTools = activeCustomDefs.map((def: any) =>
-      createCustomToolRuntime(def, {
+    const entityType = contextAgentId ? "agent" : projectId ? "project" : teamId ? "team" : "global";
+    const entityId = contextAgentId || projectId || teamId || "";
+
+    const activeCustomTools = await resolveCustomToolsForSession({
+      username,
+      entityType,
+      entityId,
+      context: {
         cwd: workspaceDir,
         session: null as any,
         username,
         sessionId,
-      }),
-    );
+      },
+    });
 
     const workflowTools = createWorkflowTools({
       username,

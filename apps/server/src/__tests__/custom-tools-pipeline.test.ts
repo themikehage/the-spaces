@@ -1,69 +1,10 @@
 import { describe, expect, it } from "bun:test";
 import { createManageCustomToolsTool } from "../core/custom-tools/manage-custom-tools-tool";
-import { buildScopeWithDefaults, resolveVariables } from "../core/custom-tools/pipeline-engine";
 import { CustomToolDefinitionSchema } from "../core/custom-tools/schemas";
 
-describe("Custom Tools Pipeline Fixes", () => {
-  describe("buildScopeWithDefaults", () => {
-    it("should inject default values for missing parameters", () => {
-      const schema = {
-        type: "object",
-        properties: {
-          path: { type: "string" },
-          header_row: { type: "number", default: 1 },
-          max_rows: { type: "number", default: null },
-        },
-      };
-
-      const toolParams = { path: "/tmp/data.xlsx" };
-      const scope = buildScopeWithDefaults(toolParams, schema);
-
-      expect(scope.path).toBe("/tmp/data.xlsx");
-      expect(scope.header_row).toBe(1);
-      expect(scope.max_rows).toBeNull();
-    });
-
-    it("should not override explicitly passed parameter values with defaults", () => {
-      const schema = {
-        type: "object",
-        properties: {
-          header_row: { type: "number", default: 1 },
-        },
-      };
-
-      const toolParams = { header_row: 5 };
-      const scope = buildScopeWithDefaults(toolParams, schema);
-
-      expect(scope.header_row).toBe(5);
-    });
-  });
-
-  describe("resolveVariables", () => {
-    it("should perform full-replacement native return when template is exact single variable match", () => {
-      const scope = {
-        sheets: ["Ventas", "Gastos"],
-        count: 42,
-        meta: { key: "value" },
-      };
-
-      expect(resolveVariables("{sheets}", scope)).toEqual(["Ventas", "Gastos"]);
-      expect(resolveVariables("{count}", scope)).toBe(42);
-      expect(resolveVariables("{meta}", scope)).toEqual({ key: "value" });
-    });
-
-    it("should perform string interpolation when variable is embedded inside string", () => {
-      const scope = {
-        sheets: ["Ventas"],
-        name: "test",
-      };
-
-      expect(resolveVariables("SHEETS='{sheets}'", scope)).toBe("SHEETS='[\\\"Ventas\\\"]'");
-      expect(resolveVariables("Hello {name}", scope)).toBe("Hello test");
-    });
-  });
-
+describe("Custom Tools Validation", () => {
   describe("CustomToolDefinitionSchema", () => {
-    it("should validate tool definition with dependencies array", () => {
+    it("should validate script tool definition with dependencies array", () => {
       const validTool = {
         name: "excel_extract",
         description: "Extract content from excel file with openpyxl",
@@ -75,22 +16,16 @@ describe("Custom Tools Pipeline Fixes", () => {
           },
         },
         execute: {
-          type: "pipeline",
-          steps: [
-            {
-              tool: "bash",
-              params: { command: "python3 script.py" },
-            },
-          ],
+          type: "script",
+          file: "scripts/execute.js",
         },
       };
 
       const parsed = CustomToolDefinitionSchema.parse(validTool);
       expect(parsed.dependencies).toEqual(["openpyxl"]);
+      expect(parsed.execute.type).toBe("script");
     });
-  });
 
-  describe("CustomToolDefinitionSchema enhancements", () => {
     it("should allow UI-only tools without explicit execute field", () => {
       const uiOnlyTool = {
         name: "ui_status_dashboard",
@@ -165,27 +100,6 @@ describe("Custom Tools Pipeline Fixes", () => {
 
       expect(() => CustomToolDefinitionSchema.parse(cardListFlexible)).not.toThrow();
       expect(() => CustomToolDefinitionSchema.parse(stepsFlexible)).not.toThrow();
-    });
-
-    it("should parse step id and optional step params in pipeline mode", () => {
-      const pipelineTool = {
-        name: "pipeline_step_test",
-        description: "Tests step id and omitted params in step definition",
-        parameters: { type: "object", properties: {} },
-        execute: {
-          type: "pipeline",
-          steps: [
-            {
-              id: "step_one",
-              tool: "bash",
-            },
-          ],
-        },
-      };
-
-      const parsed = CustomToolDefinitionSchema.parse(pipelineTool);
-      expect((parsed.execute as any).steps[0].id).toBe("step_one");
-      expect((parsed.execute as any).steps[0].params).toEqual({});
     });
   });
 

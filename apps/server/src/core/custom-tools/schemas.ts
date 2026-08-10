@@ -222,40 +222,21 @@ export const UiComponentSchema: z.ZodType<any> = z.discriminatedUnion("type", [
 ]);
 
 // --- Execution Mode Schemas ---
-export const PipelineStepSchema = z.object({
-  id: z.string().optional().describe("Optional step identifier"),
-  tool: z.string().min(1).max(64),
-  params: z.record(z.any()).optional().default({}),
-  output: z.string().optional().describe("Variable name to capture the result text"),
-  description: z.string().optional().describe("Human-readable label shown during execution"),
-});
-
-export const ExecutionPipelineSchema = z.object({
-  type: z.literal("pipeline"),
-  steps: z.array(PipelineStepSchema).min(1),
-  onError: z.enum(["stop", "continue"]).default("stop"),
-});
-
 export const ExecutionUiSchema = z.object({
   type: z.literal("ui"),
 });
 
-export const ExecutionAgentSchema = z.object({
-  type: z.literal("agent"),
-  agentId: z.string().optional(),
-  taskTemplate: z.string().min(10),
-  subagentType: z.enum(["explorer", "builder", "autonomous"]).default("builder"),
-  captureOutputAs: z.string().optional(),
-  waitForCompletion: z.boolean().default(true),
-  maxSteps: z.number().min(1).max(50).default(15),
+export const ExecutionScriptSchema = z.object({
+  type: z.literal("script"),
+  file: z.string().default("scripts/execute.js"),
+  timeout: z.number().min(1000).max(60000).default(30000),
 });
 
-export type ExecutionAgent = z.infer<typeof ExecutionAgentSchema>;
+export type ExecutionScript = z.infer<typeof ExecutionScriptSchema>;
 
 export const ExecutionModeSchema = z.discriminatedUnion("type", [
-  ExecutionPipelineSchema,
   ExecutionUiSchema,
-  ExecutionAgentSchema,
+  ExecutionScriptSchema,
 ]);
 
 // --- Presentation / Display Options ---
@@ -295,6 +276,7 @@ export const CustomToolDefinitionSchema = z.object({
     "UI presentation preferences for how the tool appears in chat",
   ),
   enabled: z.boolean().default(true),
+  requiresApproval: z.boolean().optional(),
   dependencies: z
     .array(z.string())
     .optional()
@@ -306,6 +288,4 @@ export const CustomToolDefinitionSchema = z.object({
 
 export type CustomToolDefinition = z.infer<typeof CustomToolDefinitionSchema>;
 export type UiComponent = z.infer<typeof UiComponentSchema>;
-export type ExecutionPipeline = z.infer<typeof ExecutionPipelineSchema>;
-export type PipelineStep = z.infer<typeof PipelineStepSchema>;
 export type ExecutionMode = z.infer<typeof ExecutionModeSchema>;

@@ -1,6 +1,8 @@
+// SPDX-License-Identifier: MIT
 import { agentRegistry as defaultAgentRegistry } from "../../agents/agent-registry";
 import { approvalManager as defaultApprovalManager } from "../approvals/approval-manager";
 import { uiApprovalRegistry as defaultUiApprovalRegistry } from "../approvals/ui-approval-registry";
+import { folderCustomToolStorage as defaultFolderCustomToolStorage } from "../custom-tools/folder-storage";
 import { delegationRegistry as defaultDelegationRegistry } from "../delegation/delegation-registry";
 import { mcpRegistry as defaultMcpRegistry } from "../mcp/mcp-registry";
 import { memoryRegistry as defaultMemoryRegistry } from "../memory/registry";
@@ -13,6 +15,7 @@ import {
   type ISessionManager,
   type IUiApprovalRegistry,
 } from "../ports/core-services.port";
+import type { ICustomToolProvider } from "../ports/custom-tool-provider.port";
 import type { IPermissionEngine } from "../ports/permission.port";
 import type { ISandbox } from "../ports/sandbox.port";
 import { type SpacesHost } from "../ports/spaces-host.port";
@@ -38,6 +41,7 @@ export interface ServerContext {
   spacesHost: SpacesHost;
   sandbox: ISandbox;
   permissionEngine: IPermissionEngine;
+  customToolProvider: ICustomToolProvider;
 }
 
 export interface ServerContextOptions {
@@ -53,6 +57,7 @@ export interface ServerContextOptions {
   spacesHost?: SpacesHost;
   sandbox?: ISandbox;
   permissionEngine?: IPermissionEngine;
+  customToolProvider?: ICustomToolProvider;
 }
 
 export function createServerContext(options?: ServerContextOptions): ServerContext {
@@ -69,5 +74,6 @@ export function createServerContext(options?: ServerContextOptions): ServerConte
     spacesHost: options?.spacesHost ?? defaultServerSpacesHost,
     sandbox: options?.sandbox ?? new LocalSandbox(),
     permissionEngine: options?.permissionEngine ?? new PermissionEngine(),
+    customToolProvider: options?.customToolProvider ?? defaultFolderCustomToolStorage,
   };
 }

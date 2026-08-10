@@ -3,24 +3,24 @@ export const CUSTOM_TOOL_THEME_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: 'Outfit', sans-serif;
-    background: #121212;
-    color: #e2e8f0;
-    padding: 1rem;
-    line-height: 1.6;
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: transparent;
+    color: var(--text-primary);
+    padding: 0.5rem;
+    line-height: 1.5;
     -webkit-font-smoothing: antialiased;
   }
   :root {
-    --bg: #121212;
-    --surface: #171717;
-    --surface-hover: #313131;
+    --bg: transparent;
+    --surface: rgba(255, 255, 255, 0.04);
+    --surface-hover: rgba(255, 255, 255, 0.08);
     --accent: #4ade80;
     --text-primary: #e2e8f0;
-    --text-secondary: #a2a2a2;
+    --text-secondary: #94a3b8;
     --success: #4ade80;
     --warning: #fbbf24;
-    --error: #ca3214;
-    --border: #2a2a2a;
+    --error: #f87171;
+    --border: rgba(255, 255, 255, 0.1);
   }
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
   .card-title { color: var(--text-primary); font-size: 14px; font-weight: 600; }

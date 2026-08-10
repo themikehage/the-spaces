@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
+import { CustomToolEditorModal } from "@/components/settings/CustomToolEditorModal";
 import { useEntityCustomTools } from "@/hooks/useEntityCustomTools";
-import { Check, RefreshCw, Save, Wrench } from "lucide-react";
+import { Check, Edit2, Plus, RefreshCw, Save, ShieldAlert, Wrench } from "lucide-react";
+import { useState } from "react";
 import type { EntityType } from "shared";
 
 interface Props {
@@ -25,7 +27,20 @@ export function EntityCustomToolsEditor({ entityType, entityId = "", title }: Pr
     refresh,
   } = useEntityCustomTools(entityType, entityId);
 
+  const [editorModalOpen, setEditorModalOpen] = useState(false);
+  const [selectedToolForEdit, setSelectedToolForEdit] = useState<string | undefined>();
+
   if (entityType !== "global" && !entityId) return null;
+
+  const handleOpenNew = () => {
+    setSelectedToolForEdit(undefined);
+    setEditorModalOpen(true);
+  };
+
+  const handleOpenEdit = (name: string) => {
+    setSelectedToolForEdit(name);
+    setEditorModalOpen(true);
+  };
 
   return (
     <div className="space-y-3 bg-bg border border-input rounded-2xl p-4">
@@ -50,6 +65,15 @@ export function EntityCustomToolsEditor({ entityType, entityId = "", title }: Pr
               {scopeConfig.resolved.length} active
             </span>
           )}
+
+          <button
+            type="button"
+            onClick={handleOpenNew}
+            className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-accent/15 text-accent font-semibold hover:bg-accent/25 transition-colors cursor-pointer border border-accent/20"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            New Tool
+          </button>
 
           <button
             type="button"
@@ -91,8 +115,7 @@ export function EntityCustomToolsEditor({ entityType, entityId = "", title }: Pr
           <Wrench className="w-6 h-6 text-muted-foreground mx-auto mb-2 opacity-50" />
           <p className="text-xs font-semibold text-foreground">No custom tools registered</p>
           <p className="text-[11px] text-muted-foreground mt-1 max-w-xs mx-auto">
-            Create custom tools in chat using{" "}
-            <code className="bg-muted px-1 py-0.5 rounded text-[10px]">manage_custom_tools</code>.
+            Click "New Tool" above to create a folder-based custom tool.
           </p>
         </div>
       ) : (
@@ -174,6 +197,13 @@ export function EntityCustomToolsEditor({ entityType, entityId = "", title }: Pr
                         {tool.executeType}
                       </span>
 
+                      {tool.requiresApproval && (
+                        <span className="flex items-center gap-1 text-[9px] px-1.5 py-0.2 rounded font-semibold uppercase bg-warning/15 text-warning border border-warning/20">
+                          <ShieldAlert className="w-2.5 h-2.5" />
+                          Approval Required
+                        </span>
+                      )}
+
                       {sourceBadge.variant !== "none" && (
                         <span
                           className={`text-[9px] px-1.5 py-0.2 rounded font-semibold uppercase ${
@@ -202,11 +232,27 @@ export function EntityCustomToolsEditor({ entityType, entityId = "", title }: Pr
                     )}
                   </div>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleOpenEdit(tool.name)}
+                  className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-surface-hover cursor-pointer"
+                  title="Edit custom tool folder"
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                </button>
               </div>
             );
           })}
         </div>
       )}
+
+      <CustomToolEditorModal
+        isOpen={editorModalOpen}
+        onClose={() => setEditorModalOpen(false)}
+        toolName={selectedToolForEdit}
+        onSaved={refresh}
+      />
     </div>
   );
 }

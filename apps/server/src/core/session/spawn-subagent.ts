@@ -141,7 +141,7 @@ export async function spawnSubagent(params: SpawnSubagentParams): Promise<Envelo
 
   const { sessionToolFactory } = await import("./tool-factory");
 
-  const { customTools: subSessionTools } = sessionToolFactory.createSessionTools({
+  const { customTools: subSessionTools } = await sessionToolFactory.createSessionTools({
     username,
     sessionId: subagentSessionId,
     workspaceDir,

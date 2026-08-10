@@ -249,7 +249,7 @@ Use 'delegate' to delegate to a specific target.`,
         });
         await subResourceLoader.reload();
 
-        const { customTools: subSessionTools } = sessionToolFactory.createSessionTools({
+        const { customTools: subSessionTools } = await sessionToolFactory.createSessionTools({
           username,
           sessionId: subagentSessionId,
           workspaceDir,

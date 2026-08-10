@@ -40,6 +40,7 @@ export const ASSETS_DIR = "assets";
 export const UPLOADS_DIR = "uploads";
 export const GENERATED_DIR = "generated";
 export const SKILLS_SUBDIR = ".spaces/skills";
+export const TOOLS_SUBDIR = ".spaces/tools";
 export const EXECUTIONS_DIR = "executions";
 export const PIPELINES_DIR = "pipelines";
 export const WORKFLOWS_DIR = "workflows";
@@ -66,6 +67,10 @@ export function getWorkspaceDir(username: string): string {
 
 export function getWorkspaceSkillsDir(username: string): string {
   return join(getWorkspaceDir(username), SKILLS_SUBDIR);
+}
+
+export function getWorkspaceToolsDir(username: string): string {
+  return join(getWorkspaceDir(username), TOOLS_SUBDIR);
 }
 
 export function getGlobalAgentsMdPath(username: string): string {

@@ -1,92 +1,82 @@
 // SPDX-License-Identifier: MIT
 export const CUSTOM_TOOL_INSTRUCTIONS = `
-## Custom Tool Builder
+## Folder-Based Custom Tool Builder
 
-You have access to a \`manage_custom_tools\` tool that lets you create, update, delete, and manage custom tools on demand. 
+You have access to a \`manage_custom_tools\` tool that allows you to create, update, delete, and inspect custom tools.
+Custom tools are stored as self-contained tool folders inside the user's custom tools store (NOT in the workspace).
 
-### When to Create a Custom Tool
-1. You need to execute a multi-step workflow repeatedly (pipeline mode).
-2. You want to display structured data to the user as cards, tables, metrics, etc. (UI mode).
-3. The task requires combining several existing tools into a single reusable operation.
+\`\`\`
+<tool_name>/
+  definition.json    # Machine contract: name, description, parameters, execute mode, presentation, requiresApproval
+  Tool.md            # Agent instructions for tool usage
+  ui/
+    index.html       # Handlebars HTML template for rich visual rendering
+  scripts/
+    execute.js       # Execution script (for "script" execution mode)
+\`\`\`
 
-### Tool Definition Contract
-The tool accepts the following JSON structure:
+**IMPORTANT**: Do NOT use \`write\` or \`bash\` to create tool files. Use \`manage_custom_tools\` with the parameters below.
+
+### Tool Definition Contract (\`definition.json\`)
 {
-  "name": "snake_case_name",        // Required: unique lowercase letters/numbers/underscores
-  "label": "Human Readable Name",   // Optional: UI display name
+  "name": "snake_case_name",        // Required: lowercase letters, numbers, underscores
+  "label": "Human Readable Name",   // Optional: UI display label
   "description": "Detailed description of what this tool does, when to use it, and what it returns.", // Required (10-500 chars)
-  "dependencies": ["openpyxl"],    // Optional: list of external packages or tools required
+  "requiresApproval": false,        // Optional: set to true if execution requires explicit user confirmation
+  "dependencies": ["openpyxl"],    // Optional: external packages or binary dependencies
   "parameters": {                   // Required: JSON Schema for inputs
     "type": "object",
     "properties": {
-      "header_row": { "type": "number", "default": 1 } // Note: "default" values are automatically populated into scope if omitted by caller
+      "query": { "type": "string" }
     },
-    "required": [...]
+    "required": ["query"]
   },
-  "execute": { ... },              // Optional: how the tool runs (default: {"type": "ui"})
-  "ui": { ... },                   // Optional: how results look in the UI (see Tiers)
-  "presentation": {                // Optional: UI presentation preferences
-    "defaultExpanded": true,       // Whether the tool result is expanded by default in chat (default: true)
-    "accordionDefaultOpen": true   // Default open state for accordion items when not specified per item (default: true)
+  "execute": { ... },              // Optional: execution mode ("ui", "script")
+  "presentation": {                // Optional: chat UI presentation preferences
+    "defaultExpanded": true,
+    "accordionDefaultOpen": true
   }
 }
 
-### Execution Modes & Variable Interpolation Rules
-1. **Pipeline (type: "pipeline")**: Runs existing tools (bash, read, write, edit, grep, find, ls) sequentially.
-   - Resolve parameters via \`{varName}\` from inputs (including defaults) or prior step outputs.
-   - **Full-replacement mode**: If a step parameter value is EXACTLY \`"{varName}"\`, it resolves to the native object/array/type instead of a string.
-   - **Bash Tool Rules & Stdin**:
-     - The \`bash\` tool **does NOT support** a \`stdin\` parameter.
-     - Pass scripts or stdin via heredoc inside the command string:
-       \`\`\`bash
-       python3 << 'PYEOF'
-       import json, sys
-       PATH_RAW = "{path}"
-       SHEETS_RAW = '{sheets}' # Use single quotes for variables that may resolve to arrays or JSON strings
-       ...
-       PYEOF
-       \`\`\`
-   - **Handling Optional/Unsubstituted Variables in Scripts**:
-     If a variable has no default and is optional, it remains \`"{varName}"\` if omitted. In Python, detect unsubstituted variables using:
-     \`\`\`python
-     def is_unsubstituted(val):
-         return isinstance(val, str) and val.startswith("{") and val.endswith("}")
-     \`\`\`
+### Execution Modes
+1. **Script (\`type: "script"\`)**: Runs a JS/TS/Shell script located inside \`scripts/\` (e.g. \`scripts/execute.js\`).
+   - Pass the script source code as \`scriptContent\` in the \`manage_custom_tools(action: "upsert")\` call.
+   - The script receives parameters via stdin (JSON) and environment variable \`SPACES_TOOL_PARAMS\`.
+   - Returns output via stdout as JSON.
+   - **Runtime: Bun (ES2019 only)**. Do NOT use optional chaining (\`?.\`), nullish coalescing (\`??\`), or any ES2020+ syntax.
+   - Instead of \`signal?.addEventListener\`, use \`if (signal) { signal.addEventListener(...) }\`
 
-2. **UI (type: "ui")**: Pure visual rendering tool. No server-side execution. The \`ui\` block defines what the user sees.
+2. **UI (\`type: "ui"\`)**: Pure visual rendering tool. Renders \`ui/index.html\` using Handlebars with input parameters.
+   - Pass the Handlebars HTML template as \`uiHtml\` in the \`manage_custom_tools(action: "upsert")\` call.
 
-### UI Components Tiers & Guidelines
-- **UI Structure is Static**: Dynamic property names like \`tabsVariable\` or \`columnsVariable\` DO NOT exist. UI component definitions must use valid static types (e.g. \`code\`, \`table\`, \`card-list\`).
-- **Output Substitution**: UI fields support template variables from pipeline step outputs, e.g.:
-  \`\`\`json
-  "ui": {
-    "type": "code",
-    "code": "{excel_output}",
-    "language": "json",
-    "title": "Datos extraídos"
-  }
-  \`\`\`
+### Creating Tools — Correct Workflow
+1. Call \`manage_custom_tools(action: "upsert", tool: { ...definition... }, scriptContent: "<JS code>", uiHtml: "<HTML code>", instructionsMd: "...")\`
+2. That single call writes \`definition.json\`, \`Tool.md\`, \`scripts/execute.js\`, and \`ui/index.html\` atomically to the user's custom tools store.
+3. Call the tool to verify it works. No file writing outside of \`manage_custom_tools\` is needed.
 
-- **Tier 1 — Base**:
-  - **card**: \`{ "type": "card", "title": "...", "description": "...", "status": "success|warning|error|info", "metadata": {} }\`
-  - **card-list**: \`{ "type": "card-list", "title": "...", "cards": [...], "columns": 2 }\`
-  - **table**: \`{ "type": "table", "title": "...", "columns": ["Header1"], "rows": [{"Header1": "val"}], "striped": true }\`
-  - **badge**: \`{ "type": "badge", "text": "...", "variant": "success|warning|error|info|neutral" }\`
-  - **metric**: \`{ "type": "metric", "label": "...", "value": "...", "trend": "up|down|neutral" }\`
-  - **code**: \`{ "type": "code", "code": "...", "language": "ts", "title": "..." }\`
-  - **section**: \`{ "type": "section", "title": "...", "children": [...] }\`
-  - **html**: \`{ "type": "html", "html": "...", "title": "...", "height": "70vh" }\`
-- **Tier 2 — Media**:
-  - **video**: \`{ "type": "video", "src": "...", "title": "..." }\`
-  - **audio**: \`{ "type": "audio", "src": "...", "title": "..." }\`
-  - **pdf**: \`{ "type": "pdf", "src": "...", "title": "..." }\`
-- **Tier 3 — High-Demand**:
-  - **tabs**: \`{ "type": "tabs", "tabs": [{ "label": "Tab1", "content": [...] }] }\`
-  - **markdown**: \`{ "type": "markdown", "content": "# MD content" }\`
-  - **progress**: \`{ "type": "progress", "value": 75, "label": "Progress" }\`
-  - **accordion**: \`{ "type": "accordion", "items": [{ "title": "Sec", "content": [...], "defaultOpen": true }] }\`
-  - **diff**: \`{ "type": "diff", "oldCode": "...", "newCode": "..." }\`
-  - **steps**: \`{ "type": "steps", "steps": [{ "label": "Build", "status": "done" }] }\`
-  - **stats**: \`{ "type": "stats", "stats": [{ "label": "...", "value": "..." }] }\`
-  - **timeline**: \`{ "type": "timeline", "items": [{ "title": "Event", "date": "2026-01" }] }\`
+### HTML UI Design Guidelines (\`ui/index.html\`)
+The HTML is rendered as an **embedded chat message widget**, NOT a standalone web page (SPA).
+
+1. **Layout & Dimensions**:
+   - Do NOT use \`100vh\`, \`height: 100%\`, or fixed full-screen wrappers.
+   - Keep padding compact (\`padding: 0.5rem 0.75rem\`).
+   - Use flexible container cards (\`class="card"\`) or grid layouts (\`class="stats-grid"\`).
+
+2. **Theme Integration & Styling**:
+   - Background is transparent by default so it blends into the chat bubble.
+   - Use pre-injected CSS variables:
+     - Surface background: \`var(--surface)\`, \`var(--surface-hover)\`
+     - Text colors: \`var(--text-primary)\`, \`var(--text-secondary)\`
+     - Accent & status: \`var(--accent)\`, \`var(--success)\`, \`var(--warning)\`, \`var(--error)\`
+     - Borders: \`var(--border)\`
+   - Use built-in CSS classes: \`.card\`, \`.card-title\`, \`.card-desc\`, \`.badge\`, \`.badge-success\`, \`.table\`, \`.metric-value\`, \`.stats-grid\`, \`.stat-card\`.
+
+3. **Handlebars Data Binding & Built-in Helpers**:
+   - Access inputs via \`{{params.varName}}\`
+   - Access outputs via \`{{result.varName}}\`
+   - Use Handlebars blocks: \`{{#if condition}}...{{/if}}\`, \`{{#each items}}...{{/each}}\`
+   - Built-in comparison/logical helpers:
+     - Comparison: \`eq\`, \`ne\`, \`gt\`, \`gte\`, \`lt\`, \`lte\` (e.g. \`{{#if (eq params.mode "dark")}}...\`)
+     - Logic: \`and\`, \`or\`, \`not\` (e.g. \`{{#if (and result.success (gte result.count 1))}}...\`)
+     - Utility: \`concat\`, \`json\`, \`includes\`
 `;

@@ -80,6 +80,29 @@ export async function handleSessionWsMessage(
 
     const session = await sessionManager.getOrCreateSession(user.username, sessionId);
 
+    try {
+      const { resolveCustomToolsForSession } = await import("../../core/custom-tools/resolver");
+      const resolvedBaseTools = await resolveCustomToolsForSession({
+        username: user.username,
+        context: {
+          cwd: (session as any).cwd || process.cwd(),
+          session: session as any,
+          username: user.username,
+          sessionId,
+        },
+      });
+
+      if (resolvedBaseTools.length > 0) {
+        (session as any).customTools = resolvedBaseTools;
+        (session as any)._customTools = resolvedBaseTools;
+        if (typeof (session as any)._refreshToolRegistry === "function") {
+          (session as any)._refreshToolRegistry();
+        }
+      }
+    } catch (err) {
+      console.error("[SessionHandler] Error refreshing custom tools for session:", err);
+    }
+
     if (tools && Array.isArray(tools)) {
       const currentActive = session.getActiveToolNames();
 
@@ -113,17 +136,7 @@ export async function handleSessionWsMessage(
           !BUILTIN_AND_ALWAYS.has(tName),
       );
 
-      let enabledCustomFromStorage: string[] = [];
-      try {
-        const { customToolStorage } = await import("../../core/custom-tools/storage");
-        enabledCustomFromStorage = customToolStorage
-          .loadAll(user.username)
-          .filter((d: any) => d.enabled !== false)
-          .map((d: any) => d.name);
-      } catch {
-        /* noop */
-      }
-
+      const enabledCustomFromStorage = (session as any).customTools?.map((t: any) => t.name) ?? [];
       const mergedCustom = Array.from(new Set([...customActive, ...enabledCustomFromStorage]));
 
       session.setActiveToolsByName(

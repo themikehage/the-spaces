@@ -168,15 +168,15 @@ export class SessionPromptBuilder {
     }
 
     try {
-      const { customToolStorage } = await import("../custom-tools/storage");
-      const customDefs = customToolStorage
+      const { folderCustomToolStorage } = await import("../custom-tools/folder-storage");
+      const customDefs = folderCustomToolStorage
         .loadAll(username)
-        .filter((d: any) => d.enabled !== false);
+        .filter((d) => d.definition.enabled !== false);
       if (customDefs.length > 0) {
         appendPrompts.push(
           `\n\n## Custom Tools Available (User-Created):\n` +
             `You have ${customDefs.length} custom tool(s) registered and active for this user:\n` +
-            `${customDefs.map((t: any) => `- ${t.name}: ${t.description}`).join("\n")}\n` +
+            `${customDefs.map((t) => `- ${t.definition.name}: ${t.definition.description}`).join("\n")}\n` +
             `These are available as regular tools — invoke them by name like any other tool. Prefer them when the task matches their purpose.\n`,
         );
       }
@@ -374,17 +374,17 @@ export class SessionPromptBuilder {
 
     // 7. Registered Tools & MCP Extensions
     try {
-      const { customToolStorage } = await import("../custom-tools/storage");
-      const customDefs = customToolStorage
+      const { folderCustomToolStorage } = await import("../custom-tools/folder-storage");
+      const customDefs = folderCustomToolStorage
         .loadAll(username)
-        .filter((d: any) => d.enabled !== false);
+        .filter((d) => d.definition.enabled !== false);
 
       let toolsContent = "";
       if (customDefs.length > 0) {
         toolsContent +=
           `## Custom Registered Tools:\n` +
           `You have ${customDefs.length} custom tool(s) registered:\n` +
-          `${customDefs.map((t: any) => `- ${t.name}: ${t.description}`).join("\n")}\n\n`;
+          `${customDefs.map((t) => `- ${t.definition.name}: ${t.definition.description}`).join("\n")}\n\n`;
       }
 
       sections.push({

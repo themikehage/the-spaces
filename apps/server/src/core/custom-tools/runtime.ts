@@ -1,13 +1,20 @@
 // SPDX-License-Identifier: MIT
-import { AsyncLocalStorage } from "node:async_hooks";
-import { type PipelineContext, executePipeline, resolveVariables } from "./pipeline-engine";
+import { uiApprovalRegistry } from "../approvals/ui-approval-registry";
 import { type CustomToolDefinition } from "./schemas";
+import { executeCustomToolScript } from "./script-executor";
+import { loadToolUi } from "./ui-loader";
 
-export const pipelineExecutionStack = new AsyncLocalStorage<string[]>();
+export interface CustomToolContext {
+  username: string;
+  sessionId: string;
+  cwd?: string;
+  [key: string]: unknown;
+}
 
 export function createCustomToolRuntime(
   definition: CustomToolDefinition,
-  context: PipelineContext,
+  context: CustomToolContext,
+  toolDir?: string,
 ): any {
   return {
     name: definition.name,
@@ -18,86 +25,90 @@ export function createCustomToolRuntime(
       toolCallId: string,
       params: Record<string, any>,
       signal?: AbortSignal,
-      onUpdate?: (partialResult: any) => void,
+      _onUpdate?: (partialResult: any) => void,
     ) => {
-      const executeDef = definition.execute;
-      switch (executeDef.type) {
-        case "pipeline": {
-          const currentStack = pipelineExecutionStack.getStore() || [];
-          if (currentStack.includes(definition.name)) {
-            return {
-              content: [
-                {
-                  type: "text",
-                  text: `Circular dependency detected: ${currentStack.join(" -> ")} -> ${definition.name}`,
-                },
-              ],
-              isError: true,
-            };
-          }
-          if (currentStack.length >= 5) {
-            return {
-              content: [{ type: "text", text: `Max pipeline execution depth (5) exceeded` }],
-              isError: true,
-            };
-          }
-          const nextStack = [...currentStack, definition.name];
+      if (definition.requiresApproval) {
+        const approvalRes = await uiApprovalRegistry.register(toolCallId, {
+          username: context.username,
+          sessionId: context.sessionId,
+          toolName: definition.name,
+          args: params,
+          reason: `Execution approval required for custom tool "${definition.label || definition.name}"`,
+        });
 
-          return pipelineExecutionStack.run(nextStack, async () => {
-            const { sessionManager } = await import("../session/session-manager");
-            const activeSession = sessionManager.getSession(context.username, context.sessionId);
-            if (!activeSession) {
+        if (approvalRes.action !== "confirm" && approvalRes.action !== "approve") {
+          return {
+            content: [{ type: "text", text: `Execution of custom tool ${definition.name} was rejected by user.` }],
+            isError: false,
+          };
+        }
+      }
+
+      const executeDef = definition.execute;
+
+      switch (executeDef.type) {
+        case "script": {
+          if (!toolDir) {
+            return {
+              content: [{ type: "text", text: `Tool directory not provided for script execution.` }],
+              isError: true,
+            };
+          }
+          try {
+            const scriptRes = await executeCustomToolScript({
+              toolDir,
+              file: executeDef.file,
+              params,
+              timeoutMs: executeDef.timeout,
+              signal,
+            });
+
+            if (scriptRes.exitCode !== 0) {
               return {
-                content: [{ type: "text", text: `Session ${context.sessionId} is not active` }],
+                content: [{ type: "text", text: scriptRes.stderr || scriptRes.stdout || `Script exited with code ${scriptRes.exitCode}` }],
                 isError: true,
               };
             }
-            const runContext = {
-              ...context,
-              session: activeSession as any,
-            };
-            const result = await executePipeline(
-              executeDef.steps,
-              params,
-              runContext,
-              executeDef.onError,
-              signal,
-              (step, total, desc) => {
-                onUpdate?.({
-                  content: [{ type: "text", text: `Step ${step}/${total}: ${desc}` }],
-                  details: { step, total },
-                });
+
+            const uiResult = toolDir ? loadToolUi(toolDir, { params, result: scriptRes.outputData ?? scriptRes.stdout }) : {};
+
+            const outputText = scriptRes.stdout || "Script executed successfully";
+            const responseText = uiResult.error
+              ? `${outputText}\n\n[Warning: UI template failed to render: ${uiResult.error}]`
+              : outputText;
+
+            return {
+              content: [{ type: "text", text: responseText }],
+              details: {
+                output: scriptRes.outputData,
+                ...(uiResult.html ? { ui: { type: "html", html: uiResult.html } } : {}),
+                ...(uiResult.error ? { uiError: uiResult.error } : {}),
+                presentation: definition.presentation || { defaultExpanded: true, accordionDefaultOpen: true },
               },
-              definition.parameters,
-            );
-            const scope = result.scope || {};
-            const resolvedUi = definition.ui ? resolveVariables(definition.ui, scope) : undefined;
-            const lastOutput = result.details?.lastOutput ?? "";
-            result.content = [
-              {
-                type: "text",
-                text: resolvedUi
-                  ? lastOutput || `Pipeline completed — UI rendered for ${definition.name}`
-                  : lastOutput || "Pipeline completed successfully",
-              },
-            ];
-            result.details = {
-              ...result.details,
-              ...(resolvedUi ? { ui: resolvedUi } : {}),
-              ...(definition.presentation
-                ? { presentation: definition.presentation }
-                : { presentation: { defaultExpanded: true, accordionDefaultOpen: true } }),
+              isError: false,
             };
-            delete result.scope;
-            return result;
-          });
+          } catch (err: unknown) {
+            const errorMsg = err instanceof Error ? err.message : String(err);
+            return {
+              content: [{ type: "text", text: `Script execution error: ${errorMsg}` }],
+              isError: true,
+            };
+          }
         }
 
-        case "ui":
+        case "ui": {
+          const uiResult = toolDir ? loadToolUi(toolDir, { params }) : {};
+          if (uiResult.error) {
+            return {
+              content: [{ type: "text", text: `Custom tool UI rendering failed: ${uiResult.error}` }],
+              isError: true,
+            };
+          }
+
           return {
             content: [{ type: "text", text: `UI rendered for custom tool ${definition.name}` }],
             details: {
-              ui: definition.ui,
+              ui: uiResult.html ? { type: "html", html: uiResult.html } : definition.ui,
               presentation: definition.presentation || {
                 defaultExpanded: true,
                 accordionDefaultOpen: true,
@@ -105,56 +116,6 @@ export function createCustomToolRuntime(
             },
             isError: false,
           };
-
-        case "agent": {
-          const { agentId, taskTemplate, subagentType, captureOutputAs, maxSteps } = executeDef;
-          const resolvedTask = resolveVariables(taskTemplate, params);
-
-          const { spawnSubagent } = await import("../session/spawn-subagent");
-          const { sessionManager } = await import("../session/session-manager");
-          const { delegationRegistry } = await import("../delegation/delegation-registry");
-
-          try {
-            const spawnResult = await spawnSubagent({
-              toolCallId,
-              username: context.username,
-              parentSessionId: context.sessionId,
-              agentId: agentId ?? undefined,
-              task: resolvedTask,
-              subagentType: subagentType ?? "builder",
-              maxSteps: maxSteps ?? 15,
-              sessionManager,
-              delegationRegistry: context.delegationRegistry ?? delegationRegistry,
-              workspaceDir: context.cwd,
-              signal,
-            });
-
-            const outputs = spawnResult.outputs ?? {};
-
-            if (captureOutputAs) {
-              return {
-                content: [{ type: "text", text: spawnResult.executive_summary }],
-                details: { capturedAs: captureOutputAs, value: outputs },
-                pipelineScopeUpdate: {
-                  [captureOutputAs]: spawnResult.executive_summary,
-                  ...outputs,
-                },
-                isError: spawnResult.status === "error",
-              };
-            }
-
-            return {
-              content: [{ type: "text", text: spawnResult.executive_summary }],
-              isError: spawnResult.status === "error",
-            };
-          } catch (err: any) {
-            return {
-              content: [
-                { type: "text", text: `Subagent execution failed: ${err?.message || err}` },
-              ],
-              isError: true,
-            };
-          }
         }
 
         default:

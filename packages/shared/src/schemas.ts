@@ -968,12 +968,22 @@ export const CustomToolSummarySchema = z.object({
   label: z.string().optional(),
   description: z.string(),
   enabled: z.boolean(),
-  executeType: z.enum(["pipeline", "ui"]),
+  executeType: z.enum(["ui", "script"]),
   dependencies: z.array(z.string()).optional(),
+  requiresApproval: z.boolean().optional(),
+  hasUi: z.boolean().optional(),
+  hasScripts: z.boolean().optional(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
 });
 export type CustomToolSummary = z.infer<typeof CustomToolSummarySchema>;
+
+export const UpsertFolderCustomToolSchema = z.object({
+  definition: z.record(z.any()),
+  instructionsMd: z.string().optional(),
+  uiHtml: z.string().optional(),
+});
+export type UpsertFolderCustomTool = z.infer<typeof UpsertFolderCustomToolSchema>;
 
 export const CredentialTypeSchema = z.enum(["bearer", "basic", "api-key"]);
 export type CredentialType = z.infer<typeof CredentialTypeSchema>;

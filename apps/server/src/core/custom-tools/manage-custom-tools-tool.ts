@@ -1,8 +1,9 @@
+// SPDX-License-Identifier: MIT
 import { ZodError } from "zod";
 import { createServerContext } from "../infra/server-context";
+import { folderCustomToolStorage } from "./folder-storage";
 import { createCustomToolRuntime } from "./runtime";
 import { type CustomToolDefinition, CustomToolDefinitionSchema } from "./schemas";
-import { customToolStorage } from "./storage";
 
 export interface ManageCustomToolsOptions {
   username: string;
@@ -10,8 +11,9 @@ export interface ManageCustomToolsOptions {
 }
 
 export function createManageCustomToolsTool(options: ManageCustomToolsOptions) {
-  const { sessionManager } = createServerContext();
+  const { sessionManager, customToolProvider } = createServerContext();
   const { username, sessionId } = options;
+  const provider = customToolProvider || folderCustomToolStorage;
 
   return {
     name: "manage_custom_tools",
@@ -37,29 +39,51 @@ export function createManageCustomToolsTool(options: ManageCustomToolsOptions) {
           type: "boolean",
           description: "The enabled status of the tool (required for toggle)",
         },
+        instructionsMd: {
+          type: "string",
+          description: "Optional Tool.md contextual instructions (for upsert)",
+        },
+        uiHtml: {
+          type: "string",
+          description: "Optional Handlebars ui/index.html template string (for upsert)",
+        },
+        scriptContent: {
+          type: "string",
+          description: "Optional JS script content to write as scripts/execute.js (for upsert with type=script)",
+        },
       },
       required: ["action"],
     },
-    execute: async (toolCallId: string, params: any) => {
-      const { action, tool, name, enabled } = params;
+    execute: async (_toolCallId: string, params: Record<string, unknown>) => {
+      const action = params.action as string;
+      const tool = params.tool as Record<string, unknown> | undefined;
+      const name = params.name as string | undefined;
+      const enabled = params.enabled as boolean | undefined;
+      const instructionsMd = params.instructionsMd as string | undefined;
+      const uiHtml = params.uiHtml as string | undefined;
+      const scriptContent = params.scriptContent as string | undefined;
+
+      const session = sessionManager.getSession(username, sessionId) as unknown as Record<string, unknown>;
+      const workspaceDir = (session?.cwd as string) || undefined;
+      const options = { workspaceDir };
 
       try {
         switch (action) {
           case "get": {
             if (name) {
-              const def = customToolStorage.get(username, name);
-              if (!def) {
+              const folderTool = provider.get(username, name, options);
+              if (!folderTool) {
                 return {
                   content: [{ type: "text", text: `Custom tool "${name}" not found.` }],
                   isError: true,
                 };
               }
               return {
-                content: [{ type: "text", text: JSON.stringify(def, null, 2) }],
-                details: { tool: def },
+                content: [{ type: "text", text: JSON.stringify(folderTool, null, 2) }],
+                details: { tool: folderTool },
               };
             } else {
-              const all = customToolStorage.loadAll(username);
+              const all = provider.loadAll(username, options);
               return {
                 content: [{ type: "text", text: `Loaded ${all.length} custom tools.` }],
                 details: { tools: all },
@@ -70,9 +94,7 @@ export function createManageCustomToolsTool(options: ManageCustomToolsOptions) {
           case "upsert": {
             if (!tool) {
               return {
-                content: [
-                  { type: "text", text: "Parameter 'tool' is required for action 'upsert'." },
-                ],
+                content: [{ type: "text", text: "Parameter 'tool' is required for action 'upsert'." }],
                 isError: true,
               };
             }
@@ -82,81 +104,57 @@ export function createManageCustomToolsTool(options: ManageCustomToolsOptions) {
               parsedTool = CustomToolDefinitionSchema.parse(tool);
             } catch (err) {
               if (err instanceof ZodError) {
-                const VALID_UI_TYPES = [
-                  "badge",
-                  "card",
-                  "card-list",
-                  "table",
-                  "metric",
-                  "code",
-                  "html",
-                  "section",
-                  "video",
-                  "audio",
-                  "pdf",
-                  "tabs",
-                  "markdown",
-                  "progress",
-                  "accordion",
-                  "diff",
-                  "steps",
-                  "stats",
-                  "timeline",
-                ].join(", ");
-
                 const issues = err.issues
-                  .map((issue) => {
-                    let msg = `- Path [${issue.path.join(".")}]: ${issue.message}`;
-                    if ((issue as any).received !== undefined) {
-                      msg += ` (received: ${JSON.stringify((issue as any).received)})`;
-                    }
-                    const isRootUiTypeIssue =
-                      issue.code === "invalid_union_discriminator" ||
-                      (issue.path.length === 1 &&
-                        issue.path[0] === "ui" &&
-                        issue.code === "invalid_union");
-                    if (isRootUiTypeIssue) {
-                      msg += ` — Valid UI types are: ${VALID_UI_TYPES}`;
-                    }
-                    return msg;
-                  })
+                  .map((issue) => `- Path [${issue.path.join(".")}]: ${issue.message}`)
                   .join("\n");
 
                 return {
-                  content: [
-                    { type: "text", text: `Schema validation failed for custom tool:\n${issues}` },
-                  ],
+                  content: [{ type: "text", text: `Schema validation failed for custom tool:\n${issues}` }],
                   isError: true,
                 };
               }
               throw err;
             }
 
-            customToolStorage.upsert(username, parsedTool);
+            provider.upsert(
+              username,
+              {
+                definition: parsedTool,
+                instructionsMd,
+                scriptContent,
+                uiHtml,
+                hasUi: !!uiHtml,
+                hasScripts: !!scriptContent,
+                toolDir: "",
+              },
+              options,
+            );
 
-            // Dynamically register into the active session if available
-            const session = sessionManager.getSession(username, sessionId) as any;
+            const savedFolderTool = provider.get(username, parsedTool.name, options);
+
             if (session) {
-              const runtime = createCustomToolRuntime(parsedTool, {
-                cwd: session.cwd,
-                session,
-                username,
-                sessionId,
-              });
-
-              const filtered = (session.customTools || []).filter(
-                (t: any) => t.name !== parsedTool.name,
+              const runtime = createCustomToolRuntime(
+                parsedTool,
+                {
+                  cwd: workspaceDir || process.cwd(),
+                  session: session as any,
+                  username,
+                  sessionId,
+                },
+                savedFolderTool?.toolDir,
               );
+
+              const currentTools = (session.customTools as unknown[]) || [];
+              const filtered = currentTools.filter((t: any) => t.name !== parsedTool.name);
               const nextTools = parsedTool.enabled ? [...filtered, runtime] : filtered;
               session.customTools = nextTools;
-              (session as any)._customTools = nextTools;
+              session._customTools = nextTools;
 
-              if (typeof (session as any)._refreshToolRegistry === "function") {
-                (session as any)._refreshToolRegistry();
+              if (typeof session._refreshToolRegistry === "function") {
+                session._refreshToolRegistry();
               }
             }
 
-            // Broadcast refresh
             try {
               const { broadcastToUser } = await import("../../ws/handler");
               broadcastToUser(username, {
@@ -181,107 +179,57 @@ export function createManageCustomToolsTool(options: ManageCustomToolsOptions) {
           case "delete": {
             if (!name) {
               return {
-                content: [
-                  { type: "text", text: "Parameter 'name' is required for action 'delete'." },
-                ],
+                content: [{ type: "text", text: "Parameter 'name' is required for action 'delete'." }],
                 isError: true,
               };
             }
 
-            customToolStorage.delete(username, name);
+            provider.delete(username, name, options);
 
-            // Dynamically remove from the active session
-            const session = sessionManager.getSession(username, sessionId);
             if (session) {
-              const nextTools = (session.customTools || []).filter((t: any) => t.name !== name);
+              const currentTools = (session.customTools as unknown[]) || [];
+              const nextTools = currentTools.filter((t: any) => t.name !== name);
               session.customTools = nextTools;
-              (session as any)._customTools = nextTools;
-              if (typeof (session as any)._refreshToolRegistry === "function") {
-                (session as any)._refreshToolRegistry();
+              session._customTools = nextTools;
+              if (typeof session._refreshToolRegistry === "function") {
+                session._refreshToolRegistry();
               }
             }
 
-            // Broadcast refresh
-            try {
-              const { broadcastToUser } = await import("../../ws/handler");
-              broadcastToUser(username, {
-                type: "entity-updated",
-                entityType: "custom_tool",
-              });
-            } catch (e) {
-              console.error("Failed to broadcast entity refresh:", e);
-            }
-
             return {
-              content: [{ type: "text", text: `Custom tool "${name}" successfully deleted.` }],
-              details: { deletedName: name },
+              content: [{ type: "text", text: `Custom tool "${name}" deleted.` }],
             };
           }
 
           case "toggle": {
             if (!name || enabled === undefined) {
               return {
-                content: [
-                  {
-                    type: "text",
-                    text: "Parameters 'name' and 'enabled' are required for action 'toggle'.",
-                  },
-                ],
+                content: [{ type: "text", text: "Parameters 'name' and 'enabled' are required for action 'toggle'." }],
                 isError: true,
               };
             }
 
-            customToolStorage.toggle(username, name, enabled);
-
-            // Dynamically sync enabling/disabling in session
-            const session = sessionManager.getSession(username, sessionId) as any;
-            if (session) {
-              const def = customToolStorage.get(username, name);
-              let nextTools = (session.customTools || []).filter((t: any) => t.name !== name);
-              if (enabled && def) {
-                const runtime = createCustomToolRuntime(def, {
-                  cwd: session.cwd,
-                  session,
-                  username,
-                  sessionId,
-                });
-                nextTools = [...nextTools, runtime];
-              }
-              session.customTools = nextTools;
-              (session as any)._customTools = nextTools;
-              if (typeof (session as any)._refreshToolRegistry === "function") {
-                (session as any)._refreshToolRegistry();
-              }
-            }
-
-            // Broadcast refresh
-            try {
-              const { broadcastToUser } = await import("../../ws/handler");
-              broadcastToUser(username, {
-                type: "entity-updated",
-                entityType: "custom_tool",
-              });
-            } catch (e) {
-              console.error("Failed to broadcast entity refresh:", e);
+            const folderTool = provider.get(username, name, options);
+            if (folderTool) {
+              folderTool.definition.enabled = enabled;
+              provider.upsert(username, folderTool, options);
             }
 
             return {
-              content: [
-                { type: "text", text: `Custom tool "${name}" enabled status set to ${enabled}.` },
-              ],
-              details: { name, enabled },
+              content: [{ type: "text", text: `Custom tool "${name}" toggled to ${enabled}.` }],
             };
           }
 
           default:
             return {
-              content: [{ type: "text", text: `Invalid action "${action}".` }],
+              content: [{ type: "text", text: `Unknown action "${action}".` }],
               isError: true,
             };
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
         return {
-          content: [{ type: "text", text: `Error managing custom tools: ${err.message || err}` }],
+          content: [{ type: "text", text: `Error managing custom tools: ${errorMsg}` }],
           isError: true,
         };
       }

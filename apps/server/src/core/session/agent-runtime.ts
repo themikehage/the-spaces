@@ -233,7 +233,7 @@ export async function createAgentRuntime(
     await resourceLoader.reload();
   }
 
-  const { customTools: factoryCustomTools, hasExaKey } = sessionToolFactory.createSessionTools({
+  const { customTools: factoryCustomTools, hasExaKey } = await sessionToolFactory.createSessionTools({
     username,
     sessionId,
     workspaceDir,
@@ -321,11 +321,14 @@ export async function createAgentRuntime(
     remove: [...(entityConfig?.toolOverrides?.remove || []), ...(toolOverrides?.remove || [])],
   };
 
+  const customToolNames = finalCustomTools.map((t: any) => t.name);
+
   const combinedTools = resolveActiveTools({
     sessionTools: systemTools,
     hasExaKey,
     memoryEnabled,
     resolvedAgentId: agentId,
+    customToolNames,
     toolOverrides: mergedToolOverrides,
   });
 

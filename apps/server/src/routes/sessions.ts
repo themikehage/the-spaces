@@ -872,11 +872,12 @@ sessionsRouter.post("/:id/tools", zValidator("json", ToolPermissionsSchema), asy
 
   let enabledCustomFromStorage: string[] = [];
   try {
-    const { customToolStorage } = await import("../core/custom-tools/storage");
-    enabledCustomFromStorage = customToolStorage
-      .loadAll(username)
-      .filter((d: any) => d.enabled !== false)
-      .map((d: any) => d.name);
+    const { folderCustomToolStorage } = await import("../core/custom-tools/folder-storage");
+    const workspaceDir = (session as any).cwd || undefined;
+    enabledCustomFromStorage = folderCustomToolStorage
+      .loadAll(username, { workspaceDir })
+      .filter((d) => d.definition.enabled !== false)
+      .map((d) => d.definition.name);
   } catch {
     /* noop */
   }
