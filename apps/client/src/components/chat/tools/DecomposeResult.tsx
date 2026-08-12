@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { toSafeString } from "@/lib/safe-string";
 
 interface TaskItem {
@@ -84,7 +83,7 @@ export function DecomposeResult({ text, details, l }: Props) {
               </div>
 
               {task.prompt && (
-                <div className="ml-7.5 text-[10px] text-muted-foreground leading-relaxed font-mono break-words whitespace-pre-wrap max-h-24 overflow-y-auto opacity-70 group-hover:opacity-100 transition-opacity">
+                <div className="ml-7.5 text-[10px] text-muted-foreground leading-relaxed font-mono break-words whitespace-pre-wrap max-h-24 overflow-y-auto">
                   {task.prompt}
                 </div>
               )}

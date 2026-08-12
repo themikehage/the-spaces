@@ -94,6 +94,11 @@ export function AgentCard({
       )}
 
       <div className="flex items-center gap-1.5 flex-wrap">
+        {((agent as any).tag || (agent as any).definition?.tag) && (
+          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+            {(agent as any).tag || (agent as any).definition?.tag}
+          </span>
+        )}
         {agent.tags && agent.tags.length > 0 && (
           <div className="flex items-center gap-1 flex-wrap">
             {agent.tags.map((tag) => (

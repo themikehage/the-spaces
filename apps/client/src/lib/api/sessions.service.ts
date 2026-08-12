@@ -109,8 +109,14 @@ async function fetchSessionTools(sessionId: string): Promise<any> {
   return res.json();
 }
 
-async function updateSessionTools(sessionId: string, toolsOrConfig: any): Promise<void> {
-  const body = Array.isArray(toolsOrConfig) ? { tools: toolsOrConfig } : toolsOrConfig;
+async function updateSessionTools(
+  sessionId: string,
+  toolsOrConfig: any,
+  mode?: string,
+): Promise<void> {
+  const body = Array.isArray(toolsOrConfig)
+    ? { tools: toolsOrConfig, ...(mode ? { autonomyMode: mode, executionMode: mode } : {}) }
+    : toolsOrConfig;
   const res = await apiFetch(`/api/sessions/${sessionId}/tools`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

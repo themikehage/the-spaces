@@ -116,6 +116,7 @@ export const WorkflowDefinitionSchema = z.object({
   retryCount: z.number().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
+  tag: z.string().max(64).optional(),
 });
 export type WorkflowDefinition = z.infer<typeof WorkflowDefinitionSchema>;
 

@@ -1,8 +1,7 @@
-// SPDX-License-Identifier: MIT
 import { useAuth } from "@/contexts/AuthContext";
 import { useLiterals } from "@/lib";
 import { resolveFileUrl } from "@/lib/file-urls";
-import { Check, ChevronDown, Copy, Zap } from "lucide-react";
+import { ChevronDown, Zap } from "lucide-react";
 import { useState } from "react";
 import { HtmlPreview } from "./HtmlPreview";
 import { ImageGrid } from "./ImageGrid";
@@ -76,7 +75,6 @@ export function AssistantTextBlock({
   activeAgentId?: string | null;
   activeChannelId?: string | null;
 }) {
-  const [copied, setCopied] = useState(false);
   const htmlOutput = isHtml(text) ? text : null;
   const markers = extractFileMarkers(text);
   const imageMarkers = markers.filter((m) => m.type === "image");
@@ -86,31 +84,10 @@ export function AssistantTextBlock({
   const videoMarkers = markers.filter((m) => m.type === "video");
   const officeMarkers = markers.filter((m) => m.type === "office" || m.type === "other");
 
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error("Failed to copy:", err);
-    }
-  };
-
-  const copyButton = (
-    <button
-      onClick={handleCopy}
-      className="absolute top-2 right-2 p-1.5 rounded-md bg-card/80 hover:bg-card border border-border/50 hover:border-primary/30 text-text-secondary hover:text-text-primary transition-all opacity-0 group-hover:opacity-100 backdrop-blur-sm"
-      title={copied ? "Copiado!" : "Copiar mensaje"}
-    >
-      {copied ? <Check size={14} className="text-success" /> : <Copy size={14} />}
-    </button>
-  );
-
   if (htmlOutput || markers.length > 0) {
     const { token } = useAuth();
     return (
-      <div className="relative group">
-        {copyButton}
+      <div className="relative">
         <div className="space-y-3">
           {htmlOutput && <HtmlPreview html={htmlOutput} />}
           {htmlMarkers.map((m, i) => (
@@ -257,10 +234,5 @@ export function AssistantTextBlock({
       </div>
     );
   }
-  return (
-    <div className="relative group">
-      {copyButton}
-      <RichMarkdown content={text} />
-    </div>
-  );
+  return <RichMarkdown content={text} />;
 }

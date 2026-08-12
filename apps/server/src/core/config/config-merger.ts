@@ -19,6 +19,18 @@ export function deepMerge(base: EntityConfig, override: EntityConfig): EntityCon
       continue;
     }
 
+    if (key === "toolOverrides" && isRecord(value) && isRecord(baseValue)) {
+      const baseAdd = Array.isArray(baseValue.add) ? baseValue.add : [];
+      const overrideAdd = Array.isArray(value.add) ? value.add : [];
+      const baseRemove = Array.isArray(baseValue.remove) ? baseValue.remove : [];
+      const overrideRemove = Array.isArray(value.remove) ? value.remove : [];
+      result[key] = {
+        add: Array.from(new Set([...baseAdd, ...overrideAdd])),
+        remove: Array.from(new Set([...baseRemove, ...overrideRemove])),
+      };
+      continue;
+    }
+
     if (isRecord(value)) {
       const baseRecord = isRecord(baseValue) ? baseValue : {};
       result[key] = { ...baseRecord, ...value };

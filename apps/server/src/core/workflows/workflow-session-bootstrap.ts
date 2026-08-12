@@ -52,6 +52,7 @@ export class WorkflowSessionBootstrap implements IWorkflowSessionBootstrap {
       workflowRunId: runId,
       workflowId,
       agentId,
+      autonomyMode: "standard",
       executionMode: "standard",
       workspaceDir,
       startedAt: new Date().toISOString(),

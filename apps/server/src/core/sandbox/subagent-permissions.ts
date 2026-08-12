@@ -85,18 +85,18 @@ export function matchWildcard(value: string, pattern: string): boolean {
 function getBaseRulesForType(subagentType?: string): ToolPermissionRule[] {
   const typeDef = subagentTypeRegistry.get(subagentType);
   const defaults = DEFAULT_SUBAGENT_PERMISSIONS.rules;
-  const profile = typeDef.permissionProfile;
+  const mode = typeDef.autonomyMode;
 
   let baseRules: ToolPermissionRule[] = defaults;
 
-  if (profile === "explorer") {
+  if (mode === "readonly") {
     baseRules = defaults.map((rule) => {
       if (["write", "edit", "bash"].includes(rule.toolName)) {
         return { ...rule, action: "deny" as const };
       }
       return rule;
     });
-  } else if (profile === "autonomous") {
+  } else if (mode === "autonomous") {
     baseRules = defaults.map((rule) => {
       if (["write", "edit", "bash"].includes(rule.toolName)) {
         return { ...rule, action: "allow" as const };
@@ -112,10 +112,6 @@ function getBaseRulesForType(subagentType?: string): ToolPermissionRule[] {
   return baseRules;
 }
 
-/**
- * Build effective ruleset for a subagent session.
- * Merges system defaults, parent limits, metadata rules, and user persistent decisions.
- */
 export function buildSubagentRules(
   username: string,
   subagentSessionId: string,
@@ -124,25 +120,23 @@ export function buildSubagentRules(
 ): ToolPermissionRule[] {
   const rules: ToolPermissionRule[] = [];
 
-  let resolvedType = subagentType;
-  if (!resolvedType) {
-    const meta = sessionMetadataStore.getSessionMetadata(username, subagentSessionId);
-    if (meta) {
-      if (typeof meta.subagentType === "string") {
-        resolvedType = meta.subagentType;
-      } else if (typeof meta.executionMode === "string") {
-        resolvedType =
-          meta.executionMode === "readonly"
-            ? "explorer"
-            : meta.executionMode === "autonomous"
-              ? "autonomous"
-              : "builder";
-      }
-    }
-  }
+  const meta = sessionMetadataStore.getSessionMetadata(username, subagentSessionId);
+  const resolvedType =
+    subagentType ||
+    (meta?.autonomyMode as string) ||
+    (meta?.subagentType as string) ||
+    (meta?.executionMode as string);
 
-  // 1. Defaults for this subagent type
   rules.push(...getBaseRulesForType(resolvedType));
+
+  if (meta && Array.isArray(meta.permissionRules)) {
+    rules.push(
+      ...meta.permissionRules.map((r: any) => ({
+        ...r,
+        source: "agent-default" as const,
+      })),
+    );
+  }
 
   // 2. Parent constraints
   if (parentSessionId) {

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { useAuth } from "@/contexts/AuthContext";
 import { useEscapeKey } from "@/hooks/useEscapeKey";
 import { workspaceService } from "@/lib/api/workspace.service";
@@ -221,14 +220,14 @@ export function ImageGrid({
                 />
               </div>
 
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+              <div className="absolute top-2 right-2 flex items-center gap-1.5 p-1 bg-black/60 backdrop-blur-md rounded-lg border border-white/10 shadow-sm z-10">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     downloadImage(resolved, img.title);
                   }}
                   disabled={isDownloading}
-                  className="p-1.5 bg-white/20 rounded-full hover:bg-white/40 transition-colors disabled:opacity-50 cursor-pointer"
+                  className="p-1.5 bg-white/10 hover:bg-white/30 text-white rounded-md transition-colors disabled:opacity-50 cursor-pointer"
                   title="Download image"
                 >
                   {isDownloading ? (
@@ -242,7 +241,7 @@ export function ImageGrid({
                     e.stopPropagation();
                     openImageInNewTab(resolved);
                   }}
-                  className="p-1.5 bg-white/20 rounded-full hover:bg-white/40 transition-colors cursor-pointer"
+                  className="p-1.5 bg-white/10 hover:bg-white/30 text-white rounded-md transition-colors cursor-pointer"
                   title="Open in new tab"
                 >
                   <ExternalLink size={14} className="text-white" />
@@ -287,20 +286,20 @@ export function ImageGrid({
                   />
                 </div>
 
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                <div className="absolute top-1.5 right-1.5 flex items-center gap-1 p-1 bg-black/60 backdrop-blur-md rounded-md border border-white/10 shadow-sm z-10">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       downloadImage(resolved, img.title);
                     }}
                     disabled={isDownloading}
-                    className="p-1.5 bg-white/20 rounded-full hover:bg-white/40 transition-colors disabled:opacity-50 cursor-pointer"
+                    className="p-1 bg-white/10 hover:bg-white/30 text-white rounded transition-colors disabled:opacity-50 cursor-pointer"
                     title="Download image"
                   >
                     {isDownloading ? (
-                      <Minus size={14} className="animate-spin text-white" />
+                      <Minus size={12} className="animate-spin text-white" />
                     ) : (
-                      <Download size={14} className="text-white" />
+                      <Download size={12} className="text-white" />
                     )}
                   </button>
                   <button
@@ -308,10 +307,10 @@ export function ImageGrid({
                       e.stopPropagation();
                       openImageInNewTab(resolved);
                     }}
-                    className="p-1.5 bg-white/20 rounded-full hover:bg-white/40 transition-colors cursor-pointer"
+                    className="p-1 bg-white/10 hover:bg-white/30 text-white rounded transition-colors cursor-pointer"
                     title="Open in new tab"
                   >
-                    <ExternalLink size={14} className="text-white" />
+                    <ExternalLink size={12} className="text-white" />
                   </button>
                 </div>
 

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+import type { AutonomyMode } from "shared";
 import { buildSessionPath, type ContextPathInput } from "@/router/paths";
 
 export interface SessionContext {
@@ -15,7 +15,8 @@ export interface CreateSessionBody {
   teamId?: string;
   tools?: string[];
   skills?: string[];
-  executionMode?: "readonly" | "standard" | "autonomous";
+  autonomyMode?: AutonomyMode;
+  executionMode?: AutonomyMode;
 }
 
 type ResolvedContext =
@@ -46,16 +47,15 @@ function resolveContext(context: SessionContext): ResolvedContext {
 export function buildCreateSessionBody(
   sessionName: string,
   context: SessionContext,
-  options?: { tools?: string[]; skills?: string[]; executionMode?: string },
+  options?: { tools?: string[]; skills?: string[]; autonomyMode?: AutonomyMode; executionMode?: AutonomyMode },
 ): CreateSessionBody {
   const resolved = resolveContext(context);
+  const activeAutonomy = options?.autonomyMode ?? options?.executionMode;
   const base: CreateSessionBody = {
     name: sessionName,
     ...(options?.tools && options.tools.length > 0 ? { tools: options.tools } : {}),
     ...(options?.skills && options.skills.length > 0 ? { skills: options.skills } : {}),
-    ...(options?.executionMode
-      ? { executionMode: options.executionMode as "readonly" | "standard" | "autonomous" }
-      : {}),
+    ...(activeAutonomy ? { autonomyMode: activeAutonomy, executionMode: activeAutonomy } : {}),
   };
 
   switch (resolved.type) {

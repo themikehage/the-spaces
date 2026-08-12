@@ -1,8 +1,8 @@
-import { SessionPrefix } from "shared";
+import { SessionPrefix, type AutonomyMode } from "shared";
 import { createServerContext } from "../infra/server-context";
 import type { IApprovalManager } from "../ports/core-services.port";
 import type { IWorkspaceResolver } from "../ports/workspace-resolver.port";
-import { extractSubject, permissionEngine, userPermissionStore } from "../sandbox";
+import { permissionEngine } from "../sandbox";
 import { sessionMetadataStore } from "./metadata-store";
 import * as defaultWorkspaceResolver from "./workspace-resolver";
 
@@ -11,7 +11,8 @@ export interface CreateBeforeToolCallHookParams {
   isSubagent?: boolean;
   parentSessionId?: string;
   username?: string;
-  executionMode?: "readonly" | "standard" | "autonomous";
+  autonomyMode?: AutonomyMode;
+  executionMode?: AutonomyMode;
   permissionOverrides?: Record<string, "allow" | "deny" | "ask">;
   workspaceResolver?: IWorkspaceResolver;
   approvalManager?: IApprovalManager;
@@ -22,6 +23,7 @@ export function createBeforeToolCallHook({
   isSubagent,
   parentSessionId,
   username,
+  autonomyMode,
   executionMode,
   permissionOverrides,
   workspaceResolver = defaultWorkspaceResolver,
@@ -38,23 +40,11 @@ export function createBeforeToolCallHook({
 
     const resolvedUsername = username || "default_user";
 
-    const resolvedAutonomy =
-      (sessionMetadataStore.getSessionMetadata(resolvedUsername, sessionId)
-        ?.autonomyLevel as any) ?? "auto";
-
     const resolvedMode =
-      (sessionMetadataStore.getSessionMetadata(resolvedUsername, sessionId)
-        ?.executionMode as any) ?? executionMode;
-
-    if (resolvedAutonomy === "suggest") {
-      const harmlessTools = ["ask_question", "request_approval"];
-      if (!harmlessTools.includes(toolName)) {
-        return {
-          block: true,
-          reason: `[Autonomy: Suggest Mode] Tool execution blocked. Suggested action: ${toolName} with arguments ${JSON.stringify(args)}`,
-        };
-      }
-    }
+      sessionMetadataStore.getAutonomyMode(resolvedUsername, sessionId) ??
+      autonomyMode ??
+      executionMode ??
+      "standard";
 
     const allowedWriteDir = workspaceResolver.resolveSessionAllowedWriteDir(resolvedUsername, sessionId);
 
@@ -63,6 +53,7 @@ export function createBeforeToolCallHook({
       username: resolvedUsername,
       sessionId,
       parentSessionId,
+      autonomyMode: resolvedMode,
       executionMode: resolvedMode,
       allowedWriteDir,
       permissionOverrides,
@@ -71,10 +62,7 @@ export function createBeforeToolCallHook({
       return { block: true, reason: `[Permission Denied] ${verdict.reason}` };
     }
 
-    const harmlessTools = ["ask_question", "request_approval", "memory"];
-    const needsApproval =
-      verdict.allow === "ask" ||
-      (resolvedAutonomy === "propose" && !harmlessTools.includes(toolName));
+    const needsApproval = verdict.allow === "ask";
 
     if (needsApproval) {
       const toolCallId = toolCall.id;
@@ -105,22 +93,9 @@ export function createBeforeToolCallHook({
       try {
         const result = await approvalPromise;
         if (result.action === "deny") {
-          if (result.payload?.persist) {
-            const pattern = String(
-              result.payload.pattern || extractSubject(toolName, args as Record<string, unknown>),
-            );
-            userPermissionStore.saveDecision(resolvedUsername, toolName, pattern, "deny");
-          }
           return { block: true, reason: `[Permission Denied] Rejected by user` };
         }
-
-        if (result.payload?.persist) {
-          const pattern = String(
-            result.payload.pattern || extractSubject(toolName, args as Record<string, unknown>),
-          );
-          userPermissionStore.saveDecision(resolvedUsername, toolName, pattern, "allow");
-        }
-        return undefined; // Approved
+        return undefined;
       } finally {
         if (signal) {
           signal.removeEventListener("abort", onAbort);
@@ -128,6 +103,7 @@ export function createBeforeToolCallHook({
       }
     }
 
-    return undefined; // Allowed
+    return undefined;
   };
 }
+

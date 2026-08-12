@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { AVAILABLE_TOOLS, getSessionDir } from "shared";
+import { AVAILABLE_TOOLS, type AutonomyMode, getSessionDir } from "shared";
 
 export interface TeamConfigReader {
   getTeamType(username: string, teamId: string): string | null;
@@ -137,26 +137,20 @@ export class SessionMetadataStore {
     }
   }
 
-  setExecutionMode(
-    username: string,
-    sessionId: string,
-    mode: "readonly" | "standard" | "autonomous",
-  ): void {
-    this.saveSessionMetadata(username, sessionId, { executionMode: mode });
+  setAutonomyMode(username: string, sessionId: string, mode: AutonomyMode): void {
+    this.saveSessionMetadata(username, sessionId, { autonomyMode: mode, executionMode: mode });
   }
 
-  getExecutionMode(
-    username: string,
-    sessionId: string,
-  ): "readonly" | "standard" | "autonomous" | undefined {
+  setExecutionMode(username: string, sessionId: string, mode: AutonomyMode): void {
+    this.setAutonomyMode(username, sessionId, mode);
+  }
+
+  getAutonomyMode(username: string, sessionId: string): AutonomyMode | undefined {
     const metadata = this.getSessionMetadata(username, sessionId);
     if (metadata) {
-      if (
-        metadata.executionMode === "readonly" ||
-        metadata.executionMode === "standard" ||
-        metadata.executionMode === "autonomous"
-      ) {
-        return metadata.executionMode;
+      const mode = metadata.autonomyMode ?? metadata.executionMode;
+      if (mode === "readonly" || mode === "standard" || mode === "autonomous") {
+        return mode;
       }
       if (metadata.teamId) {
         try {
@@ -172,25 +166,8 @@ export class SessionMetadataStore {
     return undefined;
   }
 
-  setAutonomyLevel(
-    username: string,
-    sessionId: string,
-    level: "auto" | "propose" | "suggest",
-  ): void {
-    this.saveSessionMetadata(username, sessionId, { autonomyLevel: level });
-  }
-
-  getAutonomyLevel(username: string, sessionId: string): "auto" | "propose" | "suggest" {
-    const metadata = this.getSessionMetadata(username, sessionId);
-    if (
-      metadata &&
-      (metadata.autonomyLevel === "auto" ||
-        metadata.autonomyLevel === "propose" ||
-        metadata.autonomyLevel === "suggest")
-    ) {
-      return metadata.autonomyLevel;
-    }
-    return "auto";
+  getExecutionMode(username: string, sessionId: string): AutonomyMode | undefined {
+    return this.getAutonomyMode(username, sessionId);
   }
 
   computeAndPersistMetrics(username: string, sessionId: string, session: any): void {

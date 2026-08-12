@@ -90,6 +90,7 @@ describe("Dynamic Workspaces & Permissions Tests", () => {
       { path: join(allowedDir, "src", "index.ts") },
       {
         allowedWriteDir: allowedDir,
+        autonomyMode: "standard",
         executionMode: "standard",
       },
     );
@@ -101,6 +102,7 @@ describe("Dynamic Workspaces & Permissions Tests", () => {
       { path: "src/App.jsx" },
       {
         allowedWriteDir: allowedDir,
+        autonomyMode: "standard",
         executionMode: "standard",
       },
     );
@@ -112,6 +114,7 @@ describe("Dynamic Workspaces & Permissions Tests", () => {
       { path: "/tmp/somefile.txt" },
       {
         allowedWriteDir: allowedDir,
+        autonomyMode: "standard",
         executionMode: "standard",
       },
     );
@@ -123,6 +126,7 @@ describe("Dynamic Workspaces & Permissions Tests", () => {
       { path: join(userDir, "other-agent", "index.ts") },
       {
         allowedWriteDir: allowedDir,
+        autonomyMode: "standard",
         executionMode: "standard",
       },
     );
@@ -134,6 +138,7 @@ describe("Dynamic Workspaces & Permissions Tests", () => {
       { path: "../outside.ts" },
       {
         allowedWriteDir: allowedDir,
+        autonomyMode: "standard",
         executionMode: "standard",
       },
     );
@@ -145,6 +150,7 @@ describe("Dynamic Workspaces & Permissions Tests", () => {
       { path: join(userDir, "other-agent", "index.ts") },
       {
         allowedWriteDir: allowedDir,
+        autonomyMode: "autonomous",
         executionMode: "autonomous",
       },
     );

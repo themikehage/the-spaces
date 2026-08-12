@@ -93,8 +93,14 @@ export async function handleSessionWsMessage(
       });
 
       if (resolvedBaseTools.length > 0) {
-        (session as any).customTools = resolvedBaseTools;
-        (session as any)._customTools = resolvedBaseTools;
+        const current: unknown[] = (session as any).customTools ?? [];
+        const resolvedNames = new Set(resolvedBaseTools.map((t: any) => t.name));
+        const merged = [
+          ...resolvedBaseTools,
+          ...current.filter((t: any) => t && !resolvedNames.has(t.name)),
+        ];
+        (session as any).customTools = merged;
+        (session as any)._customTools = merged;
         if (typeof (session as any)._refreshToolRegistry === "function") {
           (session as any)._refreshToolRegistry();
         }

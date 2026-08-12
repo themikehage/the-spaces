@@ -23,6 +23,9 @@ export {
   type WsServerMessage,
 } from "./ws-messages";
 
+export const AutonomyModeSchema = z.enum(["readonly", "standard", "autonomous"]);
+export type AutonomyMode = z.infer<typeof AutonomyModeSchema>;
+
 export const SessionSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -44,6 +47,7 @@ export const SessionSchema = z.object({
   turnCount: z.number().optional(),
   schedulingMode: z.string().optional(),
   archived: z.boolean().optional(),
+  autonomyMode: AutonomyModeSchema.optional(),
 });
 
 export const CreateSessionSchema = z.object({
@@ -53,7 +57,8 @@ export const CreateSessionSchema = z.object({
   teamId: z.string().optional(),
   tools: z.array(z.string()).optional(),
   skills: z.array(z.string()).optional(),
-  executionMode: z.enum(["readonly", "standard", "autonomous"]).optional(),
+  autonomyMode: AutonomyModeSchema.optional(),
+  executionMode: AutonomyModeSchema.optional(),
 });
 
 export const ModelSettingsSchema = z.object({
@@ -77,11 +82,12 @@ export {
 
 export const ToolPermissionsSchema = z.object({
   tools: z.array(z.string().min(1)),
-  executionMode: z.enum(["readonly", "standard", "autonomous"]).optional(),
-  autonomyLevel: z.enum(["auto", "propose", "suggest"]).optional(),
+  autonomyMode: AutonomyModeSchema.optional(),
+  executionMode: AutonomyModeSchema.optional(),
 });
 export type ToolPermissions = z.infer<typeof ToolPermissionsSchema>;
-export type ExecutionMode = NonNullable<z.infer<typeof ToolPermissionsSchema>["executionMode"]>;
+export const ExecutionModeSchema = AutonomyModeSchema;
+export type ExecutionMode = AutonomyMode;
 
 export const SetApiKeySchema = z.object({
   apiKey: z.string().min(1),
@@ -271,6 +277,7 @@ export const AgentDefinitionSchema = z.object({
   /** @deprecated Use agent type and capabilities instead */
   scope: AgentRefSchema.optional(),
   tags: z.array(z.string()).optional(),
+  tag: z.string().max(64).optional(),
   description: z.string().max(500).optional(),
   type: AgentTypeSchema.optional(),
   workflowId: z.string().optional(),
@@ -645,6 +652,7 @@ export const TeamSchema = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
   blueprintId: z.string().optional(),
+  tag: z.string().max(64).optional(),
 });
 export type Team = z.infer<typeof TeamSchema>;
 
@@ -663,6 +671,7 @@ export const CreateTeamSchema = z.object({
   avatarUrl: z.string().optional(),
   context: z.array(TeamContextItemSchema).optional(),
   blueprintId: z.string().optional(),
+  tag: z.string().max(64).optional(),
 });
 export type CreateTeam = z.infer<typeof CreateTeamSchema>;
 
@@ -864,6 +873,7 @@ export const ProjectSchema = z.object({
   status: ProjectStatusSchema.default("planning"),
   createdAt: z.string(),
   assignment: ProjectAssignmentSchema.optional().nullable(),
+  tag: z.string().max(64).optional(),
 });
 export type Project = z.infer<typeof ProjectSchema>;
 

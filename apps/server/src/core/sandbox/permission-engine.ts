@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+import type { AutonomyMode } from "shared";
 import { tmpdir } from "node:os";
 import { isAbsolute, resolve, sep } from "node:path";
 import { buildSubagentRules, evaluateSubagentRules } from "./subagent-permissions";
@@ -11,7 +11,8 @@ export interface PermissionEngineOptions {
   username?: string;
   sessionId?: string;
   parentSessionId?: string;
-  executionMode?: "readonly" | "standard" | "autonomous";
+  autonomyMode?: AutonomyMode;
+  executionMode?: AutonomyMode;
   allowedWriteDir?: string;
   permissionOverrides?: Record<string, "allow" | "deny" | "ask">;
 }
@@ -168,14 +169,15 @@ export class PermissionEngine {
       }
     }
 
-    // 2. Evaluate filesystem sandbox dynamic rules if allowedWriteDir is provided
+    const activeMode = options?.autonomyMode ?? options?.executionMode;
+
     if ((toolName === "write" || toolName === "edit") && options?.allowedWriteDir) {
       const targetPath = subject;
       const allowedDir = options.allowedWriteDir;
       const isInsideAllowed = this.isSubpath(allowedDir, targetPath) || this.isTempPath(targetPath);
 
       if (!isInsideAllowed) {
-        if (options.executionMode !== "autonomous") {
+        if (activeMode !== "autonomous") {
           return {
             allow: "ask",
             reason: `Writing/Editing outside the authorized workspace (${allowedDir}) requires confirmation.`,
@@ -184,19 +186,12 @@ export class PermissionEngine {
       }
     }
 
-    // 3. Evaluate dynamic rules for subagents if username and sessionId are available
     if (options?.isSubagent && options.username && options.sessionId) {
-      const subagentType =
-        options.executionMode === "readonly"
-          ? "explorer"
-          : options.executionMode === "autonomous"
-            ? "autonomous"
-            : "builder";
       const dynamicRules = buildSubagentRules(
         options.username,
         options.sessionId,
         options.parentSessionId,
-        subagentType,
+        activeMode,
       );
       const verdict = evaluateSubagentRules(toolName, args, dynamicRules);
       if (verdict) {
@@ -204,8 +199,20 @@ export class PermissionEngine {
       }
     }
 
-    // 4. Fall back to static ASK rules (skipped for autonomous mode)
-    if (options?.executionMode !== "autonomous") {
+    if (options?.permissionOverrides) {
+      const override = options.permissionOverrides[toolName] ?? options.permissionOverrides["*"];
+      if (override === "allow") {
+        return { allow: true };
+      }
+      if (override === "deny") {
+        return { allow: false, reason: `Blocked by permission override for tool ${toolName}` };
+      }
+      if (override === "ask") {
+        return { allow: "ask", reason: `Approval required by permission override for tool ${toolName}` };
+      }
+    }
+
+    if (activeMode !== "autonomous") {
       for (const rule of ASK_RULES) {
         if ((rule.tool === "write" || rule.tool === "edit") && options?.allowedWriteDir) {
           continue;

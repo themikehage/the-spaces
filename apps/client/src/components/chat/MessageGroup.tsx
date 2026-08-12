@@ -1,10 +1,80 @@
-// SPDX-License-Identifier: MIT
 import { AgentAvatar } from "@/components/shared/AgentAvatar";
 import { formatTimestamp, type Message } from "@/lib/message-grouping";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Check, Copy } from "lucide-react";
+import { useState } from "react";
 import { AssistantTextBlock, ThinkingBlock } from "./MessageBlocks";
 import { BranchNav } from "./SystemMessage";
 import { ToolCallRow, type ToolResultData } from "./tools/ToolCallRow";
+
+function AssistantMessageFooter({ msg }: { msg: Message }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    const rawText =
+      typeof msg.content === "string"
+        ? msg.content
+        : Array.isArray(msg.content)
+          ? (msg.content as Array<{ text?: string }>).map((b) => b.text ?? "").join(" ")
+          : "";
+    try {
+      await navigator.clipboard.writeText(rawText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
+
+  return (
+    <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 mt-2 text-xs text-muted-foreground font-mono select-none">
+      <button
+        type="button"
+        onClick={handleCopy}
+        className="flex items-center gap-1 text-[11px] hover:text-foreground transition-colors cursor-pointer"
+        title={copied ? "Copiado!" : "Copiar mensaje"}
+      >
+        {copied ? <Check size={11} className="text-success" /> : <Copy size={11} />}
+        <span>{copied ? "Copiado" : "Copiar"}</span>
+      </button>
+      {msg.provider && (
+        <span>
+          • provider: <span className="text-muted-foreground">{msg.provider}</span>
+        </span>
+      )}
+      {msg.model && (
+        <span>
+          • model: <span className="text-muted-foreground">{msg.model}</span>
+        </span>
+      )}
+      {msg.usage && (
+        <>
+          <span>
+            • tokens:{" "}
+            <span className="text-muted-foreground">
+              {msg.usage.totalTokens ?? msg.usage.input + msg.usage.output}
+            </span>
+          </span>
+          {typeof msg.usage.cost?.total === "number" && (
+            <span>
+              • cost:{" "}
+              <span className="text-muted-foreground">
+                ${msg.usage.cost.total.toFixed(6)}
+              </span>
+            </span>
+          )}
+        </>
+      )}
+      {msg.timestamp && (
+        <span>
+          •{" "}
+          <span className="text-muted-foreground">
+            {formatTimestamp(msg.timestamp)}
+          </span>
+        </span>
+      )}
+    </div>
+  );
+}
 
 interface MessageGroupProps {
   messages: Message[];
@@ -169,46 +239,7 @@ export function MessageGroup({
                 <span className="inline-block w-2 h-4 ml-1 bg-primary animate-pulse rounded-sm" />
               )}
 
-              {(msg.provider || msg.model || msg.usage || msg.timestamp) && !isStreaming && (
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-2 text-xs text-muted-foreground font-mono">
-                  {msg.provider && (
-                    <span>
-                      provider: <span className="text-muted-foreground">{msg.provider}</span>
-                    </span>
-                  )}
-                  {msg.model && (
-                    <span>
-                      • model: <span className="text-muted-foreground">{msg.model}</span>
-                    </span>
-                  )}
-                  {msg.usage && (
-                    <>
-                      <span>
-                        • tokens:{" "}
-                        <span className="text-muted-foreground">
-                          {msg.usage.totalTokens ?? msg.usage.input + msg.usage.output}
-                        </span>
-                      </span>
-                      {typeof msg.usage.cost?.total === "number" && (
-                        <span>
-                          • cost:{" "}
-                          <span className="text-muted-foreground">
-                            ${msg.usage.cost.total.toFixed(6)}
-                          </span>
-                        </span>
-                      )}
-                    </>
-                  )}
-                  {msg.timestamp && (
-                    <span>
-                      •{" "}
-                      <span className="text-muted-foreground">
-                        {formatTimestamp(msg.timestamp)}
-                      </span>
-                    </span>
-                  )}
-                </div>
-              )}
+              {!isStreaming && <AssistantMessageFooter msg={msg} />}
             </div>
           );
         })}

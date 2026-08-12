@@ -151,11 +151,9 @@ export async function createAgentRuntime(
 
   const metadata = sessionMetadataStore.getSessionMetadata(username, sessionId);
 
-  if (entityConfig.autonomyLevel && (!metadata || !metadata.autonomyLevel)) {
-    sessionMetadataStore.setAutonomyLevel(username, sessionId, entityConfig.autonomyLevel);
-  }
-  if (entityConfig.executionMode && (!metadata || !metadata.executionMode)) {
-    sessionMetadataStore.setExecutionMode(username, sessionId, entityConfig.executionMode as any);
+  const activeAutonomy = entityConfig.autonomyMode ?? entityConfig.executionMode;
+  if (activeAutonomy && (!metadata || (!metadata.autonomyMode && !metadata.executionMode))) {
+    sessionMetadataStore.setAutonomyMode(username, sessionId, activeAutonomy);
   }
   const skillPaths = getResolvedSkillPaths(workspaceDir, username);
   const metadataSkills: string[] =
@@ -258,9 +256,32 @@ export async function createAgentRuntime(
     ];
   }
 
+  const isSubagent =
+    profile === "subagent" ||
+    profile === "delegate" ||
+    sessionId.startsWith(SessionPrefix.SUBAGENT) ||
+    sessionId.startsWith(SessionPrefix.DELEGATE);
+
+  let existingParentId = parentSessionId;
+  let existingSubagentType = subagentType;
+
+  if (isSubagent && (!existingParentId || !existingSubagentType)) {
+    const metadataPath = join(sessionDir, "metadata.json");
+    if (existsSync(metadataPath)) {
+      try {
+        const meta = JSON.parse(readFileSync(metadataPath, "utf-8"));
+        if (!existingParentId) existingParentId = meta.parentSessionId;
+        if (!existingSubagentType) existingSubagentType = meta.subagentType;
+      } catch {
+        /* noop */
+      }
+    }
+  }
+
   const beforeToolCall = createBeforeToolCallHook({
     sessionId,
     isSubagent: toolProfile === "subagent" || toolProfile === "agent-server",
+    parentSessionId: existingParentId,
     username,
     permissionOverrides: entityConfig.permissionOverrides,
     approvalManager: createServerContext().approvalManager,
@@ -290,28 +311,6 @@ export async function createAgentRuntime(
       await session.setModel(resolvedModel);
     } catch (e) {
       console.error(`[AgentRuntime] Failed to set resolved model for session ${sessionId}:`, e);
-    }
-  }
-
-  const isSubagent =
-    profile === "subagent" ||
-    profile === "delegate" ||
-    sessionId.startsWith(SessionPrefix.SUBAGENT) ||
-    sessionId.startsWith(SessionPrefix.DELEGATE);
-
-  let existingParentId = parentSessionId;
-  let existingSubagentType = subagentType;
-
-  if (isSubagent && (!existingParentId || !existingSubagentType)) {
-    const metadataPath = join(sessionDir, "metadata.json");
-    if (existsSync(metadataPath)) {
-      try {
-        const meta = JSON.parse(readFileSync(metadataPath, "utf-8"));
-        if (!existingParentId) existingParentId = meta.parentSessionId;
-        if (!existingSubagentType) existingSubagentType = meta.subagentType;
-      } catch {
-        /* noop */
-      }
     }
   }
 

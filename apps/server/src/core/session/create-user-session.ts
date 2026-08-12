@@ -1,5 +1,4 @@
-// SPDX-License-Identifier: MIT
-import { getTeamWorkspaceDir } from "shared";
+import { getTeamWorkspaceDir, type AutonomyMode } from "shared";
 import { createServerContext, type ServerContext } from "../infra/server-context";
 import { teamStore as defaultTeamStore } from "../../teams/team-store";
 import { resolveCanonicalProjectId } from "./workspace-resolver";
@@ -43,7 +42,8 @@ export interface CreateUserSessionInput {
   teamId?: string;
   tools?: string[];
   skills?: string[];
-  executionMode?: "readonly" | "standard" | "autonomous";
+  autonomyMode?: AutonomyMode;
+  executionMode?: AutonomyMode;
   context?: ServerContext;
 }
 
@@ -60,7 +60,8 @@ export interface CreatedSessionDto {
 }
 
 export async function createUserSession(input: CreateUserSessionInput): Promise<CreatedSessionDto> {
-  const { username, name, projectId, agentId, teamId, tools, skills, executionMode, context } = input;
+  const { username, name, projectId, agentId, teamId, tools, skills, autonomyMode, executionMode, context } = input;
+  const activeAutonomy = autonomyMode ?? executionMode;
   const serverCtx = context ?? createServerContext();
   const sessionManager = serverCtx.sessionManager as any;
   const agentRegistry = serverCtx.agentRegistry;
@@ -108,7 +109,7 @@ export async function createUserSession(input: CreateUserSessionInput): Promise<
     projectId: resolvedProjectId || null,
     agentId: ownerAgentId || null,
     teamId: teamId || null,
-    ...(executionMode ? { executionMode } : {}),
+    ...(activeAutonomy ? { autonomyMode: activeAutonomy, executionMode: activeAutonomy } : {}),
     ...(skills ? { skills } : {}),
   });
 

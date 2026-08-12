@@ -17,6 +17,7 @@ interface Props {
     name?: string;
     description?: string;
     avatarUrl?: string;
+    tag?: string;
     maxRounds?: number;
     showThinking?: boolean;
     showTools?: boolean;
@@ -40,6 +41,7 @@ export function TeamSettingsModal({
   const [activeTab, setActiveTab] = useState<"general" | "prompts">("general");
   const [name, setName] = useState(team.name);
   const [description, setDescription] = useState(team.description || "");
+  const [tag, setTag] = useState(team.tag || "");
   const [showThinking, setShowThinking] = useState(team.showThinking ?? false);
   const [showTools, setShowTools] = useState(team.showTools ?? false);
   const [streamingEnabled, setStreamingEnabled] = useState(team.streamingEnabled ?? true);
@@ -65,6 +67,7 @@ export function TeamSettingsModal({
   useEffect(() => {
     setName(team.name);
     setDescription(team.description || "");
+    setTag(team.tag || "");
     setShowThinking(team.showThinking ?? false);
     setShowTools(team.showTools ?? false);
     setStreamingEnabled(team.streamingEnabled ?? true);
@@ -116,6 +119,7 @@ export function TeamSettingsModal({
       await onSave({
         name: name.trim(),
         description: description.trim() || undefined,
+        tag: tag.trim() || undefined,
         showThinking,
         showTools,
         streamingEnabled,
@@ -205,6 +209,20 @@ export function TeamSettingsModal({
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-medium text-muted-foreground block mb-1">
+              Tag
+            </label>
+            <input
+              type="text"
+              value={tag}
+              onChange={(e) => setTag(e.target.value)}
+              placeholder="e.g. backend, frontend, core"
+              maxLength={64}
               className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
             />
           </div>

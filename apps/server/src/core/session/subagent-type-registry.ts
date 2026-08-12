@@ -1,10 +1,11 @@
+import type { AutonomyMode } from "shared";
 import type { ToolPermissionRule } from "../sandbox/subagent-permissions";
 
 export interface SubagentTypeDefinition {
   id: string;
   label: string;
   systemPromptAppend?: string;
-  permissionProfile: "explorer" | "builder" | "autonomous" | "custom";
+  autonomyMode: AutonomyMode;
   customRules?: ToolPermissionRule[];
   excludedTools?: string[];
 }
@@ -18,23 +19,23 @@ export class SubagentTypeRegistry {
 
   private registerDefaults(): void {
     this.register({
-      id: "explorer",
-      label: "Explorer (Read-Only)",
-      permissionProfile: "explorer",
+      id: "readonly",
+      label: "Read-Only (Explorer)",
+      autonomyMode: "readonly",
       systemPromptAppend: "You are an explorer subagent. Focus on reading and analyzing code.",
     });
 
     this.register({
-      id: "builder",
-      label: "Builder (Standard)",
-      permissionProfile: "builder",
+      id: "standard",
+      label: "Standard (Builder)",
+      autonomyMode: "standard",
       systemPromptAppend: "You are a builder subagent. Implement changes accurately.",
     });
 
     this.register({
       id: "autonomous",
       label: "Autonomous (Full)",
-      permissionProfile: "autonomous",
+      autonomyMode: "autonomous",
       systemPromptAppend: "You are an autonomous subagent with permission to execute modifications.",
     });
   }
@@ -45,10 +46,17 @@ export class SubagentTypeRegistry {
 
   get(id?: string): SubagentTypeDefinition {
     if (!id) {
-      return this.types.get("builder")!;
+      return this.types.get("standard")!;
     }
-    const found = this.types.get(id.toLowerCase());
-    return found || this.types.get("builder")!;
+    const normalized = id.toLowerCase();
+    const aliasMap: Record<string, string> = {
+      explorer: "readonly",
+      builder: "standard",
+      "read-only": "readonly",
+    };
+    const resolvedId = aliasMap[normalized] || normalized;
+    const found = this.types.get(resolvedId);
+    return found || this.types.get("standard")!;
   }
 
   list(): SubagentTypeDefinition[] {
@@ -56,8 +64,15 @@ export class SubagentTypeRegistry {
   }
 
   has(id: string): boolean {
-    return this.types.has(id.toLowerCase());
+    const normalized = id.toLowerCase();
+    const aliasMap: Record<string, string> = {
+      explorer: "readonly",
+      builder: "standard",
+      "read-only": "readonly",
+    };
+    return this.types.has(aliasMap[normalized] || normalized);
   }
 }
 
 export const subagentTypeRegistry = new SubagentTypeRegistry();
+

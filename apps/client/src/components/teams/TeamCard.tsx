@@ -40,11 +40,16 @@ export function TeamCard({ team, registeredAgents, onOpen }: Props) {
             className="flex-shrink-0"
           />
           <div className="min-w-0 flex flex-col gap-0.5">
-            <div className="flex items-center gap-1.5 min-w-0">
+            <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
               <h3 className="font-medium text-foreground text-sm truncate">{team.name}</h3>
               <span className="px-1.5 py-0.5 text-[9px] font-semibold rounded-full flex-shrink-0 bg-accent/15 text-accent border border-accent/25">
                 {team.teamType || "Orchestration"}
               </span>
+              {team.tag && (
+                <span className="px-1.5 py-0.5 text-[9px] font-semibold rounded-full flex-shrink-0 bg-primary/10 text-primary border border-primary/20">
+                  {team.tag}
+                </span>
+              )}
             </div>
             {team.description && (
               <p className="text-muted-foreground text-xs truncate">{team.description}</p>

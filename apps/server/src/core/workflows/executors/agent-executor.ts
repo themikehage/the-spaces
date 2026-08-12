@@ -32,6 +32,7 @@ export async function executeAgentStep(
     workflowRunId: run.id,
     workflowId: run.workflowId,
     agentId,
+    autonomyMode: "standard",
     executionMode: "standard",
     workspaceDir,
     startedAt,

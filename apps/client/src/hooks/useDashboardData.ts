@@ -58,6 +58,7 @@ export function useDashboardData({ onNavigate }: UseDashboardDataParams) {
   const [projectName, setRepoName] = useState("");
   const [cloneUrl, setCloneUrl] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [tag, setTag] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -167,6 +168,7 @@ export function useDashboardData({ onNavigate }: UseDashboardDataParams) {
         name: projectName.trim(),
         cloneUrl: cloneUrl.trim() || undefined,
         avatarUrl: avatarUrl.trim() || undefined,
+        tag: tag.trim() || undefined,
       });
 
       await fetchData();
@@ -175,6 +177,7 @@ export function useDashboardData({ onNavigate }: UseDashboardDataParams) {
       setRepoName("");
       setCloneUrl("");
       setAvatarUrl("");
+      setTag("");
     } catch (err: any) {
       setSubmitError(err.message);
     } finally {
@@ -265,6 +268,8 @@ export function useDashboardData({ onNavigate }: UseDashboardDataParams) {
     setCloneUrl,
     avatarUrl,
     setAvatarUrl,
+    tag,
+    setTag,
     submitting,
     submitError,
     setSubmitError,

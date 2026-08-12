@@ -271,7 +271,8 @@ export class AgentSession implements IAgentRuntime {
       const allTools = this.toolRegistry.getAllTools();
       const allNames = allTools.map((t) => t.name);
       const newNames = allNames.filter((n) => !prevSet.has(n));
-      const activeNames = [...prevActiveNames, ...newNames];
+      const survivingPrev = prevActiveNames.filter((n) => !!this.toolRegistry.getTool(n));
+      const activeNames = [...survivingPrev, ...newNames];
       const active = activeNames
         .map((name) => this.toolRegistry.getTool(name))
         .filter(Boolean) as ITool[];

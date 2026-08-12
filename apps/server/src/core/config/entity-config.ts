@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
+import type { AutonomyMode } from "shared";
+
 export interface EntityConfig {
   defaultModel?: string;
-  autonomyLevel?: "auto" | "propose" | "suggest";
-  executionMode?: string;
+  autonomyMode?: AutonomyMode;
+  executionMode?: AutonomyMode;
   toolOverrides?: {
     add?: string[];
     remove?: string[];
@@ -14,3 +16,4 @@ export interface EntityConfig {
   hooks?: Record<string, unknown>;
   [key: string]: unknown;
 }
+

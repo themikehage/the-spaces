@@ -69,8 +69,15 @@ export async function spawnSubagent(params: SpawnSubagentParams): Promise<Envelo
   const parentMeta =
     sessionManager.metadataStore.getSessionMetadata(username, parentSessionId) || {};
   const parentExecutionMode = parentMeta.executionMode;
-  const rawSubagentType =
-    subagentType || (parentExecutionMode === "autonomous" ? "autonomous" : "builder");
+
+  let rawSubagentType = subagentType;
+  if (parentExecutionMode === "autonomous" && rawSubagentType !== "explorer") {
+    rawSubagentType = "autonomous";
+  } else if (parentExecutionMode === "readonly") {
+    rawSubagentType = "explorer";
+  } else if (!rawSubagentType) {
+    rawSubagentType = "builder";
+  }
 
   const { subagentTypeRegistry } = await import("./subagent-type-registry");
   const typeDef = subagentTypeRegistry.get(rawSubagentType);
@@ -83,12 +90,7 @@ export async function spawnSubagent(params: SpawnSubagentParams): Promise<Envelo
     resolvedSubagentType,
   );
 
-  const derivedExecutionMode =
-    typeDef.permissionProfile === "explorer"
-      ? "readonly"
-      : typeDef.permissionProfile === "autonomous"
-        ? "autonomous"
-        : "standard";
+  const derivedExecutionMode = typeDef.autonomyMode;
 
   const parentRef = resolveParentRef(parentMeta);
   const parentEntityType = parentRef.type;

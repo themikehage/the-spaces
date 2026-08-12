@@ -8,7 +8,7 @@ import { attentionStore } from "@/lib/attention/attention-store";
 import { wsClient } from "@/lib/ws-client";
 import { AlertTriangle, Check, HelpCircle, Play, Send, Shield, Users, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import type { ProjectStatus } from "shared";
+import type { AutonomyMode, ProjectStatus } from "shared";
 import { ProjectStatusSchema } from "shared";
 import { ProjectAssignmentModal } from "./ProjectAssignmentModal";
 
@@ -40,9 +40,7 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [autonomyMap, setAutonomyMap] = useState<Record<string, "auto" | "propose" | "suggest">>(
-    {},
-  );
+  const [autonomyMap, setAutonomyMap] = useState<Record<string, AutonomyMode>>({});
   const [steerMessages, setSteerMessages] = useState<Record<string, string>>({});
   const [startingAgent, setStartingAgent] = useState<string | null>(null);
 
@@ -53,7 +51,6 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
     if (!projectId) return;
     try {
       setError(null);
-      // Fetch project details
       const [projData, assignData, agentsData, sessionsData] = await Promise.all([
         projectsService.fetchProjects().catch(() => []),
         projectsService.fetchProjectAssignment(projectId).catch(() => null),
@@ -69,16 +66,17 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
       setAgents((agentsData as any).agents || agentsData || []);
       setSessions(sessionsData);
 
-      const map: Record<string, "auto" | "propose" | "suggest"> = {};
+      const map: Record<string, AutonomyMode> = {};
       await Promise.all(
         sessionsData.map(async (s: any) => {
           try {
             const tools = await sessionsService.fetchSessionTools(s.id);
-            if (tools.autonomyLevel) {
-              map[s.id] = tools.autonomyLevel;
+            const mode = tools.autonomyMode ?? tools.executionMode;
+            if (mode) {
+              map[s.id] = mode;
             }
           } catch {
-            // ignore
+            /* noop */
           }
         }),
       );
@@ -139,16 +137,14 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
     }
   };
 
-  const changeAutonomyLevel = async (sessionId: string, level: "auto" | "propose" | "suggest") => {
+  const changeAutonomyMode = async (sessionId: string, mode: AutonomyMode) => {
     try {
       const toolsData = await sessionsService.fetchSessionTools(sessionId);
-      await sessionsService.updateSessionTools(
-        sessionId,
-        (toolsData as any).tools || toolsData || [],
-      );
-      setAutonomyMap((prev) => ({ ...prev, [sessionId]: level }));
+      const currentTools = (toolsData as any).tools || toolsData || [];
+      await sessionsService.updateSessionTools(sessionId, currentTools, mode);
+      setAutonomyMap((prev) => ({ ...prev, [sessionId]: mode }));
     } catch (err) {
-      console.error("Failed to change autonomy level:", err);
+      console.error("Failed to change autonomy mode:", err);
     }
   };
 
@@ -335,26 +331,25 @@ export function ProjectFloorPanel({ projectId }: ProjectFloorPanelProps) {
                   <div className="flex-1 py-4 flex flex-col justify-between min-h-[140px]">
                     {session ? (
                       <div className="flex-1 flex flex-col justify-between">
-                        {/* Autonomy Level Control */}
                         <div className="mb-3.5">
                           <label className="text-[9px] uppercase tracking-wider text-muted-foreground font-extrabold block mb-1">
-                            Nivel de Autonomía
+                            Modo de Autonomía
                           </label>
                           <div className="grid grid-cols-3 gap-1 bg-surface-hover/80 rounded-xl p-0.5 border border-input/5">
-                            {(["auto", "propose", "suggest"] as const).map((lvl) => (
+                            {(["readonly", "standard", "autonomous"] as const).map((mode) => (
                               <button
-                                key={lvl}
-                                onClick={() => changeAutonomyLevel(session.id, lvl)}
+                                key={mode}
+                                onClick={() => changeAutonomyMode(session.id, mode)}
                                 className={`py-1 text-[9px] font-bold rounded-lg transition-all capitalize cursor-pointer flex items-center justify-center gap-1 ${
-                                  autonomy === lvl
+                                  autonomy === mode
                                     ? "bg-bg text-foreground shadow border border-input/10"
                                     : "text-muted-foreground hover:text-foreground"
                                 }`}
                               >
-                                {lvl === "auto" && <Shield size={10} />}
-                                {lvl === "propose" && <HelpCircle size={10} />}
-                                {lvl === "suggest" && <AlertTriangle size={10} />}
-                                {lvl}
+                                {mode === "autonomous" && <Shield size={10} />}
+                                {mode === "standard" && <HelpCircle size={10} />}
+                                {mode === "readonly" && <AlertTriangle size={10} />}
+                                {mode}
                               </button>
                             ))}
                           </div>

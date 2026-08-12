@@ -8,7 +8,7 @@ import { literals as u } from "./ProjectCreateModal.literals";
 
 interface ProjectCreateModalProps {
   onClose: () => void;
-  onSubmit: (data: { name: string; cloneUrl?: string; avatarUrl?: string }) => Promise<any>;
+  onSubmit: (data: { name: string; cloneUrl?: string; avatarUrl?: string; tag?: string }) => Promise<any>;
   onUploadAvatar?: (id: string, file: File) => Promise<string>;
 }
 
@@ -16,6 +16,7 @@ export function ProjectCreateModal({ onClose, onSubmit, onUploadAvatar }: Projec
   const l = useLiterals(u);
   const [name, setName] = useState("");
   const [cloneUrl, setCloneUrl] = useState("");
+  const [tag, setTag] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,6 +60,7 @@ export function ProjectCreateModal({ onClose, onSubmit, onUploadAvatar }: Projec
         name: name.trim(),
         cloneUrl: cloneUrl.trim() || undefined,
         avatarUrl: resolvedAvatarUrl,
+        tag: tag.trim() || undefined,
       });
 
       const projectId = project?.id;
@@ -121,6 +123,20 @@ export function ProjectCreateModal({ onClose, onSubmit, onUploadAvatar }: Projec
             placeholder={l.cloneUrlPlaceholder}
             value={cloneUrl}
             onChange={(e) => setCloneUrl(e.target.value)}
+            className="w-full px-3 py-2 bg-bg border border-input rounded-xl text-sm text-foreground focus:outline-none focus:border-accent"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
+            Tag
+          </label>
+          <input
+            type="text"
+            placeholder="e.g. backend, frontend, core"
+            maxLength={64}
+            value={tag}
+            onChange={(e) => setTag(e.target.value)}
             className="w-full px-3 py-2 bg-bg border border-input rounded-xl text-sm text-foreground focus:outline-none focus:border-accent"
           />
         </div>

@@ -322,6 +322,8 @@ export function DashboardPage({ onNavigate, onSelectProject }: Props) {
         setCloneUrl={state.setCloneUrl}
         avatarUrl={state.avatarUrl}
         setAvatarUrl={state.setAvatarUrl}
+        tag={state.tag}
+        setTag={state.setTag}
         submitting={state.submitting}
         submitError={state.submitError}
         setSubmitError={state.setSubmitError}

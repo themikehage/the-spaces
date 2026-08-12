@@ -827,7 +827,7 @@ sessionsRouter.get("/:id/skills", async (c) => {
 sessionsRouter.post("/:id/tools", zValidator("json", ToolPermissionsSchema), async (c) => {
   const { sessionManager } = c.get("serverContext");
   const sessionId = c.req.param("id");
-  const { tools, executionMode, autonomyLevel } = c.req.valid("json");
+  const { tools, autonomyMode, executionMode } = c.req.valid("json");
   const { username } = getAuthPayload(c);
 
   if (sessionId.startsWith(SessionPrefix.EXEC)) {
@@ -898,11 +898,9 @@ sessionsRouter.post("/:id/tools", zValidator("json", ToolPermissionsSchema), asy
     ),
   );
   sessionManager.metadataStore.persistSessionTools(username, sessionId, tools);
-  if (executionMode) {
-    sessionManager.metadataStore.setExecutionMode(username, sessionId, executionMode);
-  }
-  if (autonomyLevel) {
-    sessionManager.metadataStore.setAutonomyLevel(username, sessionId, autonomyLevel);
+  const activeAutonomy = autonomyMode ?? executionMode;
+  if (activeAutonomy) {
+    sessionManager.metadataStore.setAutonomyMode(username, sessionId, activeAutonomy);
   }
 
   try {
@@ -932,8 +930,12 @@ sessionsRouter.post("/:id/tools", zValidator("json", ToolPermissionsSchema), asy
           cfg.executionMode = executionMode;
         }
         if (Array.isArray(tools)) {
+          const existingAdd: string[] = Array.isArray((cfg.toolOverrides as any)?.add)
+            ? ((cfg.toolOverrides as any).add as string[])
+            : [];
           cfg.toolOverrides = {
-            add: tools,
+            ...(cfg.toolOverrides as any),
+            add: Array.from(new Set([...existingAdd, ...tools])),
           };
         }
         writeFileSync(cfgPath, JSON.stringify(cfg, null, 2), "utf-8");
@@ -943,7 +945,7 @@ sessionsRouter.post("/:id/tools", zValidator("json", ToolPermissionsSchema), asy
     console.error("[POST /:id/tools] Error persisting entity tools config:", e);
   }
 
-  return c.json({ success: true, tools, executionMode, autonomyLevel });
+  return c.json({ success: true, tools, autonomyMode: activeAutonomy, executionMode: activeAutonomy });
 });
 
 function getGatedToolStatus(username: string): Record<string, "available" | "missing_key"> {
@@ -978,15 +980,15 @@ sessionsRouter.get("/:id/tools", async (c) => {
       serialTools = agentEntry.server.definition.serialTools;
     }
   }
-  const executionMode = sessionManager.metadataStore.getExecutionMode(username, sessionId);
-  const autonomyLevel = sessionManager.metadataStore.getAutonomyLevel(username, sessionId);
+  const autonomyMode =
+    sessionManager.metadataStore.getAutonomyMode(username, sessionId) ?? "standard";
 
   return c.json({
     tools,
     serialTools,
     toolStatus: getGatedToolStatus(username),
-    executionMode,
-    autonomyLevel,
+    autonomyMode,
+    executionMode: autonomyMode,
   });
 });
 

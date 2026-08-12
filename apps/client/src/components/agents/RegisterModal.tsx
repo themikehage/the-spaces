@@ -198,6 +198,19 @@ export function RegisterModal({
 
           <div>
             <label className="text-xs font-medium text-muted-foreground block mb-1">
+              Tag
+            </label>
+            <input
+              value={form.tag || ""}
+              onChange={set("tag")}
+              placeholder="e.g. backend, frontend, core"
+              maxLength={64}
+              className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-medium text-muted-foreground block mb-1">
               {l.systemPromptField}
             </label>
             <textarea

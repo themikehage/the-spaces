@@ -143,9 +143,16 @@ export function ProjectsPage({ onNavigate: _onNavigate, onSelectProject }: Props
                       className="rounded-none w-full h-full object-cover"
                     />
                   </div>
-                  <h3 className="font-extrabold text-xs text-foreground truncate mt-2.5 leading-tight">
-                    {repo.name}
-                  </h3>
+                  <div className="flex items-center justify-between gap-1 mt-2.5">
+                    <h3 className="font-extrabold text-xs text-foreground truncate leading-tight">
+                      {repo.name}
+                    </h3>
+                    {(repo as any).tag && (
+                      <span className="px-1.5 py-0.5 text-[9px] font-semibold rounded-full flex-shrink-0 bg-primary/10 text-primary border border-primary/20">
+                        {(repo as any).tag}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-[9px] text-text-secondary mt-0.5 truncate font-mono">
                     {literals.id} {repo.id || repo.name}
                   </p>

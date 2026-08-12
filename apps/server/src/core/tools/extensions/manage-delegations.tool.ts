@@ -109,7 +109,7 @@ Use 'delegate' to delegate to a specific target.`,
         },
         autonomyMode: {
           type: "string",
-          enum: ["read-only", "standard", "autonomous"],
+          enum: ["readonly", "standard", "autonomous"],
           description: "Optional explicit autonomy mode.",
         },
         payload: {
@@ -155,8 +155,15 @@ Use 'delegate' to delegate to a specific target.`,
         const parentMeta =
           activeSessionManager.metadataStore.getSessionMetadata(username, parentSessionId) || {};
         const parentExecutionMode = parentMeta.executionMode;
-        const resolvedSubagentType =
-          args.subagentType || (parentExecutionMode === "autonomous" ? "autonomous" : "builder");
+
+        let resolvedSubagentType = args.subagentType;
+        if (parentExecutionMode === "autonomous" && resolvedSubagentType !== "explorer") {
+          resolvedSubagentType = "autonomous";
+        } else if (parentExecutionMode === "readonly") {
+          resolvedSubagentType = "explorer";
+        } else if (!resolvedSubagentType) {
+          resolvedSubagentType = "builder";
+        }
 
         const effectiveRules = buildSubagentRules(
           username,
@@ -416,7 +423,24 @@ Use 'delegate' to delegate to a specific target.`,
 
         const parentMeta =
           activeSessionManager.metadataStore.getSessionMetadata(username, parentSessionId) || {};
-        const resolvedExecutionMode = args.autonomyMode || parentMeta.executionMode || undefined;
+        const parentExecutionMode = parentMeta.executionMode;
+
+        let resolvedSubagentType = args.subagentType;
+        if (parentExecutionMode === "autonomous" && resolvedSubagentType !== "explorer") {
+          resolvedSubagentType = "autonomous";
+        } else if (parentExecutionMode === "readonly") {
+          resolvedSubagentType = "explorer";
+        } else if (!resolvedSubagentType) {
+          resolvedSubagentType = "builder";
+        }
+
+        const resolvedExecutionMode =
+          args.autonomyMode ||
+          (resolvedSubagentType === "autonomous"
+            ? "autonomous"
+            : resolvedSubagentType === "explorer"
+              ? "readonly"
+              : parentExecutionMode || "standard");
 
         activeSessionManager.metadataStore.saveSessionMetadata(username, delegateSessionId, {
           name: `Delegation: ${targetType} - ${targetId}`,
@@ -428,6 +452,7 @@ Use 'delegate' to delegate to a specific target.`,
           task: task.slice(0, 500),
           subagentDepth: effectiveDepth,
           executionMode: resolvedExecutionMode,
+          subagentType: resolvedSubagentType,
           teamId: parentMeta.teamId || null,
         });
 

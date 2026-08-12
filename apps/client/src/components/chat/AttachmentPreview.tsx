@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 import { AnimatePresence, motion } from "framer-motion";
 import { FileText, X } from "lucide-react";
 
@@ -51,7 +50,7 @@ export function AttachmentPreview({ attachments, onRemove }: AttachmentPreviewPr
             <button
               type="button"
               onClick={() => onRemove(att.id)}
-              className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-destructive text-white hover:bg-destructive/90 flex items-center justify-center cursor-pointer shadow-sm md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+              className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-destructive text-white hover:bg-destructive/90 flex items-center justify-center cursor-pointer shadow-sm"
             >
               <X size={10} strokeWidth={3} />
             </button>

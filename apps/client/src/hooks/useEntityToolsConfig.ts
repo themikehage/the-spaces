@@ -1,8 +1,7 @@
-// SPDX-License-Identifier: MIT
 import { useEntityConfig } from "@/hooks/useEntityConfig";
 import { sessionsService } from "@/lib/api/sessions.service";
 import { useCallback } from "react";
-import type { EntityType } from "shared";
+import type { AutonomyMode, EntityType } from "shared";
 
 export const DEFAULT_TOOLS = [
   "read",
@@ -32,22 +31,23 @@ export function useEntityToolsConfig(
       ? resolvedConfig.toolOverrides.add
       : DEFAULT_TOOLS;
 
-  const executionMode =
-    (resolvedConfig.executionMode as "readonly" | "standard" | "autonomous" | undefined) ||
+  const autonomyMode: AutonomyMode =
+    (resolvedConfig.autonomyMode as AutonomyMode) ||
+    (resolvedConfig.executionMode as AutonomyMode) ||
     "standard";
 
   const updateTools = useCallback(
-    async (tools: string[], mode?: "readonly" | "standard" | "autonomous") => {
+    async (tools: string[], mode?: AutonomyMode) => {
       if (entityType && entityId) {
         await patchConfig({
           toolOverrides: { add: tools },
-          ...(mode ? { executionMode: mode } : {}),
+          ...(mode ? { autonomyMode: mode, executionMode: mode } : {}),
         });
       }
 
       if (sessionId) {
         try {
-          await sessionsService.updateSessionTools(sessionId, tools);
+          await sessionsService.updateSessionTools(sessionId, tools, mode);
         } catch (err) {
           console.error("Failed to update in-flight session tools:", err);
         }
@@ -58,7 +58,8 @@ export function useEntityToolsConfig(
 
   return {
     activeTools,
-    executionMode,
+    autonomyMode,
+    executionMode: autonomyMode,
     updateTools,
     isLoading,
   };

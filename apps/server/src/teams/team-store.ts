@@ -63,6 +63,7 @@ class TeamStore {
       createdAt: now,
       updatedAt: now,
       blueprintId: data.blueprintId,
+      tag: data.tag,
     };
 
     writeFileSync(this.getTeamJsonPath(username, id), JSON.stringify(team, null, 2), "utf-8");
@@ -137,6 +138,7 @@ class TeamStore {
     if (updates.showTools !== undefined) team.showTools = updates.showTools;
     if (updates.avatarUrl !== undefined) team.avatarUrl = updates.avatarUrl;
     if (updates.blueprintId !== undefined) team.blueprintId = updates.blueprintId;
+    if (updates.tag !== undefined) team.tag = updates.tag;
     team.updatedAt = new Date().toISOString();
 
     writeFileSync(this.getTeamJsonPath(username, id), JSON.stringify(team, null, 2), "utf-8");

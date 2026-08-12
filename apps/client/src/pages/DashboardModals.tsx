@@ -13,6 +13,8 @@ interface CreateProjectModalProps {
   setCloneUrl: (val: string) => void;
   avatarUrl: string;
   setAvatarUrl: (val: string) => void;
+  tag?: string;
+  setTag?: (val: string) => void;
   submitting: boolean;
   submitError: string | null;
   setSubmitError: (val: string | null) => void;
@@ -29,6 +31,8 @@ export function CreateProjectModal({
   setCloneUrl,
   avatarUrl,
   setAvatarUrl,
+  tag = "",
+  setTag,
   submitting,
   submitError,
   setSubmitError,
@@ -82,6 +86,20 @@ export function CreateProjectModal({
             />
           </div>
 
+          <div>
+            <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
+              Tag
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. backend, frontend, core"
+              maxLength={64}
+              value={tag}
+              onChange={(e) => setTag?.(e.target.value)}
+              className="w-full px-3 py-2 bg-bg border border-input rounded-xl text-sm text-foreground focus:outline-none focus:border-accent"
+            />
+          </div>
+
           {submitError && (
             <div className="p-3 bg-error/10 border border-error/20 text-error rounded-xl text-xs font-semibold">
               {submitError}
@@ -97,6 +115,7 @@ export function CreateProjectModal({
                 setRepoName("");
                 setCloneUrl("");
                 setAvatarUrl("");
+                setTag?.("");
                 setSubmitError(null);
               }}
             >

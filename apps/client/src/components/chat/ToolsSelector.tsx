@@ -8,17 +8,18 @@ import {
   GATE_ENV_VARS,
   TOOL_DISPLAY_META,
   TOOL_PRESETS,
-  type ExecutionMode,
+  type AutonomyMode,
   type ToolPreset,
 } from "shared";
 import { literals as u } from "./ToolsSelector.literals";
 
 interface Props {
   activeTools: string[];
-  onChange: (tools: string[], executionMode?: ExecutionMode) => void;
+  onChange: (tools: string[], autonomyMode?: AutonomyMode) => void;
   disabled?: boolean;
   toolStatus?: Record<string, "available" | "missing_key">;
-  executionMode?: ExecutionMode;
+  autonomyMode?: AutonomyMode;
+  executionMode?: AutonomyMode;
 }
 
 export function ToolsSelector({
@@ -26,10 +27,12 @@ export function ToolsSelector({
   onChange,
   disabled = false,
   toolStatus,
+  autonomyMode,
   executionMode,
 }: Props) {
   const l = useLiterals(u);
   const [open, setOpen] = useState(false);
+  const activeMode = autonomyMode ?? executionMode;
 
   const handleToggleTool = (toolId: string) => {
     let next: string[];
@@ -38,7 +41,7 @@ export function ToolsSelector({
     } else {
       next = [...activeTools, toolId];
     }
-    onChange(next, executionMode);
+    onChange(next, activeMode);
   };
 
   const applyPreset = (preset: ToolPreset) => {
@@ -53,7 +56,7 @@ export function ToolsSelector({
   };
 
   const isReadOnly =
-    executionMode === "readonly" ||
+    activeMode === "readonly" ||
     (activeTools.includes("read") &&
       activeTools.includes("grep") &&
       activeTools.includes("find") &&
@@ -62,8 +65,8 @@ export function ToolsSelector({
       !activeTools.includes("edit") &&
       !activeTools.includes("bash"));
 
-  const isAutonomous = executionMode === "autonomous";
-  const isStandard = executionMode === "standard" || (!isReadOnly && !isAutonomous);
+  const isAutonomous = activeMode === "autonomous";
+  const isStandard = activeMode === "standard" || (!isReadOnly && !isAutonomous);
 
   let statusLabel = `${activeTools.length}/${AVAILABLE_TOOLS.length} tools`;
   if (isAutonomous) statusLabel = l.fullAccess;

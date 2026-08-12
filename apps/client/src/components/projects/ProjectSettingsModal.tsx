@@ -16,6 +16,7 @@ interface Project {
   name: string;
   cloneUrl?: string | null;
   avatarUrl?: string | null;
+  tag?: string | null;
   createdAt?: string | null;
   diskPath?: string;
 }
@@ -27,6 +28,7 @@ interface Props {
     name: string;
     cloneUrl: string | null;
     avatarUrl: string | null;
+    tag?: string | null;
   }) => Promise<void>;
   onUploadAvatar?: (id: string, file: File) => Promise<string>;
   onDeleteAvatar?: (id: string) => Promise<void>;
@@ -45,6 +47,7 @@ export function ProjectSettingsModal({
   const [activeTab, setActiveTab] = useState<"general" | "prompts">("general");
   const [name, setName] = useState(project.name);
   const [cloneUrl, setCloneUrl] = useState(project.cloneUrl || "");
+  const [tag, setTag] = useState(project.tag || "");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,6 +69,7 @@ export function ProjectSettingsModal({
   useEffect(() => {
     setName(project.name);
     setCloneUrl(project.cloneUrl || "");
+    setTag(project.tag || "");
     setAvatarPreview(project.avatarUrl || null);
     if (project.avatarUrl && isDefaultAvatar(project.avatarUrl)) {
       setSelectedDefaultAvatar(project.avatarUrl.slice(DEFAULT_AVATAR_PREFIX.length));
@@ -114,6 +118,7 @@ export function ProjectSettingsModal({
         name: name.trim(),
         cloneUrl: cloneUrl.trim() || null,
         avatarUrl: resolvedAvatarUrl,
+        tag: tag.trim() || null,
       });
 
       if (avatarFile && onUploadAvatar) {
@@ -217,6 +222,20 @@ export function ProjectSettingsModal({
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
+              className="w-full px-3 py-2 bg-bg border border-input rounded-xl text-sm text-foreground focus:outline-none focus:border-accent"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1">
+              Tag
+            </label>
+            <input
+              type="text"
+              value={tag}
+              onChange={(e) => setTag(e.target.value)}
+              placeholder="e.g. backend, frontend, core"
+              maxLength={64}
               className="w-full px-3 py-2 bg-bg border border-input rounded-xl text-sm text-foreground focus:outline-none focus:border-accent"
             />
           </div>

@@ -10,8 +10,8 @@ import type { AttentionItem } from "shared";
 export function GlobalApprovalOverlay() {
   const approvals = useAttention((items) => items.filter((i) => i.kind === "approval"));
 
-  const handleResolve = (id: string, action: "approve" | "deny", persist: boolean) => {
-    attentionStore.resolveApproval(id, action, { persist });
+  const handleResolve = (id: string, action: "approve" | "deny") => {
+    attentionStore.resolveApproval(id, action);
   };
 
   if (approvals.length === 0) return null;
@@ -23,7 +23,7 @@ export function GlobalApprovalOverlay() {
           <ApprovalCard
             key={approval.approvalId}
             approval={approval}
-            onResolve={(action, persist) => handleResolve(approval.approvalId, action, persist)}
+            onResolve={(action) => handleResolve(approval.approvalId, action)}
           />
         ))}
       </AnimatePresence>
@@ -36,10 +36,9 @@ function ApprovalCard({
   onResolve,
 }: {
   approval: AttentionItem;
-  onResolve: (action: "approve" | "deny", persist: boolean) => void;
+  onResolve: (action: "approve" | "deny") => void;
 }) {
   const [timeLeft, setTimeLeft] = useState(0);
-  const [persist, setPersist] = useState(false);
 
   useEffect(() => {
     const updateTime = () => {
@@ -96,28 +95,12 @@ function ApprovalCard({
         {approval.reason}
       </div>
 
-      <div className="flex items-center gap-1.5">
-        <input
-          type="checkbox"
-          id={`persist-${approval.approvalId}`}
-          checked={persist}
-          onChange={(e) => setPersist(e.target.checked)}
-          className="w-3 h-3 rounded border-border text-primary focus:ring-ring bg-background cursor-pointer"
-        />
-        <label
-          htmlFor={`persist-${approval.approvalId}`}
-          className="text-[10px] text-muted-foreground select-none cursor-pointer"
-        >
-          Remember this decision
-        </label>
-      </div>
-
       <div className="flex gap-1.5">
         <Button
           variant="outline"
           size="sm"
           className="flex-1 text-[11px] h-7"
-          onClick={() => onResolve("deny", persist)}
+          onClick={() => onResolve("deny")}
         >
           Deny
         </Button>
@@ -125,7 +108,7 @@ function ApprovalCard({
           variant="accent"
           size="sm"
           className="flex-1 text-[11px] h-7"
-          onClick={() => onResolve("approve", persist)}
+          onClick={() => onResolve("approve")}
         >
           Approve
         </Button>
@@ -133,3 +116,4 @@ function ApprovalCard({
     </motion.div>
   );
 }
+

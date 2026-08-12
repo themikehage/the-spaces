@@ -168,10 +168,15 @@ describe("Subagent Permission Inheritance", () => {
         sessionMetadataStore.getSessionMetadata(testUser, parentAutoSessionId) || {};
       const parentExecutionMode = parentMeta.executionMode;
 
-      // If no explicit subagent type is provided
       const subagentTypeInput: string | undefined = undefined;
-      const resolvedSubagentType =
-        subagentTypeInput || (parentExecutionMode === "autonomous" ? "autonomous" : "builder");
+      let resolvedSubagentType: string | undefined = subagentTypeInput;
+      if (parentExecutionMode === "autonomous" && resolvedSubagentType !== "explorer") {
+        resolvedSubagentType = "autonomous";
+      } else if (parentExecutionMode === "readonly") {
+        resolvedSubagentType = "explorer";
+      } else if (!resolvedSubagentType) {
+        resolvedSubagentType = "builder";
+      }
       expect(resolvedSubagentType).toBe("autonomous");
 
       const rules = buildSubagentRules(
@@ -181,7 +186,46 @@ describe("Subagent Permission Inheritance", () => {
         resolvedSubagentType,
       );
 
-      // Child write tools should inherit autonomous and allow execution
+      const writeVerdict = evaluateSubagentRules("write", { path: "file.ts" }, rules);
+      expect(writeVerdict).toBeDefined();
+      expect(writeVerdict!.allow).toBe(true);
+    });
+
+    it("should inherit autonomous mode even if LLM explicitly passed subagentType builder", () => {
+      const parentAutoSessionId = "exec_parent_session_auto_builder";
+      sessionMetadataStore.saveSessionMetadata(testUser, parentAutoSessionId, {
+        executionMode: "autonomous",
+      });
+      sessionMetadataStore.persistSessionTools(testUser, parentAutoSessionId, [
+        "read",
+        "write",
+        "edit",
+        "bash",
+      ]);
+
+      const parentMeta =
+        sessionMetadataStore.getSessionMetadata(testUser, parentAutoSessionId) || {};
+      const parentExecutionMode = parentMeta.executionMode;
+
+      const subagentTypeInput: string | undefined = "builder";
+      let resolvedSubagentType: string | undefined = subagentTypeInput;
+      if (parentExecutionMode === "autonomous" && resolvedSubagentType !== "explorer") {
+        resolvedSubagentType = "autonomous";
+      } else if (parentExecutionMode === "readonly") {
+        resolvedSubagentType = "explorer";
+      } else if (!resolvedSubagentType) {
+        resolvedSubagentType = "builder";
+      }
+
+      expect(resolvedSubagentType).toBe("autonomous");
+
+      const rules = buildSubagentRules(
+        testUser,
+        subagentSessionId,
+        parentAutoSessionId,
+        resolvedSubagentType,
+      );
+
       const writeVerdict = evaluateSubagentRules("write", { path: "file.ts" }, rules);
       expect(writeVerdict).toBeDefined();
       expect(writeVerdict!.allow).toBe(true);
@@ -189,10 +233,10 @@ describe("Subagent Permission Inheritance", () => {
   });
 
   describe("PermissionEngine evaluation under autonomous mode", () => {
-    it("should allow bash command without asking in autonomous mode when subagentType is missing in metadata but executionMode is autonomous", () => {
+    it("should allow bash command without asking in autonomous mode when subagentType is missing in metadata but autonomyMode is autonomous", () => {
       const delSessionId = "del_delegated_session_test";
-      // Save metadata for delegate session with only executionMode: autonomous
       sessionMetadataStore.saveSessionMetadata(testUser, delSessionId, {
+        autonomyMode: "autonomous",
         executionMode: "autonomous",
       });
 
@@ -203,6 +247,7 @@ describe("Subagent Permission Inheritance", () => {
           isSubagent: true,
           username: testUser,
           sessionId: delSessionId,
+          autonomyMode: "autonomous",
           executionMode: "autonomous",
         },
       );

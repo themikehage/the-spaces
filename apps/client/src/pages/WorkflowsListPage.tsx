@@ -91,6 +91,11 @@ export const WorkflowsListPage: React.FC = () => {
                       <h3 className="text-sm font-bold text-foreground group-hover:text-primary transition truncate">
                         {wf.name}
                       </h3>
+                      {wf.tag && (
+                        <span className="px-1.5 py-0.5 text-[9px] font-semibold rounded-full flex-shrink-0 bg-primary/10 text-primary border border-primary/20">
+                          {wf.tag}
+                        </span>
+                      )}
                     </div>
                     <IconButton
                       icon={Trash2}
