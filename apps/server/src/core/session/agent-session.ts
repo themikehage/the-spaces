@@ -28,6 +28,7 @@ import { PromptBuilder } from "./prompt-builder-core";
 import type { DefaultResourceLoader } from "./resource-loader";
 import { handleAgentEvent as processAgentEvent } from "./session-event-handler";
 import { calculateSessionStats } from "./session-stats-calculator";
+import { SlashResolver } from "./slash-resolver";
 import type { AgentSessionEvent, IAgentRuntime } from "../ports/agent-runtime.port";
 export type { AgentSessionEvent };
 
@@ -83,6 +84,8 @@ export class AgentSession implements IAgentRuntime {
   private hookRunner: IHookRunner;
   public permissionEngine: IPermissionEngine;
   private activeSkillPrompts: string[] = [];
+  private activeToolPrompts: string[] = [];
+  private slashResolver: SlashResolver;
   private abortController: AbortController | null = null;
 
   registerHook(hook: Hook): void {
@@ -183,6 +186,7 @@ export class AgentSession implements IAgentRuntime {
     }
 
     this.promptBuilder = new PromptBuilder(this.resourceLoader);
+    this.slashResolver = new SlashResolver(this.resourceLoader, this.toolRegistry);
     this.compactionManager = new CompactionManager(this.sessionStore, this.modelRegistry);
     this.navigationController = new NavigationController(
       this.sessionStore,
@@ -393,6 +397,7 @@ export class AgentSession implements IAgentRuntime {
             ...(this.resourceLoader.getAppendSystemPrompt() || []),
             availableSkillsPrompt,
             ...this.activeSkillPrompts,
+            ...this.activeToolPrompts,
           ]
             .filter(Boolean)
             .join("\n\n");
@@ -497,26 +502,16 @@ export class AgentSession implements IAgentRuntime {
     this.isStreaming = true;
 
     try {
-      // Load matching skills content
-      const availableSkills = this.resourceLoader.getSkills().skills;
-      const matchedSkills = [];
-      const matches = [...messageText.matchAll(/(?:^|\s)\/([a-zA-Z0-9_-]+)/g)];
-      const uniqueNames = new Set(matches.map((m) => m[1].toLowerCase()));
-
-      for (const name of uniqueNames) {
-        const skill = availableSkills.find((s) => s.name.toLowerCase() === name);
-        if (skill) {
-          matchedSkills.push(skill);
-        }
-      }
-
-      const skillPrompts: string[] = [];
-      for (const skill of matchedSkills) {
-        if (skill.content) {
-          skillPrompts.push(`=== Active Skill Instructions: ${skill.name} ===\n${skill.content}`);
-        }
-      }
+      const { skillPrompts, toolDirective, toolNamesToActivate } = this.slashResolver.resolve(
+        messageText,
+        this.getActiveToolNames(),
+      );
       this.activeSkillPrompts = skillPrompts;
+      this.activeToolPrompts = toolDirective ? [toolDirective] : [];
+
+      if (toolNamesToActivate.length > 0) {
+        this.setActiveToolsByName([...this.getActiveToolNames(), ...toolNamesToActivate]);
+      }
 
       const contentParts: any[] = [{ type: "text" as const, text: messageText }];
       if (opts?.images && Array.isArray(opts.images)) {

@@ -6,8 +6,16 @@ import { useToast } from "@/contexts/ToastContext";
 import { useLiterals } from "@/lib";
 import { sessionsService } from "@/lib/api/sessions.service";
 import { EntityEventBus } from "@/lib/event-bus";
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
-import type { EntityType } from "shared";
+import { useCustomToolsList } from "@/hooks/useCustomToolsList";
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { AVAILABLE_TOOLS, TOOL_DISPLAY_META, type EntityType } from "shared";
+
+export interface SlashItem {
+  id: string;
+  name: string;
+  description?: string;
+  kind: "skill" | "tool";
+}
 
 const DEFAULT_TOOLS = [
   "read",
@@ -96,9 +104,39 @@ export function useChatInputForm({
   const localTextareaRef = useRef<HTMLTextAreaElement>(null);
   const textareaRef = externalTextareaRef || localTextareaRef;
 
-  const [autocompleteMode, setAutocompleteMode] = useState<"skill" | "mention" | null>(null);
+  const customTools = useCustomToolsList();
+  const [autocompleteMode, setAutocompleteMode] = useState<"slash" | "mention" | null>(null);
   const [autocompleteSearch, setAutocompleteSearch] = useState("");
   const [autocompleteSelectedIndex, setAutocompleteSelectedIndex] = useState(0);
+
+  const slashTools = useMemo<SlashItem[]>(() => {
+    const systemItems: SlashItem[] = (AVAILABLE_TOOLS as readonly string[]).map((toolId) => {
+      const meta = (TOOL_DISPLAY_META as Record<string, { description?: string }>)[toolId];
+      return {
+        id: toolId,
+        name: toolId,
+        description: meta?.description,
+        kind: "tool",
+      };
+    });
+    const customItems: SlashItem[] = customTools.tools.map((ct) => ({
+      id: ct.name,
+      name: ct.name,
+      description: ct.description,
+      kind: "tool",
+    }));
+    return [...systemItems, ...customItems];
+  }, [customTools.tools]);
+
+  const slashItems = useMemo<SlashItem[]>(() => {
+    const skillItems: SlashItem[] = skills.map((s) => ({
+      id: s.name,
+      name: s.name,
+      description: s.description,
+      kind: "skill",
+    }));
+    return [...skillItems, ...slashTools];
+  }, [skills, slashTools]);
 
   useEffect(() => {
     setHistoryIndex(-1);
@@ -120,14 +158,14 @@ export function useChatInputForm({
     t.name.toLowerCase().includes(autocompleteSearch.toLowerCase()),
   );
 
-  const filteredSkills = skills.filter((s) =>
+  const filteredSlashItems = slashItems.filter((s) =>
     s.name.toLowerCase().includes(autocompleteSearch.toLowerCase()),
   );
 
   const filteredItems =
     autocompleteMode === "mention"
-      ? filteredMentions.map((t) => ({ id: t.id, name: t.name }))
-      : filteredSkills.map((s) => ({ id: s.name, name: s.name, description: s.description }));
+      ? filteredMentions.map((t) => ({ id: t.id, name: t.name, kind: "mention" as const }))
+      : filteredSlashItems;
 
   const checkAutocomplete = (text: string, cursorPosition: number) => {
     const textBeforeCursor = text.slice(0, cursorPosition);
@@ -146,7 +184,7 @@ export function useChatInputForm({
     if (lastWordMatch) {
       const triggerWord = lastWordMatch[1];
       setAutocompleteSearch(triggerWord.slice(1));
-      setAutocompleteMode("skill");
+      setAutocompleteMode("slash");
       setAutocompleteSelectedIndex(0);
     } else {
       setAutocompleteMode(null);
@@ -173,7 +211,7 @@ export function useChatInputForm({
     }, 0);
   };
 
-  const insertSkillReference = (skillName: string) => {
+  const insertSlashReference = (itemName: string) => {
     const textarea = textareaRef.current;
     if (!textarea) return;
     const cursorPosition = textarea.selectionStart;
@@ -183,10 +221,10 @@ export function useChatInputForm({
     const hasSlashMatch = textBeforeCursor.match(/(\/\S*)$/);
     let textBeforeCursorReplaced;
     if (hasSlashMatch) {
-      textBeforeCursorReplaced = textBeforeCursor.replace(/(\/\S*)$/, `/${skillName} `);
+      textBeforeCursorReplaced = textBeforeCursor.replace(/(\/\S*)$/, `/${itemName} `);
     } else {
       const needsSpace = textBeforeCursor.length > 0 && !textBeforeCursor.endsWith(" ");
-      textBeforeCursorReplaced = `${textBeforeCursor}${needsSpace ? " " : ""}/${skillName} `;
+      textBeforeCursorReplaced = `${textBeforeCursor}${needsSpace ? " " : ""}/${itemName} `;
     }
     const newVal = textBeforeCursorReplaced + textAfterCursor;
     setInput(newVal);
@@ -285,7 +323,7 @@ export function useChatInputForm({
         if (autocompleteMode === "mention") {
           insertMention(selectedItem.name);
         } else {
-          insertSkillReference(selectedItem.name);
+          insertSlashReference(selectedItem.name);
         }
         return;
       }
@@ -426,8 +464,11 @@ export function useChatInputForm({
       if (detail?.type === "skill" || detail?.type === "all" || !detail?.type) {
         fetchSessionSkills();
       }
+      if (detail?.type === "custom-tool" || detail?.type === "all" || !detail?.type) {
+        customTools.refresh();
+      }
     });
-  }, [fetchSessionSkills]);
+  }, [fetchSessionSkills, customTools.refresh]);
 
   const placeholderText = runnerActive
     ? l.placeholderRunnerActive
@@ -457,7 +498,8 @@ export function useChatInputForm({
     filteredItems,
     checkAutocomplete,
     insertMention,
-    insertSkillReference,
+    insertSlashReference,
+    insertSkillReference: insertSlashReference,
     handleFileChange,
     removeAttachment,
     handleSendAction,

@@ -47,6 +47,11 @@ export interface ToolResultData {
     originalSize?: number;
     extractedSize?: number;
     url?: string;
+    subagentSessionId?: string;
+    task?: string;
+    delegatorName?: string;
+    delegatorId?: string;
+    delegatorEntityType?: string;
   };
 }
 

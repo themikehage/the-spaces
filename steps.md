@@ -16,7 +16,7 @@
 - [x] Integrar formateo Markdown en mensajes del chat.
 - [x] Refactorizar tema visual con modo claro/oscuro completo.
 
-## Próximo sprint: estabilización y calidad
+## Estabilización y calidad
 
 - [x] Actualizar la documentación de producto y del estado real del repositorio.
 - [x] Ejecutar y registrar una verificación completa de `pnpm build`.
@@ -34,32 +34,6 @@
   - Fase 2 (Errores): Jerarquía centralizada de clases `AppError`, `HttpError`, middleware de `X-Request-Id` e integración global de `onError` en Hono con serialización segura. Refactorizado de `routes/auth.ts`.
   - Fase 3 (Strict TS): Tipado de `bash-tool.ts`, `approval-manager.ts` y eliminación progresiva de `any`.
   - Fase 5 (Docs): Configuración de `typedoc.json` para generación automática de documentación de contratos y API.
-
-# Steps - Project Tasks
-
-## Base de producto completada
-
-- [x] Configurar el monorepo y los workspaces de `pnpm`.
-- [x] Crear el paquete compartido con contratos, tipos y esquemas Zod.
-- [x] Implementar el servidor Bun + Hono, API REST, autenticación y WebSocket.
-- [x] Implementar el cliente React para proyectos, sesiones, agentes, equipos y workspace.
-- [x] Implementar la landing de producto.
-- [x] Incorporar gestión de archivos, preview, logs, backups, proveedores, skills, MCP, plugins y aprobaciones.
-- [x] Integrar 9 proveedores de IA: OpenAI, Google Gemini, xAI, DeepSeek, Groq, Mistral, OpenRouter, Qwen y OpenCodeGo.
-- [x] Implementar herramientas de generación de imágenes y video.
-- [x] Unificar orquestación de subagentes en `manage_delegations` (spawn + delegate).
-- [x] Implementar motor de permisos dinámico por usuario/sesión.
-- [x] Añadir herramientas de preview en vivo para proyectos HTML.
-- [x] Integrar formateo Markdown en mensajes del chat.
-- [x] Refactorizar tema visual con modo claro/oscuro completo.
-
-## Próximo sprint: estabilización y calidad
-
-- [x] Actualizar la documentación de producto y del estado real del repositorio.
-- [x] Ejecutar y registrar una verificación completa de `pnpm build`.
-- [x] Implementar desacoplamiento de Core SDK (Fases 0, 1 y 2: contratos, puertos, resolución de modelo, config por workspace `.spaces/config.json` y payloads de delegación `outputs`).
-- [x] Resolver items críticos de `03-core-sdk-next-steps.md`: desacoplar `SessionPromptBuilder` y `DelegationRegistry` de `sessionManager`, estandarizar `ToolActivationEngine` con políticas por workspace, categorizar `TOOL_GROUPS`, habilitar inyección de memoria auto-recalled y asegurar trazabilidad de tools no instaladas (`manage_pipelines`).
-- [x] Implementar la Fase 1 del Plan 04 (`04-post-next-steps.md`): estructurar la Arquitectura Limpia interna en `apps/server/src/core/ports/` e implementar el contrato de integración `SpacesHost`.
 - [x] Implementar la sección de Observabilidad real del Plan 04: registro de auditoría estructurado en JSONL (`tool-calls.jsonl`) vía `afterToolCall` hook, agregación de métricas en `ObservabilityService` y endpoints REST `/api/logs/tool-calls` y `/api/logs/metrics`.
 - [x] Completar Refactorización para Código Abierto (Open Source Readiness):
   - Fase 0: Auditoría, eliminación de código muerto (channel/lab), definición de `TOOL_GROUPS`, hooks `afterToolCall` y `buildProjectContextPrompt()`.
@@ -110,7 +84,7 @@
 - [x] Eliminar el sistema de plugins, mover ajustes de UI a la configuración (Memory & Exa Search integrados en Settings > General, remoción de PluginsPage, ruta `/plugins` y código durmiente PluginManager/BasePlugin).
 - [x] Unificar herramientas de tareas en `task.tool` (acciones start/update/end/status), unificar herramientas de memoria en `memory.tool` (acciones read/upsert/delete) y eliminar código muerto de `manage_pipelines` y sus referencias.
 
-## Siguiente sprint: arquitectura del frontend
+## Arquitectura del frontend
 
 - [x] Implementar Hito 1 — Capa de Servicios de API del Cliente (`plans/completed/22-frontend-api-service-layer.md`):
   - [x] Fase 1: Crear `lib/api/agents.service.ts`, `lib/api/teams.service.ts` y migrar `useAgents.ts`, `useTeams.ts`, `useTeam.ts`
@@ -151,9 +125,20 @@
   - [x] WF-08: Paso Sub-Workflow (`type:"workflow"`) para modularización con `subWorkflowId`, passing de inputs y protección anti-recursión (`maxDepth: 3`).
   - [x] Actualizar esquemas Zod en `@shared`, contrato `manage_workflow`, documentación `.agents/rules/workflow.rules.md` y suite de pruebas `workflow-engine-enhancements.test.ts`.
 - [x] Modificaciones en la Tool de Task: UI no bloqueante durante la ejecución de planes y botón de cancelación total en la barra flotante `FloatingTasks`.
+- [x] Implementar el Plan 31 — Diagnóstico y Fix de Desincronización de UI en Sesiones Largas (`plans/completed/31-ui-desync-long-sessions.md`):
+  - [x] Limpieza real y des-suscripción de listeners de WebSocket en el servidor (`wsRegistry.clearUnsub` / `setUnsub`).
+  - [x] Emisión de eventos no bloqueante con `Promise.allSettled` en `TypedEventEmitter.emit`.
+  - [x] Cleanup reactivo de suscripción en `useConnectionAwareEffect` enviando `session_unsubscribe` al cliente.
+  - [x] Sincronización dinámica del flag `streaming` en `useChatAreaState.ts` escuchando el evento `session_status`.
+- [x] Implementar el Plan 36 — Campo `tag` en entidades (`plans/36-entities-tag.md`):
+  - [x] Definición de `tag: z.string().max(64).optional()` en esquemas compartidos (`AgentDefinitionSchema`, `TeamSchema`, `CreateTeamSchema`, `ProjectSchema`, `WorkflowDefinitionSchema`).
+  - [x] Soporte de persistencia en servidor (`agent-registry.ts`, `team-store.ts`, `files.ts`, `workflow-store.ts`).
+  - [x] Propagación en servicios API del cliente (`agents`, `teams`, `projects`, `workflows`).
+  - [x] Campos de entrada opcionales `tag` en los formularios modales (`RegisterModal`, `TeamCreateModal`, `TeamSettingsModal`, `DashboardModals`, `WorkflowsListPage`).
+  - [x] Renderizado del chip de `tag` en las tarjetas y componentes de UI (`AgentCard`, `TeamCard`, etc.).
 
-## Criterio de cierre del sprint
+## Próximos pasos
 
-- La compilación, typecheck, lint y pruebas pasan de forma reproducible.
-- Las rutas y flujos críticos cuentan con pruebas de integración.
-- La documentación permite instalar, configurar y ejecutar el producto sin conocimiento previo del repositorio.
+- [ ] Implementar el Plan 40 — Arquitectura de Sandboxing Productivo (`plans/40-production-sandbox-architecture.md`).
+
+

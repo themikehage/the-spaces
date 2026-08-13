@@ -4,7 +4,7 @@ import { sessionsService } from "@/lib/api/sessions.service";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, CheckCircle, Users, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { literals as u } from "./DelegationsPanel.literals";
 import type { PendingDelegation } from "./FloatingDelegations";
 
@@ -97,6 +97,9 @@ export function DelegationsPanel({
             targetType: data.targetType,
             status: "running",
             startedAt: new Date().toISOString(),
+            delegatorName: data.delegatorName,
+            delegatorId: data.delegatorId,
+            delegatorEntityType: data.delegatorEntityType,
           },
         ];
       });
@@ -231,6 +234,22 @@ export function DelegationsPanel({
                       {d.startedAt ? new Date(d.startedAt).toLocaleTimeString() : ""}
                     </span>
                   </div>
+                  {d.delegatorName && (
+                    <div className="text-[10px] text-text-secondary flex items-center gap-1">
+                      <span>delegated by</span>
+                      {d.delegatorEntityType !== "global" && d.delegatorId ? (
+                        <Link
+                          to={`/${d.delegatorEntityType === "agent" ? "agents" : d.delegatorEntityType === "project" ? "projects" : "teams"}/${d.delegatorId}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-accent hover:underline font-medium"
+                        >
+                          {d.delegatorName}
+                        </Link>
+                      ) : (
+                        <span className="font-medium text-text-primary">{d.delegatorName}</span>
+                      )}
+                    </div>
+                  )}
                   <h3 className="text-xs font-medium text-text-primary leading-relaxed break-words line-clamp-2">
                     {d.task}
                   </h3>
@@ -298,6 +317,21 @@ export function DelegationsPanel({
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {/* Task Section */}
               <div className="space-y-1">
+                {selectedDelegation.delegatorName && (
+                  <div className="text-xs text-text-secondary flex items-center gap-1 mb-2">
+                    <span>delegated by</span>
+                    {selectedDelegation.delegatorEntityType !== "global" && selectedDelegation.delegatorId ? (
+                      <Link
+                        to={`/${selectedDelegation.delegatorEntityType === "agent" ? "agents" : selectedDelegation.delegatorEntityType === "project" ? "projects" : "teams"}/${selectedDelegation.delegatorId}`}
+                        className="text-accent hover:underline font-medium"
+                      >
+                        {selectedDelegation.delegatorName}
+                      </Link>
+                    ) : (
+                      <span className="font-medium text-text-primary">{selectedDelegation.delegatorName}</span>
+                    )}
+                  </div>
+                )}
                 <h4 className="text-[10px] font-mono uppercase text-text-secondary font-semibold tracking-wider">
                   {l.thTask}
                 </h4>

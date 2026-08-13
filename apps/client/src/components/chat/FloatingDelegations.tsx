@@ -51,6 +51,11 @@ export function FloatingDelegations({ delegations, onNavigateToSession }: Props)
                   className={`w-2.5 h-2.5 rounded-full ${statusColor} ${isRunning ? "animate-pulse" : ""}`}
                 />
                 <div className="flex flex-col min-w-0 flex-1">
+                  {d.delegatorName && (
+                    <span className="text-[10px] text-text-secondary truncate">
+                      delegated by <span className="font-medium text-text-primary">{d.delegatorName}</span>
+                    </span>
+                  )}
                   <span className="text-xs text-text-primary font-medium truncate">{d.task}</span>
                   <span className="text-[10px] text-text-secondary">{statusText}</span>
                 </div>

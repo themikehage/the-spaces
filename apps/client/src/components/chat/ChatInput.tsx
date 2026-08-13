@@ -271,7 +271,7 @@ export function ChatInput({
             if (form.autocompleteMode === "mention") {
               form.insertMention(item.name);
             } else {
-              form.insertSkillReference(item.name);
+              form.insertSlashReference(item.name);
             }
           }}
           onClose={() => form.setAutocompleteMode(null)}
@@ -306,7 +306,7 @@ export function ChatInput({
               skills={form.skills}
               skillsLoading={form.skillsLoading}
               onSelectSkill={(skillName) => {
-                form.insertSkillReference(skillName);
+                form.insertSlashReference(skillName);
               }}
               onFileClick={() => form.fileInputRef.current?.click()}
               toolStatus={form.toolStatus}

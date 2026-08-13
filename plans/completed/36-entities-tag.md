@@ -1,6 +1,6 @@
 # Plan 36 — Campo `tag` en entidades (agentes, proyectos, teams, workflows) para agrupación futura
 
-**Estado:** 🔜 Pendiente de implementar — plan aprobado
+**Estado:** ✅ Completado — resuelto e implementado en cliente, servidor y schemas compartidos
 
 ## Objetivo
 

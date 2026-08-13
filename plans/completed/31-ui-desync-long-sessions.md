@@ -1,6 +1,6 @@
 # Plan 31 — Diagnóstico: UI desincronizada tras loops/interacciones largas
 
-**Estado:** 🔜 Pendiente de implementar — diagnóstico completado
+**Estado:** ✅ Completado — resuelto e implementado en cliente y servidor
 
 ## Síntoma
 

@@ -1,6 +1,6 @@
 # Plan 37 — Invocar tools y custom tools con `/` (slash commands), como las skills
 
-**Estado:** 🔜 Pendiente de implementar — diseño aprobado
+**Estado:** ✅ Completado
 
 ## Objetivo
 

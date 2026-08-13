@@ -8,10 +8,11 @@ interface AutocompleteItem {
   id: string;
   name: string;
   description?: string;
+  kind?: "skill" | "tool" | "mention";
 }
 
 interface AutocompletePopoverProps {
-  mode: "skill" | "mention" | null;
+  mode: "slash" | "mention" | null;
   items: AutocompleteItem[];
   selectedIndex: number;
   onSelect: (item: AutocompleteItem) => void;
@@ -40,7 +41,7 @@ export function AutocompletePopover({
         className="w-64 max-h-48 bg-[#171717] border border-border rounded-xl shadow-xl flex flex-col"
       >
         <div className="px-2.5 py-1.5 text-[10px] font-semibold text-muted-foreground border-b border-border/40 tracking-wider uppercase bg-[#121212] select-none">
-          {mode === "mention" ? l.mentionHeader : l.skillsHeader}
+          {mode === "mention" ? l.mentionHeader : l.slashHeader}
         </div>
 
         <div className="flex-1 overflow-y-auto p-1 max-h-40">
@@ -68,8 +69,21 @@ export function AutocompletePopover({
                     <span className="font-medium truncate">@{item.name}</span>
                   </>
                 ) : (
-                  <div className="flex flex-col gap-0.5 min-w-0">
-                    <span className="font-mono font-bold text-foreground">/{item.name}</span>
+                  <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-mono font-bold text-foreground">/{item.name}</span>
+                      {item.kind && (
+                        <span
+                          className={`text-[9px] font-semibold uppercase tracking-wider px-1 py-0.5 rounded ${
+                            item.kind === "skill"
+                              ? "bg-violet-500/15 text-violet-400"
+                              : "bg-blue-500/15 text-blue-400"
+                          }`}
+                        >
+                          {item.kind === "skill" ? l.skillBadge : l.toolBadge}
+                        </span>
+                      )}
+                    </div>
                     {item.description && (
                       <span className="text-[10px] text-muted-foreground truncate max-w-full">
                         {item.description}

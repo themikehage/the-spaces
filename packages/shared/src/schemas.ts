@@ -724,6 +724,9 @@ export const PendingDelegationSchema = z.object({
   completedAt: z.string().optional(),
   result: z.any().optional(),
   subagentSessionId: z.string(),
+  delegatorName: z.string().optional(),
+  delegatorId: z.string().optional(),
+  delegatorEntityType: z.enum(["agent", "project", "team", "global"]).optional(),
 });
 export type PendingDelegation = z.infer<typeof PendingDelegationSchema>;
 

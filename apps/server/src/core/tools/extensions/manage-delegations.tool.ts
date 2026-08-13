@@ -61,7 +61,8 @@ export function createManageDelegationsTool(opts: ManageDelegationsOptions) {
     name: "manage_delegations",
     description: `Manage delegations to subagents or targets (agents, projects, teams, sessions).
 Use 'spawn' to run an isolated, fresh subagent session.
-Use 'delegate' to delegate to a specific target.`,
+Use 'delegate' to delegate to a specific target.
+Delegation is asynchronous: after calling spawn or delegate, do NOT poll for status — you will be automatically notified when the delegate completes.`,
     parameters: {
       type: "object",
       properties: {
@@ -123,6 +124,12 @@ Use 'delegate' to delegate to a specific target.`,
     execute: async (toolCallId: string, args: any, parentSignal?: AbortSignal) => {
       const { action, task, targetType, targetId } = args;
 
+      if (!task || task.trim().length < 10) {
+        throw new Error(
+          "Parameter 'task' must be a non-empty string with at least 10 characters describing the work to delegate.",
+        );
+      }
+
       const userSettings = activeSessionManager.userConfig.getUserSettings(username);
       const appConfig = getAppConfig();
       const maxDepth =
@@ -177,11 +184,22 @@ Use 'delegate' to delegate to a specific target.`,
             ? "readonly"
             : resolvedSubagentType === "autonomous"
               ? "autonomous"
-              : "standard";
+              : "autonomous";
 
         const parentRef = resolveParentRef(parentMeta);
         const parentEntityType = parentRef.type;
         const parentEntityId: string | null = parentRef.id !== "global" ? parentRef.id : null;
+
+        const delegatorEntityType = parentRef.type === "custom" ? "agent" : (parentRef.type as "project" | "team" | "global");
+        const delegatorId = parentRef.id !== "global" ? parentRef.id : undefined;
+        let delegatorName: string;
+        if (delegatorEntityType === "agent" && delegatorId) {
+          delegatorName = activeAgentRegistry.get(delegatorId, username)?.name ?? delegatorId;
+        } else if (delegatorEntityType === "global") {
+          delegatorName = "You";
+        } else {
+          delegatorName = delegatorId ?? "You";
+        }
 
         const metadata = {
           subagentId: subagentSessionId,
@@ -311,6 +329,9 @@ Use 'delegate' to delegate to a specific target.`,
             status: "running",
             startedAt: metadata.startedAt,
             subagentSessionId,
+            delegatorName,
+            delegatorId,
+            delegatorEntityType,
           },
           () => {
             childToken.abortAll();
@@ -403,13 +424,30 @@ Use 'delegate' to delegate to a specific target.`,
               text: `Subagent delegation started. Subagent session ID: ${subagentSessionId}`,
             },
           ],
-          details: { status: "delegated", subagentSessionId, task },
+          details: { status: "delegated", subagentSessionId, task, delegatorName, delegatorId, delegatorEntityType },
         };
       } else if (action === "delegate") {
         if (!targetType || !targetId) {
           throw new Error(
             "Parameters 'targetType' and 'targetId' are required when action is 'delegate'.",
           );
+        }
+
+        if (targetType === "agent") {
+          const entry = activeAgentRegistry.get(targetId, username);
+          if (!entry) {
+            throw new Error(
+              `Agent "${targetId}" not found for user "${username}". Delegation aborted.`,
+            );
+          }
+        } else if (targetType === "team") {
+          const { teamStore } = await import("../../../teams/team-store");
+          const team = teamStore.getTeam(username, targetId);
+          if (!team) {
+            throw new Error(
+              `Team "${targetId}" not found for user "${username}". Delegation aborted.`,
+            );
+          }
         }
 
         if (targetType === "agent" && permittedAgentIds && !permittedAgentIds.has(targetId)) {
@@ -440,7 +478,7 @@ Use 'delegate' to delegate to a specific target.`,
             ? "autonomous"
             : resolvedSubagentType === "explorer"
               ? "readonly"
-              : parentExecutionMode || "standard");
+              : "autonomous");
 
         activeSessionManager.metadataStore.saveSessionMetadata(username, delegateSessionId, {
           name: `Delegation: ${targetType} - ${targetId}`,
@@ -738,6 +776,18 @@ Use 'delegate' to delegate to a specific target.`,
           });
         };
 
+        const parentRef = resolveParentRef(parentMeta);
+        const delegatorEntityType = parentRef.type === "custom" ? "agent" : (parentRef.type as "project" | "team" | "global");
+        const delegatorId = parentRef.id !== "global" ? parentRef.id : undefined;
+        let delegatorName: string;
+        if (delegatorEntityType === "agent" && delegatorId) {
+          delegatorName = activeAgentRegistry.get(delegatorId, username)?.name ?? delegatorId;
+        } else if (delegatorEntityType === "global") {
+          delegatorName = "You";
+        } else {
+          delegatorName = delegatorId ?? "You";
+        }
+
         activeDelegationRegistry.register(
           username,
           parentSessionId,
@@ -750,6 +800,9 @@ Use 'delegate' to delegate to a specific target.`,
             status: "running",
             startedAt: new Date().toISOString(),
             subagentSessionId: delegateSessionId,
+            delegatorName,
+            delegatorId,
+            delegatorEntityType,
           },
           () => {
             childToken.abortAll();
@@ -767,7 +820,7 @@ Use 'delegate' to delegate to a specific target.`,
               text: `Delegation started for target ${targetType}:${targetId}. Session ID: ${delegateSessionId}`,
             },
           ],
-          details: { status: "delegated", subagentSessionId: delegateSessionId, task },
+          details: { status: "delegated", subagentSessionId: delegateSessionId, task, delegatorName, delegatorId, delegatorEntityType },
         };
       } else {
         throw new Error(`Unsupported manage_delegations action: ${action}`);

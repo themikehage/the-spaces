@@ -15,6 +15,9 @@ export interface PendingDelegation {
   completedAt?: string;
   result?: EnvelopeResult;
   subagentSessionId: string;
+  delegatorName?: string;
+  delegatorId?: string;
+  delegatorEntityType?: "agent" | "project" | "team" | "global";
 }
 
 export type DelegationEvent =
@@ -25,6 +28,9 @@ export type DelegationEvent =
       subagentSessionId: string;
       task: string;
       targetType: string;
+      delegatorName?: string;
+      delegatorId?: string;
+      delegatorEntityType?: "agent" | "project" | "team" | "global";
     }
   | {
       type: "delegation_completed";
@@ -103,6 +109,9 @@ export class DelegationRegistry {
       subagentSessionId: d.subagentSessionId,
       task: d.task,
       targetType: d.targetType,
+      delegatorName: d.delegatorName,
+      delegatorId: d.delegatorId,
+      delegatorEntityType: d.delegatorEntityType,
     });
   }
 

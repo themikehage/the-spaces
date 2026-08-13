@@ -110,8 +110,27 @@ export function ToolResultRouter({
     case "manage_delegations": {
       const task = (args.task as string) || "";
       const isSpawn = args.action === "spawn";
+      const details = result?.details as any;
+      const delegatorName = (details?.delegatorName as string) || (args.delegatorName as string) || "";
+      const delegatorId = (details?.delegatorId as string) || (args.delegatorId as string) || "";
+      const delegatorEntityType = (details?.delegatorEntityType as string) || (args.delegatorEntityType as string) || "global";
       return (
         <div className="flex flex-col gap-2 w-full">
+          {delegatorName && (
+            <div className="text-[11px] text-text-secondary flex items-center gap-1">
+              <span>delegated by</span>
+              {delegatorEntityType !== "global" && delegatorId ? (
+                <Link
+                  to={`/${delegatorEntityType === "agent" ? "agents" : delegatorEntityType === "project" ? "projects" : "teams"}/${delegatorId}`}
+                  className="text-accent hover:underline font-medium"
+                >
+                  {delegatorName}
+                </Link>
+              ) : (
+                <span className="font-medium text-text-primary">{delegatorName}</span>
+              )}
+            </div>
+          )}
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs text-text-primary truncate flex-1">{task}</span>
             {onOpenSubagentConsole && (
@@ -139,8 +158,27 @@ export function ToolResultRouter({
     }
     case "spawn_subagent": {
       const task = (args.task as string) || "";
+      const details = result?.details as any;
+      const delegatorName = (details?.delegatorName as string) || (args.delegatorName as string) || "";
+      const delegatorId = (details?.delegatorId as string) || (args.delegatorId as string) || "";
+      const delegatorEntityType = (details?.delegatorEntityType as string) || (args.delegatorEntityType as string) || "global";
       return (
         <div className="">
+          {delegatorName && (
+            <div className="text-[11px] text-text-secondary flex items-center gap-1 mb-1">
+              <span>delegated by</span>
+              {delegatorEntityType !== "global" && delegatorId ? (
+                <Link
+                  to={`/${delegatorEntityType === "agent" ? "agents" : delegatorEntityType === "project" ? "projects" : "teams"}/${delegatorId}`}
+                  className="text-accent hover:underline font-medium"
+                >
+                  {delegatorName}
+                </Link>
+              ) : (
+                <span className="font-medium text-text-primary">{delegatorName}</span>
+              )}
+            </div>
+          )}
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs text-text-primary truncate">{task}</span>
             {onOpenSubagentConsole && (
@@ -157,8 +195,27 @@ export function ToolResultRouter({
     }
     case "delegate_task": {
       const task = (args.task as string) || "";
+      const details = result?.details as any;
+      const delegatorName = (details?.delegatorName as string) || (args.delegatorName as string) || "";
+      const delegatorId = (details?.delegatorId as string) || (args.delegatorId as string) || "";
+      const delegatorEntityType = (details?.delegatorEntityType as string) || (args.delegatorEntityType as string) || "global";
       return (
         <div className="">
+          {delegatorName && (
+            <div className="text-[11px] text-text-secondary flex items-center gap-1 mb-1">
+              <span>delegated by</span>
+              {delegatorEntityType !== "global" && delegatorId ? (
+                <Link
+                  to={`/${delegatorEntityType === "agent" ? "agents" : delegatorEntityType === "project" ? "projects" : "teams"}/${delegatorId}`}
+                  className="text-accent hover:underline font-medium"
+                >
+                  {delegatorName}
+                </Link>
+              ) : (
+                <span className="font-medium text-text-primary">{delegatorName}</span>
+              )}
+            </div>
+          )}
           <div className="flex items-center justify-between gap-2">
             <div className="flex flex-col gap-0.5 min-w-0">
               <span className="text-xs text-text-primary truncate">{task}</span>

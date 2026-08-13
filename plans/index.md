@@ -24,6 +24,7 @@
 | 23  | [23-frontend-component-decomposition.md](./23-frontend-component-decomposition.md)                       | 📋 Planificado    | Hito 2: Descomposición de Componentes — reducir todo componente a ≤500 líneas                                       |
 | 24  | [24-frontend-deduplication.md](./24-frontend-deduplication.md)                                           | 📋 Planificado    | Hito 3: Eliminación de Duplicaciones — modales, event bus, localStorage, formularios, keyboard shortcuts            |
 | 25  | [25-agentic-workflow-system/README.md](./25-agentic-workflow-system/README.md)                           | 📋 Planificado    | Agentic Workflow System: outputs tipados, custom tool "agent", WorkflowEngine + DAG, team workflows, observabilidad |
+| 40  | [40-production-sandbox-architecture.md](./40-production-sandbox-architecture.md)                         | 🔜 **Próximo**    | Arquitectura de Sandboxing Productivo: aislamiento en contenedor (read-only rootfs, non-root, cgroups), refactor ISandbox y realpath |
 
 ## Referencia
 

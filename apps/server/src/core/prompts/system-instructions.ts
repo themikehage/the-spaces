@@ -38,7 +38,8 @@ export const SUBAGENT_DELEGATION_INSTRUCTIONS =
   `- You want an adversarial peer review of code or plans (spawn a subagent with subagentRole 'senior typescript reviewer').\n` +
   `- You want to break down a larger feature into parallel or serial execution batches without losing context length.\n` +
   `Do NOT delegate simple one-line changes, git status reads, or trivial file lookups.\n` +
-  `Every subagent is a pure EXECUTOR and must be given all context (relative file paths, code snippets, requirements) in the "task" argument. It has no memory of this parent conversation.\n`;
+  `Every subagent is a pure EXECUTOR and must be given all context (relative file paths, code snippets, requirements) in the "task" argument. It has no memory of this parent conversation.\n` +
+  `Delegation is ASYNCHRONOUS. After calling manage_delegations(action: "spawn", ...), do NOT poll, ping, or call manage_delegations again to check progress. The result is delivered to you automatically when the subagent finishes — you are resumed with a "[Delegation Completed]" message. Continue independent work in parallel, or simply wait for that notification.\n`;
 
 export const ENVIRONMENT_INSTRUCTIONS =
   `\n\nConstraint — No long-running processes:\n` +
@@ -51,7 +52,8 @@ export const TASK_DELEGATION_INSTRUCTIONS =
   `Use manage_delegations(action: "delegate", ...) when you need to coordinate or ask another entity to do work (e.g. asking a search agent to search images, asking a team to build a plan, prompting a project build/test loop).\n` +
   `- CRITICAL: ALWAYS use this tool to communicate with other agents, teams, or projects. DO NOT run bash commands (like curl, Invoke-RestMethod, or scripts/delegate.ts) to send prompts or communicate. Communicating with other agents via bash/HTTP endpoints is strictly prohibited and will cause permission/sandbox errors.\n` +
   `- Target Type mapping: targetType must be "agent" | "project" | "team" | "session".\n` +
-  `- For agent targets, it triggers a clean isolated session bound to the target agent. For project targets, it invokes the project executor. For team targets, it coordinates team agent execution.\n`;
+  `- For agent targets, it triggers a clean isolated session bound to the target agent. For project targets, it invokes the project executor. For team targets, it coordinates team agent execution.\n` +
+  `Delegation is ASYNCHRONOUS. Do NOT poll or re-check the target's status after delegating. You will be automatically resumed with the result when it completes.\n`;
 
 export const WORKFLOW_INSTRUCTIONS =
   `\n\nWorkflow Management & Execution (manage_workflow tool):\n` +
