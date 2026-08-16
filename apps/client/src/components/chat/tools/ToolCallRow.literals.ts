@@ -16,6 +16,7 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
 
     argApprovalRequest: "Approval Request",
     argUserQuestion: "User Question",
+    inputSummary: "input",
     argImages: "images",
     argChart: "Chart",
     argHtmlDoc: "HTML document",
@@ -77,6 +78,7 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
 
     argApprovalRequest: "Petición de aprobación",
     argUserQuestion: "Pregunta al usuario",
+    inputSummary: "entrada",
     argImages: "imágenes",
     argChart: "Gráfico",
     argHtmlDoc: "documento HTML",

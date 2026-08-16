@@ -168,4 +168,28 @@ describe("Spaces Tool Validation & Broadcast Tests", () => {
       expect(result.reason).toContain("port: 3000");
     });
   });
+
+  describe("verifyCommandSafety /dev/null redirection", () => {
+    it("should allow 2>/dev/null without flagging /dev", async () => {
+      const { verifyCommandSafety } = await import("../core/tools/base/bash.tool");
+      const result = verifyCommandSafety(
+        "which bun node npm 2>/dev/null; ls -la ~/.bun/bin 2>/dev/null",
+      );
+      expect(result.safe).toBe(true);
+    });
+
+    it("should allow >/dev/null and &>/dev/null redirections", async () => {
+      const { verifyCommandSafety } = await import("../core/tools/base/bash.tool");
+      expect(verifyCommandSafety("echo hi >/dev/null").safe).toBe(true);
+      expect(verifyCommandSafety("echo hi &>/dev/null").safe).toBe(true);
+      expect(verifyCommandSafety("find / -maxdepth 6 -name bun -type f 2>/dev/null").safe).toBe(true);
+    });
+
+    it("should still reject real /dev access", async () => {
+      const { verifyCommandSafety } = await import("../core/tools/base/bash.tool");
+      const result = verifyCommandSafety("cat /dev/sda");
+      expect(result.safe).toBe(false);
+      expect(result.reason).toContain("/dev");
+    });
+  });
 });

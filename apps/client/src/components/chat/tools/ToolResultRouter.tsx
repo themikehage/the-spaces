@@ -243,7 +243,7 @@ export function ToolResultRouter({
     case "find":
       return <FindResult text={text} />;
     case "write":
-      return <WriteResult text={text} isError={result?.isError ?? false} />;
+      return <WriteResult text={text} isError={result?.isError ?? false} args={args} />;
     case "read":
       return <ReadResult content={result?.content ?? []} args={args} />;
     case "edit":
