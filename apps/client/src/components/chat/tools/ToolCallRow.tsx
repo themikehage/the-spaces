@@ -6,8 +6,6 @@ import { TOOL_META, getArgSummary, getResultSummary, getToolLabel } from "./tool
 import { literals } from "./ToolCallRow.literals";
 import { ToolResultRouter } from "./ToolResultRouter";
 
-const INLINE_INPUT_TOOLS = new Set(["bash", "write", "edit"]);
-
 export interface ToolContentBlock {
   type: string;
   text?: string;
@@ -214,16 +212,6 @@ export function ToolCallRow({
 
       {(!running || isInteractive || activeResult !== null) && expanded && (
         <div className={`border-t border-border bg-card-hover/20 ${isFullBleed ? "p-0" : "p-3"}`}>
-          {!isFullBleed && !INLINE_INPUT_TOOLS.has(toolName) && Object.keys(args).length > 0 && (
-            <details className="mb-2">
-              <summary className="cursor-pointer text-muted-foreground hover:text-foreground font-mono text-[11px] select-none">
-                {l.inputSummary}
-              </summary>
-              <pre className="mt-1 font-mono text-[11px] leading-relaxed text-muted-foreground whitespace-pre-wrap break-words bg-muted/60 p-2.5 rounded-md max-h-64 overflow-y-auto">
-                {JSON.stringify(args, null, 2)}
-              </pre>
-            </details>
-          )}
           <ToolResultRouter
             toolName={toolName}
             args={args}
