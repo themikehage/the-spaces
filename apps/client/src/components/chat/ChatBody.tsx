@@ -12,6 +12,7 @@ import { WelcomeChatInput } from "./WelcomeChatInput";
 interface ChatBodyProps {
   sessionId: string | null;
   activeProjectName: string | null;
+  activeProjectId?: string | null;
   activeAgent: { id: string; name: string; avatarUrl?: string } | null;
   activeTeam: { id: string; name: string } | null;
   messages: Message[];
@@ -49,6 +50,7 @@ interface ChatBodyProps {
 export function ChatBody({
   sessionId,
   activeProjectName,
+  activeProjectId = null,
   activeAgent,
   activeTeam,
   messages,
@@ -139,7 +141,7 @@ export function ChatBody({
                     ? "team"
                     : activeAgent
                       ? "agent"
-                      : activeProjectName
+                      : activeProjectId || activeProjectName
                         ? "project"
                         : "global"
                 }
@@ -148,9 +150,7 @@ export function ChatBody({
                     ? activeTeam.id
                     : activeAgent
                       ? activeAgent.id
-                      : activeProjectName
-                        ? activeProjectName
-                        : "global"
+                      : activeProjectId || activeProjectName || "global"
                 }
               />
             ) : (
@@ -231,16 +231,20 @@ export function ChatBody({
             activeProjectName={activeProjectName}
             activeAgentId={activeAgent?.id}
             entityType={
-              activeTeam ? "team" : activeAgent ? "agent" : activeProjectName ? "project" : "global"
+              activeTeam
+                ? "team"
+                : activeAgent
+                  ? "agent"
+                  : activeProjectId || activeProjectName
+                    ? "project"
+                    : "global"
             }
             entityId={
               activeTeam
                 ? activeTeam.id
                 : activeAgent
                   ? activeAgent.id
-                  : activeProjectName
-                    ? activeProjectName
-                    : "global"
+                  : activeProjectId || activeProjectName || "global"
             }
             contextUsage={contextUsage}
             onCompact={handleCompact}

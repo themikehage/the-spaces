@@ -82,6 +82,7 @@ export function ChatArea({
       <ChatBody
         sessionId={sessionId}
         activeProjectName={activeProjectName}
+        activeProjectId={activeProjectId}
         activeAgent={activeAgent}
         activeTeam={activeTeam}
         messages={state.messages}
