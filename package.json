@@ -17,7 +17,9 @@
     "typecheck": "pnpm -r run typecheck",
     "test": "pnpm -r run test",
     "check-license": "bun run scripts/check-license.ts",
-    "secret-scan": "secretlint \"**/*\""
+    "secret-scan": "secretlint \"**/*\"",
+    "sync-mobile-types": "bun run scripts/export-shared-schema.ts",
+    "mobile-proxy": "bun run scripts/mobile-proxy.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",

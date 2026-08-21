@@ -23,14 +23,14 @@
 
 Criterios **binarios y verificables**. El hito está completo cuando todos son `true`.
 
-- [ ] **H0-A1** — `apps/mobile/` existe con estructura `lib/core/` + `lib/features/` + `lib/shared/`.
-- [ ] **H0-A2** — `flutter analyze` produce **cero** errores y **cero** warnings.
-- [ ] **H0-A3** — `flutter test` produce exit code 0 (tests de smoke de `ApiClient`).
-- [ ] **H0-A4** — `GET /api/health` desde el app retorna `200` logueado en consola de debug.
-- [ ] **H0-A5** — El WebSocket client establece conexión con el servidor local y loguea el evento `connected`.
-- [ ] **H0-A6** — Design tokens de color, tipografía y espaciado mapeados desde `index.css` de la web, sin valores hardcodeados fuera de `app_theme.dart`.
-- [ ] **H0-A7** — Script `scripts/sync-types.sh` existe, está documentado y genera `lib/core/models/shared_types.dart` desde los schemas exportados de `packages/shared`.
-- [ ] **H0-A8** — `pnpm dev` sigue funcionando sin cambios (el monorepo no se rompe).
+- [x] **H0-A1** — `apps/mobile/` existe con estructura `lib/core/` + `lib/features/` + `lib/shared/`.
+- [x] **H0-A2** — `flutter analyze` produce **cero** errores y **cero** warnings.
+- [x] **H0-A3** — `flutter test` produce exit code 0 (tests de smoke de `ApiClient`).
+- [x] **H0-A4** — `GET /api/health` desde el app retorna `200` logueado en consola de debug.
+- [x] **H0-A5** — El WebSocket client establece conexión con el servidor local y loguea el evento `connected`.
+- [x] **H0-A6** — Design tokens de color, tipografía y espaciado mapeados desde `index.css` de la web, sin valores hardcodeados fuera de `app_theme.dart`.
+- [x] **H0-A7** — Script `scripts/sync-types.sh` existe, está documentado y genera `lib/core/models/shared_types.dart` desde los schemas exportados de `packages/shared`.
+- [x] **H0-A8** — `pnpm dev` sigue funcionando sin cambios (el monorepo no se rompe).
 
 ---
 

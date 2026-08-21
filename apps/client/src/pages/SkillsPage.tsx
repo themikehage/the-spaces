@@ -9,7 +9,7 @@ import { useToast } from "@/contexts/ToastContext";
 import { useLiterals } from "@/lib";
 import { skillsService } from "@/lib/api/skills.service";
 import { EntityEventBus } from "@/lib/event-bus";
-import { BookOpen, ChevronLeft, RefreshCw } from "lucide-react";
+import { BookOpen, Check, ChevronLeft, Copy, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { literals as u } from "./SkillsPage.literals";
 
@@ -31,6 +31,7 @@ export function SkillsPage() {
   const [search, setSearch] = useState("");
   const [selectedSkill, setSelectedSkill] = useState<SkillInfo | null>(null);
   const [mobileShowDetails, setMobileShowDetails] = useState(false);
+  const [copiedSkill, setCopiedSkill] = useState(false);
 
   const [resetting, setResetting] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -53,6 +54,23 @@ export function SkillsPage() {
   const handleResetSkills = useCallback(() => {
     setShowResetConfirm(true);
   }, []);
+
+  const handleCopySkill = useCallback(async () => {
+    if (!selectedSkill) return;
+    const text = selectedSkill.content || selectedSkill.description || "";
+    if (!text) {
+      addToast("error", l.copyError);
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedSkill(true);
+      addToast("success", l.copySuccess);
+      setTimeout(() => setCopiedSkill(false), 2000);
+    } catch {
+      addToast("error", l.copyError);
+    }
+  }, [selectedSkill, addToast, l.copySuccess, l.copyError]);
 
   const fetchSkills = useCallback(async () => {
     try {
@@ -180,6 +198,14 @@ export function SkillsPage() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
+                    <button
+                      type="button"
+                      onClick={handleCopySkill}
+                      title={l.copyInstructions}
+                      className="p-2 rounded-lg border border-input/40 text-muted-foreground hover:text-foreground hover:bg-card-hover transition-colors cursor-pointer"
+                    >
+                      {copiedSkill ? <Check size={14} className="text-success" /> : <Copy size={14} />}
+                    </button>
                     <Badge variant={selectedSkill.scope === "project" ? "primary" : "secondary"}>
                       {selectedSkill.scope === "project" ? l.scopeProjectDetail : l.scopeUserDetail}
                     </Badge>

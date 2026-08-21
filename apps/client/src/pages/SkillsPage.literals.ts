@@ -20,6 +20,9 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     instructions: "Instructions",
     noInstructionText: "*No instruction text*",
     selectSkillHint: "Select a skill from the list to view its instructions",
+    copyInstructions: "Copy instructions",
+    copySuccess: "Skill instructions copied to clipboard",
+    copyError: "Failed to copy skill",
     resetConfirm:
       'Are you sure you want to reset the default Manager Skills? All manual changes to skills starting with "factory-" will be overwritten.',
     resetSuccess: "Manager skills reset successfully.",
@@ -44,6 +47,9 @@ export const literals: Record<SupportedLocale, Record<string, string>> = {
     instructions: "Instrucciones",
     noInstructionText: "*Sin texto de instruccion*",
     selectSkillHint: "Selecciona un skill de la lista para ver sus instrucciones",
+    copyInstructions: "Copiar instrucciones",
+    copySuccess: "Instrucciones del skill copiadas al portapapeles",
+    copyError: "Error al copiar el skill",
     resetConfirm:
       "¿Estas seguro de que quieres restablecer las Skills por defecto de Manager? Se sobrescribiran todos los cambios manuales en las skills que empiezan con 'factory-'.",
     resetSuccess: "Skills de Manager restablecidas con exito.",

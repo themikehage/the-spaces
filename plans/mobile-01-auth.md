@@ -22,15 +22,15 @@
 
 ## 2. Estado Final (To-Be) — Criterios de Aceptación
 
-- [ ] **H1-A1** — Abrir la app sin token → pantalla `LoginScreen` renderiza sin errores.
-- [ ] **H1-A2** — Login exitoso con credenciales válidas → token persiste en secure storage → redirect a `DashboardScreen`.
-- [ ] **H1-A3** — Login con credenciales inválidas → mensaje de error visible en pantalla, sin crash.
-- [ ] **H1-A4** — Matar y reabrir la app con token vigente → no muestra `LoginScreen`, va directo a Dashboard.
-- [ ] **H1-A5** — Logout → token eliminado de storage → redirect a `LoginScreen`.
-- [ ] **H1-A6** — `AuthRepository` no tiene ninguna referencia a widgets ni a `BuildContext`.
-- [ ] **H1-A7** — `GoRouter.redirect` implementado y funcional como único punto de guard.
-- [ ] **H1-A8** — `flutter analyze` produce cero warnings en `lib/features/auth/`.
-- [ ] **H1-A9** — `flutter test` en `test/features/auth/` produce exit code 0.
+- [x] **H1-A1** — Abrir la app sin token → pantalla `LoginScreen` renderiza sin errores.
+- [x] **H1-A2** — Login exitoso con credenciales válidas → token persiste en secure storage → redirect a `DashboardScreen`.
+- [x] **H1-A3** — Login con credenciales inválidas → mensaje de error visible en pantalla, sin crash.
+- [x] **H1-A4** — Matar y reabrir la app con token vigente → no muestra `LoginScreen`, va directo a Dashboard.
+- [x] **H1-A5** — Logout → token eliminado de storage → redirect a `LoginScreen`.
+- [x] **H1-A6** — `AuthRepository` no tiene ninguna referencia a widgets ni a `BuildContext`.
+- [x] **H1-A7** — `GoRouter.redirect` implementado y funcional como único punto de guard.
+- [x] **H1-A8** — `flutter analyze` produce cero warnings en `lib/features/auth/`.
+- [x] **H1-A9** — `flutter test` en `test/features/auth/` produce exit code 0.
 
 ---
 

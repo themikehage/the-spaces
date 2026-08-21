@@ -2,8 +2,6 @@ import { RichMarkdown } from "@/components/chat/RichMarkdown";
 import { Modal } from "@/components/ui/Modal";
 import { useEntitySkills, type SkillInfo } from "@/hooks/useEntitySkills";
 import { useLiterals } from "@/lib";
-import { EntityEventBus } from "@/lib/event-bus";
-import { Check } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { EntityType } from "shared";
 import { literals as u } from "./ChatInput.literals";
@@ -11,12 +9,10 @@ import { PortalPopover } from "./PortalPopover";
 
 interface SkillsPopoverProps {
   skills?: SkillInfo[];
-  activeSkills?: string[];
   loading?: boolean;
   open: boolean;
   onClose: () => void;
   onSelectSkill: (skillName: string) => void;
-  onToggleSkill?: (skillName: string) => void;
   triggerRef: React.RefObject<HTMLButtonElement | null>;
   disabled?: boolean;
   entityType?: EntityType;
@@ -25,12 +21,10 @@ interface SkillsPopoverProps {
 
 export function SkillsPopover({
   skills: externalSkills,
-  activeSkills: externalActiveSkills,
   loading: externalLoading = false,
   open,
   onClose,
   onSelectSkill,
-  onToggleSkill: externalToggleSkill,
   triggerRef,
   disabled = false,
   entityType,
@@ -51,7 +45,6 @@ export function SkillsPopover({
   const useEntityHook = Boolean(entityType && entityId);
 
   const installedSkills = useEntityHook ? entitySkills.installedSkills : externalSkills || [];
-  const activeSkillsList = useEntityHook ? entitySkills.activeSkills : externalActiveSkills || [];
   const isLoading = useEntityHook ? entitySkills.isLoading : externalLoading;
 
   const isGlobalSkill = (s: SkillInfo) =>
@@ -77,15 +70,6 @@ export function SkillsPopover({
       requestAnimationFrame(() => inputRef.current?.focus());
     }
   }, [open]);
-
-  const handleToggleSkillItem = async (skillName: string) => {
-    if (useEntityHook) {
-      await entitySkills.toggleSkill(skillName);
-      EntityEventBus.emit({ type: "skill" });
-    } else if (externalToggleSkill) {
-      externalToggleSkill(skillName);
-    }
-  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -193,7 +177,6 @@ export function SkillsPopover({
             ) : (
               filtered.map((s, idx) => {
                 const isFocused = idx === selectedIndex;
-                const isActive = activeSkillsList.includes(s.name);
                 const isGlobal = isGlobalSkill(s);
 
                 return (
@@ -232,7 +215,6 @@ export function SkillsPopover({
                       )}
                     </div>
 
-                    {/* Right: Actions (Ver instruction & Aplicar button) */}
                     <div className="flex items-center gap-1.5 shrink-0">
                       {s.content && (
                         <button
@@ -246,22 +228,6 @@ export function SkillsPopover({
                           Ver
                         </button>
                       )}
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleToggleSkillItem(s.name);
-                        }}
-                        disabled={disabled}
-                        title={isActive ? "Desactivar skill" : "Aplicar / Activar skill"}
-                        className={`w-6 h-6 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-sm ${
-                          isActive
-                            ? "bg-primary text-primary-foreground border border-primary hover:bg-destructive hover:border-destructive"
-                            : "bg-[#121212] border border-border/40 text-muted-foreground/40 hover:text-primary hover:border-primary/50"
-                        }`}
-                      >
-                        <Check size={13} strokeWidth={2.5} />
-                      </button>
                     </div>
                   </div>
                 );

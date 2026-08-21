@@ -21,15 +21,15 @@
 
 ## 2. Estado Final (To-Be) — Criterios de Aceptación
 
-- [ ] **H2-A1** — `DashboardScreen` carga y muestra proyectos recientes del backend real.
-- [ ] **H2-A2** — `DashboardScreen` muestra sesiones activas con su estado (`running`, `idle`, `error`).
-- [ ] **H2-A3** — Pull-to-refresh refresca datos del backend sin navegación.
-- [ ] **H2-A4** — Cambiar el estado de una sesión desde el cliente web → el badge en mobile se actualiza en < 2 segundos via WS.
-- [ ] **H2-A5** — Estado `loading` muestra skeleton loaders (no spinners genéricos).
-- [ ] **H2-A6** — Estado `error` muestra mensaje de error con botón de retry.
-- [ ] **H2-A7** — `DashboardRepository` no tiene referencias a widgets ni a `BuildContext`.
-- [ ] **H2-A8** — `flutter analyze lib/features/dashboard/` produce cero warnings.
-- [ ] **H2-A9** — `flutter test test/features/dashboard/` produce exit code 0.
+- [x] **H2-A1** — `DashboardScreen` carga y muestra proyectos recientes del backend real.
+- [x] **H2-A2** — `DashboardScreen` muestra sesiones activas con su estado (`running`, `idle`, `error`).
+- [x] **H2-A3** — Pull-to-refresh refresca datos del backend sin navegación.
+- [x] **H2-A4** — Cambiar el estado de una sesión desde el cliente web → el badge en mobile se actualiza en < 2 segundos via WS.
+- [x] **H2-A5** — Estado `loading` muestra skeleton loaders (no spinners genéricos).
+- [x] **H2-A6** — Estado `error` muestra mensaje de error con botón de retry.
+- [x] **H2-A7** — `DashboardRepository` no tiene referencias a widgets ni a `BuildContext`.
+- [x] **H2-A8** — `flutter analyze lib/features/dashboard/` produce cero warnings.
+- [x] **H2-A9** — `flutter test test/features/dashboard/` produce exit code 0.
 
 ---
 

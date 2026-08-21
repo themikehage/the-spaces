@@ -136,9 +136,31 @@
   - [x] Propagación en servicios API del cliente (`agents`, `teams`, `projects`, `workflows`).
   - [x] Campos de entrada opcionales `tag` en los formularios modales (`RegisterModal`, `TeamCreateModal`, `TeamSettingsModal`, `DashboardModals`, `WorkflowsListPage`).
   - [x] Renderizado del chip de `tag` en las tarjetas y componentes de UI (`AgentCard`, `TeamCard`, etc.).
+- [x] Implementar Hito 0 — Mobile Scaffolding & Fundación Flutter (`plans/mobile-00-scaffolding.md`):
+  - [x] Crear estructura base en `apps/mobile/` (`lib/core/`, `lib/features/`, `lib/shared/`).
+  - [x] Implementar `ApiClient` tipado con interceptores de autenticación y mapeo jerárquico de excepciones `ApiException`.
+  - [x] Implementar `WsClient` resiliente con reconexión automática y backoff exponencial.
+  - [x] Implementar `AppStorage` tipado con `FlutterSecureStorage` y `SharedPreferences`.
+  - [x] Centralizar tokens de diseño en `AppTheme`, `AppColors`, `AppTypography` y `AppSpacing` mapeados desde `index.css`.
+  - [x] Implementar script puente `scripts/export-shared-schema.ts` / `scripts/sync-types.sh` y comando `sync-mobile-types`.
+  - [x] Verificación completa con `flutter analyze` (0 warnings/errors), 10 unit/smoke tests en verde y build íntegro del monorepo (`pnpm build`).
+- [x] Implementar Hito 1 — Mobile Auth & Session Guard (`plans/mobile-01-auth.md`):
+  - [x] Implementar modelos `AuthUser` y `AuthResponse` inmutables y tipados.
+  - [x] Implementar `AuthRepository` encapsulando `POST /api/auth/login`, `POST /api/auth/logout` y persistencia segura en `AppStorage`.
+  - [x] Implementar state machine `AuthState` y `AuthNotifier` desacoplados de widgets y HTTP directo.
+  - [x] Implementar UI `LoginScreen` con tokens de `AppTheme`, inputs validados y feedback de error inline.
+  - [x] Implementar navegación declarativa con `GoRouter.redirect` y `RouterListenable` reactivo a cambios de sesión.
+  - [x] Verificación completa: 28 tests unitarios/widget en verde y `flutter analyze` con 0 warnings/errors.
+- [x] Implementar Hito 2 — Mobile Dashboard (`plans/mobile-02-dashboard.md`):
+  - [x] Sub-hito 2.1: Modelos de datos `DashboardSession` y `DashboardProject` con Freezed y parsing flexible.
+  - [x] Sub-hito 2.2: `DashboardRepository` sobre `ApiClient` (`/api/sessions`, `/api/workspace-projects`) sin `Dio` directo ni referencias a UI.
+  - [x] Sub-hito 2.3: State machine `DashboardState` y `DashboardNotifier` con carga paralela, pull-to-refresh y suscripción reactiva a eventos WebSocket `session_status` (< 2s).
+  - [x] Sub-hito 2.4: UI `DashboardScreen` (cero `setState`), `SessionCard` con badges semánticos, `ProjectCard`, `DashboardSkeleton` animado y rutas conectadas en `AppRouter`.
+  - [x] Verificación completa: 15 tests dedicados del feature en verde (43 tests totales en mobile) y `flutter analyze` con 0 issues.
 
 ## Próximos pasos
 
 - [ ] Implementar el Plan 40 — Arquitectura de Sandboxing Productivo (`plans/40-production-sandbox-architecture.md`).
+
 
 
