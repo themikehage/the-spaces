@@ -174,7 +174,11 @@
   - [x] Sub-hito 5.2: State machine `ChatState` y `ChatNotifier` con streaming reactivo token a token via WebSocket, `StreamingBubble` con cursor animado y soporte de abort/stop stream.
   - [x] Sub-hito 5.3: `ChatInputBar` expandible con toggles dinámicos send/stop, `ModelSelectorSheet` bottom modal con búsqueda y badges.
   - [x] Sub-hito 5.4: `ToolCallCard` colapsable con JSON highlight y badges semánticos, `AttachmentPreview` con integración `ImagePicker`.
-  - [x] Verificación completa: 90 tests totales en verde (`flutter test`), `flutter analyze` con 0 issues y 100% de cobertura de contratos de streaming y WS.
+- [x] Implementar Hito 6 — Mobile Projects & Agents (`plans/mobile-06-projects-agents.md`):
+  - [x] Sub-hito 6.1: Modelos `Project` y `Agent` con Freezed, `ProjectsRepository` y `AgentsRepository` desacoplados.
+  - [x] Sub-hito 6.2: State machines `ProjectsNotifier` y `AgentsNotifier` con búsqueda reactiva, filtros y recarga vía eventos de entidad.
+  - [x] Sub-hito 6.3: UI `ProjectsScreen`, `ProjectDetailScreen`, `AgentsScreen`, `AgentDetailScreen` y componente reutilizable `EntityConfigEditor`.
+  - [x] Verificación completa: 120 tests totales en verde (`flutter test`), `flutter analyze` con 0 issues y rutas conectadas en `AppRouter`.
 
 ## Próximos pasos
 
