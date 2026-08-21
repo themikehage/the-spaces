@@ -64,7 +64,10 @@ export const CreateSessionSchema = z.object({
 export const ModelSettingsSchema = z.object({
   provider: z.string(),
   modelId: z.string(),
-  thinkingLevel: z.enum(["off", "minimal", "low", "medium", "high", "xhigh"]),
+  thinkingLevel: z
+    .enum(["off", "minimal", "low", "medium", "high", "xhigh"])
+    .optional()
+    .default("off"),
 });
 
 export {

@@ -63,7 +63,7 @@ class ChatRepository {
       data: {
         'provider': provider,
         'modelId': modelId,
-        if (thinkingLevel != null) 'thinkingLevel': thinkingLevel,
+        'thinkingLevel': thinkingLevel ?? 'off',
       },
     );
   }
