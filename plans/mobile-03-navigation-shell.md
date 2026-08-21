@@ -22,14 +22,14 @@
 
 ## 2. Estado Final (To-Be) — Criterios de Aceptación
 
-- [ ] **H3-A1** — Bottom nav con 5 tabs: Dashboard, Sessions, Projects, Agents, Settings. Cada tab es tappable y navega a su screen (placeholder si la screen aún no existe).
-- [ ] **H3-A2** — Cambiar de tab preserva el scroll y estado de la screen anterior.
-- [ ] **H3-A3** — AppDrawer accesible desde icono en AppBar con: Teams, Workflows, Skills, MCP, Schedules, Logs.
-- [ ] **H3-A4** — `AttentionBadge` visible en la tab de Sessions (o en AppBar) con count numérico de pendientes.
-- [ ] **H3-A5** — Deep links funcionales: navegar a `/sessions/abc123` desde notificación → abre la app en `SessionsScreen` con el id correcto.
-- [ ] **H3-A6** — `GoRouter` es la única fuente de verdad de la ruta activa — ningún widget tiene su propia lógica de routing.
-- [ ] **H3-A7** — `flutter analyze lib/core/router/ lib/shared/widgets/` produce cero warnings.
-- [ ] **H3-A8** — `flutter test test/core/router/` produce exit code 0.
+- [x] **H3-A1** — Bottom nav con 5 tabs: Dashboard, Sessions, Projects, Agents, Settings. Cada tab es tappable y navega a su screen (placeholder si la screen aún no existe).
+- [x] **H3-A2** — Cambiar de tab preserva el scroll y estado de la screen anterior.
+- [x] **H3-A3** — AppDrawer accesible desde icono en AppBar con: Teams, Workflows, Skills, MCP, Schedules, Logs.
+- [x] **H3-A4** — `AttentionBadge` visible en la tab de Sessions (o en AppBar) con count numérico de pendientes.
+- [x] **H3-A5** — Deep links funcionales: navegar a `/sessions/abc123` desde notificación → abre la app en `SessionsScreen` con el id correcto.
+- [x] **H3-A6** — `GoRouter` es la única fuente de verdad de la ruta activa — ningún widget tiene su propia lógica de routing.
+- [x] **H3-A7** — `flutter analyze lib/core/router/ lib/shared/widgets/` produce cero warnings.
+- [x] **H3-A8** — `flutter test test/core/router/` produce exit code 0.
 
 ---
 

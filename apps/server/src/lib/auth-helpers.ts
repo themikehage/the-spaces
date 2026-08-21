@@ -84,15 +84,26 @@ export function getSessionTokensFromCookieHeader(
   return tokens;
 }
 
-function findUserByTokenSync(token: string): { username: string; expiresAt: unknown } | null {
-  if (!token) return null;
+function findUserByTokenSync(rawToken: string): { username: string; expiresAt: unknown } | null {
+  if (!rawToken) return null;
   try {
+    let token = rawToken.trim();
+    try {
+      token = decodeURIComponent(token);
+    } catch {
+      /* noop */
+    }
+    let clean = token;
+    if (clean.startsWith("s:")) clean = clean.slice(2);
+    const dotIdx = clean.indexOf(".");
+    if (dotIdx !== -1) clean = clean.slice(0, dotIdx);
+
     const db = getDb();
     const row = db
       .query(
-        `SELECT user.username, session.expiresAt FROM session INNER JOIN user ON session.userId = user.id WHERE session.token = ?`,
+        `SELECT user.username, session.expiresAt FROM session INNER JOIN user ON session.userId = user.id WHERE session.token = ? OR session.token = ?`,
       )
-      .get(token) as { username: string; expiresAt: unknown } | null;
+      .get(clean, token) as { username: string; expiresAt: unknown } | null;
     return row ?? null;
   } catch {
     return null;

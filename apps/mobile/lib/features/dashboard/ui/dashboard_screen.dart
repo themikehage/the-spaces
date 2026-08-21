@@ -19,6 +19,14 @@ class DashboardScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          key: const Key('dashboard_drawer_button'),
+          icon: const Icon(Icons.menu),
+          tooltip: 'Open menu',
+          onPressed: () {
+            Scaffold.maybeOf(context)?.openDrawer();
+          },
+        ),
         title: Row(
           children: [
             Container(

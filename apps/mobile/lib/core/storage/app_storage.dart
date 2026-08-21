@@ -11,7 +11,8 @@ enum StorageKey {
   defaultProvider('default_provider'),
   themeMode('theme_mode'),
   activeSessionId('active_session_id'),
-  activeProjectId('active_project_id');
+  activeProjectId('active_project_id'),
+  sessionFilter('session_filter');
 
   final String keyName;
   const StorageKey(this.keyName);

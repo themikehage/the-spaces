@@ -3,6 +3,7 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
 import { auth } from "../auth/index";
+import { getDb } from "../auth/db";
 import { getAuthPayload, sessionMiddleware } from "../auth/middleware";
 import { getUserByUsername, isFirstRun } from "../auth/onboarding";
 import {
@@ -90,8 +91,27 @@ authRouter.post("/register", zValidator("json", RegisterSchema), async (c) => {
     let token: string | null = null;
     for (const cookie of setCookies) {
       c.res.headers.append("Set-Cookie", cookie);
-      if (cookie.startsWith("better-auth.session_token=")) {
-        token = cookie.split("=")[1].split(";")[0];
+      const match = cookie.match(/(?:__Secure-)?better-auth\.session_token=([^;]+)/);
+      if (match) {
+        let raw = decodeURIComponent(match[1].trim());
+        if (raw.startsWith("s:")) raw = raw.slice(2);
+        const dotIdx = raw.indexOf(".");
+        token = dotIdx !== -1 ? raw.slice(0, dotIdx) : raw;
+      }
+    }
+
+    if (!token) {
+      try {
+        const db = getDb();
+        const userRow = await getUserByUsername(username);
+        if (userRow?.id) {
+          const sessionRow = db
+            .query(`SELECT token FROM session WHERE userId = ? ORDER BY createdAt DESC LIMIT 1`)
+            .get(userRow.id) as { token: string } | null;
+          if (sessionRow?.token) token = sessionRow.token;
+        }
+      } catch {
+        /* noop */
       }
     }
 
@@ -132,8 +152,24 @@ authRouter.post("/login", zValidator("json", LoginSchema), async (c) => {
     let token: string | null = null;
     for (const cookie of setCookies) {
       c.res.headers.append("Set-Cookie", cookie);
-      if (cookie.startsWith("better-auth.session_token=")) {
-        token = cookie.split("=")[1].split(";")[0];
+      const match = cookie.match(/(?:__Secure-)?better-auth\.session_token=([^;]+)/);
+      if (match) {
+        let raw = decodeURIComponent(match[1].trim());
+        if (raw.startsWith("s:")) raw = raw.slice(2);
+        const dotIdx = raw.indexOf(".");
+        token = dotIdx !== -1 ? raw.slice(0, dotIdx) : raw;
+      }
+    }
+
+    if (!token && user.id) {
+      try {
+        const db = getDb();
+        const sessionRow = db
+          .query(`SELECT token FROM session WHERE userId = ? ORDER BY createdAt DESC LIMIT 1`)
+          .get(user.id) as { token: string } | null;
+        if (sessionRow?.token) token = sessionRow.token;
+      } catch {
+        /* noop */
       }
     }
 

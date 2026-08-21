@@ -157,6 +157,18 @@
   - [x] Sub-hito 2.3: State machine `DashboardState` y `DashboardNotifier` con carga paralela, pull-to-refresh y suscripción reactiva a eventos WebSocket `session_status` (< 2s).
   - [x] Sub-hito 2.4: UI `DashboardScreen` (cero `setState`), `SessionCard` con badges semánticos, `ProjectCard`, `DashboardSkeleton` animado y rutas conectadas en `AppRouter`.
   - [x] Verificación completa: 15 tests dedicados del feature en verde (43 tests totales en mobile) y `flutter analyze` con 0 issues.
+- [x] Implementar Hito 3 — Mobile Navegación & Layout Shell (`plans/mobile-03-navigation-shell.md`):
+  - [x] Sub-hito 3.1: `StatefulShellRoute.indexedStack` en `AppRouter` con 5 branches (Dashboard, Sessions, Projects, Agents, Settings) y widget `AppShell`.
+  - [x] Sub-hito 3.2: State machine de navegación global `NavigationState` y `NavigationNotifier`.
+  - [x] Sub-hito 3.3: `AppDrawer` integrado con rutas secundarias (Teams, Workflows, Skills, MCP, Schedules, Logs) y cierre reactivo.
+  - [x] Sub-hito 3.4: `AttentionBadge` integrado en la pestaña de Sessions con stub reactivo `AttentionNotifier`.
+  - [x] Verificación completa: 53 tests totales en verde (`flutter test`), `flutter analyze` con 0 issues y validación estática de patrones de navegación.
+- [x] Implementar Hito 4 — Mobile Sessions List (`plans/mobile-04-sessions-list.md`):
+  - [x] Sub-hito 4.1: Modelos de sesión `Session`, `CreateSessionInput` y `PaginatedSessions` generados con Freezed y validaciones de estado.
+  - [x] Sub-hito 4.2: `SessionsRepository` sobre `ApiClient` (`GET /api/sessions`, `POST /api/sessions`, `DELETE /api/sessions/:id`).
+  - [x] Sub-hito 4.3: State machine `SessionsState` y `SessionsNotifier` con paginación lazy, filtros por estado persistentes en `AppStorage` y reactividad WS en tiempo real.
+  - [x] Sub-hito 4.4: UI `SessionsScreen` (cero `setState`), `SessionListItem`, `NewSessionSheet` bottom modal, `SessionsSkeleton` y swipe-to-delete con confirmación dialogada.
+  - [x] Verificación completa: 71 tests totales en verde (`flutter test`), `flutter analyze` con 0 issues y cero imports directos de Dio o `setState`.
 
 ## Próximos pasos
 

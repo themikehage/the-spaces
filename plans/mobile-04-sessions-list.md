@@ -21,17 +21,17 @@
 
 ## 2. Estado Final (To-Be) — Criterios de Aceptación
 
-- [ ] **H4-A1** — `SessionsScreen` muestra lista real de sesiones del backend con skeleton durante carga.
-- [ ] **H4-A2** — Búsqueda por nombre de sesión filtra la lista en tiempo real (filtro local, sin HTTP).
-- [ ] **H4-A3** — Filtro por estado: All, Active, Idle. Persiste en `AppStorage` entre sesiones de app.
-- [ ] **H4-A4** — Scroll hasta el final → carga página siguiente (paginación lazy).
-- [ ] **H4-A5** — FAB "+" abre `NewSessionSheet` (bottom sheet) con campos: nombre, agente, proyecto.
-- [ ] **H4-A6** — Crear sesión desde mobile → aparece en el cliente web sin necesidad de refresh manual.
-- [ ] **H4-A7** — Swipe-to-delete en una sesión → confirmación → `DELETE /api/sessions/:id` → desaparece de la lista.
-- [ ] **H4-A8** — Sesión creada desde el cliente web → aparece en mobile en < 2 segundos via WS.
-- [ ] **H4-A9** — Tap en sesión → navega a `/sessions/:id` (placeholder del Hito 5 de Chat).
-- [ ] **H4-A10** — `flutter analyze lib/features/sessions/` produce cero warnings.
-- [ ] **H4-A11** — `flutter test test/features/sessions/` produce exit code 0.
+- [x] **H4-A1** — `SessionsScreen` muestra lista real de sesiones del backend con skeleton durante carga.
+- [x] **H4-A2** — Búsqueda por nombre de sesión filtra la lista en tiempo real (filtro local, sin HTTP).
+- [x] **H4-A3** — Filtro por estado: All, Active, Idle. Persiste en `AppStorage` entre sesiones de app.
+- [x] **H4-A4** — Scroll hasta el final → carga página siguiente (paginación lazy).
+- [x] **H4-A5** — FAB "+" abre `NewSessionSheet` (bottom sheet) con campos: nombre, agente, proyecto.
+- [x] **H4-A6** — Crear sesión desde mobile → aparece en el cliente web sin necesidad de refresh manual.
+- [x] **H4-A7** — Swipe-to-delete en una sesión → confirmación → `DELETE /api/sessions/:id` → desaparece de la lista.
+- [x] **H4-A8** — Sesión creada desde el cliente web → aparece en mobile en < 2 segundos via WS.
+- [x] **H4-A9** — Tap en sesión → navega a `/sessions/:id` (placeholder del Hito 5 de Chat).
+- [x] **H4-A10** — `flutter analyze lib/features/sessions/` produce cero warnings.
+- [x] **H4-A11** — `flutter test test/features/sessions/` produce exit code 0.
 
 ---
 
