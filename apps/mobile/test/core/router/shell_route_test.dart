@@ -15,6 +15,8 @@ import 'package:spaces_mobile/features/auth/ui/auth_state.dart';
 import 'package:spaces_mobile/features/dashboard/data/dashboard_repository.dart';
 import 'package:spaces_mobile/features/dashboard/data/models/dashboard_project.dart';
 import 'package:spaces_mobile/features/dashboard/data/models/dashboard_session.dart';
+import 'package:spaces_mobile/features/agents/ui/agents_screen.dart';
+import 'package:spaces_mobile/features/projects/ui/projects_screen.dart';
 import 'package:spaces_mobile/features/sessions/ui/sessions_screen.dart';
 
 class FakeAuthRepository implements AuthRepository {
@@ -190,12 +192,12 @@ void main() {
       // Tap Projects tab
       await tester.tap(find.byKey(const Key('shell_nav_projects')));
       await tester.pumpAndSettle();
-      expect(find.text('Projects (Coming Soon)'), findsOneWidget);
+      expect(find.byType(ProjectsScreen), findsOneWidget);
 
       // Tap Agents tab
       await tester.tap(find.byKey(const Key('shell_nav_agents')));
       await tester.pumpAndSettle();
-      expect(find.text('Agents (Coming Soon)'), findsOneWidget);
+      expect(find.byType(AgentsScreen), findsOneWidget);
 
       // Tap Settings tab
       await tester.tap(find.byKey(const Key('shell_nav_settings')));
@@ -217,7 +219,7 @@ void main() {
       // Switch to Projects
       await tester.tap(find.byKey(const Key('shell_nav_projects')));
       await tester.pumpAndSettle();
-      expect(find.text('Projects (Coming Soon)'), findsOneWidget);
+      expect(find.byType(ProjectsScreen), findsOneWidget);
 
       // Switch back to Dashboard — state is preserved immediately without reload
       await tester.tap(find.byKey(const Key('shell_nav_dashboard')));

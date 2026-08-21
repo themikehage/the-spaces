@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/agents/ui/agent_detail_screen.dart';
+import '../../features/agents/ui/agents_screen.dart';
 import '../../features/auth/ui/auth_notifier.dart';
 import '../../features/auth/ui/auth_state.dart';
 import '../../features/auth/ui/login_screen.dart';
 import '../../features/chat/ui/chat_screen.dart';
 import '../../features/dashboard/ui/dashboard_screen.dart';
+import '../../features/projects/ui/project_detail_screen.dart';
+import '../../features/projects/ui/projects_screen.dart';
 import '../../features/sessions/ui/sessions_screen.dart';
 import '../../shared/widgets/app_shell.dart';
 import '../theme/app_theme.dart';
@@ -188,14 +192,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/projects',
                 name: 'projects',
-                builder: (context, state) =>
-                    const PlaceholderScreen(title: 'Projects'),
+                builder: (context, state) => const ProjectsScreen(),
                 routes: [
                   GoRoute(
                     path: ':id',
                     name: 'project-detail',
-                    builder: (context, state) => PlaceholderScreen(
-                      title: 'Project ${state.pathParameters['id'] ?? ''}',
+                    builder: (context, state) => ProjectDetailScreen(
+                      projectId: state.pathParameters['id'] ?? '',
                     ),
                   ),
                 ],
@@ -210,14 +213,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/agents',
                 name: 'agents',
-                builder: (context, state) =>
-                    const PlaceholderScreen(title: 'Agents'),
+                builder: (context, state) => const AgentsScreen(),
                 routes: [
                   GoRoute(
                     path: ':id',
                     name: 'agent-detail',
-                    builder: (context, state) => PlaceholderScreen(
-                      title: 'Agent ${state.pathParameters['id'] ?? ''}',
+                    builder: (context, state) => AgentDetailScreen(
+                      agentId: state.pathParameters['id'] ?? '',
                     ),
                   ),
                 ],

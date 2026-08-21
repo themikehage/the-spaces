@@ -20,15 +20,15 @@
 
 ## 2. Estado Final (To-Be) — Criterios de Aceptación
 
-- [ ] **H6-A1** — `ProjectsScreen` lista proyectos reales con search funcional.
-- [ ] **H6-A2** — Tap en proyecto → `ProjectDetailScreen` con sesiones del proyecto y config básica.
-- [ ] **H6-A3** — Crear proyecto (FAB) → aparece en la web sin refresh.
-- [ ] **H6-A4** — `AgentsScreen` lista agentes con search funcional.
-- [ ] **H6-A5** — Tap en agente → `AgentDetailScreen` con: modelo asignado, tools activas, skills asignadas.
-- [ ] **H6-A6** — Cambiar el modelo de un agente desde mobile → la próxima sesión usa el modelo nuevo.
-- [ ] **H6-A7** — `EntityConfigEditor` widget reutilizable: usado en `ProjectDetailScreen` y `AgentDetailScreen`.
-- [ ] **H6-A8** — `flutter analyze lib/features/projects/ lib/features/agents/` produce cero warnings.
-- [ ] **H6-A9** — `flutter test test/features/projects/ test/features/agents/` produce exit code 0.
+- [x] **H6-A1** — `ProjectsScreen` lista proyectos reales con search funcional.
+- [x] **H6-A2** — Tap en proyecto → `ProjectDetailScreen` con sesiones del proyecto y config básica.
+- [x] **H6-A3** — Crear proyecto (FAB) → aparece en la web sin refresh.
+- [x] **H6-A4** — `AgentsScreen` lista agentes con search funcional.
+- [x] **H6-A5** — Tap en agente → `AgentDetailScreen` con: modelo asignado, tools activas, skills asignadas.
+- [x] **H6-A6** — Cambiar el modelo de un agente desde mobile → la próxima sesión usa el modelo nuevo.
+- [x] **H6-A7** — `EntityConfigEditor` widget reutilizable: usado en `ProjectDetailScreen` y `AgentDetailScreen`.
+- [x] **H6-A8** — `flutter analyze lib/features/projects/ lib/features/agents/` produce cero warnings.
+- [x] **H6-A9** — `flutter test test/features/projects/ test/features/agents/` produce exit code 0.
 
 ---
 
