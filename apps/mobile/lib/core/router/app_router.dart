@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/ui/auth_notifier.dart';
 import '../../features/auth/ui/auth_state.dart';
 import '../../features/auth/ui/login_screen.dart';
+import '../../features/chat/ui/chat_screen.dart';
 import '../../features/dashboard/ui/dashboard_screen.dart';
 import '../../features/sessions/ui/sessions_screen.dart';
 import '../../shared/widgets/app_shell.dart';
@@ -171,8 +172,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: ':id',
                     name: 'session-detail',
-                    builder: (context, state) => PlaceholderScreen(
-                      title: 'Session ${state.pathParameters['id'] ?? ''}',
+                    builder: (context, state) => ChatScreen(
+                      sessionId: state.pathParameters['id'] ?? '',
                     ),
                   ),
                 ],

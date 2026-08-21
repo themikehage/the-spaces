@@ -169,6 +169,12 @@
   - [x] Sub-hito 4.3: State machine `SessionsState` y `SessionsNotifier` con paginación lazy, filtros por estado persistentes en `AppStorage` y reactividad WS en tiempo real.
   - [x] Sub-hito 4.4: UI `SessionsScreen` (cero `setState`), `SessionListItem`, `NewSessionSheet` bottom modal, `SessionsSkeleton` y swipe-to-delete con confirmación dialogada.
   - [x] Verificación completa: 71 tests totales en verde (`flutter test`), `flutter analyze` con 0 issues y cero imports directos de Dio o `setState`.
+- [x] Implementar Hito 5 — Mobile Chat & Real-Time Streaming (`plans/mobile-05-chat.md`):
+  - [x] Sub-hito 5.1: Modelos de mensaje (`ChatMessage`, `ToolCall`, `AiModel`), `ChatRepository`, rendering de Markdown (`MarkdownBlock`), burbujas adaptables (`MessageBubble`) y mensajes de sistema (`SystemMessageCard`).
+  - [x] Sub-hito 5.2: State machine `ChatState` y `ChatNotifier` con streaming reactivo token a token via WebSocket, `StreamingBubble` con cursor animado y soporte de abort/stop stream.
+  - [x] Sub-hito 5.3: `ChatInputBar` expandible con toggles dinámicos send/stop, `ModelSelectorSheet` bottom modal con búsqueda y badges.
+  - [x] Sub-hito 5.4: `ToolCallCard` colapsable con JSON highlight y badges semánticos, `AttachmentPreview` con integración `ImagePicker`.
+  - [x] Verificación completa: 90 tests totales en verde (`flutter test`), `flutter analyze` con 0 issues y 100% de cobertura de contratos de streaming y WS.
 
 ## Próximos pasos
 

@@ -22,18 +22,18 @@
 
 ## 2. Estado Final (To-Be) — Criterios de Aceptación
 
-- [ ] **H5-A1** — Abrir una sesión → historial de mensajes carga desde `GET /api/sessions/:id/messages`.
-- [ ] **H5-A2** — Enviar mensaje → respuesta del asistente aparece streameada token a token en < 500ms desde el primer token.
-- [ ] **H5-A3** — Durante streaming, botón "Stop" cancela la generación (`DELETE /api/sessions/:id/stream` o equivalente del backend).
-- [ ] **H5-A4** — Bloques de markdown se renderizan correctamente: código con syntax highlight, listas, negritas, links.
-- [ ] **H5-A5** — Tool calls visibles como cards colapsables con nombre, argumentos y resultado.
-- [ ] **H5-A6** — Input soporta texto multilínea. "Enter" en mobile no envía (usa botón).
-- [ ] **H5-A7** — Attach image desde galería → imagen visible en preview antes de enviar → enviada con el mensaje.
-- [ ] **H5-A8** — Selector de modelo (bottom sheet) — cambia el modelo para la siguiente llamada.
-- [ ] **H5-A9** — Auto-scroll al último mensaje durante streaming. Scroll manual hacia arriba pausa el auto-scroll.
-- [ ] **H5-A10** — `ChatRepository` no tiene referencias a widgets.
-- [ ] **H5-A11** — `flutter analyze lib/features/chat/` produce cero warnings.
-- [ ] **H5-A12** — `flutter test test/features/chat/` produce exit code 0.
+- [x] **H5-A1** — Abrir una sesión → historial de mensajes carga desde `GET /api/sessions/:id/messages`.
+- [x] **H5-A2** — Enviar mensaje → respuesta del asistente aparece streameada token a token en < 500ms desde el primer token.
+- [x] **H5-A3** — Durante streaming, botón "Stop" cancela la generación (`DELETE /api/sessions/:id/stream` o equivalente del backend).
+- [x] **H5-A4** — Bloques de markdown se renderizan correctamente: código con syntax highlight, listas, negritas, links.
+- [x] **H5-A5** — Tool calls visibles como cards colapsables con nombre, argumentos y resultado.
+- [x] **H5-A6** — Input soporta texto multilínea. "Enter" en mobile no envía (usa botón).
+- [x] **H5-A7** — Attach image desde galería → imagen visible en preview antes de enviar → enviada con el mensaje.
+- [x] **H5-A8** — Selector de modelo (bottom sheet) — cambia el modelo para la siguiente llamada.
+- [x] **H5-A9** — Auto-scroll al último mensaje durante streaming. Scroll manual hacia arriba pausa el auto-scroll.
+- [x] **H5-A10** — `ChatRepository` no tiene referencias a widgets.
+- [x] **H5-A11** — `flutter analyze lib/features/chat/` produce cero warnings.
+- [x] **H5-A12** — `flutter test test/features/chat/` produce exit code 0.
 
 ---
 
