@@ -86,6 +86,12 @@ class FakeWsClient implements WsClient {
   void send(Map<String, dynamic> message) {}
 
   @override
+  void subscribeToSession(String sessionId) {}
+
+  @override
+  void unsubscribeFromSession(String sessionId) {}
+
+  @override
   void dispose() {}
 }
 

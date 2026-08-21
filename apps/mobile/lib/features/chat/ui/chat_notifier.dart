@@ -30,6 +30,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
   }
 
   void _init() {
+    _repository.connectToSession(_sessionId);
     loadHistory();
     _listenToEvents();
   }
@@ -72,7 +73,12 @@ class ChatNotifier extends StateNotifier<ChatState> {
   void _handleWsEvent(Map<String, dynamic> event) {
     final type = event['type'] as String?;
 
-    if (type == 'agent_start') {
+    if (type == 'error' || type == 'auth_error') {
+      state = state.copyWith(
+        isStreaming: false,
+        error: event['error']?.toString() ?? 'Error occurred in session communication',
+      );
+    } else if (type == 'agent_start') {
       state = state.copyWith(
         isStreaming: true,
         streamingContent: '',
@@ -271,6 +277,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
 
   @override
   void dispose() {
+    _repository.unsubscribeFromSession(_sessionId);
     _eventsSubscription?.cancel();
     super.dispose();
   }

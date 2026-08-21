@@ -80,6 +80,15 @@ class ChatRepository {
 
   Future<void> connectToSession(String sessionId) async {
     await _wsClient.connect(sessionId: sessionId);
+    _wsClient.subscribeToSession(sessionId);
+  }
+
+  void subscribeToSession(String sessionId) {
+    _wsClient.subscribeToSession(sessionId);
+  }
+
+  void unsubscribeFromSession(String sessionId) {
+    _wsClient.unsubscribeFromSession(sessionId);
   }
 
   void sendPrompt({
@@ -93,6 +102,16 @@ class ChatRepository {
       'message': message,
       if (images != null && images.isNotEmpty) 'images': images,
     });
+  }
+
+  Future<void> postPrompt({
+    required String sessionId,
+    required String message,
+  }) async {
+    await _apiClient.post<dynamic>(
+      '/api/sessions/$sessionId/prompt',
+      data: {'message': message},
+    );
   }
 
   Stream<Map<String, dynamic>> get events => _wsClient.events;

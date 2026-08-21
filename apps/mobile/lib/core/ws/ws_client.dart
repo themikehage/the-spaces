@@ -18,7 +18,6 @@ class WsClient {
   WebSocketChannel? _channel;
   StreamSubscription? _channelSubscription;
   Timer? _reconnectTimer;
-  Timer? _pingTimer;
 
   final _eventsController = StreamController<Map<String, dynamic>>.broadcast();
   final _connectionStatusController = StreamController<bool>.broadcast();
@@ -80,7 +79,7 @@ class WsClient {
         _connectionStatusController.add(true);
       }
       _reconnectAttempts = 0;
-      _startPingTimer();
+      _sendAuthMessage();
 
       _channelSubscription = _channel!.stream.listen(
         (dynamic rawData) {
@@ -110,6 +109,30 @@ class WsClient {
     }
   }
 
+  void _sendAuthMessage() {
+    if (_currentToken != null && _currentToken!.isNotEmpty) {
+      send({
+        'type': 'auth',
+        'token': _currentToken,
+        if (_currentSessionId != null && _currentSessionId!.isNotEmpty)
+          'sessionId': _currentSessionId,
+      });
+    }
+  }
+
+  void subscribeToSession(String sessionId) {
+    _currentSessionId = sessionId;
+    if (connected) {
+      send({'type': 'session_subscribe', 'sessionId': sessionId});
+    }
+  }
+
+  void unsubscribeFromSession(String sessionId) {
+    if (connected) {
+      send({'type': 'session_unsubscribe', 'sessionId': sessionId});
+    }
+  }
+
   void _handleIncomingData(dynamic rawData) {
     try {
       final String payload;
@@ -122,8 +145,20 @@ class WsClient {
       }
 
       final dynamic decoded = jsonDecode(payload);
-      if (decoded is Map<String, dynamic> && !_eventsController.isClosed) {
-        _eventsController.add(decoded);
+      if (decoded is Map<String, dynamic>) {
+        final type = decoded['type'] as String?;
+        if (type == 'ping') {
+          send({'type': 'pong'});
+          return;
+        }
+        if (type == 'auth_success' &&
+            _currentSessionId != null &&
+            _currentSessionId!.isNotEmpty) {
+          send({'type': 'session_subscribe', 'sessionId': _currentSessionId});
+        }
+        if (!_eventsController.isClosed) {
+          _eventsController.add(decoded);
+        }
       }
     } catch (_) {}
   }
@@ -144,15 +179,6 @@ class WsClient {
     });
   }
 
-  void _startPingTimer() {
-    _pingTimer?.cancel();
-    _pingTimer = Timer.periodic(const Duration(seconds: 25), (_) {
-      if (connected) {
-        send({'type': 'ping', 'timestamp': DateTime.now().millisecondsSinceEpoch});
-      }
-    });
-  }
-
   void send(Map<String, dynamic> message) {
     if (_channel != null) {
       _channel!.sink.add(jsonEncode(message));
@@ -160,8 +186,6 @@ class WsClient {
   }
 
   void _cleanupCurrentConnection() {
-    _pingTimer?.cancel();
-    _pingTimer = null;
     _channelSubscription?.cancel();
     _channelSubscription = null;
     _channel?.sink.close();

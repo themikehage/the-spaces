@@ -75,6 +75,18 @@ class FakeWsClient extends Fake implements WsClient {
   Stream<Map<String, dynamic>> get events => _controller.stream;
 
   @override
+  bool get connected => true;
+
+  @override
+  Future<void> connect({String? sessionId, String? token}) async {}
+
+  @override
+  void subscribeToSession(String sessionId) {}
+
+  @override
+  void unsubscribeFromSession(String sessionId) {}
+
+  @override
   void send(Map<String, dynamic> message) {
     sentMessages.add(message);
   }
@@ -83,6 +95,7 @@ class FakeWsClient extends Fake implements WsClient {
     _controller.add(event);
   }
 
+  @override
   void dispose() {
     _controller.close();
   }
