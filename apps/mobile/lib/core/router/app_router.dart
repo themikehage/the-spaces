@@ -16,6 +16,9 @@ import '../../features/sessions/ui/sessions_screen.dart';
 import '../../features/settings/ui/settings_screen.dart';
 import '../../features/teams/ui/team_detail_screen.dart';
 import '../../features/teams/ui/teams_screen.dart';
+import '../../features/workflows/ui/workflow_detail_screen.dart';
+import '../../features/workflows/ui/workflow_run_detail_screen.dart';
+import '../../features/workflows/ui/workflows_screen.dart';
 import '../../shared/widgets/app_shell.dart';
 import '../theme/app_theme.dart';
 
@@ -132,7 +135,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/workflows',
         name: 'workflows',
         parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const PlaceholderScreen(title: 'Workflows'),
+        builder: (context, state) => const WorkflowsScreen(),
+        routes: [
+          GoRoute(
+            path: ':id',
+            name: 'workflow-detail',
+            parentNavigatorKey: rootNavigatorKey,
+            builder: (context, state) => WorkflowDetailScreen(
+              workflowId: state.pathParameters['id'] ?? '',
+            ),
+            routes: [
+              GoRoute(
+                path: 'runs/:runId',
+                name: 'workflow-run-detail',
+                parentNavigatorKey: rootNavigatorKey,
+                builder: (context, state) => WorkflowRunDetailScreen(
+                  workflowId: state.pathParameters['id'] ?? '',
+                  runId: state.pathParameters['runId'] ?? '',
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
       GoRoute(
         path: '/skills',

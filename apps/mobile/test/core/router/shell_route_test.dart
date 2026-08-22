@@ -296,7 +296,7 @@ void main() {
       await tester.tap(find.byKey(const Key('drawer_teams_item')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Teams (Coming Soon)'), findsOneWidget);
+      expect(find.byKey(const Key('teams_search_input')), findsOneWidget);
     });
   });
 }
