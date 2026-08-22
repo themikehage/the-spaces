@@ -10,6 +10,8 @@ import '../../features/auth/ui/auth_state.dart';
 import '../../features/auth/ui/login_screen.dart';
 import '../../features/chat/ui/chat_screen.dart';
 import '../../features/dashboard/ui/dashboard_screen.dart';
+import '../../features/env_vars/ui/env_vars_screen.dart';
+import '../../features/mcp/ui/mcp_screen.dart';
 import '../../features/projects/ui/project_detail_screen.dart';
 import '../../features/projects/ui/projects_screen.dart';
 import '../../features/sessions/ui/sessions_screen.dart';
@@ -165,10 +167,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const PlaceholderScreen(title: 'Skills'),
       ),
       GoRoute(
+        path: '/env-vars',
+        name: 'env-vars',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const EnvVarsScreen(),
+      ),
+      GoRoute(
         path: '/mcp',
         name: 'mcp',
         parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const PlaceholderScreen(title: 'MCP Servers'),
+        builder: (context, state) => const McpScreen(),
       ),
       GoRoute(
         path: '/schedules',

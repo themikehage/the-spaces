@@ -130,6 +130,12 @@ class AppDrawer extends ConsumerWidget {
                     onTap: () => _navigateTo(context, ref, '/skills'),
                   ),
                   _DrawerItem(
+                    key: const Key('drawer_env_vars_item'),
+                    icon: Icons.vpn_key_outlined,
+                    label: 'Env Vars',
+                    onTap: () => _navigateTo(context, ref, '/env-vars'),
+                  ),
+                  _DrawerItem(
                     key: const Key('drawer_mcp_item'),
                     icon: Icons.extension_outlined,
                     label: 'MCP Servers',

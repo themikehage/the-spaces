@@ -222,6 +222,10 @@ void main() {
     });
 
     testWidgets('tapping each bottom nav tab navigates to its branch', (tester) async {
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
       await tester.pumpWidget(buildShellApp());
       await tester.pumpAndSettle();
 

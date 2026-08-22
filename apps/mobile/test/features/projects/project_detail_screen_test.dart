@@ -142,6 +142,7 @@ class MockSessionsRepository implements SessionsRepository {
     String? search,
     String? agentId,
     String? projectId,
+    bool archived = false,
   }) async {
     final filtered = sessions.where((s) {
       if (agentId != null && s.agentId != agentId) return false;
@@ -156,6 +157,12 @@ class MockSessionsRepository implements SessionsRepository {
       perPage: limit,
     );
   }
+
+  @override
+  Future<void> archiveSession(String id) async {}
+
+  @override
+  Future<void> unarchiveSession(String id) async {}
 
   @override
   Future<Session> createSession(CreateSessionInput input) async {
