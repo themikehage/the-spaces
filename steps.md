@@ -187,7 +187,11 @@
   - [x] Sub-hito 8.1: Modelos `AppSettings` y `ProviderConfig` con Freezed, `SettingsRepository` sobre `ApiClient` y persistencia de credenciales exclusivamente en `FlutterSecureStorage` (`AppStorage`).
   - [x] Sub-hito 8.2: State machine `SettingsState` y `SettingsNotifier` con auto-guardado reactivo (debounce de 500ms), gestión de API keys por proveedor y logout.
   - [x] Sub-hito 8.3: UI `SettingsScreen` (cero `setState`), `ProviderListItem`, modal `ProviderCredentialsSheet` con toggle de visibilidad y conexión de rutas en `AppRouter`.
-  - [x] Verificación completa: 157 tests totales en verde (`flutter test`), `flutter analyze` con 0 issues y validación estática de patrones de seguridad.
+- [x] Implementar Hito 9 — Mobile Teams & Workflows (`plans/mobile-09-teams-workflows.md`):
+  - [x] Sub-hito 9.1: Modelos `Team` y `TeamMember` con Freezed, `TeamsRepository` sobre `ApiClient` (`/api/teams`), state machine `TeamsState` y `TeamsNotifier` con reactividad WS, UI `TeamsScreen` con búsqueda y modal de creación, y `TeamDetailScreen` con tabs para miembros, sesiones e integración `EntityConfigEditor`.
+  - [x] Sub-hito 9.2: Modelos `Workflow`, `WorkflowStep`, `WorkflowRun` y `WorkflowStepState` con Freezed, `WorkflowsRepository` sobre `ApiClient` (`/api/workflows`, `/api/workflows/:id/run`, `/api/workflows/runs/:runId`), y state machine `WorkflowsNotifier` con reactividad WS para eventos de ejecución.
+  - [x] Sub-hito 9.3: UI `WorkflowsScreen` con badges de estado, `WorkflowDetailScreen` (con historial de ejecuciones, banner read-only de web client y botón "Run"), `WorkflowRunDetailScreen` (con timeline en tiempo real de pasos y abort button), y conexión de rutas en `AppRouter`.
+  - [x] Verificación completa: 193 tests totales en verde (`flutter test`), `flutter analyze` con 0 issues y resolución de colisión de Hero tags en FABs.
 
 ## Próximos pasos
 
