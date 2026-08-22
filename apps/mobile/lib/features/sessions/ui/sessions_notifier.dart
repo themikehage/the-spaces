@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/events/entity_event_bus.dart';
 import '../../../core/storage/app_storage.dart';
 import '../../../core/ws/ws_client.dart';
 import '../data/models/create_session_input.dart';
@@ -15,6 +16,7 @@ class SessionsNotifier extends StateNotifier<SessionsState> {
   final WsClient? _wsClient;
 
   StreamSubscription? _wsSubscription;
+  StreamSubscription? _entityBusSubscription;
   static const int _pageSize = 20;
 
   SessionsNotifier({
@@ -34,7 +36,23 @@ class SessionsNotifier extends StateNotifier<SessionsState> {
       state = state.copyWith(filter: savedFilter);
     }
     _listenToWsEvents();
+    _listenToEntityBus();
     load();
+  }
+
+  void _listenToEntityBus() {
+    _entityBusSubscription?.cancel();
+    _entityBusSubscription = EntityEventBus.listen((event) {
+      final type = event.type;
+      final rawName = event.rawName;
+      if (type == 'session' ||
+          type == 'session_renamed' ||
+          rawName == 'session_renamed' ||
+          type == 'all' ||
+          type == null) {
+        load();
+      }
+    });
   }
 
   void _listenToWsEvents() {
@@ -65,14 +83,25 @@ class SessionsNotifier extends StateNotifier<SessionsState> {
             sessions: state.sessions.where((s) => s.id != sessionId).toList(),
           );
         }
-      } else if (type == 'session_status') {
-        final sessionId = event['sessionId']?.toString();
+      } else if (type == 'session_status' ||
+          type == 'session_status_changed' ||
+          type == 'session_updated') {
+        final sessionId = (event['sessionId'] ?? event['id'])?.toString();
         final status = event['status']?.toString();
-        if (sessionId != null && status != null) {
+        final title = (event['title'] ?? event['name'])?.toString();
+
+        if (sessionId != null) {
           state = state.copyWith(
             sessions: state.sessions.map((s) {
               if (s.id == sessionId) {
-                return s.copyWith(status: status);
+                var updated = s;
+                if (status != null && status.isNotEmpty) {
+                  updated = updated.copyWith(status: status);
+                }
+                if (title != null && title.isNotEmpty) {
+                  updated = updated.copyWith(title: title);
+                }
+                return updated;
               }
               return s;
             }).toList(),
@@ -192,6 +221,7 @@ class SessionsNotifier extends StateNotifier<SessionsState> {
   @override
   void dispose() {
     _wsSubscription?.cancel();
+    _entityBusSubscription?.cancel();
     super.dispose();
   }
 }

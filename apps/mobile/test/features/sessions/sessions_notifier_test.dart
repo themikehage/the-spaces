@@ -25,6 +25,8 @@ class FakeSessionsRepository implements SessionsRepository {
     int limit = 20,
     String? status,
     String? search,
+    String? agentId,
+    String? projectId,
   }) async {
     if (shouldThrow) {
       throw Exception('Failed to fetch sessions');

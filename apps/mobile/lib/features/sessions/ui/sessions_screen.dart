@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../data/models/session.dart';
+import 'sessions_console_screen.dart';
 import 'sessions_notifier.dart';
+import 'sessions_state.dart';
 import 'widgets/new_session_sheet.dart';
 import 'widgets/session_list_item.dart';
 import 'widgets/sessions_skeleton.dart';
@@ -191,23 +193,8 @@ class _SessionsScreenState extends ConsumerState<SessionsScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final state = ref.watch(sessionsNotifierProvider);
-    final displayedSessions = state.filteredSessions;
-
+  Widget _buildSessionsListView(SessionsState state, List<Session> displayedSessions) {
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          key: const Key('sessions_drawer_button'),
-          icon: const Icon(Icons.menu),
-          tooltip: 'Open menu',
-          onPressed: () {
-            Scaffold.maybeOf(context)?.openDrawer();
-          },
-        ),
-        title: const Text('Sessions'),
-      ),
       floatingActionButton: FloatingActionButton(
         key: const Key('new_session_fab'),
         onPressed: () => NewSessionSheet.show(context),
@@ -335,6 +322,52 @@ class _SessionsScreenState extends ConsumerState<SessionsScreen> {
                       ),
           ),
         ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(sessionsNotifierProvider);
+    final displayedSessions = state.filteredSessions;
+
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            key: const Key('sessions_drawer_button'),
+            icon: const Icon(Icons.menu),
+            tooltip: 'Open menu',
+            onPressed: () {
+              Scaffold.maybeOf(context)?.openDrawer();
+            },
+          ),
+          title: const Text('Sessions Hub'),
+          bottom: const TabBar(
+            tabs: [
+              Tab(
+                key: Key('sessions_tab_list'),
+                text: 'Sessions',
+                icon: Icon(Icons.chat_bubble_outline, size: 18),
+              ),
+              Tab(
+                key: Key('sessions_tab_console'),
+                text: 'Console',
+                icon: Icon(Icons.terminal, size: 18),
+              ),
+            ],
+            indicatorColor: AppColors.primary,
+            labelColor: AppColors.primary,
+            unselectedLabelColor: AppColors.mutedForeground,
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            _buildSessionsListView(state, displayedSessions),
+            const SessionsConsoleScreen(),
+          ],
+        ),
       ),
     );
   }

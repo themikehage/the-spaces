@@ -189,6 +189,46 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const AttentionScreen(),
       ),
 
+      // Entity detail routes outside the shell (no bottom navigation bar)
+      GoRoute(
+        path: '/agents/:id',
+        name: 'agent-detail',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => AgentDetailScreen(
+          agentId: state.pathParameters['id'] ?? '',
+        ),
+        routes: [
+          GoRoute(
+            path: 'sessions/:sessionId',
+            name: 'agent-session-detail',
+            parentNavigatorKey: rootNavigatorKey,
+            builder: (context, state) => AgentDetailScreen(
+              agentId: state.pathParameters['id'] ?? '',
+              sessionId: state.pathParameters['sessionId'],
+            ),
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/projects/:id',
+        name: 'project-detail',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => ProjectDetailScreen(
+          projectId: state.pathParameters['id'] ?? '',
+        ),
+        routes: [
+          GoRoute(
+            path: 'sessions/:sessionId',
+            name: 'project-session-detail',
+            parentNavigatorKey: rootNavigatorKey,
+            builder: (context, state) => ProjectDetailScreen(
+              projectId: state.pathParameters['id'] ?? '',
+              sessionId: state.pathParameters['sessionId'],
+            ),
+          ),
+        ],
+      ),
+
       // Stateful Shell Route for Bottom Navigation Tabs
       StatefulShellRoute.indexedStack(
         parentNavigatorKey: rootNavigatorKey,
@@ -237,15 +277,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: '/projects',
                 name: 'projects',
                 builder: (context, state) => const ProjectsScreen(),
-                routes: [
-                  GoRoute(
-                    path: ':id',
-                    name: 'project-detail',
-                    builder: (context, state) => ProjectDetailScreen(
-                      projectId: state.pathParameters['id'] ?? '',
-                    ),
-                  ),
-                ],
               ),
             ],
           ),
@@ -258,15 +289,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: '/agents',
                 name: 'agents',
                 builder: (context, state) => const AgentsScreen(),
-                routes: [
-                  GoRoute(
-                    path: ':id',
-                    name: 'agent-detail',
-                    builder: (context, state) => AgentDetailScreen(
-                      agentId: state.pathParameters['id'] ?? '',
-                    ),
-                  ),
-                ],
               ),
             ],
           ),

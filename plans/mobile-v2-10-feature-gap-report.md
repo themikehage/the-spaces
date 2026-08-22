@@ -77,9 +77,8 @@ H5 define "ToolCallCard colapsable con nombre/args/resultado". El web tiene **~3
 El plan mobile es **plano**: bottom-nav → pantallas. El web es **centrado en contexto**:
 
 - Contexto activo único (proyecto **O** agente **O** equipo), persistido en localStorage y derivado de la URL (`useWorkspaceContext.ts`).
-- **Tabs por contexto**: Chat / Files / Delegations / Timeline / Preview / Org chart.
+- **Tabs por contexto**: Chat / Files 
 - **Session resolver** (`useSessionResolver`, `getSessionPath`): entrar a `/session/:id` resuelve el contexto y navega.
-- **Chat por equipo multi-agente** (`TeamChatArea`, streaming `team_message`).
 
 Solo H2/H4 tocan sesiones sueltas. El grueso de la app — "chat dentro de un contexto con tabs" — no tiene plan en mobile.
 

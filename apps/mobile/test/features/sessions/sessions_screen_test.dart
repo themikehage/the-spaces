@@ -28,6 +28,8 @@ class MockSessionsRepository implements SessionsRepository {
     int limit = 20,
     String? status,
     String? search,
+    String? agentId,
+    String? projectId,
   }) async {
     var list = sessions;
     if (status != null && status.isNotEmpty && status.toLowerCase() != 'all') {

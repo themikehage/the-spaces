@@ -15,6 +15,8 @@ class SessionsRepository {
     int limit = 20,
     String? status,
     String? search,
+    String? agentId,
+    String? projectId,
   }) async {
     final queryParams = <String, dynamic>{
       'page': page,
@@ -27,6 +29,14 @@ class SessionsRepository {
 
     if (search != null && search.trim().isNotEmpty) {
       queryParams['search'] = search.trim();
+    }
+
+    if (agentId != null && agentId.isNotEmpty) {
+      queryParams['agentId'] = agentId;
+    }
+
+    if (projectId != null && projectId.isNotEmpty) {
+      queryParams['projectId'] = projectId;
     }
 
     final response = await _apiClient.get<dynamic>(

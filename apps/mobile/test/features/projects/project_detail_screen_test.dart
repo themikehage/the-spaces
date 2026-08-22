@@ -8,6 +8,9 @@ import 'package:spaces_mobile/core/storage/app_storage.dart';
 import 'package:spaces_mobile/core/ws/ws_client.dart';
 import 'package:spaces_mobile/features/agents/data/agents_repository.dart';
 import 'package:spaces_mobile/features/agents/data/models/agent.dart';
+import 'package:spaces_mobile/features/chat/data/chat_repository.dart';
+import 'package:spaces_mobile/features/chat/data/models/ai_model.dart';
+import 'package:spaces_mobile/features/chat/data/models/chat_message.dart';
 import 'package:spaces_mobile/features/projects/data/models/project.dart';
 import 'package:spaces_mobile/features/projects/data/projects_repository.dart';
 import 'package:spaces_mobile/features/projects/ui/project_detail_screen.dart';
@@ -15,6 +18,8 @@ import 'package:spaces_mobile/features/sessions/data/models/create_session_input
 import 'package:spaces_mobile/features/sessions/data/models/paginated_sessions.dart';
 import 'package:spaces_mobile/features/sessions/data/models/session.dart';
 import 'package:spaces_mobile/features/sessions/data/sessions_repository.dart';
+import 'package:spaces_mobile/shared/widgets/entity_chat_screen.dart';
+import 'package:spaces_mobile/shared/widgets/entity_page_indicator.dart';
 
 import '../../helpers/fake_secure_storage.dart';
 
@@ -120,34 +125,79 @@ class MockAgentsRepository implements AgentsRepository {
 }
 
 class MockSessionsRepository implements SessionsRepository {
+  List<Session> sessions = [
+    const Session(
+      id: 'sess-proj-1',
+      title: 'Refactor UI',
+      projectId: 'proj-1',
+      status: 'active',
+    ),
+  ];
+
   @override
   Future<PaginatedSessions> getSessions({
     int page = 1,
     int limit = 20,
     String? status,
     String? search,
+    String? agentId,
+    String? projectId,
   }) async {
-    return const PaginatedSessions(
-      items: [
-        Session(
-          id: 'sess-100',
-          title: 'Refactor UI',
-          projectId: 'proj-1',
-          status: 'active',
-        ),
-      ],
-      total: 1,
+    final filtered = sessions.where((s) {
+      if (agentId != null && s.agentId != agentId) return false;
+      if (projectId != null && s.projectId != projectId) return false;
+      return true;
+    }).toList();
+
+    return PaginatedSessions(
+      items: filtered,
+      total: filtered.length,
       page: 1,
-      perPage: 20,
+      perPage: limit,
     );
   }
 
   @override
-  Future<Session> createSession(CreateSessionInput input) async =>
-      const Session(id: 'new', title: 'New');
+  Future<Session> createSession(CreateSessionInput input) async {
+    final newSession = Session(
+      id: 'sess-${sessions.length + 1}',
+      title: input.title,
+      agentId: input.agentId,
+      projectId: input.projectId,
+      status: 'active',
+    );
+    sessions.add(newSession);
+    return newSession;
+  }
 
   @override
-  Future<void> deleteSession(String id) async {}
+  Future<void> deleteSession(String id) async {
+    sessions.removeWhere((s) => s.id == id);
+  }
+}
+
+class MockChatRepository extends Fake implements ChatRepository {
+  @override
+  Future<List<ChatMessage>> getMessages(String sessionId) async => [];
+
+  @override
+  Future<List<AiModel>> getModels() async => [];
+
+  @override
+  Stream<Map<String, dynamic>> sessionEvents(String sessionId) =>
+      const Stream.empty();
+
+  @override
+  Stream<Map<String, dynamic>> get events => const Stream.empty();
+
+  @override
+  Future<void> connectToSession(String sessionId) async {}
+
+  @override
+  void subscribeToSession(String sessionId) {}
+
+  @override
+  void unsubscribeFromSession(String sessionId) {}
 }
 
 class FakeWsClient extends WsClient {
@@ -172,6 +222,7 @@ void main() {
   late MockProjectsRepository mockProjectsRepo;
   late MockAgentsRepository mockAgentsRepo;
   late MockSessionsRepository mockSessionsRepo;
+  late MockChatRepository mockChatRepo;
   late FakeWsClient fakeWs;
   late AppStorage storage;
 
@@ -184,6 +235,7 @@ void main() {
     mockProjectsRepo = MockProjectsRepository();
     mockAgentsRepo = MockAgentsRepository();
     mockSessionsRepo = MockSessionsRepository();
+    mockChatRepo = MockChatRepository();
     fakeWs = FakeWsClient();
   });
 
@@ -194,6 +246,7 @@ void main() {
         projectsRepositoryProvider.overrideWithValue(mockProjectsRepo),
         agentsRepositoryProvider.overrideWithValue(mockAgentsRepo),
         sessionsRepositoryProvider.overrideWithValue(mockSessionsRepo),
+        chatRepositoryProvider.overrideWithValue(mockChatRepo),
         wsClientProvider.overrideWithValue(fakeWs),
       ],
       child: const MaterialApp(
@@ -202,23 +255,40 @@ void main() {
     );
   }
 
-  group('ProjectDetailScreen Widget Tests', () {
-    testWidgets('renders tabs, project sessions, and switches to config tab',
+  group('ProjectDetailScreen Entity-First Widget Tests', () {
+    testWidgets('renders EntityChatScreen with PageView, AppBar, Sessions button, and Config button',
         (tester) async {
       await tester.pumpWidget(createWidget());
       await tester.pumpAndSettle();
 
+      expect(find.byType(EntityChatScreen), findsOneWidget);
       expect(find.text('Spaces App'), findsOneWidget);
-      expect(find.text('Sessions (1)'), findsOneWidget);
-      expect(find.text('Configuration'), findsOneWidget);
-      expect(find.text('Refactor UI'), findsOneWidget);
+      expect(find.byType(EntityPageIndicator), findsOneWidget);
+      expect(find.byKey(const Key('entity_chat_sessions_button')), findsOneWidget);
+      expect(find.byKey(const Key('entity_chat_config_button')), findsOneWidget);
+    });
 
-      // Switch to Configuration tab
-      await tester.tap(find.text('Configuration'));
+    testWidgets('tap on config button opens EntityConfigSheet', (tester) async {
+      await tester.pumpWidget(createWidget());
       await tester.pumpAndSettle();
 
-      expect(find.text('Project Configuration'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('entity_chat_config_button')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Project Settings'), findsOneWidget);
       expect(find.text('Assigned Model'), findsOneWidget);
+      expect(find.byKey(const Key('entity_config_sheet_delete_button')), findsOneWidget);
+    });
+
+    testWidgets('tap on Sessions button opens EntitySessionsSheet', (tester) async {
+      await tester.pumpWidget(createWidget());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('entity_chat_sessions_button')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Refactor UI'), findsOneWidget);
+      expect(find.byKey(const Key('entity_sessions_new_session_button')), findsOneWidget);
     });
   });
 }

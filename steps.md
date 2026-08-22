@@ -200,10 +200,29 @@
   - [x] Sub-hito 10.5: Splash screen (`flutter_native_splash.yaml`), app icons (`flutter_launcher_icons.yaml`) y bundle ID unificado `com.spaces.mobile` en iOS y Android.
   - [x] Sub-hito 10.6: CI/CD GitHub Actions en `.github/workflows/mobile-ci.yml` con pipeline automatizado de análisis estático, suite de pruebas y build de release.
   - [x] Verificación final: 196 tests en verde (`flutter test`), `flutter analyze` con 0 issues y monorepo íntegro con `pnpm build`.
+- [x] Implementar Hito 11 — Entity-First Navigation: Chat as Primary Screen (`plans/mobile-11-entity-chat-navigation.md`):
+  - [x] Sub-hito 11.1: Reorganización del router (`/agents/:id` y `/projects/:id` fuera de `StatefulShellRoute` con `parentNavigatorKey: rootNavigatorKey` y sub-rutas `sessions/:sessionId`).
+  - [x] Sub-hito 11.2: Componente `EntityChatScreen` con `PageView` horizontal (Chat en pág 0, `WorkspaceFilesPanel` placeholder en pág 1), `EntityPageIndicator` animado, `EntitySessionsSheet` bottom modal y `EntityConfigSheet` modal.
+  - [x] Sub-hito 11.3: `EntitySessionNotifier` y `EntitySessionState` para resolución automática de última sesión de la entidad o creación inmediata si no existe.
+  - [x] Sub-hito 11.4: Integración completa en `AgentDetailScreen` y `ProjectDetailScreen`.
+- [x] Implementar Hito 13 — Chat Input Avanzado & Sessions Hub (`plans/mobile-13-chat-input-sessions-hub.md`):
+  - [x] Sub-hito 13.1: `ContextRing` con custom painter y umbrales de color dinámicos (<60% verde, 60-85% naranja, >85% rojo), `CompactButton` reactivo, soporte de WS `context_usage` y método `compact()` en `ChatNotifier`.
+  - [x] Sub-hito 13.2: `InputModeToggle` para modo Steer / Follow-up con soporte en payload de prompts WS, almacenamiento de `sentHistory` (últimos 20) y navegación de historial con botones `↑`/`↓` en `ChatInputBar`.
+  - [x] Sub-hito 13.3: `SessionStatusDot` con animación pulsante para estado `streaming` e indicadores de color para estados de sesión en `SessionListItem`.
+  - [x] Sub-hito 13.4: `EntityEventBus` fuertemente tipado en memoria y auto-renombre de sesión tras primer mensaje con `PATCH /api/sessions/:id` y emisión de evento reactivo `session_renamed`.
+  - [x] Sub-hito 13.5: `SessionsConsoleNotifier` con ring buffer de 500 eventos (FIFO), filtros interactivos por categoría (Messages, Reasoning, Tools, Errors), botón Freeze/Unfreeze en tiempo real y `TabBar` de 2 pestañas ("Sessions" y "Console") en `SessionsScreen`.
+  - [x] Verificación completa: `flutter analyze` con 0 warnings/issues y suite de tests en verde (`flutter test`).
+- [x] Implementar Hito 12 — Chat Rich Rendering: Tool Calls, Approvals & ThinkingBlock (`plans/mobile-12-chat-rich-rendering.md`):
+  - [x] Sub-hito 12.1: `ThinkingBlock` colapsable con borde izquierdo de color, header "Thinking" con icono `psychology_alt`, cursor parpadeante en `isStreaming: true`, y colapso automático si `content.length > 200`.
+  - [x] Sub-hito 12.2: `ToolResultRouter` como único dispatcher por `toolCall.name` → renderers especializados: `EditResultRenderer` (diff +/-), `BashResultRenderer` (exit code badge), `ReadResultRenderer` (lightbox de imágenes), `GrepResultRenderer` (resaltado de patrón), `WriteResultRenderer` (badge Created/Modified), `GenericToolCard` (fallback). `ToolCallCard` usa `ToolResultRouter` en su cuerpo expandible.
+  - [x] Sub-hito 12.3: `ApprovalForm` inline con severidad (info/warning/critical), countdown de 15s con auto-deny, botones Approve/Deny. `ChatNotifier.resolveApproval()` emite vía `ChatRepository` y actualiza el mensaje en lista. `ChatMessage` soporta `ApprovalRequest` y `isApprovalRequest`. `ChatNotifier` maneja WS `tool_approval_required`.
+  - [x] Sub-hito 12.4: `AskQuestionForm` inline con `ChoiceChip` multi-select, `TextField` custom. `ChatNotifier.answerQuestion()` emite y actualiza el mensaje. `ChatMessage` soporta `QuestionRequest` e `isQuestionRequest`. `ChatNotifier` maneja WS `ask_question`.
+  - [x] Verificación final: `flutter analyze lib/features/chat/` con 0 warnings, `ToolResultRouter` como único dispatcher, `ApprovalForm`/`AskQuestionForm` solo en `features/chat/`.
 
 ## Próximos pasos
 
+- [ ] Implementar Hito 14 — Workspace Files Panel (`plans/mobile-14-workspace-files-panel.md`).
+- [ ] Implementar Hito 15 — Sessions Hub Completo: Kanban + Archive (`plans/mobile-15-sessions-hub-kanban.md`).
+- [ ] Implementar Hito 16 — Admin: Env Vars + MCP Marketplace (`plans/mobile-16-admin-env-mcp.md`).
 - [ ] Implementar el Plan 40 — Arquitectura de Sandboxing Productivo (`plans/40-production-sandbox-architecture.md`).
-
-
 

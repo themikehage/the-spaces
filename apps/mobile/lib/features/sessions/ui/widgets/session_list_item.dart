@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../data/models/session.dart';
+import 'session_status_dot.dart';
 
 class SessionListItem extends StatelessWidget {
   final Session session;
@@ -79,14 +80,7 @@ class SessionListItem extends StatelessWidget {
           children: [
             Row(
               children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: statusColor,
-                    shape: BoxShape.circle,
-                  ),
-                ),
+                SessionStatusDot(status: session.status),
                 const SizedBox(width: AppSpacing.sm),
                 Container(
                   padding: const EdgeInsets.symmetric(
