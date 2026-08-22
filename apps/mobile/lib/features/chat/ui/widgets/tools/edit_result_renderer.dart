@@ -43,9 +43,6 @@ class EditResultRenderer extends StatelessWidget {
     final lineNumColor = isDark ? AppColors.textTertiaryDark : AppColors.textTertiaryLight;
     final defaultTextColor = isDark ? AppColors.darkForeground : AppColors.lightForeground;
 
-    int oldLineNum = 1;
-    int newLineNum = 1;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -116,17 +113,12 @@ class EditResultRenderer extends StatelessWidget {
                     if (isAdded) {
                       lineBg = AppColors.success.withValues(alpha: 0.15);
                       textColor = AppColors.success;
-                      newLineNum++;
                     } else if (isRemoved) {
                       lineBg = AppColors.error.withValues(alpha: 0.15);
                       textColor = AppColors.error;
-                      oldLineNum++;
                     } else if (isHunk) {
                       lineBg = AppColors.primary.withValues(alpha: 0.1);
                       textColor = AppColors.primary;
-                    } else {
-                      oldLineNum++;
-                      newLineNum++;
                     }
 
                     return Container(
