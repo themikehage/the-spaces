@@ -47,7 +47,8 @@ class KanbanSessionCard extends StatelessWidget {
                       color: AppColors.darkForeground,
                       fontWeight: FontWeight.w600,
                     ),
-                    maxLines: 2,
+                    maxLines: 3,
+                    softWrap: true,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -58,10 +59,11 @@ class KanbanSessionCard extends StatelessWidget {
               const SizedBox(height: AppSpacing.xs),
               Wrap(
                 spacing: AppSpacing.xs,
-                runSpacing: 2,
+                runSpacing: 4,
                 children: [
                   if (session.agentId != null && session.agentId!.isNotEmpty)
                     Container(
+                      constraints: const BoxConstraints(maxWidth: 120),
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.xs,
                         vertical: 2,
@@ -79,11 +81,16 @@ class KanbanSessionCard extends StatelessWidget {
                             color: AppColors.mutedForeground,
                           ),
                           const SizedBox(width: 2),
-                          Text(
-                            session.agentId!,
-                            style: AppTypography.labelSmall.copyWith(
-                              color: AppColors.mutedForeground,
-                              fontSize: 10,
+                          Flexible(
+                            child: Text(
+                              session.agentId!,
+                              style: AppTypography.labelSmall.copyWith(
+                                color: AppColors.mutedForeground,
+                                fontSize: 10,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              softWrap: false,
                             ),
                           ),
                         ],
@@ -91,6 +98,7 @@ class KanbanSessionCard extends StatelessWidget {
                     ),
                   if (session.projectId != null && session.projectId!.isNotEmpty)
                     Container(
+                      constraints: const BoxConstraints(maxWidth: 120),
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.xs,
                         vertical: 2,
@@ -108,11 +116,16 @@ class KanbanSessionCard extends StatelessWidget {
                             color: AppColors.mutedForeground,
                           ),
                           const SizedBox(width: 2),
-                          Text(
-                            session.projectId!,
-                            style: AppTypography.labelSmall.copyWith(
-                              color: AppColors.mutedForeground,
-                              fontSize: 10,
+                          Flexible(
+                            child: Text(
+                              session.projectId!,
+                              style: AppTypography.labelSmall.copyWith(
+                                color: AppColors.mutedForeground,
+                                fontSize: 10,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              softWrap: false,
                             ),
                           ),
                         ],

@@ -146,6 +146,7 @@ class SessionListItem extends StatelessWidget {
                 fontWeight: FontWeight.w600,
               ),
               maxLines: 2,
+              softWrap: true,
               overflow: TextOverflow.ellipsis,
             ),
             if (session.agentId != null || session.projectId != null || session.messageCount > 0) ...[
@@ -156,40 +157,54 @@ class SessionListItem extends StatelessWidget {
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   if (session.agentId != null && session.agentId!.isNotEmpty)
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.smart_toy_outlined,
-                          size: 14,
-                          color: AppColors.mutedForeground,
-                        ),
-                        const SizedBox(width: AppSpacing.xs),
-                        Text(
-                          session.agentId!,
-                          style: AppTypography.bodySmall.copyWith(
+                    Container(
+                      constraints: const BoxConstraints(maxWidth: 150),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.smart_toy_outlined,
+                            size: 14,
                             color: AppColors.mutedForeground,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: AppSpacing.xs),
+                          Flexible(
+                            child: Text(
+                              session.agentId!,
+                              style: AppTypography.bodySmall.copyWith(
+                                color: AppColors.mutedForeground,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   if (session.projectId != null && session.projectId!.isNotEmpty)
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.folder_outlined,
-                          size: 14,
-                          color: AppColors.mutedForeground,
-                        ),
-                        const SizedBox(width: AppSpacing.xs),
-                        Text(
-                          session.projectId!,
-                          style: AppTypography.bodySmall.copyWith(
+                    Container(
+                      constraints: const BoxConstraints(maxWidth: 150),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.folder_outlined,
+                            size: 14,
                             color: AppColors.mutedForeground,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: AppSpacing.xs),
+                          Flexible(
+                            child: Text(
+                              session.projectId!,
+                              style: AppTypography.bodySmall.copyWith(
+                                color: AppColors.mutedForeground,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   if (session.messageCount > 0)
                     Row(
