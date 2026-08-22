@@ -147,44 +147,87 @@ class _SessionsScreenState extends ConsumerState<SessionsScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
-    return Center(
-      key: const Key('sessions_empty_state'),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+  Widget _buildArchivedToggle(bool showArchived) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xs,
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(3),
+        decoration: BoxDecoration(
+          color: AppColors.darkCard,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          border: Border.all(color: AppColors.darkBorder),
+        ),
+        child: Row(
           children: [
-            Icon(
-              Icons.chat_bubble_outline,
-              size: 64,
-              color: AppColors.mutedForeground.withValues(alpha: 0.5),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              'No Sessions Found',
-              style: AppTypography.titleLarge.copyWith(
-                color: AppColors.darkForeground,
-                fontWeight: FontWeight.bold,
+            Expanded(
+              child: GestureDetector(
+                key: const Key('sessions_toggle_active'),
+                onTap: showArchived
+                    ? () => ref.read(sessionsNotifierProvider.notifier).toggleShowArchived()
+                    : null,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs + 2),
+                  decoration: BoxDecoration(
+                    color: !showArchived ? AppColors.primary : Colors.transparent,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  ),
+                  alignment: Alignment.center,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.chat_bubble_outline,
+                        size: 14,
+                        color: !showArchived ? AppColors.primaryForeground : AppColors.mutedForeground,
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      Text(
+                        'Active',
+                        style: AppTypography.labelMedium.copyWith(
+                          color: !showArchived ? AppColors.primaryForeground : AppColors.mutedForeground,
+                          fontWeight: !showArchived ? FontWeight.bold : FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              'Create a new session to get started with your AI agents.',
-              textAlign: TextAlign.center,
-              style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.mutedForeground,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            ElevatedButton.icon(
-              key: const Key('empty_state_create_button'),
-              onPressed: () => NewSessionSheet.show(context),
-              icon: const Icon(Icons.add),
-              label: const Text('New Session'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: AppColors.primaryForeground,
+            Expanded(
+              child: GestureDetector(
+                key: const Key('sessions_toggle_archived'),
+                onTap: !showArchived
+                    ? () => ref.read(sessionsNotifierProvider.notifier).toggleShowArchived()
+                    : null,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs + 2),
+                  decoration: BoxDecoration(
+                    color: showArchived ? AppColors.primary : Colors.transparent,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  ),
+                  alignment: Alignment.center,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.archive_outlined,
+                        size: 14,
+                        color: showArchived ? AppColors.primaryForeground : AppColors.mutedForeground,
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      Text(
+                        'Archived',
+                        style: AppTypography.labelMedium.copyWith(
+                          color: showArchived ? AppColors.primaryForeground : AppColors.mutedForeground,
+                          fontWeight: showArchived ? FontWeight.bold : FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ],
@@ -193,22 +236,77 @@ class _SessionsScreenState extends ConsumerState<SessionsScreen> {
     );
   }
 
-  Widget _buildSessionsListView(SessionsState state, List<Session> displayedSessions) {
-    return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        key: const Key('new_session_fab'),
-        onPressed: () => NewSessionSheet.show(context),
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.primaryForeground,
-        tooltip: 'New Session',
-        child: const Icon(Icons.add),
+  Widget _buildEmptyState(bool showArchived) {
+    return Center(
+      key: const Key('sessions_empty_state'),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              showArchived ? Icons.archive_outlined : Icons.chat_bubble_outline,
+              size: 64,
+              color: AppColors.mutedForeground.withValues(alpha: 0.5),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              showArchived ? 'No Archived Sessions' : 'No Sessions Found',
+              style: AppTypography.titleLarge.copyWith(
+                color: AppColors.darkForeground,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              showArchived
+                  ? 'Sessions you archive will appear here.'
+                  : 'Create a new session to get started with your AI agents.',
+              textAlign: TextAlign.center,
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.mutedForeground,
+              ),
+            ),
+            if (!showArchived) ...[
+              const SizedBox(height: AppSpacing.lg),
+              ElevatedButton.icon(
+                key: const Key('empty_state_create_button'),
+                onPressed: () => NewSessionSheet.show(context),
+                icon: const Icon(Icons.add),
+                label: const Text('New Session'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.primaryForeground,
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildSessionsListView(SessionsState state, List<Session> displayedSessions) {
+    final showArchived = state.showArchived;
+
+    return Scaffold(
+      floatingActionButton: showArchived
+          ? null
+          : FloatingActionButton(
+              key: const Key('new_session_fab'),
+              onPressed: () => NewSessionSheet.show(context),
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.primaryForeground,
+              tooltip: 'New Session',
+              child: const Icon(Icons.add),
+            ),
       body: Column(
         children: [
+          _buildArchivedToggle(showArchived),
           Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.md,
-              AppSpacing.sm,
+              AppSpacing.xs,
               AppSpacing.md,
               AppSpacing.sm,
             ),
@@ -258,7 +356,7 @@ class _SessionsScreenState extends ConsumerState<SessionsScreen> {
             child: state.isLoading
                 ? const SessionsSkeleton()
                 : displayedSessions.isEmpty
-                    ? _buildEmptyState()
+                    ? _buildEmptyState(showArchived)
                     : RefreshIndicator(
                         onRefresh: _onRefresh,
                         color: AppColors.primary,
@@ -315,7 +413,48 @@ class _SessionsScreenState extends ConsumerState<SessionsScreen> {
                                   color: AppColors.destructiveForeground,
                                 ),
                               ),
-                              child: SessionListItem(session: session),
+                              child: SessionListItem(
+                                session: session,
+                                onArchive: () async {
+                                  await ref
+                                      .read(sessionsNotifierProvider.notifier)
+                                      .archiveSession(session.id);
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Session "${session.title}" archived'),
+                                        backgroundColor: AppColors.darkCard,
+                                      ),
+                                    );
+                                  }
+                                },
+                                onUnarchive: () async {
+                                  await ref
+                                      .read(sessionsNotifierProvider.notifier)
+                                      .unarchiveSession(session.id);
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Session "${session.title}" restored'),
+                                        backgroundColor: AppColors.darkCard,
+                                      ),
+                                    );
+                                  }
+                                },
+                                onDelete: () async {
+                                  await ref
+                                      .read(sessionsNotifierProvider.notifier)
+                                      .deleteSession(session.id);
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Session "${session.title}" deleted'),
+                                        backgroundColor: AppColors.darkCard,
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
                             );
                           },
                         ),

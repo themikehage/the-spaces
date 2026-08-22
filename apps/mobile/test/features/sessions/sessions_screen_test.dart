@@ -342,5 +342,59 @@ void main() {
       expect(navigatedRoute, equals('/sessions/sess-nav-1'));
       expect(find.text('Detail sess-nav-1'), findsOneWidget);
     });
+
+    testWidgets('Active/Archived toggle switches displayed sessions list', (tester) async {
+      repository.sessions = [
+        const Session(id: 'sess-act-1', title: 'Active Project Work', status: 'active', archived: false),
+        const Session(id: 'sess-arc-1', title: 'Old Archive Session', status: 'idle', archived: true),
+      ];
+
+      await tester.pumpWidget(createTestableWidget(
+        child: const SessionsScreen(),
+        repository: repository,
+        storage: storage,
+        wsClient: wsClient,
+      ));
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('Active Project Work'), findsOneWidget);
+      expect(find.text('Old Archive Session'), findsNothing);
+
+      await tester.tap(find.byKey(const Key('sessions_toggle_archived')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Active Project Work'), findsNothing);
+      expect(find.text('Old Archive Session'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('sessions_toggle_active')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Active Project Work'), findsOneWidget);
+      expect(find.text('Old Archive Session'), findsNothing);
+    });
+
+    testWidgets('empty state displays different message when viewing archived sessions', (tester) async {
+      repository.sessions = [];
+
+      await tester.pumpWidget(createTestableWidget(
+        child: const SessionsScreen(),
+        repository: repository,
+        storage: storage,
+        wsClient: wsClient,
+      ));
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('No Sessions Found'), findsOneWidget);
+      expect(find.byKey(const Key('empty_state_create_button')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('sessions_toggle_archived')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('No Archived Sessions'), findsOneWidget);
+      expect(find.text('Sessions you archive will appear here.'), findsOneWidget);
+      expect(find.byKey(const Key('empty_state_create_button')), findsNothing);
+    });
   });
 }
