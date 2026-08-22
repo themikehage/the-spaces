@@ -7,7 +7,6 @@ import '../../core/theme/app_theme.dart';
 import '../../features/attention/ui/attention_notifier.dart';
 import '../../features/attention/ui/attention_sheet.dart';
 import '../../features/auth/ui/auth_notifier.dart';
-import 'attention_badge.dart';
 
 class AppDrawer extends ConsumerWidget {
   const AppDrawer({super.key});

@@ -19,6 +19,10 @@ import 'package:spaces_mobile/features/dashboard/data/models/dashboard_session.d
 import 'package:spaces_mobile/features/agents/ui/agents_screen.dart';
 import 'package:spaces_mobile/features/projects/ui/projects_screen.dart';
 import 'package:spaces_mobile/features/sessions/ui/sessions_screen.dart';
+import 'package:spaces_mobile/features/settings/data/models/app_settings.dart';
+import 'package:spaces_mobile/features/settings/data/models/provider_config.dart';
+import 'package:spaces_mobile/features/settings/data/settings_repository.dart';
+import 'package:spaces_mobile/features/settings/ui/settings_screen.dart';
 
 class FakeAuthRepository implements AuthRepository {
   bool isAuth = true;
@@ -67,6 +71,26 @@ class FakeDashboardRepository implements DashboardRepository {
           updatedAt: DateTime.now().toIso8601String(),
         ),
       ];
+}
+
+class FakeSettingsRepository implements SettingsRepository {
+  @override
+  Future<AppSettings> getSettings() async => const AppSettings();
+
+  @override
+  Future<AppSettings> updateSettings(Map<String, dynamic> patch) async => const AppSettings();
+
+  @override
+  Future<List<ProviderConfig>> getProviders() async => [];
+
+  @override
+  Future<void> saveProviderCredentials(String providerId, String apiKey) async {}
+
+  @override
+  Future<void> clearProviderCredentials(String providerId) async {}
+
+  @override
+  Future<String?> getSavedProviderApiKey(String providerId) async => null;
 }
 
 class FakeWsClient implements WsClient {
@@ -155,6 +179,7 @@ void main() {
         appStorageProvider.overrideWithValue(fakeStorage),
         authRepositoryProvider.overrideWithValue(fakeAuthRepo),
         dashboardRepositoryProvider.overrideWithValue(fakeDashboardRepo),
+        settingsRepositoryProvider.overrideWithValue(FakeSettingsRepository()),
         wsClientProvider.overrideWithValue(fakeWsClient),
         authNotifierProvider.overrideWith(
           (ref) => TestAuthNotifier(
@@ -218,7 +243,7 @@ void main() {
       // Tap Settings tab
       await tester.tap(find.byKey(const Key('shell_nav_settings')));
       await tester.pumpAndSettle();
-      expect(find.text('Settings (Coming Soon)'), findsOneWidget);
+      expect(find.byType(SettingsScreen), findsOneWidget);
 
       // Return to Dashboard
       await tester.tap(find.byKey(const Key('shell_nav_dashboard')));

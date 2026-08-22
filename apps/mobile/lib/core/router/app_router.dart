@@ -13,6 +13,7 @@ import '../../features/dashboard/ui/dashboard_screen.dart';
 import '../../features/projects/ui/project_detail_screen.dart';
 import '../../features/projects/ui/projects_screen.dart';
 import '../../features/sessions/ui/sessions_screen.dart';
+import '../../features/settings/ui/settings_screen.dart';
 import '../../shared/widgets/app_shell.dart';
 import '../theme/app_theme.dart';
 
@@ -241,8 +242,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/settings',
                 name: 'settings',
-                builder: (context, state) =>
-                    const PlaceholderScreen(title: 'Settings'),
+                builder: (context, state) => const SettingsScreen(),
               ),
             ],
           ),
