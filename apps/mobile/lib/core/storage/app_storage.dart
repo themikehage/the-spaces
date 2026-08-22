@@ -49,6 +49,30 @@ class AppStorage {
     await _secureStorage.delete(key: key.keyName);
   }
 
+  Future<String?> secureReadRaw(String key) async {
+    return _secureStorage.read(key: key);
+  }
+
+  Future<void> secureWriteRaw(String key, String value) async {
+    await _secureStorage.write(key: key, value: value);
+  }
+
+  Future<void> secureDeleteRaw(String key) async {
+    await _secureStorage.delete(key: key);
+  }
+
+  Future<String?> getProviderApiKey(String providerId) async {
+    return secureReadRaw('provider_key_$providerId');
+  }
+
+  Future<void> setProviderApiKey(String providerId, String key) async {
+    await secureWriteRaw('provider_key_$providerId', key);
+  }
+
+  Future<void> deleteProviderApiKey(String providerId) async {
+    await secureDeleteRaw('provider_key_$providerId');
+  }
+
   Future<void> secureClear() async {
     await _secureStorage.deleteAll();
   }
