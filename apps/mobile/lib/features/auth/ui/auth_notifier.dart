@@ -18,15 +18,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = const AuthState.loading();
     try {
       final isAuth = await _repository.isAuthenticated();
+      if (!mounted) return;
       if (isAuth) {
         final username = await _repository.getUsername() ?? 'User';
         final userId = await _repository.getUserId();
+        if (!mounted) return;
         state = AuthState.authenticated(username: username, userId: userId);
       } else {
         state = const AuthState.unauthenticated();
       }
     } catch (_) {
-      state = const AuthState.unauthenticated();
+      if (mounted) {
+        state = const AuthState.unauthenticated();
+      }
     }
   }
 
@@ -40,16 +44,21 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = const AuthState.loading();
     try {
       final response = await _repository.login(cleanUsername, password);
+      if (!mounted) return true;
       state = AuthState.authenticated(
         username: response.user.username,
         userId: response.user.id,
       );
       return true;
     } on ApiException catch (e) {
-      state = AuthState.error(e.message);
+      if (mounted) {
+        state = AuthState.error(e.message);
+      }
       return false;
     } catch (_) {
-      state = const AuthState.error('An unexpected error occurred during login.');
+      if (mounted) {
+        state = const AuthState.error('An unexpected error occurred during login.');
+      }
       return false;
     }
   }
@@ -57,7 +66,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> logout() async {
     state = const AuthState.loading();
     await _repository.logout();
-    state = const AuthState.unauthenticated();
+    if (mounted) {
+      state = const AuthState.unauthenticated();
+    }
   }
 
   void resetError() {
