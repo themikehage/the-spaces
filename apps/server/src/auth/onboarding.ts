@@ -18,9 +18,10 @@ export async function getUserByUsername(
 ): Promise<{ id: string; email: string; username: string } | null> {
   try {
     const db = getDb();
+    const clean = username.trim().toLowerCase();
     const row = db
-      .query("SELECT id, email, username FROM user WHERE username = ?")
-      .get(username) as {
+      .query("SELECT id, email, username FROM user WHERE LOWER(username) = ? OR LOWER(email) = ?")
+      .get(clean, clean) as {
       id: string;
       email: string;
       username: string;

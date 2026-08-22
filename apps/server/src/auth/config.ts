@@ -82,10 +82,33 @@ function getOrCreateSecret(): string {
 
 function getTrustedOrigins(): string[] {
   const origins: string[] = [];
-  const url = process.env.BETTER_AUTH_URL;
-  if (url) origins.push(url);
-  origins.push(`http://localhost:${process.env.PORT || 3000}`);
-  origins.push("http://localhost:5173");
-  origins.push("http://127.0.0.1:5173");
+  const addOrigin = (o?: string | null) => {
+    if (!o) return;
+    const trimmed = o.trim().replace(/\/+$/, "");
+    if (trimmed && !origins.includes(trimmed)) {
+      origins.push(trimmed);
+      if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
+        origins.push(`https://${trimmed}`);
+        origins.push(`http://${trimmed}`);
+      }
+    }
+  };
+
+  addOrigin(process.env.BETTER_AUTH_URL);
+  if (process.env.ALLOWED_ORIGINS) {
+    for (const item of process.env.ALLOWED_ORIGINS.split(",")) {
+      addOrigin(item);
+    }
+  }
+  if (process.env.SERVICE_FQDN_SPACES) {
+    addOrigin(`https://${process.env.SERVICE_FQDN_SPACES}`);
+  }
+  if (process.env.SERVICE_FQDN_SPACES_3000) {
+    addOrigin(`https://${process.env.SERVICE_FQDN_SPACES_3000}`);
+  }
+
+  addOrigin(`http://localhost:${process.env.PORT || 3000}`);
+  addOrigin("http://localhost:5173");
+  addOrigin("http://127.0.0.1:5173");
   return origins;
 }

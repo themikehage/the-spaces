@@ -135,16 +135,19 @@ authRouter.post("/login", zValidator("json", LoginSchema), async (c) => {
 
   const user = await getUserByUsername(username);
   if (!user) {
+    console.warn(`[Auth] User not found for login identifier: "${username}"`);
     throw new UnauthorizedError("INVALID_CREDENTIALS", "Invalid credentials");
   }
 
   try {
     const result = await auth.api.signInEmail({
       body: { email: user.email, password },
+      headers: c.req.raw.headers,
       asResponse: true,
     });
 
     if (!result.ok) {
+      console.warn(`[Auth] signInEmail returned !ok status ${result.status} for user "${user.username}" (email "${user.email}")`);
       throw new UnauthorizedError("INVALID_CREDENTIALS", "Invalid credentials");
     }
 
@@ -174,9 +177,10 @@ authRouter.post("/login", zValidator("json", LoginSchema), async (c) => {
     }
 
     const returnToken = c.req.header("X-Spaces-Return-Token") === "1";
-    return c.json({ user: { username }, token: returnToken ? token : null });
+    return c.json({ user: { username: user.username }, token: returnToken ? token : null });
   } catch (err: any) {
     if (err?.statusCode) throw err;
+    console.warn(`[Auth] signInEmail exception for user "${user.username}":`, err?.message || err);
     throw new UnauthorizedError("INVALID_CREDENTIALS", "Invalid credentials");
   }
 });
