@@ -267,6 +267,8 @@
   - [x] Sub-hito 9.D: Widget `AttachedFileCard` con badge de extensión, nombre de archivo y botón de descarga con token, integrado en `MessageBubble` de usuario mediante parser de `[Attached File: path]` que limpia el markdown crudo. Suite de tests unitarios y de widgets en verde.
   - [x] Verificación completa: `flutter analyze` con 0 issues/warnings y 152 tests de chat en verde.
 
+- [x] Configurar la conexión de la aplicación móvil Flutter a un backend real con fallback automático a producción en builds de release (`AppConfig.apiBaseUrl` / `AppConfig.wsBaseUrl`) y soporte de proxy/ngrok para desarrollo local.
+
 ## Próximos pasos
 
 - [ ] Implementar el Plan 40 — Arquitectura de Sandboxing Productivo (`plans/40-production-sandbox-architecture.md`).
