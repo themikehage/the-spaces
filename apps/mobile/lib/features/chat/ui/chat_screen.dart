@@ -356,8 +356,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             contextLimit: state.contextLimit,
             isCompacting: state.isCompacting,
             onCompact: () => notifier.compact(),
-            inputMode: state.inputMode,
-            onInputModeChanged: (mode) => notifier.setInputMode(mode),
             sentHistory: state.sentHistory,
             onNavigateHistory: (delta) => notifier.navigateHistory(delta),
             onSend: (text) => notifier.sendMessage(

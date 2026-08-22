@@ -22,8 +22,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
       if (isAuth) {
         final username = await _repository.getUsername() ?? 'User';
         final userId = await _repository.getUserId();
+        final token = await _repository.getToken();
         if (!mounted) return;
-        state = AuthState.authenticated(username: username, userId: userId);
+        state = AuthState.authenticated(
+          username: username,
+          userId: userId,
+          token: token,
+        );
       } else {
         state = const AuthState.unauthenticated();
       }
@@ -48,6 +53,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = AuthState.authenticated(
         username: response.user.username,
         userId: response.user.id,
+        token: response.token,
       );
       return true;
     } on ApiException catch (e) {
@@ -81,4 +87,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
 final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final repository = ref.watch(authRepositoryProvider);
   return AuthNotifier(repository: repository);
+});
+
+final authTokenProvider = Provider<String?>((ref) {
+  try {
+    final authState = ref.watch(authNotifierProvider);
+    return authState.token;
+  } catch (_) {
+    return null;
+  }
 });

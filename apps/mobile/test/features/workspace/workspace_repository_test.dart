@@ -222,5 +222,177 @@ void main() {
 
       expect(url, contains('/api/workspace/assets/logo.png?agentId=agent-123&raw=true'));
     });
+
+    test('createFile sends PUT with type file and returns created WorkspaceFile', () async {
+      mockAdapter.responseBody = ResponseBody.fromString(
+        jsonEncode({
+          'name': 'new_doc.md',
+          'path': 'docs/new_doc.md',
+          'size': 15,
+          'isDirectory': false,
+        }),
+        200,
+        headers: {
+          Headers.contentTypeHeader: [Headers.jsonContentType],
+        },
+      );
+
+      final file = await repository.createFile(
+        entityType: 'agent',
+        entityId: 'agent-123',
+        path: 'docs/new_doc.md',
+        content: '# Hello world',
+      );
+
+      expect(file.name, equals('new_doc.md'));
+      expect(file.path, equals('docs/new_doc.md'));
+      expect(mockAdapter.lastRequestOptions?.method, equals('PUT'));
+      expect(mockAdapter.lastRequestOptions?.path, equals('/api/workspace/docs/new_doc.md'));
+      expect(mockAdapter.lastRequestOptions?.data, equals({'type': 'file', 'content': '# Hello world'}));
+    });
+
+    test('createFolder sends PUT with type folder and returns folder WorkspaceFile', () async {
+      mockAdapter.responseBody = ResponseBody.fromString(
+        jsonEncode({
+          'name': 'components',
+          'path': 'src/components',
+          'isDirectory': true,
+        }),
+        200,
+        headers: {
+          Headers.contentTypeHeader: [Headers.jsonContentType],
+        },
+      );
+
+      final folder = await repository.createFolder(
+        entityType: 'agent',
+        entityId: 'agent-123',
+        path: 'src/components',
+      );
+
+      expect(folder.name, equals('components'));
+      expect(folder.isDirectory, isTrue);
+      expect(mockAdapter.lastRequestOptions?.method, equals('PUT'));
+      expect(mockAdapter.lastRequestOptions?.path, equals('/api/workspace/src/components'));
+      expect(mockAdapter.lastRequestOptions?.data, equals({'type': 'folder'}));
+    });
+
+    test('renameFile sends PATCH with newPath', () async {
+      mockAdapter.responseBody = ResponseBody.fromString(
+        jsonEncode({
+          'name': 'renamed.md',
+          'path': 'docs/renamed.md',
+          'isDirectory': false,
+        }),
+        200,
+        headers: {
+          Headers.contentTypeHeader: [Headers.jsonContentType],
+        },
+      );
+
+      final file = await repository.renameFile(
+        entityType: 'agent',
+        entityId: 'agent-123',
+        oldPath: 'docs/old.md',
+        newPath: 'docs/renamed.md',
+      );
+
+      expect(file.name, equals('renamed.md'));
+      expect(mockAdapter.lastRequestOptions?.method, equals('PATCH'));
+      expect(mockAdapter.lastRequestOptions?.path, equals('/api/workspace/docs/old.md'));
+      expect(mockAdapter.lastRequestOptions?.data, equals({'newPath': 'docs/renamed.md'}));
+    });
+
+    test('deleteFile sends DELETE to /api/workspace/:path', () async {
+      mockAdapter.responseBody = ResponseBody.fromString(
+        jsonEncode({'success': true}),
+        200,
+        headers: {
+          Headers.contentTypeHeader: [Headers.jsonContentType],
+        },
+      );
+
+      await repository.deleteFile(
+        entityType: 'agent',
+        entityId: 'agent-123',
+        path: 'trash.txt',
+      );
+
+      expect(mockAdapter.lastRequestOptions?.method, equals('DELETE'));
+      expect(mockAdapter.lastRequestOptions?.path, equals('/api/workspace/trash.txt'));
+    });
+
+    test('saveFile sends PUT with file content', () async {
+      mockAdapter.responseBody = ResponseBody.fromString(
+        jsonEncode({
+          'name': 'config.json',
+          'path': 'config.json',
+          'size': 25,
+        }),
+        200,
+        headers: {
+          Headers.contentTypeHeader: [Headers.jsonContentType],
+        },
+      );
+
+      final file = await repository.saveFile(
+        entityType: 'agent',
+        entityId: 'agent-123',
+        path: 'config.json',
+        content: '{"key":"value"}',
+      );
+
+      expect(file.name, equals('config.json'));
+      expect(mockAdapter.lastRequestOptions?.method, equals('PUT'));
+      expect(mockAdapter.lastRequestOptions?.data, equals({'type': 'file', 'content': '{"key":"value"}'}));
+    });
+
+    test('listChildren queries /api/workspace/:path and parses children', () async {
+      mockAdapter.responseBody = ResponseBody.fromString(
+        jsonEncode({
+          'name': 'src',
+          'path': 'src',
+          'isDirectory': true,
+          'children': [
+            {'name': 'app.dart', 'path': 'src/app.dart', 'isDirectory': false, 'size': 100},
+          ]
+        }),
+        200,
+        headers: {
+          Headers.contentTypeHeader: [Headers.jsonContentType],
+        },
+      );
+
+      final children = await repository.listChildren(
+        entityType: 'agent',
+        entityId: 'agent-123',
+        path: 'src',
+      );
+
+      expect(children.length, equals(1));
+      expect(children[0].name, equals('app.dart'));
+      expect(mockAdapter.lastRequestOptions?.path, equals('/api/workspace/src'));
+    });
+
+    test('downloadFileBytes requests with download=true', () async {
+      final bytes = utf8.encode('file contents');
+      mockAdapter.responseBody = ResponseBody(
+        Stream.value(Uint8List.fromList(bytes)),
+        200,
+        headers: {
+          Headers.contentTypeHeader: ['application/octet-stream'],
+        },
+      );
+
+      final downloaded = await repository.downloadFileBytes(
+        entityType: 'agent',
+        entityId: 'agent-123',
+        path: 'data.bin',
+      );
+
+      expect(downloaded, isNotEmpty);
+      expect(mockAdapter.lastRequestOptions?.queryParameters['download'], equals('true'));
+      expect(mockAdapter.lastRequestOptions?.path, equals('/api/workspace/data.bin'));
+    });
   });
 }

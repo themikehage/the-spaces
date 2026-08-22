@@ -7,47 +7,111 @@ class AppColors {
   static const Color white = Color(0xFFFFFFFF);
   static const Color black = Color(0xFF000000);
 
-  static const Color darkBackground = Color(0xFF18181B);
-  static const Color darkForeground = Color(0xFFF4F4F5);
-  static const Color darkCard = Color(0xFF202024);
-  static const Color darkCardForeground = Color(0xFFF4F4F5);
-  static const Color darkSurface = Color(0xFF27272A);
-  static const Color darkSurfaceHover = Color(0xFF323236);
-  static const Color darkBorder = Color(0xFF2E2E33);
-  static const Color darkBorderHover = Color(0xFF3F3F46);
+  // Dark Theme tokens
+  static const Color darkBackground = Color(0xFF121212);
+  static const Color darkForeground = Color(0xFFE2E8F0);
+  static const Color darkCard = Color(0xFF171717);
+  static const Color darkCardForeground = Color(0xFFE2E8F0);
+  static const Color darkPopover = Color(0xFF242424);
+  static const Color darkPopoverForeground = Color(0xFFA9A9A9);
+  static const Color darkPrimary = Color(0xFF72E3AD);
+  static const Color darkPrimaryForeground = Color(0xFF1E2723);
+  static const Color darkSecondary = Color(0xFF242424);
+  static const Color darkSecondaryForeground = Color(0xFFFAFAFA);
+  static const Color darkMuted = Color(0xFF1F1F1F);
+  static const Color darkMutedForeground = Color(0xFFA2A2A2);
+  static const Color darkAccent = Color(0xFF313131);
+  static const Color darkAccentForeground = Color(0xFFFAFAFA);
+  static const Color darkDestructive = Color(0xFF541C15);
+  static const Color darkDestructiveForeground = Color(0xFFEDE9E8);
+  static const Color darkBorder = Color(0xFF292929);
+  static const Color darkInput = Color(0xFF242424);
+  static const Color darkRing = Color(0xFF72E3AD);
+  static const Color darkSidebar = Color(0xFF121212);
+  static const Color darkSidebarForeground = Color(0xFF898989);
+  static const Color darkSidebarPrimary = Color(0xFF72E3AD);
+  static const Color darkSidebarPrimaryForeground = Color(0xFF1E2723);
+  static const Color darkSidebarAccent = Color(0xFF313131);
+  static const Color darkSidebarAccentForeground = Color(0xFFFAFAFA);
+  static const Color darkSidebarBorder = Color(0xFF292929);
+  static const Color darkSidebarRing = Color(0xFF72E3AD);
 
-  static const Color lightBackground = Color(0xFFFAFAFA);
-  static const Color lightForeground = Color(0xFF18181B);
-  static const Color lightCard = Color(0xFFFFFFFF);
-  static const Color lightCardForeground = Color(0xFF18181B);
-  static const Color lightSurface = Color(0xFFF4F4F5);
-  static const Color lightSurfaceHover = Color(0xFFE4E4E7);
-  static const Color lightBorder = Color(0xFFE4E4E7);
-  static const Color lightBorderHover = Color(0xFFD4D4D8);
+  static const Color darkSurface = Color(0xFF171717);
+  static const Color darkSurfaceHover = Color(0xFF242424);
+  static const Color darkBorderHover = Color(0xFF313131);
 
-  static const Color primary = Color(0xFF10B981);
-  static const Color primaryForeground = Color(0xFFFFFFFF);
-  static const Color secondary = Color(0xFF27272A);
-  static const Color secondaryForeground = Color(0xFFF4F4F5);
-  static const Color muted = Color(0xFF27272A);
-  static const Color mutedForeground = Color(0xFFA1A1AA);
-  static const Color accent = Color(0xFF3F3F46);
-  static const Color accentForeground = Color(0xFFF4F4F5);
+  // Light Theme tokens
+  static const Color lightBackground = Color(0xFFFCFCFC);
+  static const Color lightForeground = Color(0xFF171717);
+  static const Color lightCard = Color(0xFFFCFCFC);
+  static const Color lightCardForeground = Color(0xFF171717);
+  static const Color lightPopover = Color(0xFFFCFCFC);
+  static const Color lightPopoverForeground = Color(0xFF525252);
+  static const Color lightPrimary = Color(0xFF72E3AD);
+  static const Color lightPrimaryForeground = Color(0xFF1E2723);
+  static const Color lightSecondary = Color(0xFFFDFDFD);
+  static const Color lightSecondaryForeground = Color(0xFF171717);
+  static const Color lightMuted = Color(0xFFEDEDED);
+  static const Color lightMutedForeground = Color(0xFF202020);
+  static const Color lightAccent = Color(0xFFEDEDED);
+  static const Color lightAccentForeground = Color(0xFF202020);
+  static const Color lightDestructive = Color(0xFFCA3214);
+  static const Color lightDestructiveForeground = Color(0xFFFFFCFC);
+  static const Color lightBorder = Color(0xFFDFDFDF);
+  static const Color lightInput = Color(0xFFF6F6F6);
+  static const Color lightRing = Color(0xFF72E3AD);
+  static const Color lightSidebar = Color(0xFFFCFCFC);
+  static const Color lightSidebarForeground = Color(0xFF707070);
+  static const Color lightSidebarPrimary = Color(0xFF72E3AD);
+  static const Color lightSidebarPrimaryForeground = Color(0xFF1E2723);
+  static const Color lightSidebarAccent = Color(0xFFEDEDED);
+  static const Color lightSidebarAccentForeground = Color(0xFF202020);
+  static const Color lightSidebarBorder = Color(0xFFDFDFDF);
+  static const Color lightSidebarRing = Color(0xFF72E3AD);
 
-  static const Color destructive = Color(0xFFEF4444);
-  static const Color destructiveForeground = Color(0xFFFFFFFF);
+  static const Color lightSurface = Color(0xFFEDEDED);
+  static const Color lightSurfaceHover = Color(0xFFDFDFDF);
+  static const Color lightBorderHover = Color(0xFFCCCCCC);
+
+  // Common / Direct brand tokens
+  static const Color primary = Color(0xFF72E3AD);
+  static const Color primaryForeground = Color(0xFF1E2723);
+  static const Color secondary = Color(0xFF242424);
+  static const Color secondaryForeground = Color(0xFFFAFAFA);
+  static const Color muted = Color(0xFF1F1F1F);
+  static const Color mutedForeground = Color(0xFFA2A2A2);
+  static const Color accent = Color(0xFF313131);
+  static const Color accentForeground = Color(0xFFFAFAFA);
+
+  static const Color destructive = Color(0xFFCA3214);
+  static const Color destructiveForeground = Color(0xFFFFFCFC);
   static const Color success = Color(0xFF10B981);
   static const Color warning = Color(0xFFF59E0B);
-  static const Color error = Color(0xFFEF4444);
+  static const Color error = Color(0xFFCA3214);
 
-  static const Color textPrimaryDark = Color(0xFFF4F4F5);
-  static const Color textSecondaryDark = Color(0xFFA1A1AA);
-  static const Color textTertiaryDark = Color(0xFF71717A);
+  // Chart tokens
+  static const Color chart1Light = Color(0xFF72E3AD);
+  static const Color chart2Light = Color(0xFF3B82F6);
+  static const Color chart3Light = Color(0xFF8B5CF6);
+  static const Color chart4Light = Color(0xFFF59E0B);
+  static const Color chart5Light = Color(0xFF10B981);
 
-  static const Color textPrimaryLight = Color(0xFF18181B);
-  static const Color textSecondaryLight = Color(0xFF71717A);
-  static const Color textTertiaryLight = Color(0xFFA1A1AA);
+  static const Color chart1Dark = Color(0xFF4ADE80);
+  static const Color chart2Dark = Color(0xFF60A5FA);
+  static const Color chart3Dark = Color(0xFFA78BFA);
+  static const Color chart4Dark = Color(0xFFFBBF24);
+  static const Color chart5Dark = Color(0xFF2DD4BF);
 
+  // Text hierarchy
+  static const Color textPrimaryDark = Color(0xFFE2E8F0);
+  static const Color textSecondaryDark = Color(0xFFA2A2A2);
+  static const Color textTertiaryDark = Color(0xFF898989);
+
+  static const Color textPrimaryLight = Color(0xFF171717);
+  static const Color textSecondaryLight = Color(0xFF525252);
+  static const Color textTertiaryLight = Color(0xFF707070);
+
+  // File syntax colors
   static const Color fileJs = Color(0xFFF1E05A);
   static const Color fileTs = Color(0xFF3178C6);
   static const Color fileHtml = Color(0xFFE34C26);
@@ -188,14 +252,14 @@ class AppTheme {
       fontFamily: AppTypography.fontFamily,
       scaffoldBackgroundColor: AppColors.darkBackground,
       colorScheme: const ColorScheme.dark(
-        primary: AppColors.primary,
-        onPrimary: AppColors.primaryForeground,
-        secondary: AppColors.secondary,
-        onSecondary: AppColors.secondaryForeground,
+        primary: AppColors.darkPrimary,
+        onPrimary: AppColors.darkPrimaryForeground,
+        secondary: AppColors.darkSecondary,
+        onSecondary: AppColors.darkSecondaryForeground,
         surface: AppColors.darkSurface,
         onSurface: AppColors.darkForeground,
-        error: AppColors.error,
-        onError: AppColors.destructiveForeground,
+        error: AppColors.darkDestructive,
+        onError: AppColors.darkDestructiveForeground,
       ),
       cardTheme: CardThemeData(
         color: AppColors.darkCard,
@@ -226,14 +290,14 @@ class AppTheme {
       fontFamily: AppTypography.fontFamily,
       scaffoldBackgroundColor: AppColors.lightBackground,
       colorScheme: const ColorScheme.light(
-        primary: AppColors.primary,
-        onPrimary: AppColors.primaryForeground,
-        secondary: AppColors.secondary,
-        onSecondary: AppColors.secondaryForeground,
+        primary: AppColors.lightPrimary,
+        onPrimary: AppColors.lightPrimaryForeground,
+        secondary: AppColors.lightSecondary,
+        onSecondary: AppColors.lightSecondaryForeground,
         surface: AppColors.lightSurface,
         onSurface: AppColors.lightForeground,
-        error: AppColors.error,
-        onError: AppColors.destructiveForeground,
+        error: AppColors.lightDestructive,
+        onError: AppColors.lightDestructiveForeground,
       ),
       cardTheme: CardThemeData(
         color: AppColors.lightCard,

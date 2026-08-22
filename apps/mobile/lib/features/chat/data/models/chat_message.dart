@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'subagent_session.dart';
+
 part 'chat_message.freezed.dart';
 
 @freezed
@@ -125,6 +127,9 @@ class ToolCall with _$ToolCall {
     dynamic result,
     @Default('done') String status,
     @Default(false) bool isError,
+    String? liveOutput,
+    List<SubagentEvent>? subagentEvents,
+    SubagentSession? subagentSession,
   }) = _ToolCall;
 
   factory ToolCall.fromJson(Map<String, dynamic> json) {
@@ -147,6 +152,19 @@ class ToolCall with _$ToolCall {
     final status = (json['status'] as String?) ??
         (isErr ? 'error' : (json['result'] != null ? 'done' : 'running'));
 
+    List<SubagentEvent>? parsedEvents;
+    if (json['subagentEvents'] is List) {
+      parsedEvents = (json['subagentEvents'] as List)
+          .whereType<Map<String, dynamic>>()
+          .map(SubagentEvent.fromJson)
+          .toList();
+    }
+
+    SubagentSession? parsedSubagent;
+    if (json['subagentSession'] is Map<String, dynamic>) {
+      parsedSubagent = SubagentSession.fromJson(json['subagentSession'] as Map<String, dynamic>);
+    }
+
     return ToolCall(
       id: (json['id'] ?? json['toolCallId'] ?? '') as String,
       name: (json['name'] ?? json['toolName'] ?? '') as String,
@@ -154,6 +172,9 @@ class ToolCall with _$ToolCall {
       result: json['result'],
       status: status,
       isError: isErr,
+      liveOutput: json['liveOutput'] as String?,
+      subagentEvents: parsedEvents,
+      subagentSession: parsedSubagent,
     );
   }
 
@@ -165,6 +186,10 @@ class ToolCall with _$ToolCall {
       'result': result,
       'status': status,
       'isError': isError,
+      if (liveOutput != null) 'liveOutput': liveOutput,
+      if (subagentEvents != null)
+        'subagentEvents': subagentEvents!.map((e) => e.toJson()).toList(),
+      if (subagentSession != null) 'subagentSession': subagentSession!.toJson(),
     };
   }
 
@@ -187,6 +212,15 @@ class ChatMessage with _$ChatMessage {
     @Default('') String createdAt,
     @Default(false) bool isError,
     @Default(false) bool isStreaming,
+    String? provider,
+    String? model,
+    int? inputTokens,
+    int? outputTokens,
+    double? costUsd,
+    String? steerMode,
+    List<String>? siblings,
+    Map<String, dynamic>? details,
+    List<SubagentSession>? subagentSessions,
   }) = _ChatMessage;
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
@@ -262,6 +296,65 @@ class ChatMessage with _$ChatMessage {
       }
     }
 
+    final provider = (json['provider'] ?? json['providerName']) as String?;
+    final model = (json['model'] ?? json['modelId']) as String?;
+
+    int? inputTokens;
+    int? outputTokens;
+    double? costUsd;
+
+    final rawUsage = json['usage'];
+    if (rawUsage is Map<String, dynamic>) {
+      final inTok = rawUsage['input'] ?? rawUsage['inputTokens'] ?? rawUsage['promptTokens'];
+      if (inTok is num) inputTokens = inTok.toInt();
+      final outTok = rawUsage['output'] ?? rawUsage['outputTokens'] ?? rawUsage['completionTokens'];
+      if (outTok is num) outputTokens = outTok.toInt();
+      final cost = rawUsage['cost'];
+      if (cost is Map) {
+        final tot = cost['total'];
+        if (tot is num) costUsd = tot.toDouble();
+      } else if (cost is num) {
+        costUsd = cost.toDouble();
+      }
+    }
+
+    if (inputTokens == null && json['inputTokens'] is num) {
+      inputTokens = (json['inputTokens'] as num).toInt();
+    }
+    if (outputTokens == null && json['outputTokens'] is num) {
+      outputTokens = (json['outputTokens'] as num).toInt();
+    }
+    if (costUsd == null) {
+      if (json['costUsd'] is num) {
+        costUsd = (json['costUsd'] as num).toDouble();
+      } else if (json['cost'] is num) {
+        costUsd = (json['cost'] as num).toDouble();
+      }
+    }
+
+    final steerMode = (json['steerMode'] ??
+        (json['followUp'] == true
+            ? 'follow_up'
+            : (json['steering'] == true ? 'steering' : null))) as String?;
+
+    final rawSiblings = json['siblings'] ?? json['branches'];
+    List<String>? siblings;
+    if (rawSiblings is List) {
+      siblings = rawSiblings.map((e) => e.toString()).toList();
+    }
+
+    final details = json['details'] is Map<String, dynamic>
+        ? (json['details'] as Map<String, dynamic>)
+        : null;
+
+    List<SubagentSession>? subagentSessions;
+    if (json['subagentSessions'] is List) {
+      subagentSessions = (json['subagentSessions'] as List)
+          .whereType<Map<String, dynamic>>()
+          .map(SubagentSession.fromJson)
+          .toList();
+    }
+
     return ChatMessage(
       id: rawId.toString(),
       role: rawRole,
@@ -273,6 +366,15 @@ class ChatMessage with _$ChatMessage {
       createdAt: createdAt,
       isError: isError,
       isStreaming: isStreaming,
+      provider: provider,
+      model: model,
+      inputTokens: inputTokens,
+      outputTokens: outputTokens,
+      costUsd: costUsd,
+      steerMode: steerMode,
+      siblings: siblings,
+      details: details,
+      subagentSessions: subagentSessions,
     );
   }
 
@@ -288,6 +390,16 @@ class ChatMessage with _$ChatMessage {
       'createdAt': createdAt,
       'isError': isError,
       'isStreaming': isStreaming,
+      if (provider != null) 'provider': provider,
+      if (model != null) 'model': model,
+      if (inputTokens != null) 'inputTokens': inputTokens,
+      if (outputTokens != null) 'outputTokens': outputTokens,
+      if (costUsd != null) 'costUsd': costUsd,
+      if (steerMode != null) 'steerMode': steerMode,
+      if (siblings != null) 'siblings': siblings,
+      if (details != null) 'details': details,
+      if (subagentSessions != null)
+        'subagentSessions': subagentSessions!.map((s) => s.toJson()).toList(),
     };
   }
 
@@ -302,4 +414,23 @@ class ChatMessage with _$ChatMessage {
       approvalRequest != null || role.toLowerCase() == 'tool_approval_request';
   bool get isQuestionRequest =>
       questionRequest != null || role.toLowerCase() == 'ask_question';
+  bool get isDelegation =>
+      (details != null &&
+          (details!['type'] == 'delegation_notification' ||
+              details!['type'] == 'delegation')) ||
+      role.toLowerCase() == 'delegation';
+
+  int? get totalTokens =>
+      (inputTokens != null || outputTokens != null)
+          ? ((inputTokens ?? 0) + (outputTokens ?? 0))
+          : null;
+
+  int get currentBranchIndex {
+    if (siblings != null && siblings!.contains(id)) {
+      return siblings!.indexOf(id);
+    }
+    return 0;
+  }
+
+  int get branchCount => siblings?.length ?? 1;
 }

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/models/workspace_file.dart';
 import '../../data/workspace_repository.dart';
+import 'workspace_file_editor.dart';
 
 class FilePreviewSheet extends ConsumerStatefulWidget {
   final WorkspaceFile file;
@@ -172,7 +173,20 @@ class _FilePreviewSheetState extends ConsumerState<FilePreviewSheet> {
                     ],
                   ),
                 ),
-                if (_content != null)
+                if (_content != null) ...[
+                  IconButton(
+                    icon: const Icon(Icons.edit_outlined, size: 18, color: AppColors.primary),
+                    tooltip: 'Edit file',
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      WorkspaceFileEditor.open(
+                        context,
+                        file: widget.file,
+                        entityType: widget.entityType,
+                        entityId: widget.entityId,
+                      );
+                    },
+                  ),
                   IconButton(
                     icon: Icon(
                       _copied ? Icons.check : Icons.copy_outlined,
@@ -182,6 +196,7 @@ class _FilePreviewSheetState extends ConsumerState<FilePreviewSheet> {
                     tooltip: 'Copy content',
                     onPressed: _copyToClipboard,
                   ),
+                ],
                 IconButton(
                   icon: const Icon(Icons.close, size: 20),
                   onPressed: () => Navigator.of(context).pop(),

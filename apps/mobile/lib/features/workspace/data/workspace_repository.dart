@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_client.dart';
@@ -154,6 +155,125 @@ class WorkspaceRepository {
     final key = scopeParams.keys.first;
     final value = Uri.encodeComponent(scopeParams[key] ?? '');
     return '${AppConfig.apiBaseUrl}/api/workspace/$cleanPath?$key=$value&raw=true';
+  }
+
+  Future<WorkspaceFile> createFile({
+    required String entityType,
+    required String entityId,
+    required String path,
+    String content = '',
+  }) async {
+    final cleanPath = path.replaceAll(RegExp(r'^[/\\]+'), '');
+    final queryParams = _buildScopeParams(entityType, entityId);
+    final response = await _apiClient.put<dynamic>(
+      '/api/workspace/$cleanPath',
+      queryParameters: queryParams,
+      data: {'type': 'file', 'content': content},
+    );
+    if (response is Map<String, dynamic>) {
+      return WorkspaceFile.fromJson(response);
+    }
+    return WorkspaceFile(path: cleanPath, name: cleanPath.split('/').last);
+  }
+
+  Future<WorkspaceFile> createFolder({
+    required String entityType,
+    required String entityId,
+    required String path,
+  }) async {
+    final cleanPath = path.replaceAll(RegExp(r'^[/\\]+'), '');
+    final queryParams = _buildScopeParams(entityType, entityId);
+    final response = await _apiClient.put<dynamic>(
+      '/api/workspace/$cleanPath',
+      queryParameters: queryParams,
+      data: {'type': 'folder'},
+    );
+    if (response is Map<String, dynamic>) {
+      return WorkspaceFile.fromJson(response);
+    }
+    return WorkspaceFile(path: cleanPath, name: cleanPath.split('/').last, isDirectory: true);
+  }
+
+  Future<WorkspaceFile> renameFile({
+    required String entityType,
+    required String entityId,
+    required String oldPath,
+    required String newPath,
+  }) async {
+    final cleanOldPath = oldPath.replaceAll(RegExp(r'^[/\\]+'), '');
+    final cleanNewPath = newPath.replaceAll(RegExp(r'^[/\\]+'), '');
+    final queryParams = _buildScopeParams(entityType, entityId);
+    final response = await _apiClient.patch<dynamic>(
+      '/api/workspace/$cleanOldPath',
+      queryParameters: queryParams,
+      data: {'newPath': cleanNewPath},
+    );
+    if (response is Map<String, dynamic>) {
+      return WorkspaceFile.fromJson(response);
+    }
+    return WorkspaceFile(path: cleanNewPath, name: cleanNewPath.split('/').last);
+  }
+
+  Future<void> deleteFile({
+    required String entityType,
+    required String entityId,
+    required String path,
+  }) async {
+    final cleanPath = path.replaceAll(RegExp(r'^[/\\]+'), '');
+    final queryParams = _buildScopeParams(entityType, entityId);
+    await _apiClient.delete<dynamic>(
+      '/api/workspace/$cleanPath',
+      queryParameters: queryParams,
+    );
+  }
+
+  Future<WorkspaceFile> saveFile({
+    required String entityType,
+    required String entityId,
+    required String path,
+    required String content,
+  }) async {
+    final cleanPath = path.replaceAll(RegExp(r'^[/\\]+'), '');
+    final queryParams = _buildScopeParams(entityType, entityId);
+    final response = await _apiClient.put<dynamic>(
+      '/api/workspace/$cleanPath',
+      queryParameters: queryParams,
+      data: {'type': 'file', 'content': content},
+    );
+    if (response is Map<String, dynamic>) {
+      return WorkspaceFile.fromJson(response);
+    }
+    return WorkspaceFile(path: cleanPath, name: cleanPath.split('/').last);
+  }
+
+  Future<List<WorkspaceFile>> listChildren({
+    required String entityType,
+    required String entityId,
+    required String path,
+  }) async {
+    final cleanPath = path.replaceAll(RegExp(r'^[/\\]+'), '');
+    final queryParams = _buildScopeParams(entityType, entityId);
+    final response = await _apiClient.get<dynamic>(
+      '/api/workspace/$cleanPath',
+      queryParameters: queryParams,
+    );
+    return _parseFilesFromResponse(response);
+  }
+
+  Future<List<int>> downloadFileBytes({
+    required String entityType,
+    required String entityId,
+    required String path,
+  }) async {
+    final cleanPath = path.replaceAll(RegExp(r'^[/\\]+'), '');
+    final queryParams = _buildScopeParams(entityType, entityId);
+    queryParams['download'] = 'true';
+    final response = await _apiClient.dio.get<List<int>>(
+      '/api/workspace/$cleanPath',
+      queryParameters: queryParams,
+      options: Options(responseType: ResponseType.bytes),
+    );
+    return response.data ?? [];
   }
 
   Future<String?> getAuthToken() async {

@@ -3,6 +3,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:spaces_mobile/core/theme/app_theme.dart';
 import 'package:spaces_mobile/features/chat/data/models/chat_message.dart';
 import 'package:spaces_mobile/features/chat/ui/widgets/markdown_block.dart';
+import 'package:spaces_mobile/features/chat/ui/widgets/message_blocks/audio_block.dart';
+import 'package:spaces_mobile/features/chat/ui/widgets/message_blocks/code_block.dart';
+import 'package:spaces_mobile/features/chat/ui/widgets/message_blocks/html_block.dart';
+import 'package:spaces_mobile/features/chat/ui/widgets/message_blocks/pdf_block.dart';
+import 'package:spaces_mobile/features/chat/ui/widgets/message_blocks/video_block.dart';
 import 'package:spaces_mobile/features/chat/ui/widgets/message_bubble.dart';
 import 'package:spaces_mobile/features/chat/ui/widgets/system_message_card.dart';
 import 'package:spaces_mobile/features/chat/ui/widgets/tool_call_card.dart';
@@ -140,6 +145,59 @@ This is **bold** text and `inline code`.
       expect(find.byIcon(Icons.auto_awesome), findsOneWidget);
       expect(find.byType(ToolCallCard), findsOneWidget);
       expect(find.text('read_file'), findsOneWidget);
+    });
+
+    testWidgets('renders MessageBubble with inline CodeBlock, AudioBlock, VideoBlock, PdfBlock and HtmlBlock', (tester) async {
+      const richMessage = ChatMessage(
+        id: 'a-rich',
+        role: 'assistant',
+        content: '''
+Here is the code:
+```typescript
+const app = new Hono();
+```
+
+Listen to the briefing:
+<audio src="https://example.com/audio.mp3" title="Briefing Audio" artist="AI Lead"></audio>
+
+Watch the walkthrough:
+<video src="https://example.com/walkthrough.mp4" title="Walkthrough Video"></video>
+
+Documentation:
+<pdf src="https://example.com/doc.pdf" title="API Spec"></pdf>
+
+Rendered UI:
+<html>
+<p>Clean HTML result</p>
+</html>
+''',
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.dark(),
+          home: const Scaffold(
+            body: SingleChildScrollView(
+              child: MessageBubble(message: richMessage),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(CodeBlockWidget), findsOneWidget);
+      expect(find.text('TYPESCRIPT'), findsOneWidget);
+
+      expect(find.byType(AudioBlockWidget), findsOneWidget);
+      expect(find.text('Briefing Audio'), findsOneWidget);
+
+      expect(find.byType(VideoBlockWidget), findsOneWidget);
+      expect(find.text('Walkthrough Video'), findsOneWidget);
+
+      expect(find.byType(PdfBlockWidget), findsOneWidget);
+      expect(find.text('API Spec'), findsOneWidget);
+
+      expect(find.byType(HtmlBlockWidget), findsOneWidget);
+      expect(find.text('HTML PREVIEW'), findsOneWidget);
     });
 
     testWidgets('renders SystemMessageCard', (tester) async {

@@ -41,9 +41,9 @@ class _SessionsConsoleScreenState extends ConsumerState<SessionsConsoleScreen> {
   Color _getCategoryColor(String type) {
     switch (type) {
       case 'reasoning':
-        return const Color(0xFFA855F7);
+        return AppColors.chart3Dark;
       case 'tools':
-        return const Color(0xFF3B82F6);
+        return AppColors.chart2Dark;
       case 'errors':
         return AppColors.destructive;
       case 'messages':
@@ -122,7 +122,7 @@ class _SessionsConsoleScreenState extends ConsumerState<SessionsConsoleScreen> {
                   _buildFilterChip(
                     label: 'Reasoning',
                     categoryKey: 'reasoning',
-                    color: const Color(0xFFA855F7),
+                    color: AppColors.chart3Dark,
                     isSelected: state.activeFilters.contains('reasoning'),
                     onToggle: () => notifier.toggleFilter('reasoning'),
                   ),
@@ -130,7 +130,7 @@ class _SessionsConsoleScreenState extends ConsumerState<SessionsConsoleScreen> {
                   _buildFilterChip(
                     label: 'Tools',
                     categoryKey: 'tools',
-                    color: const Color(0xFF3B82F6),
+                    color: AppColors.chart2Dark,
                     isSelected: state.activeFilters.contains('tools'),
                     onToggle: () => notifier.toggleFilter('tools'),
                   ),

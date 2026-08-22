@@ -41,6 +41,38 @@ void main() {
       expect(sentText, 'Create a Flutter widget');
     });
 
+    testWidgets('renders floating card structure with bottom toolbar controls', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.dark(),
+          home: Scaffold(
+            body: ChatInputBar(
+              isStreaming: false,
+              currentModelName: 'Claude 3.5',
+              contextUsed: 500,
+              contextLimit: 1000,
+              onSend: (_) {},
+              onStop: () {},
+              onPickAttachment: () {},
+              onRemoveAttachment: (_) {},
+              onOpenModelSelector: () {},
+              onOpenSkillsSelector: () {},
+              onOpenToolsSelector: () {},
+            ),
+          ),
+        ),
+      );
+
+      // Check model name in bottom toolbar pill
+      expect(find.text('Claude 3.5'), findsOneWidget);
+      expect(find.byKey(const Key('chat_attachment_button')), findsOneWidget);
+      expect(find.byKey(const Key('chat_model_selector_button')), findsOneWidget);
+      expect(find.byKey(const Key('chat_skills_selector_button')), findsOneWidget);
+      expect(find.byKey(const Key('chat_tools_selector_button')), findsOneWidget);
+      expect(find.byKey(const Key('send_message_button')), findsOneWidget);
+      expect(find.byType(TextField), findsOneWidget);
+    });
+
     testWidgets('shows Stop button during streaming and triggers onStop', (tester) async {
       bool stopTriggered = false;
 

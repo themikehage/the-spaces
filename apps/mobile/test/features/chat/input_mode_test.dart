@@ -130,7 +130,7 @@ void main() {
     });
   });
 
-  group('ChatNotifier InputMode & History Tests', () {
+  group('ChatNotifier Streaming Steering & History Tests', () {
     late FakeChatRepository fakeRepository;
 
     setUp(() {
@@ -141,29 +141,25 @@ void main() {
       fakeRepository.eventsController.close();
     });
 
-    test('setInputMode updates inputMode state', () {
+    test('sendMessage while streaming automatically tags message with steerMode steering', () async {
       final notifier = ChatNotifier(
         sessionId: 'test-session-123',
         repository: fakeRepository,
       );
 
-      expect(notifier.state.inputMode, InputMode.steer);
-      notifier.setInputMode(InputMode.followup);
-      expect(notifier.state.inputMode, InputMode.followup);
-    });
+      // Simulate active streaming event
+      fakeRepository.eventsController.add({
+        'type': 'token',
+        'content': 'Generating output...',
+      });
+      await pumpEventQueue();
+      expect(notifier.state.isStreaming, true);
 
-    test('sendMessage sends followUp: true when inputMode is followup', () async {
-      final notifier = ChatNotifier(
-        sessionId: 'test-session-123',
-        repository: fakeRepository,
-      );
-
-      notifier.setInputMode(InputMode.followup);
-      await notifier.sendMessage('Please clarify previous step');
+      await notifier.sendMessage('Focus on unit tests');
 
       expect(fakeRepository.lastPromptSessionId, 'test-session-123');
-      expect(fakeRepository.lastPromptMessage, 'Please clarify previous step');
-      expect(fakeRepository.lastPromptFollowUp, true);
+      expect(fakeRepository.lastPromptMessage, 'Focus on unit tests');
+      expect(notifier.state.messages.last.steerMode, 'steering');
     });
 
     test('sentHistory stores up to 20 messages and navigateHistory steps through them', () async {

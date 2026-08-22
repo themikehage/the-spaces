@@ -4,6 +4,6 @@ Vamos a dividirlo en hitos basandonos en la complejidad de cada paso
 
 ---
 
-Antes de empezar vamos a crear un plan por cada hito en [plans] asegurandonos de que solo se ejecute un hito a la vez. Un buen plan se rige por principios inamovibles y tiene criterios verificables, ejemplo [Verificable-Plan-Example.md]
+Vamos a dividir estas mejoras en hitos innegociables y vamos a crear un plan profesional por cada hito en [plans] asegurandonos de que solo se ejecute un hito a la vez y de que se cumplan [frontend.rules.md] y [backend.rules.md]. Un buen plan se rige por principios inamovibles y tiene criterios verificables, ejemplo [Verificable-Plan-Example.md]
 
 ---

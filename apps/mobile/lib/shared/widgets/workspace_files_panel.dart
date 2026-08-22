@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../features/workspace/data/models/workspace_file.dart';
-import '../../features/workspace/ui/widgets/workspace_file_item.dart';
+import '../../features/workspace/ui/widgets/workspace_action_dialogs.dart';
+import '../../features/workspace/ui/widgets/workspace_search_bar.dart';
+import '../../features/workspace/ui/widgets/workspace_tree_node.dart';
 import '../../features/workspace/ui/workspace_notifier.dart';
 import 'skeletons/skeleton_list.dart';
 
@@ -32,6 +34,44 @@ class _WorkspaceFilesPanelState extends ConsumerState<WorkspaceFilesPanel> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleCreateNode({required bool isFolder}) async {
+    final newPath = await WorkspaceActionDialogs.showCreateNodeDialog(
+      context,
+      isFolder: isFolder,
+    );
+
+    if (newPath != null && newPath.isNotEmpty) {
+      final args = WorkspaceArgs(
+        entityType: widget.entityType,
+        entityId: widget.entityId,
+      );
+      final notifier = ref.read(workspaceNotifierProvider(args).notifier);
+      final success = isFolder
+          ? await notifier.createFolder(newPath)
+          : await notifier.createFile(newPath);
+
+      if (mounted) {
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Created "${newPath.split('/').last}"'),
+              backgroundColor: AppColors.success,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to create ${isFolder ? 'folder' : 'file'}'),
+              backgroundColor: AppColors.destructive,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    }
   }
 
   @override
@@ -98,74 +138,59 @@ class _WorkspaceFilesPanelState extends ConsumerState<WorkspaceFilesPanel> {
                   ),
                 ],
                 const Spacer(),
-                TextButton.icon(
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.add, size: 20, color: AppColors.primary),
+                  tooltip: 'Add file or folder',
+                  onSelected: (val) {
+                    if (val == 'file') {
+                      _handleCreateNode(isFolder: false);
+                    } else if (val == 'folder') {
+                      _handleCreateNode(isFolder: true);
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'file',
+                      child: Row(
+                        children: [
+                          Icon(Icons.note_add_outlined, size: 18, color: AppColors.primary),
+                          SizedBox(width: AppSpacing.sm),
+                          Text('New File'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'folder',
+                      child: Row(
+                        children: [
+                          Icon(Icons.create_new_folder_outlined, size: 18, color: AppColors.primary),
+                          SizedBox(width: AppSpacing.sm),
+                          Text('New Folder'),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                IconButton(
                   onPressed: state.isLoading ? null : () => notifier.refresh(),
-                  icon: const Icon(Icons.refresh, size: 16),
-                  label: const Text('Refresh'),
-                  style: TextButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
-                    foregroundColor: AppColors.primary,
-                  ),
+                  icon: const Icon(Icons.refresh, size: 18),
+                  tooltip: 'Refresh',
+                  visualDensity: VisualDensity.compact,
+                  color: AppColors.primary,
                 ),
               ],
             ),
           ),
 
           // Search Bar
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (val) => notifier.setQuery(val),
-              style: AppTypography.bodyMedium.copyWith(
-                color: isDark ? AppColors.darkForeground : AppColors.lightForeground,
-              ),
-              decoration: InputDecoration(
-                hintText: 'Search files...',
-                hintStyle: AppTypography.bodyMedium.copyWith(
-                  color: isDark ? AppColors.mutedForeground : AppColors.textSecondaryLight,
-                ),
-                prefixIcon: Icon(
-                  Icons.search,
-                  size: 20,
-                  color: isDark ? AppColors.mutedForeground : AppColors.textSecondaryLight,
-                ),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear, size: 18),
-                        onPressed: () {
-                          _searchController.clear();
-                          notifier.setQuery('');
-                          setState(() {});
-                        },
-                      )
-                    : null,
-                filled: true,
-                fillColor: isDark
-                    ? AppColors.darkCard.withValues(alpha: 0.6)
-                    : AppColors.lightCard,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.sm,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                  borderSide: BorderSide(
-                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                  borderSide: BorderSide(
-                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                  borderSide: const BorderSide(color: AppColors.primary),
-                ),
-              ),
-            ),
+          WorkspaceSearchBar(
+            controller: _searchController,
+            onChanged: (val) => notifier.setQuery(val),
+            onClear: () {
+              _searchController.clear();
+              notifier.setQuery('');
+              setState(() {});
+            },
           ),
 
           // Main body content
@@ -269,13 +294,24 @@ class _WorkspaceFilesPanelState extends ConsumerState<WorkspaceFilesPanel> {
                   color: isDark ? AppColors.mutedForeground : AppColors.textSecondaryLight,
                 ),
               ),
+              const SizedBox(height: AppSpacing.md),
+              ElevatedButton.icon(
+                onPressed: () => _handleCreateNode(isFolder: false),
+                icon: const Icon(Icons.add, size: 16),
+                label: const Text('Create File'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.primaryForeground,
+                ),
+              ),
             ],
           ),
         ),
       );
     }
 
-    final displayFiles = state.filteredFiles;
+    final isSearching = state.query.trim().isNotEmpty;
+    final displayFiles = isSearching ? state.filteredFiles : state.files;
 
     if (displayFiles.isEmpty) {
       return Center(
@@ -314,16 +350,17 @@ class _WorkspaceFilesPanelState extends ConsumerState<WorkspaceFilesPanel> {
       onRefresh: () => notifier.refresh(),
       color: AppColors.primary,
       child: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
         itemCount: displayFiles.length,
         itemBuilder: (context, index) {
           final file = displayFiles[index];
-          return WorkspaceFileItem(
-            key: ValueKey('workspace_file_${file.path}'),
+          return WorkspaceTreeNode(
+            key: ValueKey('workspace_node_${file.path}'),
             file: file,
             entityType: widget.entityType,
             entityId: widget.entityId,
-            onTap: widget.onFileTap != null ? () => widget.onFileTap!(file) : null,
+            depth: isSearching ? 0 : 0,
+            onFileTap: widget.onFileTap,
           );
         },
       ),

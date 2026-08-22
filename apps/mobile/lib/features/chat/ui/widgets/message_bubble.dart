@@ -198,8 +198,8 @@ class MessageBubble extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
                       decoration: BoxDecoration(
                         color: isFollowUp
-                            ? const Color(0xFF047857) // Deep emerald
-                            : const Color(0xFF4338CA), // Indigo/purple
+                            ? AppColors.darkPrimary
+                            : AppColors.chart3Light,
                         borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                       ),
                       child: Text(
@@ -209,7 +209,7 @@ class MessageBubble extends StatelessWidget {
                           fontSize: 8.5,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 0.5,
-                          color: Colors.white,
+                          color: AppColors.white,
                         ),
                       ),
                     ),

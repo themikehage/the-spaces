@@ -10,6 +10,7 @@ import '../../helpers/fake_secure_storage.dart';
 
 class FakeWorkspaceRepository extends WorkspaceRepository {
   List<WorkspaceFile> mockFiles = [];
+  Map<String, List<WorkspaceFile>> mockChildren = {};
   bool shouldThrow = false;
 
   FakeWorkspaceRepository({
@@ -26,6 +27,88 @@ class FakeWorkspaceRepository extends WorkspaceRepository {
       throw Exception('Network connection failed');
     }
     return mockFiles;
+  }
+
+  @override
+  Future<List<WorkspaceFile>> listChildren({
+    required String entityType,
+    required String entityId,
+    required String path,
+  }) async {
+    if (shouldThrow) {
+      throw Exception('Failed to load children');
+    }
+    return mockChildren[path] ?? [];
+  }
+
+  @override
+  Future<WorkspaceFile> createFile({
+    required String entityType,
+    required String entityId,
+    required String path,
+    String content = '',
+  }) async {
+    if (shouldThrow) throw Exception('Create failed');
+    final file = WorkspaceFile(path: path, name: path.split('/').last);
+    mockFiles.add(file);
+    return file;
+  }
+
+  @override
+  Future<WorkspaceFile> createFolder({
+    required String entityType,
+    required String entityId,
+    required String path,
+  }) async {
+    if (shouldThrow) throw Exception('Create folder failed');
+    final folder = WorkspaceFile(path: path, name: path.split('/').last, isDirectory: true);
+    mockFiles.add(folder);
+    return folder;
+  }
+
+  @override
+  Future<WorkspaceFile> renameFile({
+    required String entityType,
+    required String entityId,
+    required String oldPath,
+    required String newPath,
+  }) async {
+    if (shouldThrow) throw Exception('Rename failed');
+    mockFiles.removeWhere((f) => f.path == oldPath);
+    final file = WorkspaceFile(path: newPath, name: newPath.split('/').last);
+    mockFiles.add(file);
+    return file;
+  }
+
+  @override
+  Future<void> deleteFile({
+    required String entityType,
+    required String entityId,
+    required String path,
+  }) async {
+    if (shouldThrow) throw Exception('Delete failed');
+    mockFiles.removeWhere((f) => f.path == path);
+  }
+
+  @override
+  Future<WorkspaceFile> saveFile({
+    required String entityType,
+    required String entityId,
+    required String path,
+    required String content,
+  }) async {
+    if (shouldThrow) throw Exception('Save failed');
+    return WorkspaceFile(path: path, name: path.split('/').last, size: content.length);
+  }
+
+  @override
+  Future<List<int>> downloadFileBytes({
+    required String entityType,
+    required String entityId,
+    required String path,
+  }) async {
+    if (shouldThrow) throw Exception('Download failed');
+    return [1, 2, 3, 4];
   }
 }
 
@@ -98,22 +181,81 @@ void main() {
       expect(notifier.state.files, isEmpty);
     });
 
-    test('refresh reloads files successfully', () async {
+    test('toggles folder and lazy-loads children', () async {
       fakeRepo.mockFiles = [
-        const WorkspaceFile(path: 'initial.txt', name: 'initial.txt'),
+        const WorkspaceFile(path: 'docs', name: 'docs', isDirectory: true),
       ];
+      fakeRepo.mockChildren = {
+        'docs': [
+          const WorkspaceFile(path: 'docs/intro.md', name: 'intro.md'),
+        ],
+      };
 
       final notifier = WorkspaceNotifier(repository: fakeRepo, args: testArgs);
       await Future.delayed(const Duration(milliseconds: 50));
-      expect(notifier.state.files.length, equals(1));
 
+      expect(notifier.state.isExpanded('docs'), isFalse);
+
+      await notifier.toggleFolder('docs');
+      expect(notifier.state.isExpanded('docs'), isTrue);
+      expect(notifier.state.getChildren('docs').length, equals(1));
+      expect(notifier.state.getChildren('docs').first.name, equals('intro.md'));
+
+      await notifier.toggleFolder('docs');
+      expect(notifier.state.isExpanded('docs'), isFalse);
+    });
+
+    test('executes createFile successfully', () async {
+      fakeRepo.mockFiles = [];
+      final notifier = WorkspaceNotifier(repository: fakeRepo, args: testArgs);
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      final success = await notifier.createFile('notes.txt', content: 'hello');
+      expect(success, isTrue);
+      expect(notifier.state.files.any((f) => f.path == 'notes.txt'), isTrue);
+    });
+
+    test('executes createFolder successfully', () async {
+      fakeRepo.mockFiles = [];
+      final notifier = WorkspaceNotifier(repository: fakeRepo, args: testArgs);
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      final success = await notifier.createFolder('src');
+      expect(success, isTrue);
+      expect(notifier.state.files.any((f) => f.path == 'src' && f.isDirectory), isTrue);
+    });
+
+    test('executes renameFile successfully', () async {
       fakeRepo.mockFiles = [
-        const WorkspaceFile(path: 'initial.txt', name: 'initial.txt'),
-        const WorkspaceFile(path: 'new_file.txt', name: 'new_file.txt'),
+        const WorkspaceFile(path: 'old.md', name: 'old.md'),
       ];
+      final notifier = WorkspaceNotifier(repository: fakeRepo, args: testArgs);
+      await Future.delayed(const Duration(milliseconds: 50));
 
-      await notifier.refresh();
-      expect(notifier.state.files.length, equals(2));
+      final success = await notifier.renameFile('old.md', 'new.md');
+      expect(success, isTrue);
+      expect(notifier.state.files.any((f) => f.path == 'new.md'), isTrue);
+      expect(notifier.state.files.any((f) => f.path == 'old.md'), isFalse);
+    });
+
+    test('executes deleteFile successfully', () async {
+      fakeRepo.mockFiles = [
+        const WorkspaceFile(path: 'delete_me.txt', name: 'delete_me.txt'),
+      ];
+      final notifier = WorkspaceNotifier(repository: fakeRepo, args: testArgs);
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      final success = await notifier.deleteFile('delete_me.txt');
+      expect(success, isTrue);
+      expect(notifier.state.files.isEmpty, isTrue);
+    });
+
+    test('downloads file bytes', () async {
+      final notifier = WorkspaceNotifier(repository: fakeRepo, args: testArgs);
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      final bytes = await notifier.downloadFile('sample.png');
+      expect(bytes, equals([1, 2, 3, 4]));
     });
   });
 }

@@ -58,7 +58,7 @@ class BashResultRenderer extends StatelessWidget {
         : (isError ? 'Failed' : 'OK');
     final exitColor = isError ? AppColors.error : AppColors.success;
 
-    final codeBg = isDark ? const Color(0xFF141417) : const Color(0xFF1E1E24);
+    final codeBg = isDark ? AppColors.darkBackground : AppColors.darkCard;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -93,7 +93,7 @@ class BashResultRenderer extends StatelessWidget {
                   child: SelectableText(
                     command,
                     style: AppTypography.code.copyWith(
-                      fontSize: 12,
+                       fontSize: 12,
                       color: isDark ? AppColors.darkForeground : AppColors.lightForeground,
                     ),
                   ),
@@ -131,7 +131,7 @@ class BashResultRenderer extends StatelessWidget {
               color: codeBg,
               borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
               border: Border.all(
-                color: isDark ? AppColors.darkBorder : AppColors.black.withValues(alpha: 0.2),
+                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
               ),
             ),
             child: ClipRRect(
@@ -146,7 +146,7 @@ class BashResultRenderer extends StatelessWidget {
                       fontFamily: 'monospace',
                       fontSize: 12,
                       height: 1.45,
-                      color: Color(0xFFE4E4E7),
+                      color: AppColors.darkForeground,
                     ),
                   ),
                 ),

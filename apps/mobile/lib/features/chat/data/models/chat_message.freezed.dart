@@ -635,6 +635,9 @@ mixin _$ToolCall {
   dynamic get result => throw _privateConstructorUsedError;
   String get status => throw _privateConstructorUsedError;
   bool get isError => throw _privateConstructorUsedError;
+  String? get liveOutput => throw _privateConstructorUsedError;
+  List<SubagentEvent>? get subagentEvents => throw _privateConstructorUsedError;
+  SubagentSession? get subagentSession => throw _privateConstructorUsedError;
 
   /// Create a copy of ToolCall
   /// with the given fields replaced by the non-null parameter values.
@@ -654,7 +657,12 @@ abstract class $ToolCallCopyWith<$Res> {
       Map<String, dynamic> arguments,
       dynamic result,
       String status,
-      bool isError});
+      bool isError,
+      String? liveOutput,
+      List<SubagentEvent>? subagentEvents,
+      SubagentSession? subagentSession});
+
+  $SubagentSessionCopyWith<$Res>? get subagentSession;
 }
 
 /// @nodoc
@@ -678,6 +686,9 @@ class _$ToolCallCopyWithImpl<$Res, $Val extends ToolCall>
     Object? result = freezed,
     Object? status = null,
     Object? isError = null,
+    Object? liveOutput = freezed,
+    Object? subagentEvents = freezed,
+    Object? subagentSession = freezed,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -704,7 +715,33 @@ class _$ToolCallCopyWithImpl<$Res, $Val extends ToolCall>
           ? _value.isError
           : isError // ignore: cast_nullable_to_non_nullable
               as bool,
+      liveOutput: freezed == liveOutput
+          ? _value.liveOutput
+          : liveOutput // ignore: cast_nullable_to_non_nullable
+              as String?,
+      subagentEvents: freezed == subagentEvents
+          ? _value.subagentEvents
+          : subagentEvents // ignore: cast_nullable_to_non_nullable
+              as List<SubagentEvent>?,
+      subagentSession: freezed == subagentSession
+          ? _value.subagentSession
+          : subagentSession // ignore: cast_nullable_to_non_nullable
+              as SubagentSession?,
     ) as $Val);
+  }
+
+  /// Create a copy of ToolCall
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $SubagentSessionCopyWith<$Res>? get subagentSession {
+    if (_value.subagentSession == null) {
+      return null;
+    }
+
+    return $SubagentSessionCopyWith<$Res>(_value.subagentSession!, (value) {
+      return _then(_value.copyWith(subagentSession: value) as $Val);
+    });
   }
 }
 
@@ -722,7 +759,13 @@ abstract class _$$ToolCallImplCopyWith<$Res>
       Map<String, dynamic> arguments,
       dynamic result,
       String status,
-      bool isError});
+      bool isError,
+      String? liveOutput,
+      List<SubagentEvent>? subagentEvents,
+      SubagentSession? subagentSession});
+
+  @override
+  $SubagentSessionCopyWith<$Res>? get subagentSession;
 }
 
 /// @nodoc
@@ -744,6 +787,9 @@ class __$$ToolCallImplCopyWithImpl<$Res>
     Object? result = freezed,
     Object? status = null,
     Object? isError = null,
+    Object? liveOutput = freezed,
+    Object? subagentEvents = freezed,
+    Object? subagentSession = freezed,
   }) {
     return _then(_$ToolCallImpl(
       id: null == id
@@ -770,6 +816,18 @@ class __$$ToolCallImplCopyWithImpl<$Res>
           ? _value.isError
           : isError // ignore: cast_nullable_to_non_nullable
               as bool,
+      liveOutput: freezed == liveOutput
+          ? _value.liveOutput
+          : liveOutput // ignore: cast_nullable_to_non_nullable
+              as String?,
+      subagentEvents: freezed == subagentEvents
+          ? _value._subagentEvents
+          : subagentEvents // ignore: cast_nullable_to_non_nullable
+              as List<SubagentEvent>?,
+      subagentSession: freezed == subagentSession
+          ? _value.subagentSession
+          : subagentSession // ignore: cast_nullable_to_non_nullable
+              as SubagentSession?,
     ));
   }
 }
@@ -783,8 +841,12 @@ class _$ToolCallImpl extends _ToolCall {
       final Map<String, dynamic> arguments = const <String, dynamic>{},
       this.result,
       this.status = 'done',
-      this.isError = false})
+      this.isError = false,
+      this.liveOutput,
+      final List<SubagentEvent>? subagentEvents,
+      this.subagentSession})
       : _arguments = arguments,
+        _subagentEvents = subagentEvents,
         super._();
 
   @override
@@ -808,10 +870,24 @@ class _$ToolCallImpl extends _ToolCall {
   @override
   @JsonKey()
   final bool isError;
+  @override
+  final String? liveOutput;
+  final List<SubagentEvent>? _subagentEvents;
+  @override
+  List<SubagentEvent>? get subagentEvents {
+    final value = _subagentEvents;
+    if (value == null) return null;
+    if (_subagentEvents is EqualUnmodifiableListView) return _subagentEvents;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(value);
+  }
+
+  @override
+  final SubagentSession? subagentSession;
 
   @override
   String toString() {
-    return 'ToolCall(id: $id, name: $name, arguments: $arguments, result: $result, status: $status, isError: $isError)';
+    return 'ToolCall(id: $id, name: $name, arguments: $arguments, result: $result, status: $status, isError: $isError, liveOutput: $liveOutput, subagentEvents: $subagentEvents, subagentSession: $subagentSession)';
   }
 
   @override
@@ -825,7 +901,13 @@ class _$ToolCallImpl extends _ToolCall {
                 .equals(other._arguments, _arguments) &&
             const DeepCollectionEquality().equals(other.result, result) &&
             (identical(other.status, status) || other.status == status) &&
-            (identical(other.isError, isError) || other.isError == isError));
+            (identical(other.isError, isError) || other.isError == isError) &&
+            (identical(other.liveOutput, liveOutput) ||
+                other.liveOutput == liveOutput) &&
+            const DeepCollectionEquality()
+                .equals(other._subagentEvents, _subagentEvents) &&
+            (identical(other.subagentSession, subagentSession) ||
+                other.subagentSession == subagentSession));
   }
 
   @override
@@ -836,7 +918,10 @@ class _$ToolCallImpl extends _ToolCall {
       const DeepCollectionEquality().hash(_arguments),
       const DeepCollectionEquality().hash(result),
       status,
-      isError);
+      isError,
+      liveOutput,
+      const DeepCollectionEquality().hash(_subagentEvents),
+      subagentSession);
 
   /// Create a copy of ToolCall
   /// with the given fields replaced by the non-null parameter values.
@@ -854,7 +939,10 @@ abstract class _ToolCall extends ToolCall {
       final Map<String, dynamic> arguments,
       final dynamic result,
       final String status,
-      final bool isError}) = _$ToolCallImpl;
+      final bool isError,
+      final String? liveOutput,
+      final List<SubagentEvent>? subagentEvents,
+      final SubagentSession? subagentSession}) = _$ToolCallImpl;
   const _ToolCall._() : super._();
 
   @override
@@ -869,6 +957,12 @@ abstract class _ToolCall extends ToolCall {
   String get status;
   @override
   bool get isError;
+  @override
+  String? get liveOutput;
+  @override
+  List<SubagentEvent>? get subagentEvents;
+  @override
+  SubagentSession? get subagentSession;
 
   /// Create a copy of ToolCall
   /// with the given fields replaced by the non-null parameter values.
@@ -890,6 +984,16 @@ mixin _$ChatMessage {
   String get createdAt => throw _privateConstructorUsedError;
   bool get isError => throw _privateConstructorUsedError;
   bool get isStreaming => throw _privateConstructorUsedError;
+  String? get provider => throw _privateConstructorUsedError;
+  String? get model => throw _privateConstructorUsedError;
+  int? get inputTokens => throw _privateConstructorUsedError;
+  int? get outputTokens => throw _privateConstructorUsedError;
+  double? get costUsd => throw _privateConstructorUsedError;
+  String? get steerMode => throw _privateConstructorUsedError;
+  List<String>? get siblings => throw _privateConstructorUsedError;
+  Map<String, dynamic>? get details => throw _privateConstructorUsedError;
+  List<SubagentSession>? get subagentSessions =>
+      throw _privateConstructorUsedError;
 
   /// Create a copy of ChatMessage
   /// with the given fields replaced by the non-null parameter values.
@@ -914,7 +1018,16 @@ abstract class $ChatMessageCopyWith<$Res> {
       List<ToolCall> toolCalls,
       String createdAt,
       bool isError,
-      bool isStreaming});
+      bool isStreaming,
+      String? provider,
+      String? model,
+      int? inputTokens,
+      int? outputTokens,
+      double? costUsd,
+      String? steerMode,
+      List<String>? siblings,
+      Map<String, dynamic>? details,
+      List<SubagentSession>? subagentSessions});
 
   $ApprovalRequestCopyWith<$Res>? get approvalRequest;
   $QuestionRequestCopyWith<$Res>? get questionRequest;
@@ -945,6 +1058,15 @@ class _$ChatMessageCopyWithImpl<$Res, $Val extends ChatMessage>
     Object? createdAt = null,
     Object? isError = null,
     Object? isStreaming = null,
+    Object? provider = freezed,
+    Object? model = freezed,
+    Object? inputTokens = freezed,
+    Object? outputTokens = freezed,
+    Object? costUsd = freezed,
+    Object? steerMode = freezed,
+    Object? siblings = freezed,
+    Object? details = freezed,
+    Object? subagentSessions = freezed,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -987,6 +1109,42 @@ class _$ChatMessageCopyWithImpl<$Res, $Val extends ChatMessage>
           ? _value.isStreaming
           : isStreaming // ignore: cast_nullable_to_non_nullable
               as bool,
+      provider: freezed == provider
+          ? _value.provider
+          : provider // ignore: cast_nullable_to_non_nullable
+              as String?,
+      model: freezed == model
+          ? _value.model
+          : model // ignore: cast_nullable_to_non_nullable
+              as String?,
+      inputTokens: freezed == inputTokens
+          ? _value.inputTokens
+          : inputTokens // ignore: cast_nullable_to_non_nullable
+              as int?,
+      outputTokens: freezed == outputTokens
+          ? _value.outputTokens
+          : outputTokens // ignore: cast_nullable_to_non_nullable
+              as int?,
+      costUsd: freezed == costUsd
+          ? _value.costUsd
+          : costUsd // ignore: cast_nullable_to_non_nullable
+              as double?,
+      steerMode: freezed == steerMode
+          ? _value.steerMode
+          : steerMode // ignore: cast_nullable_to_non_nullable
+              as String?,
+      siblings: freezed == siblings
+          ? _value.siblings
+          : siblings // ignore: cast_nullable_to_non_nullable
+              as List<String>?,
+      details: freezed == details
+          ? _value.details
+          : details // ignore: cast_nullable_to_non_nullable
+              as Map<String, dynamic>?,
+      subagentSessions: freezed == subagentSessions
+          ? _value.subagentSessions
+          : subagentSessions // ignore: cast_nullable_to_non_nullable
+              as List<SubagentSession>?,
     ) as $Val);
   }
 
@@ -1037,7 +1195,16 @@ abstract class _$$ChatMessageImplCopyWith<$Res>
       List<ToolCall> toolCalls,
       String createdAt,
       bool isError,
-      bool isStreaming});
+      bool isStreaming,
+      String? provider,
+      String? model,
+      int? inputTokens,
+      int? outputTokens,
+      double? costUsd,
+      String? steerMode,
+      List<String>? siblings,
+      Map<String, dynamic>? details,
+      List<SubagentSession>? subagentSessions});
 
   @override
   $ApprovalRequestCopyWith<$Res>? get approvalRequest;
@@ -1068,6 +1235,15 @@ class __$$ChatMessageImplCopyWithImpl<$Res>
     Object? createdAt = null,
     Object? isError = null,
     Object? isStreaming = null,
+    Object? provider = freezed,
+    Object? model = freezed,
+    Object? inputTokens = freezed,
+    Object? outputTokens = freezed,
+    Object? costUsd = freezed,
+    Object? steerMode = freezed,
+    Object? siblings = freezed,
+    Object? details = freezed,
+    Object? subagentSessions = freezed,
   }) {
     return _then(_$ChatMessageImpl(
       id: null == id
@@ -1110,6 +1286,42 @@ class __$$ChatMessageImplCopyWithImpl<$Res>
           ? _value.isStreaming
           : isStreaming // ignore: cast_nullable_to_non_nullable
               as bool,
+      provider: freezed == provider
+          ? _value.provider
+          : provider // ignore: cast_nullable_to_non_nullable
+              as String?,
+      model: freezed == model
+          ? _value.model
+          : model // ignore: cast_nullable_to_non_nullable
+              as String?,
+      inputTokens: freezed == inputTokens
+          ? _value.inputTokens
+          : inputTokens // ignore: cast_nullable_to_non_nullable
+              as int?,
+      outputTokens: freezed == outputTokens
+          ? _value.outputTokens
+          : outputTokens // ignore: cast_nullable_to_non_nullable
+              as int?,
+      costUsd: freezed == costUsd
+          ? _value.costUsd
+          : costUsd // ignore: cast_nullable_to_non_nullable
+              as double?,
+      steerMode: freezed == steerMode
+          ? _value.steerMode
+          : steerMode // ignore: cast_nullable_to_non_nullable
+              as String?,
+      siblings: freezed == siblings
+          ? _value._siblings
+          : siblings // ignore: cast_nullable_to_non_nullable
+              as List<String>?,
+      details: freezed == details
+          ? _value._details
+          : details // ignore: cast_nullable_to_non_nullable
+              as Map<String, dynamic>?,
+      subagentSessions: freezed == subagentSessions
+          ? _value._subagentSessions
+          : subagentSessions // ignore: cast_nullable_to_non_nullable
+              as List<SubagentSession>?,
     ));
   }
 }
@@ -1127,8 +1339,20 @@ class _$ChatMessageImpl extends _ChatMessage {
       final List<ToolCall> toolCalls = const <ToolCall>[],
       this.createdAt = '',
       this.isError = false,
-      this.isStreaming = false})
+      this.isStreaming = false,
+      this.provider,
+      this.model,
+      this.inputTokens,
+      this.outputTokens,
+      this.costUsd,
+      this.steerMode,
+      final List<String>? siblings,
+      final Map<String, dynamic>? details,
+      final List<SubagentSession>? subagentSessions})
       : _toolCalls = toolCalls,
+        _siblings = siblings,
+        _details = details,
+        _subagentSessions = subagentSessions,
         super._();
 
   @override
@@ -1163,10 +1387,52 @@ class _$ChatMessageImpl extends _ChatMessage {
   @override
   @JsonKey()
   final bool isStreaming;
+  @override
+  final String? provider;
+  @override
+  final String? model;
+  @override
+  final int? inputTokens;
+  @override
+  final int? outputTokens;
+  @override
+  final double? costUsd;
+  @override
+  final String? steerMode;
+  final List<String>? _siblings;
+  @override
+  List<String>? get siblings {
+    final value = _siblings;
+    if (value == null) return null;
+    if (_siblings is EqualUnmodifiableListView) return _siblings;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(value);
+  }
+
+  final Map<String, dynamic>? _details;
+  @override
+  Map<String, dynamic>? get details {
+    final value = _details;
+    if (value == null) return null;
+    if (_details is EqualUnmodifiableMapView) return _details;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(value);
+  }
+
+  final List<SubagentSession>? _subagentSessions;
+  @override
+  List<SubagentSession>? get subagentSessions {
+    final value = _subagentSessions;
+    if (value == null) return null;
+    if (_subagentSessions is EqualUnmodifiableListView)
+      return _subagentSessions;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(value);
+  }
 
   @override
   String toString() {
-    return 'ChatMessage(id: $id, role: $role, content: $content, thinking: $thinking, approvalRequest: $approvalRequest, questionRequest: $questionRequest, toolCalls: $toolCalls, createdAt: $createdAt, isError: $isError, isStreaming: $isStreaming)';
+    return 'ChatMessage(id: $id, role: $role, content: $content, thinking: $thinking, approvalRequest: $approvalRequest, questionRequest: $questionRequest, toolCalls: $toolCalls, createdAt: $createdAt, isError: $isError, isStreaming: $isStreaming, provider: $provider, model: $model, inputTokens: $inputTokens, outputTokens: $outputTokens, costUsd: $costUsd, steerMode: $steerMode, siblings: $siblings, details: $details, subagentSessions: $subagentSessions)';
   }
 
   @override
@@ -1189,22 +1455,46 @@ class _$ChatMessageImpl extends _ChatMessage {
                 other.createdAt == createdAt) &&
             (identical(other.isError, isError) || other.isError == isError) &&
             (identical(other.isStreaming, isStreaming) ||
-                other.isStreaming == isStreaming));
+                other.isStreaming == isStreaming) &&
+            (identical(other.provider, provider) ||
+                other.provider == provider) &&
+            (identical(other.model, model) || other.model == model) &&
+            (identical(other.inputTokens, inputTokens) ||
+                other.inputTokens == inputTokens) &&
+            (identical(other.outputTokens, outputTokens) ||
+                other.outputTokens == outputTokens) &&
+            (identical(other.costUsd, costUsd) || other.costUsd == costUsd) &&
+            (identical(other.steerMode, steerMode) ||
+                other.steerMode == steerMode) &&
+            const DeepCollectionEquality().equals(other._siblings, _siblings) &&
+            const DeepCollectionEquality().equals(other._details, _details) &&
+            const DeepCollectionEquality()
+                .equals(other._subagentSessions, _subagentSessions));
   }
 
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      id,
-      role,
-      content,
-      thinking,
-      approvalRequest,
-      questionRequest,
-      const DeepCollectionEquality().hash(_toolCalls),
-      createdAt,
-      isError,
-      isStreaming);
+  int get hashCode => Object.hashAll([
+        runtimeType,
+        id,
+        role,
+        content,
+        thinking,
+        approvalRequest,
+        questionRequest,
+        const DeepCollectionEquality().hash(_toolCalls),
+        createdAt,
+        isError,
+        isStreaming,
+        provider,
+        model,
+        inputTokens,
+        outputTokens,
+        costUsd,
+        steerMode,
+        const DeepCollectionEquality().hash(_siblings),
+        const DeepCollectionEquality().hash(_details),
+        const DeepCollectionEquality().hash(_subagentSessions)
+      ]);
 
   /// Create a copy of ChatMessage
   /// with the given fields replaced by the non-null parameter values.
@@ -1226,7 +1516,16 @@ abstract class _ChatMessage extends ChatMessage {
       final List<ToolCall> toolCalls,
       final String createdAt,
       final bool isError,
-      final bool isStreaming}) = _$ChatMessageImpl;
+      final bool isStreaming,
+      final String? provider,
+      final String? model,
+      final int? inputTokens,
+      final int? outputTokens,
+      final double? costUsd,
+      final String? steerMode,
+      final List<String>? siblings,
+      final Map<String, dynamic>? details,
+      final List<SubagentSession>? subagentSessions}) = _$ChatMessageImpl;
   const _ChatMessage._() : super._();
 
   @override
@@ -1249,6 +1548,24 @@ abstract class _ChatMessage extends ChatMessage {
   bool get isError;
   @override
   bool get isStreaming;
+  @override
+  String? get provider;
+  @override
+  String? get model;
+  @override
+  int? get inputTokens;
+  @override
+  int? get outputTokens;
+  @override
+  double? get costUsd;
+  @override
+  String? get steerMode;
+  @override
+  List<String>? get siblings;
+  @override
+  Map<String, dynamic>? get details;
+  @override
+  List<SubagentSession>? get subagentSessions;
 
   /// Create a copy of ChatMessage
   /// with the given fields replaced by the non-null parameter values.

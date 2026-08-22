@@ -1,3 +1,4 @@
+// This is an example of a verifiable plan for the backend
 # Refactorización: Ports First & Dependency Injection
 
 **Backend Rules violadas**: Regla 1 (Ports First) y Regla 2 (Inyección de Dependencias vía ServerContext).

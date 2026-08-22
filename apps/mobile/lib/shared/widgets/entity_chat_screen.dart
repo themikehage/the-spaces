@@ -220,6 +220,8 @@ class _EntityChatScreenState extends ConsumerState<EntityChatScreen> {
                 key: ValueKey('chat_screen_$sessionId'),
                 sessionId: sessionId,
                 showAppBar: false,
+                entityType: widget.entityType,
+                entityId: widget.entityId,
               ),
 
               // Page 1: WorkspaceFilesPanel

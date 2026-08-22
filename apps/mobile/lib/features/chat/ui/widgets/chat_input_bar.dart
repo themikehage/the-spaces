@@ -5,11 +5,11 @@ import '../../../../core/theme/app_theme.dart';
 import '../../controllers/autocomplete_controller.dart';
 import '../../data/models/chat_attachment.dart';
 import '../../models/autocomplete_item.dart';
-import '../chat_state.dart';
 import 'attachment_preview.dart';
 import 'attachment_preview_bar.dart';
 import 'autocomplete_popover.dart';
-import 'chat_input_header_row.dart';
+import 'compact_button.dart';
+import 'context_ring.dart';
 
 class ChatInputBar extends StatefulWidget {
   final bool isStreaming;
@@ -20,8 +20,6 @@ class ChatInputBar extends StatefulWidget {
   final int contextLimit;
   final bool isCompacting;
   final VoidCallback? onCompact;
-  final InputMode inputMode;
-  final ValueChanged<InputMode>? onInputModeChanged;
   final List<String> sentHistory;
   final String? Function(int delta)? onNavigateHistory;
   final ValueChanged<String> onSend;
@@ -44,8 +42,6 @@ class ChatInputBar extends StatefulWidget {
     this.contextLimit = 0,
     this.isCompacting = false,
     this.onCompact,
-    this.inputMode = InputMode.steer,
-    this.onInputModeChanged,
     this.sentHistory = const [],
     this.onNavigateHistory,
     required this.onSend,
@@ -81,7 +77,15 @@ class _ChatInputBarState extends State<ChatInputBar> {
     _isExternalAutocomplete = widget.autocompleteController != null;
     _autocomplete = widget.autocompleteController ?? AutocompleteController();
 
+    _focusNode.addListener(_handleFocusChange);
+
     _hasText = _controller.text.trim().isNotEmpty;
+  }
+
+  void _handleFocusChange() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _handleTextChange() {
@@ -100,6 +104,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
   @override
   void dispose() {
     _controller.removeListener(_handleTextChange);
+    _focusNode.removeListener(_handleFocusChange);
     _focusNode.dispose();
     if (!_isExternalController) {
       _controller.dispose();
@@ -110,13 +115,9 @@ class _ChatInputBarState extends State<ChatInputBar> {
     super.dispose();
   }
 
-  void _handleSend([bool? forceFollowUp]) {
+  void _handleSend() {
     final text = _controller.text.trim();
     if (text.isEmpty && widget.attachments.isEmpty) return;
-
-    if (forceFollowUp == true && widget.onInputModeChanged != null) {
-      widget.onInputModeChanged!(InputMode.followup);
-    }
 
     widget.onSend(text);
     _controller.clear();
@@ -149,7 +150,6 @@ class _ChatInputBarState extends State<ChatInputBar> {
   KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
 
-    final isAlt = HardwareKeyboard.instance.isAltPressed;
     final isEnter = event.logicalKey == LogicalKeyboardKey.enter ||
         event.logicalKey == LogicalKeyboardKey.numpadEnter;
     final isEscape = event.logicalKey == LogicalKeyboardKey.escape;
@@ -169,7 +169,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
         _autocomplete.moveSelection(1);
         return KeyEventResult.handled;
       }
-      if (isEnter && !isAlt) {
+      if (isEnter) {
         final item = _autocomplete.selectedItem;
         if (item != null) {
           _onSelectAutocompleteItem(item);
@@ -178,8 +178,8 @@ class _ChatInputBarState extends State<ChatInputBar> {
       }
     }
 
-    if (isEnter && isAlt) {
-      _handleSend(true);
+    if (isEnter && !HardwareKeyboard.instance.isShiftPressed) {
+      _handleSend();
       return KeyEventResult.handled;
     }
 
@@ -189,195 +189,351 @@ class _ChatInputBarState extends State<ChatInputBar> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? AppColors.darkCard : AppColors.lightCard;
-    final inputBg = isDark ? AppColors.darkSurface : AppColors.lightSurface;
+    final cardBg = isDark ? AppColors.darkCard : AppColors.lightCard;
     final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
+    final activeBorderColor = isDark ? AppColors.darkRing : AppColors.lightPrimary;
     final hasAttachments = (widget.pendingAttachments != null && widget.pendingAttachments!.isNotEmpty) ||
         widget.attachments.isNotEmpty;
     final canSend = _hasText || hasAttachments;
+    final usedRatio = widget.contextLimit > 0 ? (widget.contextUsed / widget.contextLimit) : 0.0;
+    final showCompact = usedRatio > 0.85 && widget.onCompact != null;
+    final isFocused = _focusNode.hasFocus;
 
     return Container(
-      decoration: BoxDecoration(
-        color: bg,
-        border: Border(top: BorderSide(color: borderColor)),
-      ),
+      color: Colors.transparent,
       child: SafeArea(
         top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            AutocompletePopover(
-              controller: _autocomplete,
-              onSelectItem: _onSelectAutocompleteItem,
-              onDismiss: () => _autocomplete.dismiss(),
-            ),
-            if (widget.pendingAttachments != null && widget.pendingAttachments!.isNotEmpty)
-              AttachmentPreviewBar(
-                attachments: widget.pendingAttachments!,
-                onRemove: widget.onRemoveAttachment,
-              )
-            else if (widget.attachments.isNotEmpty)
-              AttachmentPreview(
-                imagePaths: widget.attachments,
-                onRemove: widget.onRemoveAttachment,
+        bottom: true,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.xs,
+            AppSpacing.md,
+            AppSpacing.sm,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AutocompletePopover(
+                controller: _autocomplete,
+                onSelectItem: _onSelectAutocompleteItem,
+                onDismiss: () => _autocomplete.dismiss(),
               ),
-            ChatInputHeaderRow(
-              inputMode: widget.inputMode,
-              onInputModeChanged: widget.onInputModeChanged,
-              sentHistory: widget.sentHistory,
-              onNavigateHistory: (delta) => _navigateHistory(delta),
-              contextUsed: widget.contextUsed,
-              contextLimit: widget.contextLimit,
-              isCompacting: widget.isCompacting,
-              onCompact: widget.onCompact,
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.sm,
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  IconButton(
-                    key: const Key('chat_model_selector_button'),
-                    icon: const Icon(Icons.psychology_outlined),
-                    tooltip: 'Select model (${widget.currentModelName ?? "Default"})',
-                    iconSize: 22,
-                    color: isDark ? AppColors.mutedForeground : AppColors.textSecondaryLight,
-                    onPressed: widget.onOpenModelSelector,
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                decoration: BoxDecoration(
+                  color: cardBg,
+                  borderRadius: BorderRadius.circular(24.0),
+                  border: Border.all(
+                    color: isFocused
+                        ? activeBorderColor
+                        : (widget.isStreaming
+                            ? activeBorderColor.withValues(alpha: 0.5)
+                            : borderColor),
+                    width: isFocused ? 1.5 : 1.0,
                   ),
-                  if (widget.onOpenSkillsSelector != null)
-                    IconButton(
-                      key: const Key('chat_skills_selector_button'),
-                      icon: const Icon(Icons.bolt_outlined),
-                      tooltip: 'Workspace skills',
-                      iconSize: 22,
-                      color: isDark ? AppColors.mutedForeground : AppColors.textSecondaryLight,
-                      onPressed: widget.onOpenSkillsSelector,
+                  boxShadow: [
+                    BoxShadow(
+                      color: isDark
+                          ? Colors.black.withValues(alpha: 0.35)
+                          : Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                      spreadRadius: 0,
                     ),
-                  if (widget.onOpenToolsSelector != null)
-                    IconButton(
-                      key: const Key('chat_tools_selector_button'),
-                      icon: const Icon(Icons.build_outlined),
-                      tooltip: 'Tools configuration',
-                      iconSize: 22,
-                      color: isDark ? AppColors.mutedForeground : AppColors.textSecondaryLight,
-                      onPressed: widget.onOpenToolsSelector,
-                    ),
-                  IconButton(
-                    key: const Key('chat_attachment_button'),
-                    icon: const Icon(Icons.attach_file),
-                    tooltip: 'Attach file or image',
-                    iconSize: 22,
-                    color: isDark ? AppColors.mutedForeground : AppColors.textSecondaryLight,
-                    onPressed: widget.onPickAttachment,
-                  ),
-                  Expanded(
-                    child: Container(
-                      constraints: const BoxConstraints(maxHeight: 140),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                        vertical: AppSpacing.xs,
-                      ),
-                      decoration: BoxDecoration(
-                        color: inputBg,
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-                        border: Border.all(color: borderColor),
-                      ),
-                      child: Focus(
-                        focusNode: _focusNode,
-                        onKeyEvent: _handleKeyEvent,
-                        child: TextField(
-                          controller: _controller,
-                          minLines: 1,
-                          maxLines: 6,
-                          keyboardType: TextInputType.multiline,
-                          textInputAction: TextInputAction.newline,
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: isDark
-                                ? AppColors.darkForeground
-                                : AppColors.lightForeground,
-                          ),
-                          decoration: InputDecoration(
-                            hintText: widget.inputMode == InputMode.followup
-                                ? 'Send follow-up comment...'
-                                : 'Message Spaces... (/ for tools, @ for mentions)',
-                            hintStyle: AppTypography.bodyMedium.copyWith(
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (widget.pendingAttachments != null && widget.pendingAttachments!.isNotEmpty)
+                        AttachmentPreviewBar(
+                          attachments: widget.pendingAttachments!,
+                          onRemove: widget.onRemoveAttachment,
+                        )
+                      else if (widget.attachments.isNotEmpty)
+                        AttachmentPreview(
+                          imagePaths: widget.attachments,
+                          onRemove: widget.onRemoveAttachment,
+                        ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.lg,
+                          AppSpacing.md,
+                          AppSpacing.lg,
+                          AppSpacing.xs,
+                        ),
+                        child: Focus(
+                          focusNode: _focusNode,
+                          onKeyEvent: _handleKeyEvent,
+                          child: TextField(
+                            controller: _controller,
+                            minLines: 1,
+                            maxLines: 6,
+                            keyboardType: TextInputType.multiline,
+                            textInputAction: TextInputAction.newline,
+                            style: AppTypography.bodyMedium.copyWith(
                               color: isDark
-                                  ? AppColors.mutedForeground
-                                  : AppColors.textSecondaryLight,
+                                  ? AppColors.darkForeground
+                                  : AppColors.lightForeground,
                             ),
-                            border: InputBorder.none,
-                            isDense: true,
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: AppSpacing.sm,
+                            decoration: InputDecoration(
+                              hintText: widget.isStreaming
+                                  ? 'Send steering instruction...'
+                                  : 'Message Spaces... (/ for tools, @ for mentions)',
+                              hintStyle: AppTypography.bodyMedium.copyWith(
+                                color: isDark
+                                    ? AppColors.mutedForeground
+                                    : AppColors.textSecondaryLight,
+                              ),
+                              border: InputBorder.none,
+                              isDense: true,
+                              contentPadding: EdgeInsets.zero,
                             ),
                           ),
                         ),
                       ),
-                    ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.sm,
+                          AppSpacing.xs,
+                          AppSpacing.sm,
+                          AppSpacing.sm,
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                physics: const BouncingScrollPhysics(),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      key: const Key('chat_attachment_button'),
+                                      icon: const Icon(Icons.attach_file),
+                                      tooltip: 'Attach file or image',
+                                      iconSize: 20,
+                                      padding: const EdgeInsets.all(6),
+                                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                      color: isDark
+                                          ? AppColors.mutedForeground
+                                          : AppColors.textSecondaryLight,
+                                      onPressed: widget.onPickAttachment,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    InkWell(
+                                      key: const Key('chat_model_selector_button'),
+                                      onTap: widget.onOpenModelSelector,
+                                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: isDark
+                                              ? AppColors.darkSurface
+                                              : AppColors.lightSurface,
+                                          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                                          border: Border.all(
+                                            color: isDark
+                                                ? AppColors.darkBorder
+                                                : AppColors.lightBorder,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.psychology_outlined,
+                                              size: 15,
+                                              color: isDark
+                                                ? AppColors.mutedForeground
+                                                : AppColors.textSecondaryLight,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            ConstrainedBox(
+                                              constraints: const BoxConstraints(maxWidth: 90),
+                                              child: Text(
+                                                widget.currentModelName ?? 'Default',
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: AppTypography.labelSmall.copyWith(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: isDark
+                                                      ? AppColors.darkForeground
+                                                      : AppColors.lightForeground,
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 2),
+                                            Icon(
+                                              Icons.keyboard_arrow_down,
+                                              size: 14,
+                                              color: isDark
+                                                  ? AppColors.mutedForeground
+                                                  : AppColors.textSecondaryLight,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    if (widget.onOpenSkillsSelector != null) ...[
+                                      IconButton(
+                                        key: const Key('chat_skills_selector_button'),
+                                        icon: const Icon(Icons.bolt_outlined),
+                                        tooltip: 'Workspace skills',
+                                        iconSize: 20,
+                                        padding: const EdgeInsets.all(6),
+                                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                        color: isDark
+                                            ? AppColors.mutedForeground
+                                            : AppColors.textSecondaryLight,
+                                        onPressed: widget.onOpenSkillsSelector,
+                                      ),
+                                      const SizedBox(width: 2),
+                                    ],
+                                    if (widget.onOpenToolsSelector != null) ...[
+                                      IconButton(
+                                        key: const Key('chat_tools_selector_button'),
+                                        icon: const Icon(Icons.tune_outlined),
+                                        tooltip: 'Tools configuration',
+                                        iconSize: 20,
+                                        padding: const EdgeInsets.all(6),
+                                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                        color: isDark
+                                            ? AppColors.mutedForeground
+                                            : AppColors.textSecondaryLight,
+                                        onPressed: widget.onOpenToolsSelector,
+                                      ),
+                                      const SizedBox(width: 2),
+                                    ],
+                                    if (widget.sentHistory.isNotEmpty && widget.onNavigateHistory != null) ...[
+                                      Tooltip(
+                                        message: 'Previous message (history)',
+                                        child: InkWell(
+                                          key: const Key('history_up_button'),
+                                          onTap: () => _navigateHistory(1),
+                                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(4.0),
+                                            child: Icon(
+                                              Icons.arrow_upward,
+                                              size: 14,
+                                              color: isDark
+                                                  ? AppColors.mutedForeground
+                                                  : AppColors.textSecondaryLight,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 2),
+                                      Tooltip(
+                                        message: 'Next message (history)',
+                                        child: InkWell(
+                                          key: const Key('history_down_button'),
+                                          onTap: () => _navigateHistory(-1),
+                                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(4.0),
+                                            child: Icon(
+                                              Icons.arrow_downward,
+                                              size: 14,
+                                              color: isDark
+                                                  ? AppColors.mutedForeground
+                                                  : AppColors.textSecondaryLight,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                    ],
+                                    if (showCompact) ...[
+                                      CompactButton(
+                                        onCompact: widget.onCompact!,
+                                        isLoading: widget.isCompacting,
+                                      ),
+                                      const SizedBox(width: 4),
+                                    ],
+                                    if (widget.contextLimit > 0 || widget.contextUsed > 0)
+                                      ContextRing(
+                                        used: widget.contextUsed,
+                                        limit: widget.contextLimit > 0 ? widget.contextLimit : 1,
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            if (widget.isStreaming && !_hasText)
+                              IconButton(
+                                key: const Key('stop_streaming_button'),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
+                                icon: Container(
+                                  width: 34,
+                                  height: 34,
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.destructive,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.stop,
+                                    size: 18,
+                                    color: AppColors.destructiveForeground,
+                                  ),
+                                ),
+                                tooltip: 'Stop generation',
+                                onPressed: widget.onStop,
+                              )
+                            else
+                              IconButton(
+                                key: const Key('send_message_button'),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
+                                icon: Container(
+                                  width: 34,
+                                  height: 34,
+                                  decoration: BoxDecoration(
+                                    color: canSend
+                                        ? (isDark ? AppColors.darkRing : AppColors.lightPrimary)
+                                        : (isDark ? AppColors.darkSurface : AppColors.lightSurface),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.arrow_upward,
+                                    size: 18,
+                                    color: canSend
+                                        ? (isDark ? AppColors.black : AppColors.lightPrimaryForeground)
+                                        : (isDark
+                                            ? AppColors.mutedForeground
+                                            : AppColors.textSecondaryLight),
+                                  ),
+                                ),
+                                tooltip: widget.isStreaming
+                                    ? 'Send steering instruction'
+                                    : 'Send message',
+                                onPressed: canSend ? _handleSend : null,
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: AppSpacing.xs),
-                  if (widget.isStreaming)
-                    IconButton(
-                      key: const Key('stop_streaming_button'),
-                      icon: Container(
-                        width: 32,
-                        height: 32,
-                        decoration: const BoxDecoration(
-                          color: AppColors.destructive,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.stop,
-                          size: 18,
-                          color: AppColors.destructiveForeground,
-                        ),
-                      ),
-                      tooltip: 'Stop generation',
-                      onPressed: widget.onStop,
-                    )
-                  else
-                    IconButton(
-                      key: const Key('send_message_button'),
-                      icon: Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: canSend
-                              ? (widget.inputMode == InputMode.followup
-                                  ? AppColors.warning
-                                  : AppColors.primary)
-                              : (isDark ? AppColors.darkSurface : AppColors.lightSurface),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          widget.inputMode == InputMode.followup
-                              ? Icons.reply
-                              : Icons.arrow_upward,
-                          size: 18,
-                          color: canSend
-                              ? (widget.inputMode == InputMode.followup
-                                  ? AppColors.black
-                                  : AppColors.primaryForeground)
-                              : (isDark
-                                  ? AppColors.mutedForeground
-                                  : AppColors.textSecondaryLight),
-                        ),
-                      ),
-                      tooltip: widget.inputMode == InputMode.followup
-                          ? 'Send follow-up'
-                          : 'Send message',
-                      onPressed: canSend ? () => _handleSend() : null,
-                    ),
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
+

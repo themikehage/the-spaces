@@ -590,7 +590,8 @@ class ChatNotifier extends StateNotifier<ChatState> {
     if (trimmed.isEmpty && pending.isEmpty && legacyPaths.isEmpty) return;
 
     final isFirstMessage = state.messages.isEmpty;
-    final isFollowUp = followUp ?? (state.inputMode == InputMode.followup);
+    final isStreamingCurrently = state.isStreaming;
+    final isFollowUp = followUp ?? false;
 
     final List<Map<String, dynamic>> images = [];
     String extraPromptText = '';
@@ -668,7 +669,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
       role: 'user',
       content: effectiveUserContent.isNotEmpty ? effectiveUserContent : trimmed,
       createdAt: DateTime.now().toIso8601String(),
-      steerMode: isFollowUp ? 'follow_up' : 'steering',
+      steerMode: isStreamingCurrently ? 'steering' : (isFollowUp ? 'follow_up' : null),
     );
 
     appendToSentHistory(trimmed.isNotEmpty ? trimmed : effectiveUserContent);

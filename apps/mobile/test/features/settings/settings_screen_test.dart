@@ -79,7 +79,7 @@ class FakeSettingsRepository implements SettingsRepository {
 
 class FakeAuthRepository implements AuthRepository {
   bool isLoggedOut = false;
-
+  
   @override
   Future<AuthResponse> login(String username, String password) async {
     return const AuthResponse(user: AuthUser(username: 'test'));
@@ -134,7 +134,7 @@ void main() {
   }
 
   group('SettingsScreen Widget Tests', () {
-    testWidgets('renders all sections and general controls on load', (tester) async {
+    testWidgets('renders tabs and general controls on load', (tester) async {
       tester.view.physicalSize = const Size(800, 1200);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
@@ -142,16 +142,31 @@ void main() {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
-      // Check section titles
+      // Check title and tabs
       expect(find.text('Settings'), findsOneWidget);
-      expect(find.text('General'), findsOneWidget);
-      expect(find.text('AI Providers'), findsOneWidget);
+      expect(find.byKey(const Key('settings_tab_general')), findsOneWidget);
+      expect(find.byKey(const Key('settings_tab_providers')), findsOneWidget);
+      expect(find.byKey(const Key('settings_tab_env')), findsOneWidget);
+      expect(find.byKey(const Key('settings_tab_mcp')), findsOneWidget);
 
       // Check general controls
       expect(find.text('Response Language'), findsOneWidget);
       expect(find.text('Memory Enabled'), findsOneWidget);
       expect(find.text('Memory Auto-Store'), findsOneWidget);
       expect(find.text('Exa Web Search'), findsOneWidget);
+    });
+
+    testWidgets('switching to Providers tab renders provider list', (tester) async {
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
+
+      // Tap on Providers tab
+      await tester.tap(find.byKey(const Key('settings_tab_providers')));
+      await tester.pumpAndSettle();
 
       // Check provider list rendering
       expect(find.byKey(const Key('provider_item_openai')), findsOneWidget);
@@ -160,7 +175,7 @@ void main() {
       expect(find.descendant(of: find.byKey(const Key('provider_item_anthropic')), matching: find.text('Anthropic')), findsOneWidget);
     });
 
-    testWidgets('tapping provider opens ProviderCredentialsSheet and saves key', (tester) async {
+    testWidgets('tapping provider in Providers tab opens ProviderCredentialsSheet and saves key', (tester) async {
       tester.view.physicalSize = const Size(800, 1200);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
@@ -168,9 +183,12 @@ void main() {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
-      // Scroll until visible and tap on Anthropic provider (not configured initially)
+      // Switch to Providers tab
+      await tester.tap(find.byKey(const Key('settings_tab_providers')));
+      await tester.pumpAndSettle();
+
+      // Tap on Anthropic provider
       final providerFinder = find.byKey(const Key('provider_item_anthropic'));
-      await tester.scrollUntilVisible(providerFinder, 200);
       await tester.tap(providerFinder);
       await tester.pumpAndSettle();
 
@@ -205,9 +223,12 @@ void main() {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
-      // Scroll until visible and tap on OpenAI provider (configured)
+      // Switch to Providers tab
+      await tester.tap(find.byKey(const Key('settings_tab_providers')));
+      await tester.pumpAndSettle();
+
+      // Tap on OpenAI provider (configured)
       final providerFinder = find.byKey(const Key('provider_item_openai'));
-      await tester.scrollUntilVisible(providerFinder, 200);
       await tester.tap(providerFinder);
       await tester.pumpAndSettle();
 
@@ -231,7 +252,6 @@ void main() {
       await tester.pumpAndSettle();
 
       final switchFinder = find.byKey(const Key('memory_enabled_switch'));
-      await tester.scrollUntilVisible(switchFinder, 200);
       await tester.tap(switchFinder);
       await tester.pump();
 
@@ -249,11 +269,12 @@ void main() {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
-      // Scroll ListView down to bring logout tile into center view
-      await tester.drag(find.byType(ListView), const Offset(0, -600));
-      await tester.pumpAndSettle();
-
       final logoutFinder = find.byKey(const Key('logout_tile'));
+      await tester.scrollUntilVisible(
+        logoutFinder,
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.tap(logoutFinder);
       await tester.pumpAndSettle();
 
@@ -265,6 +286,25 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(fakeAuthRepo.isLoggedOut, isTrue);
+    });
+
+    testWidgets('switching to Env Vars and MCP Servers tabs shows corresponding views', (tester) async {
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
+
+      // Switch to Env Vars
+      await tester.tap(find.byKey(const Key('settings_tab_env')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('add_env_var_fab')), findsOneWidget);
+
+      // Switch to MCP Servers
+      await tester.tap(find.byKey(const Key('settings_tab_mcp')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('add_mcp_server_fab')), findsOneWidget);
     });
   });
 }

@@ -10,12 +10,14 @@ class AuthState {
   final AuthStatus status;
   final String? username;
   final String? userId;
+  final String? token;
   final String? errorMessage;
 
   const AuthState._({
     required this.status,
     this.username,
     this.userId,
+    this.token,
     this.errorMessage,
   });
 
@@ -26,10 +28,12 @@ class AuthState {
   const AuthState.authenticated({
     required String username,
     String? userId,
+    String? token,
   }) : this._(
           status: AuthStatus.authenticated,
           username: username,
           userId: userId,
+          token: token,
         );
 
   const AuthState.unauthenticated()
@@ -53,9 +57,10 @@ class AuthState {
         other.status == status &&
         other.username == username &&
         other.userId == userId &&
+        other.token == token &&
         other.errorMessage == errorMessage;
   }
 
   @override
-  int get hashCode => Object.hash(status, username, userId, errorMessage);
+  int get hashCode => Object.hash(status, username, userId, token, errorMessage);
 }

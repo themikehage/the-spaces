@@ -12,6 +12,7 @@ import '../../helpers/fake_secure_storage.dart';
 
 class MockWorkspaceRepository extends WorkspaceRepository {
   List<WorkspaceFile> filesToReturn = [];
+  Map<String, List<WorkspaceFile>> childrenToReturn = {};
   bool throwError = false;
 
   MockWorkspaceRepository({required super.apiClient, required super.storage});
@@ -25,6 +26,18 @@ class MockWorkspaceRepository extends WorkspaceRepository {
       throw Exception('Server unreachable');
     }
     return filesToReturn;
+  }
+
+  @override
+  Future<List<WorkspaceFile>> listChildren({
+    required String entityType,
+    required String entityId,
+    required String path,
+  }) async {
+    if (throwError) {
+      throw Exception('Server unreachable');
+    }
+    return childrenToReturn[path] ?? [];
   }
 }
 
@@ -134,6 +147,29 @@ void main() {
 
       expect(tappedFile, isNotNull);
       expect(tappedFile!.name, equals('app.dart'));
+    });
+
+    testWidgets('expands folder and displays child nodes on tap', (tester) async {
+      mockRepo.filesToReturn = [
+        const WorkspaceFile(path: 'src', name: 'src', isDirectory: true),
+      ];
+      mockRepo.childrenToReturn = {
+        'src': [
+          const WorkspaceFile(path: 'src/main.dart', name: 'main.dart', size: 300),
+        ],
+      };
+
+      await tester.pumpWidget(createWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.text('src'), findsOneWidget);
+      expect(find.text('main.dart'), findsNothing);
+
+      // Tap on folder to expand
+      await tester.tap(find.text('src'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('main.dart'), findsOneWidget);
     });
   });
 }
