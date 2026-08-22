@@ -401,6 +401,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'create_project_fab_hero',
         key: const Key('create_project_fab'),
         onPressed: _showCreateProjectDialog,
         backgroundColor: AppColors.primary,

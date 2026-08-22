@@ -21,6 +21,7 @@ mixin _$Session {
   String get status => throw _privateConstructorUsedError;
   String? get agentId => throw _privateConstructorUsedError;
   String? get projectId => throw _privateConstructorUsedError;
+  String? get teamId => throw _privateConstructorUsedError;
   String get createdAt => throw _privateConstructorUsedError;
   String get updatedAt => throw _privateConstructorUsedError;
   int get messageCount => throw _privateConstructorUsedError;
@@ -43,6 +44,7 @@ abstract class $SessionCopyWith<$Res> {
       String status,
       String? agentId,
       String? projectId,
+      String? teamId,
       String createdAt,
       String updatedAt,
       int messageCount,
@@ -69,6 +71,7 @@ class _$SessionCopyWithImpl<$Res, $Val extends Session>
     Object? status = null,
     Object? agentId = freezed,
     Object? projectId = freezed,
+    Object? teamId = freezed,
     Object? createdAt = null,
     Object? updatedAt = null,
     Object? messageCount = null,
@@ -94,6 +97,10 @@ class _$SessionCopyWithImpl<$Res, $Val extends Session>
       projectId: freezed == projectId
           ? _value.projectId
           : projectId // ignore: cast_nullable_to_non_nullable
+              as String?,
+      teamId: freezed == teamId
+          ? _value.teamId
+          : teamId // ignore: cast_nullable_to_non_nullable
               as String?,
       createdAt: null == createdAt
           ? _value.createdAt
@@ -128,6 +135,7 @@ abstract class _$$SessionImplCopyWith<$Res> implements $SessionCopyWith<$Res> {
       String status,
       String? agentId,
       String? projectId,
+      String? teamId,
       String createdAt,
       String updatedAt,
       int messageCount,
@@ -152,6 +160,7 @@ class __$$SessionImplCopyWithImpl<$Res>
     Object? status = null,
     Object? agentId = freezed,
     Object? projectId = freezed,
+    Object? teamId = freezed,
     Object? createdAt = null,
     Object? updatedAt = null,
     Object? messageCount = null,
@@ -177,6 +186,10 @@ class __$$SessionImplCopyWithImpl<$Res>
       projectId: freezed == projectId
           ? _value.projectId
           : projectId // ignore: cast_nullable_to_non_nullable
+              as String?,
+      teamId: freezed == teamId
+          ? _value.teamId
+          : teamId // ignore: cast_nullable_to_non_nullable
               as String?,
       createdAt: null == createdAt
           ? _value.createdAt
@@ -207,6 +220,7 @@ class _$SessionImpl extends _Session {
       this.status = 'idle',
       this.agentId,
       this.projectId,
+      this.teamId,
       this.createdAt = '',
       this.updatedAt = '',
       this.messageCount = 0,
@@ -226,6 +240,8 @@ class _$SessionImpl extends _Session {
   @override
   final String? projectId;
   @override
+  final String? teamId;
+  @override
   @JsonKey()
   final String createdAt;
   @override
@@ -240,7 +256,7 @@ class _$SessionImpl extends _Session {
 
   @override
   String toString() {
-    return 'Session(id: $id, title: $title, status: $status, agentId: $agentId, projectId: $projectId, createdAt: $createdAt, updatedAt: $updatedAt, messageCount: $messageCount, isExecution: $isExecution)';
+    return 'Session(id: $id, title: $title, status: $status, agentId: $agentId, projectId: $projectId, teamId: $teamId, createdAt: $createdAt, updatedAt: $updatedAt, messageCount: $messageCount, isExecution: $isExecution)';
   }
 
   @override
@@ -254,6 +270,7 @@ class _$SessionImpl extends _Session {
             (identical(other.agentId, agentId) || other.agentId == agentId) &&
             (identical(other.projectId, projectId) ||
                 other.projectId == projectId) &&
+            (identical(other.teamId, teamId) || other.teamId == teamId) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.updatedAt, updatedAt) ||
@@ -266,7 +283,7 @@ class _$SessionImpl extends _Session {
 
   @override
   int get hashCode => Object.hash(runtimeType, id, title, status, agentId,
-      projectId, createdAt, updatedAt, messageCount, isExecution);
+      projectId, teamId, createdAt, updatedAt, messageCount, isExecution);
 
   /// Create a copy of Session
   /// with the given fields replaced by the non-null parameter values.
@@ -284,6 +301,7 @@ abstract class _Session extends Session {
       final String status,
       final String? agentId,
       final String? projectId,
+      final String? teamId,
       final String createdAt,
       final String updatedAt,
       final int messageCount,
@@ -300,6 +318,8 @@ abstract class _Session extends Session {
   String? get agentId;
   @override
   String? get projectId;
+  @override
+  String? get teamId;
   @override
   String get createdAt;
   @override

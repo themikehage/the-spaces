@@ -14,6 +14,8 @@ import '../../features/projects/ui/project_detail_screen.dart';
 import '../../features/projects/ui/projects_screen.dart';
 import '../../features/sessions/ui/sessions_screen.dart';
 import '../../features/settings/ui/settings_screen.dart';
+import '../../features/teams/ui/team_detail_screen.dart';
+import '../../features/teams/ui/teams_screen.dart';
 import '../../shared/widgets/app_shell.dart';
 import '../theme/app_theme.dart';
 
@@ -114,7 +116,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/teams',
         name: 'teams',
         parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const PlaceholderScreen(title: 'Teams'),
+        builder: (context, state) => const TeamsScreen(),
+        routes: [
+          GoRoute(
+            path: ':id',
+            name: 'team-detail',
+            parentNavigatorKey: rootNavigatorKey,
+            builder: (context, state) => TeamDetailScreen(
+              teamId: state.pathParameters['id'] ?? '',
+            ),
+          ),
+        ],
       ),
       GoRoute(
         path: '/workflows',

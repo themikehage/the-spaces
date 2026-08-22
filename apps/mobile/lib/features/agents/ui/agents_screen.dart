@@ -434,6 +434,7 @@ class _AgentsScreenState extends ConsumerState<AgentsScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'create_agent_fab_hero',
         key: const Key('create_agent_fab'),
         onPressed: _showCreateAgentDialog,
         backgroundColor: AppColors.primary,
