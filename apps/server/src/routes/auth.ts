@@ -140,14 +140,31 @@ authRouter.post("/login", zValidator("json", LoginSchema), async (c) => {
   }
 
   try {
-    const result = await auth.api.signInEmail({
+    const db = getDb();
+    const accountRows = db
+      .query(
+        "SELECT id, userId, accountId, providerId, (password IS NOT NULL) as hasPassword, issuer FROM account WHERE userId = ?",
+      )
+      .all(user.id);
+    console.log("[Auth Diagnosis]", {
+      user,
+      accountCount: accountRows.length,
+      accounts: accountRows,
+    });
+  } catch (diagErr) {
+    console.warn("[Auth Diagnosis Error]", diagErr);
+  }
+
+  try {
+    let result = await auth.api.signInEmail({
       body: { email: user.email, password },
-      headers: c.req.raw.headers,
       asResponse: true,
     });
 
     if (!result.ok) {
-      console.warn(`[Auth] signInEmail returned !ok status ${result.status} for user "${user.username}" (email "${user.email}")`);
+      console.warn(
+        `[Auth] signInEmail (asResponse) returned status ${result.status} for user "${user.username}" (email "${user.email}")`,
+      );
       throw new UnauthorizedError("INVALID_CREDENTIALS", "Invalid credentials");
     }
 
