@@ -78,6 +78,17 @@ class ChatRepository {
     });
   }
 
+  Future<void> compactSession(String sessionId) async {
+    await _apiClient.post<dynamic>('/api/sessions/$sessionId/compact');
+  }
+
+  Future<void> updateSessionTitle(String sessionId, String title) async {
+    await _apiClient.patch<dynamic>(
+      '/api/sessions/$sessionId',
+      data: {'name': title},
+    );
+  }
+
   Future<void> connectToSession(String sessionId) async {
     await _wsClient.connect(sessionId: sessionId);
     _wsClient.subscribeToSession(sessionId);
@@ -95,12 +106,14 @@ class ChatRepository {
     required String sessionId,
     required String message,
     List<Map<String, dynamic>>? images,
+    bool? followUp,
   }) {
     _wsClient.send({
       'type': 'prompt',
       'sessionId': sessionId,
       'message': message,
       if (images != null && images.isNotEmpty) 'images': images,
+      if (followUp == true) 'followUp': true,
     });
   }
 

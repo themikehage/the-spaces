@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../core/events/entity_event_bus.dart';
 import '../data/chat_repository.dart';
 import '../data/models/ai_model.dart';
 import '../data/models/chat_message.dart';
@@ -43,6 +44,9 @@ class ChatNotifier extends StateNotifier<ChatState> {
       AiModel? initialModel;
       if (models.isNotEmpty) {
         initialModel = models.first;
+      }
+      if (messages.isNotEmpty) {
+        _hasAutoRenamed = true;
       }
       state = state.copyWith(
         messages: messages,
@@ -99,6 +103,16 @@ class ChatNotifier extends StateNotifier<ChatState> {
           );
         }
       }
+    } else if (type == 'context_usage' || type == 'context_update' || type == 'usage') {
+      final rawUsed = event['used'] ?? event['contextUsed'] ?? event['totalTokens'] ?? event['tokensUsed'];
+      final rawLimit = event['limit'] ?? event['contextLimit'] ?? event['maxTokens'] ?? event['tokensLimit'];
+      final used = rawUsed is num ? rawUsed.toInt() : (rawUsed != null ? int.tryParse(rawUsed.toString()) : null);
+      final limit = rawLimit is num ? rawLimit.toInt() : (rawLimit != null ? int.tryParse(rawLimit.toString()) : null);
+
+      state = state.copyWith(
+        contextUsed: used ?? state.contextUsed,
+        contextLimit: limit ?? state.contextLimit,
+      );
     } else if (type == 'tool_execution_start') {
       final rawTc = event['toolCall'] ?? event;
       if (rawTc is Map<String, dynamic>) {
@@ -171,6 +185,11 @@ class ChatNotifier extends StateNotifier<ChatState> {
         );
       }
     } else if (type == 'message_end' || type == 'agent_end' || type == 'stream_end') {
+      final rawUsed = event['used'] ?? event['contextUsed'] ?? event['totalTokens'] ?? event['tokensUsed'];
+      final rawLimit = event['limit'] ?? event['contextLimit'] ?? event['maxTokens'] ?? event['tokensLimit'];
+      final used = rawUsed is num ? rawUsed.toInt() : (rawUsed != null ? int.tryParse(rawUsed.toString()) : null);
+      final limit = rawLimit is num ? rawLimit.toInt() : (rawLimit != null ? int.tryParse(rawLimit.toString()) : null);
+
       if (state.streamingContent.isNotEmpty || state.activeToolCalls.isNotEmpty) {
         final completedMessage = ChatMessage(
           id: 'msg_${DateTime.now().millisecondsSinceEpoch}',
@@ -184,9 +203,15 @@ class ChatNotifier extends StateNotifier<ChatState> {
           streamingContent: '',
           activeToolCalls: [],
           isStreaming: false,
+          contextUsed: used ?? state.contextUsed,
+          contextLimit: limit ?? state.contextLimit,
         );
       } else {
-        state = state.copyWith(isStreaming: false);
+        state = state.copyWith(
+          isStreaming: false,
+          contextUsed: used ?? state.contextUsed,
+          contextLimit: limit ?? state.contextLimit,
+        );
       }
     } else if (type == 'agent_error') {
       state = state.copyWith(
@@ -269,10 +294,64 @@ class ChatNotifier extends StateNotifier<ChatState> {
     state = state.copyWith(messages: updated);
   }
 
-  Future<void> sendMessage(String text, {List<String>? attachmentPaths}) async {
+  void setInputMode(InputMode mode) {
+    state = state.copyWith(inputMode: mode);
+  }
+
+  void appendToSentHistory(String text) {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return;
+    final updated = [trimmed, ...state.sentHistory.where((t) => t != trimmed)];
+    if (updated.length > 20) {
+      updated.removeRange(20, updated.length);
+    }
+    state = state.copyWith(sentHistory: updated, historyIndex: -1);
+  }
+
+  String? navigateHistory(int delta) {
+    if (state.sentHistory.isEmpty) return null;
+    final newIndex = (state.historyIndex + delta).clamp(-1, state.sentHistory.length - 1);
+    state = state.copyWith(historyIndex: newIndex);
+    if (newIndex == -1) {
+      return '';
+    }
+    return state.sentHistory[newIndex];
+  }
+
+  Future<void> compact() async {
+    state = state.copyWith(isCompacting: true, error: null);
+    try {
+      await _repository.compactSession(_sessionId);
+      await loadHistory();
+    } catch (e) {
+      state = state.copyWith(error: 'Failed to compact session: $e');
+    } finally {
+      state = state.copyWith(isCompacting: false);
+    }
+  }
+
+  bool _hasAutoRenamed = false;
+
+  Future<void> _autoRenameSession(String text) async {
+    if (_hasAutoRenamed) return;
+    _hasAutoRenamed = true;
+    try {
+      final title = text.length > 50 ? text.substring(0, 50) : text;
+      await _repository.updateSessionTitle(_sessionId, title);
+      EntityEventBus.emit('session_renamed');
+    } catch (_) {}
+  }
+
+  Future<void> sendMessage(
+    String text, {
+    List<String>? attachmentPaths,
+    bool? followUp,
+  }) async {
     final paths = attachmentPaths ?? state.selectedAttachments;
     final trimmed = text.trim();
     if (trimmed.isEmpty && paths.isEmpty) return;
+
+    final isFirstMessage = state.messages.isEmpty;
 
     final userMessage = ChatMessage(
       id: 'user_${DateTime.now().millisecondsSinceEpoch}',
@@ -303,6 +382,9 @@ class ChatNotifier extends StateNotifier<ChatState> {
       } catch (_) {}
     }
 
+    final isFollowUp = followUp ?? (state.inputMode == InputMode.followup);
+    appendToSentHistory(trimmed);
+
     state = state.copyWith(
       messages: [...state.messages, userMessage],
       selectedAttachments: [],
@@ -316,7 +398,12 @@ class ChatNotifier extends StateNotifier<ChatState> {
       sessionId: _sessionId,
       message: trimmed,
       images: images.isNotEmpty ? images : null,
+      followUp: isFollowUp ? true : null,
     );
+
+    if (isFirstMessage && trimmed.isNotEmpty) {
+      _autoRenameSession(trimmed);
+    }
   }
 
   Future<void> stopStreaming() async {

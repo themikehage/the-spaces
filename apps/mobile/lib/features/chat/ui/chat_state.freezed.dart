@@ -21,10 +21,16 @@ mixin _$ChatState {
   List<ToolCall> get activeToolCalls => throw _privateConstructorUsedError;
   bool get isStreaming => throw _privateConstructorUsedError;
   bool get isLoading => throw _privateConstructorUsedError;
+  bool get isCompacting => throw _privateConstructorUsedError;
   String? get error => throw _privateConstructorUsedError;
   AiModel? get currentModel => throw _privateConstructorUsedError;
   List<AiModel> get availableModels => throw _privateConstructorUsedError;
   List<String> get selectedAttachments => throw _privateConstructorUsedError;
+  int get contextUsed => throw _privateConstructorUsedError;
+  int get contextLimit => throw _privateConstructorUsedError;
+  InputMode get inputMode => throw _privateConstructorUsedError;
+  List<String> get sentHistory => throw _privateConstructorUsedError;
+  int get historyIndex => throw _privateConstructorUsedError;
 
   /// Create a copy of ChatState
   /// with the given fields replaced by the non-null parameter values.
@@ -44,10 +50,16 @@ abstract class $ChatStateCopyWith<$Res> {
       List<ToolCall> activeToolCalls,
       bool isStreaming,
       bool isLoading,
+      bool isCompacting,
       String? error,
       AiModel? currentModel,
       List<AiModel> availableModels,
-      List<String> selectedAttachments});
+      List<String> selectedAttachments,
+      int contextUsed,
+      int contextLimit,
+      InputMode inputMode,
+      List<String> sentHistory,
+      int historyIndex});
 
   $AiModelCopyWith<$Res>? get currentModel;
 }
@@ -72,10 +84,16 @@ class _$ChatStateCopyWithImpl<$Res, $Val extends ChatState>
     Object? activeToolCalls = null,
     Object? isStreaming = null,
     Object? isLoading = null,
+    Object? isCompacting = null,
     Object? error = freezed,
     Object? currentModel = freezed,
     Object? availableModels = null,
     Object? selectedAttachments = null,
+    Object? contextUsed = null,
+    Object? contextLimit = null,
+    Object? inputMode = null,
+    Object? sentHistory = null,
+    Object? historyIndex = null,
   }) {
     return _then(_value.copyWith(
       messages: null == messages
@@ -98,6 +116,10 @@ class _$ChatStateCopyWithImpl<$Res, $Val extends ChatState>
           ? _value.isLoading
           : isLoading // ignore: cast_nullable_to_non_nullable
               as bool,
+      isCompacting: null == isCompacting
+          ? _value.isCompacting
+          : isCompacting // ignore: cast_nullable_to_non_nullable
+              as bool,
       error: freezed == error
           ? _value.error
           : error // ignore: cast_nullable_to_non_nullable
@@ -114,6 +136,26 @@ class _$ChatStateCopyWithImpl<$Res, $Val extends ChatState>
           ? _value.selectedAttachments
           : selectedAttachments // ignore: cast_nullable_to_non_nullable
               as List<String>,
+      contextUsed: null == contextUsed
+          ? _value.contextUsed
+          : contextUsed // ignore: cast_nullable_to_non_nullable
+              as int,
+      contextLimit: null == contextLimit
+          ? _value.contextLimit
+          : contextLimit // ignore: cast_nullable_to_non_nullable
+              as int,
+      inputMode: null == inputMode
+          ? _value.inputMode
+          : inputMode // ignore: cast_nullable_to_non_nullable
+              as InputMode,
+      sentHistory: null == sentHistory
+          ? _value.sentHistory
+          : sentHistory // ignore: cast_nullable_to_non_nullable
+              as List<String>,
+      historyIndex: null == historyIndex
+          ? _value.historyIndex
+          : historyIndex // ignore: cast_nullable_to_non_nullable
+              as int,
     ) as $Val);
   }
 
@@ -146,10 +188,16 @@ abstract class _$$ChatStateImplCopyWith<$Res>
       List<ToolCall> activeToolCalls,
       bool isStreaming,
       bool isLoading,
+      bool isCompacting,
       String? error,
       AiModel? currentModel,
       List<AiModel> availableModels,
-      List<String> selectedAttachments});
+      List<String> selectedAttachments,
+      int contextUsed,
+      int contextLimit,
+      InputMode inputMode,
+      List<String> sentHistory,
+      int historyIndex});
 
   @override
   $AiModelCopyWith<$Res>? get currentModel;
@@ -173,10 +221,16 @@ class __$$ChatStateImplCopyWithImpl<$Res>
     Object? activeToolCalls = null,
     Object? isStreaming = null,
     Object? isLoading = null,
+    Object? isCompacting = null,
     Object? error = freezed,
     Object? currentModel = freezed,
     Object? availableModels = null,
     Object? selectedAttachments = null,
+    Object? contextUsed = null,
+    Object? contextLimit = null,
+    Object? inputMode = null,
+    Object? sentHistory = null,
+    Object? historyIndex = null,
   }) {
     return _then(_$ChatStateImpl(
       messages: null == messages
@@ -199,6 +253,10 @@ class __$$ChatStateImplCopyWithImpl<$Res>
           ? _value.isLoading
           : isLoading // ignore: cast_nullable_to_non_nullable
               as bool,
+      isCompacting: null == isCompacting
+          ? _value.isCompacting
+          : isCompacting // ignore: cast_nullable_to_non_nullable
+              as bool,
       error: freezed == error
           ? _value.error
           : error // ignore: cast_nullable_to_non_nullable
@@ -215,6 +273,26 @@ class __$$ChatStateImplCopyWithImpl<$Res>
           ? _value._selectedAttachments
           : selectedAttachments // ignore: cast_nullable_to_non_nullable
               as List<String>,
+      contextUsed: null == contextUsed
+          ? _value.contextUsed
+          : contextUsed // ignore: cast_nullable_to_non_nullable
+              as int,
+      contextLimit: null == contextLimit
+          ? _value.contextLimit
+          : contextLimit // ignore: cast_nullable_to_non_nullable
+              as int,
+      inputMode: null == inputMode
+          ? _value.inputMode
+          : inputMode // ignore: cast_nullable_to_non_nullable
+              as InputMode,
+      sentHistory: null == sentHistory
+          ? _value._sentHistory
+          : sentHistory // ignore: cast_nullable_to_non_nullable
+              as List<String>,
+      historyIndex: null == historyIndex
+          ? _value.historyIndex
+          : historyIndex // ignore: cast_nullable_to_non_nullable
+              as int,
     ));
   }
 }
@@ -228,14 +306,21 @@ class _$ChatStateImpl extends _ChatState {
       final List<ToolCall> activeToolCalls = const <ToolCall>[],
       this.isStreaming = false,
       this.isLoading = false,
+      this.isCompacting = false,
       this.error,
       this.currentModel,
       final List<AiModel> availableModels = const <AiModel>[],
-      final List<String> selectedAttachments = const <String>[]})
+      final List<String> selectedAttachments = const <String>[],
+      this.contextUsed = 0,
+      this.contextLimit = 0,
+      this.inputMode = InputMode.steer,
+      final List<String> sentHistory = const <String>[],
+      this.historyIndex = -1})
       : _messages = messages,
         _activeToolCalls = activeToolCalls,
         _availableModels = availableModels,
         _selectedAttachments = selectedAttachments,
+        _sentHistory = sentHistory,
         super._();
 
   final List<ChatMessage> _messages;
@@ -266,6 +351,9 @@ class _$ChatStateImpl extends _ChatState {
   @JsonKey()
   final bool isLoading;
   @override
+  @JsonKey()
+  final bool isCompacting;
+  @override
   final String? error;
   @override
   final AiModel? currentModel;
@@ -289,8 +377,30 @@ class _$ChatStateImpl extends _ChatState {
   }
 
   @override
+  @JsonKey()
+  final int contextUsed;
+  @override
+  @JsonKey()
+  final int contextLimit;
+  @override
+  @JsonKey()
+  final InputMode inputMode;
+  final List<String> _sentHistory;
+  @override
+  @JsonKey()
+  List<String> get sentHistory {
+    if (_sentHistory is EqualUnmodifiableListView) return _sentHistory;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_sentHistory);
+  }
+
+  @override
+  @JsonKey()
+  final int historyIndex;
+
+  @override
   String toString() {
-    return 'ChatState(messages: $messages, streamingContent: $streamingContent, activeToolCalls: $activeToolCalls, isStreaming: $isStreaming, isLoading: $isLoading, error: $error, currentModel: $currentModel, availableModels: $availableModels, selectedAttachments: $selectedAttachments)';
+    return 'ChatState(messages: $messages, streamingContent: $streamingContent, activeToolCalls: $activeToolCalls, isStreaming: $isStreaming, isLoading: $isLoading, isCompacting: $isCompacting, error: $error, currentModel: $currentModel, availableModels: $availableModels, selectedAttachments: $selectedAttachments, contextUsed: $contextUsed, contextLimit: $contextLimit, inputMode: $inputMode, sentHistory: $sentHistory, historyIndex: $historyIndex)';
   }
 
   @override
@@ -307,13 +417,25 @@ class _$ChatStateImpl extends _ChatState {
                 other.isStreaming == isStreaming) &&
             (identical(other.isLoading, isLoading) ||
                 other.isLoading == isLoading) &&
+            (identical(other.isCompacting, isCompacting) ||
+                other.isCompacting == isCompacting) &&
             (identical(other.error, error) || other.error == error) &&
             (identical(other.currentModel, currentModel) ||
                 other.currentModel == currentModel) &&
             const DeepCollectionEquality()
                 .equals(other._availableModels, _availableModels) &&
             const DeepCollectionEquality()
-                .equals(other._selectedAttachments, _selectedAttachments));
+                .equals(other._selectedAttachments, _selectedAttachments) &&
+            (identical(other.contextUsed, contextUsed) ||
+                other.contextUsed == contextUsed) &&
+            (identical(other.contextLimit, contextLimit) ||
+                other.contextLimit == contextLimit) &&
+            (identical(other.inputMode, inputMode) ||
+                other.inputMode == inputMode) &&
+            const DeepCollectionEquality()
+                .equals(other._sentHistory, _sentHistory) &&
+            (identical(other.historyIndex, historyIndex) ||
+                other.historyIndex == historyIndex));
   }
 
   @override
@@ -324,10 +446,16 @@ class _$ChatStateImpl extends _ChatState {
       const DeepCollectionEquality().hash(_activeToolCalls),
       isStreaming,
       isLoading,
+      isCompacting,
       error,
       currentModel,
       const DeepCollectionEquality().hash(_availableModels),
-      const DeepCollectionEquality().hash(_selectedAttachments));
+      const DeepCollectionEquality().hash(_selectedAttachments),
+      contextUsed,
+      contextLimit,
+      inputMode,
+      const DeepCollectionEquality().hash(_sentHistory),
+      historyIndex);
 
   /// Create a copy of ChatState
   /// with the given fields replaced by the non-null parameter values.
@@ -345,10 +473,16 @@ abstract class _ChatState extends ChatState {
       final List<ToolCall> activeToolCalls,
       final bool isStreaming,
       final bool isLoading,
+      final bool isCompacting,
       final String? error,
       final AiModel? currentModel,
       final List<AiModel> availableModels,
-      final List<String> selectedAttachments}) = _$ChatStateImpl;
+      final List<String> selectedAttachments,
+      final int contextUsed,
+      final int contextLimit,
+      final InputMode inputMode,
+      final List<String> sentHistory,
+      final int historyIndex}) = _$ChatStateImpl;
   const _ChatState._() : super._();
 
   @override
@@ -362,6 +496,8 @@ abstract class _ChatState extends ChatState {
   @override
   bool get isLoading;
   @override
+  bool get isCompacting;
+  @override
   String? get error;
   @override
   AiModel? get currentModel;
@@ -369,6 +505,16 @@ abstract class _ChatState extends ChatState {
   List<AiModel> get availableModels;
   @override
   List<String> get selectedAttachments;
+  @override
+  int get contextUsed;
+  @override
+  int get contextLimit;
+  @override
+  InputMode get inputMode;
+  @override
+  List<String> get sentHistory;
+  @override
+  int get historyIndex;
 
   /// Create a copy of ChatState
   /// with the given fields replaced by the non-null parameter values.

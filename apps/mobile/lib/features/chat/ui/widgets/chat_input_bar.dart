@@ -1,12 +1,24 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../chat_state.dart';
 import 'attachment_preview.dart';
+import 'compact_button.dart';
+import 'context_ring.dart';
+import 'input_mode_toggle.dart';
 
 class ChatInputBar extends StatefulWidget {
   final bool isStreaming;
   final List<String> attachments;
   final String? currentModelName;
+  final int contextUsed;
+  final int contextLimit;
+  final bool isCompacting;
+  final VoidCallback? onCompact;
+  final InputMode inputMode;
+  final ValueChanged<InputMode>? onInputModeChanged;
+  final List<String> sentHistory;
+  final String? Function(int delta)? onNavigateHistory;
   final ValueChanged<String> onSend;
   final VoidCallback onStop;
   final VoidCallback onPickAttachment;
@@ -18,6 +30,14 @@ class ChatInputBar extends StatefulWidget {
     required this.isStreaming,
     this.attachments = const [],
     this.currentModelName,
+    this.contextUsed = 0,
+    this.contextLimit = 0,
+    this.isCompacting = false,
+    this.onCompact,
+    this.inputMode = InputMode.steer,
+    this.onInputModeChanged,
+    this.sentHistory = const [],
+    this.onNavigateHistory,
     required this.onSend,
     required this.onStop,
     required this.onPickAttachment,
@@ -63,6 +83,18 @@ class _ChatInputBarState extends State<ChatInputBar> {
     _controller.clear();
   }
 
+  void _navigateHistory(int delta) {
+    if (widget.onNavigateHistory != null) {
+      final text = widget.onNavigateHistory!(delta);
+      if (text != null) {
+        _controller.text = text;
+        _controller.selection = TextSelection.fromPosition(
+          TextPosition(offset: _controller.text.length),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -71,6 +103,10 @@ class _ChatInputBarState extends State<ChatInputBar> {
     final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
 
     final canSend = _hasText || widget.attachments.isNotEmpty;
+    final usedRatio = widget.contextLimit > 0
+        ? (widget.contextUsed / widget.contextLimit)
+        : 0.0;
+    final showCompact = usedRatio > 0.85 && widget.onCompact != null;
 
     return Container(
       decoration: BoxDecoration(
@@ -90,6 +126,77 @@ class _ChatInputBarState extends State<ChatInputBar> {
                 imagePaths: widget.attachments,
                 onRemove: widget.onRemoveAttachment,
               ),
+            // Header bar with InputMode, History navigators, ContextRing & CompactButton
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.xs,
+                AppSpacing.md,
+                0,
+              ),
+              child: Row(
+                children: [
+                  if (widget.onInputModeChanged != null)
+                    InputModeToggle(
+                      currentMode: widget.inputMode,
+                      onModeChanged: widget.onInputModeChanged!,
+                    ),
+                  if (widget.sentHistory.isNotEmpty && widget.onNavigateHistory != null) ...[
+                    const SizedBox(width: AppSpacing.sm),
+                    Tooltip(
+                      message: 'Previous message (history)',
+                      child: InkWell(
+                        key: const Key('history_up_button'),
+                        onTap: () => _navigateHistory(1),
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        child: Padding(
+                          padding: const EdgeInsets.all(3.0),
+                          child: Icon(
+                            Icons.arrow_upward,
+                            size: 14,
+                            color: isDark
+                                ? AppColors.mutedForeground
+                                : AppColors.textSecondaryLight,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 2),
+                    Tooltip(
+                      message: 'Next message (history)',
+                      child: InkWell(
+                        key: const Key('history_down_button'),
+                        onTap: () => _navigateHistory(-1),
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        child: Padding(
+                          padding: const EdgeInsets.all(3.0),
+                          child: Icon(
+                            Icons.arrow_downward,
+                            size: 14,
+                            color: isDark
+                                ? AppColors.mutedForeground
+                                : AppColors.textSecondaryLight,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                  const Spacer(),
+                  if (showCompact) ...[
+                    CompactButton(
+                      onCompact: widget.onCompact!,
+                      isLoading: widget.isCompacting,
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                  ],
+                  if (widget.contextLimit > 0 || widget.contextUsed > 0)
+                    ContextRing(
+                      used: widget.contextUsed,
+                      limit: widget.contextLimit > 0 ? widget.contextLimit : 1,
+                    ),
+                ],
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.md,
@@ -134,7 +241,9 @@ class _ChatInputBarState extends State<ChatInputBar> {
                           color: isDark ? AppColors.darkForeground : AppColors.lightForeground,
                         ),
                         decoration: InputDecoration(
-                          hintText: 'Message Spaces...',
+                          hintText: widget.inputMode == InputMode.followup
+                              ? 'Send follow-up comment...'
+                              : 'Message Spaces...',
                           hintStyle: AppTypography.bodyMedium.copyWith(
                             color: isDark
                                 ? AppColors.mutedForeground
@@ -177,21 +286,29 @@ class _ChatInputBarState extends State<ChatInputBar> {
                         height: 32,
                         decoration: BoxDecoration(
                           color: canSend
-                              ? AppColors.primary
+                              ? (widget.inputMode == InputMode.followup
+                                  ? AppColors.warning
+                                  : AppColors.primary)
                               : (isDark ? AppColors.darkSurface : AppColors.lightSurface),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
-                          Icons.arrow_upward,
+                          widget.inputMode == InputMode.followup
+                              ? Icons.reply
+                              : Icons.arrow_upward,
                           size: 18,
                           color: canSend
-                              ? AppColors.primaryForeground
+                              ? (widget.inputMode == InputMode.followup
+                                  ? AppColors.black
+                                  : AppColors.primaryForeground)
                               : (isDark
                                   ? AppColors.mutedForeground
                                   : AppColors.textSecondaryLight),
                         ),
                       ),
-                      tooltip: 'Send message',
+                      tooltip: widget.inputMode == InputMode.followup
+                          ? 'Send follow-up'
+                          : 'Send message',
                       onPressed: canSend ? _handleSend : null,
                     ),
                 ],
