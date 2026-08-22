@@ -218,11 +218,16 @@
   - [x] Sub-hito 12.3: `ApprovalForm` inline con severidad (info/warning/critical), countdown de 15s con auto-deny, botones Approve/Deny. `ChatNotifier.resolveApproval()` emite vía `ChatRepository` y actualiza el mensaje en lista. `ChatMessage` soporta `ApprovalRequest` y `isApprovalRequest`. `ChatNotifier` maneja WS `tool_approval_required`.
   - [x] Sub-hito 12.4: `AskQuestionForm` inline con `ChoiceChip` multi-select, `TextField` custom. `ChatNotifier.answerQuestion()` emite y actualiza el mensaje. `ChatMessage` soporta `QuestionRequest` e `isQuestionRequest`. `ChatNotifier` maneja WS `ask_question`.
   - [x] Verificación final: `flutter analyze lib/features/chat/` con 0 warnings, `ToolResultRouter` como único dispatcher, `ApprovalForm`/`AskQuestionForm` solo en `features/chat/`.
+- [x] Implementar Hito 14 — Workspace Files Panel (`plans/mobile-14-workspace-files-panel.md`):
+  - [x] Sub-hito 14.1: Modelo de datos `WorkspaceFile` inmutable con formato de tamaños y detectores de tipo (texto/imagen/código), `WorkspaceRepository` sobre `/api/workspace` desacoplado, y `WorkspaceNotifier` (Riverpod autoDispose family provider) con búsqueda client-side y pull-to-refresh.
+  - [x] Sub-hito 14.2: Sustitución completa del placeholder `WorkspaceFilesPanel` por un panel reactivo con estados de carga (Skeleton list), error con retry, empty state ("No files in workspace" / "No matching files"), topbar con counter y botón Refresh, y widget `WorkspaceFileItem`.
+  - [x] Sub-hito 14.3: Previsualización inline de archivos con modal `FilePreviewSheet` (texto/código en monospace con copia rápida al portapapeles) e `ImageLightbox` modal interactivo con zoom (InteractiveViewer).
+  - [x] Verificación final: `flutter analyze` con 0 warnings/issues, 270 tests en verde (`flutter test`), cero dependencias a `ChatNotifier` y cero referencias a placeholders.
 
 ## Próximos pasos
 
-- [ ] Implementar Hito 14 — Workspace Files Panel (`plans/mobile-14-workspace-files-panel.md`).
 - [ ] Implementar Hito 15 — Sessions Hub Completo: Kanban + Archive (`plans/mobile-15-sessions-hub-kanban.md`).
 - [ ] Implementar Hito 16 — Admin: Env Vars + MCP Marketplace (`plans/mobile-16-admin-env-mcp.md`).
 - [ ] Implementar el Plan 40 — Arquitectura de Sandboxing Productivo (`plans/40-production-sandbox-architecture.md`).
+
 
