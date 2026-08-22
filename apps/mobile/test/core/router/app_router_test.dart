@@ -5,8 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spaces_mobile/core/router/app_router.dart';
+import 'package:spaces_mobile/core/storage/app_storage.dart';
 import 'package:spaces_mobile/core/theme/app_theme.dart';
 import 'package:spaces_mobile/core/ws/ws_client.dart';
+import 'package:spaces_mobile/features/attention/ui/attention_notifier.dart';
+import 'package:spaces_mobile/features/attention/ui/attention_state.dart';
 import 'package:spaces_mobile/features/auth/data/auth_repository.dart';
 import 'package:spaces_mobile/features/auth/data/models/auth_response.dart';
 import 'package:spaces_mobile/features/auth/ui/auth_notifier.dart';
@@ -14,6 +17,8 @@ import 'package:spaces_mobile/features/auth/ui/auth_state.dart';
 import 'package:spaces_mobile/features/dashboard/data/dashboard_repository.dart';
 import 'package:spaces_mobile/features/dashboard/data/models/dashboard_project.dart';
 import 'package:spaces_mobile/features/dashboard/data/models/dashboard_session.dart';
+
+import '../../helpers/fake_secure_storage.dart';
 
 class FakeAuthRepository implements AuthRepository {
   bool isAuth = false;
@@ -95,6 +100,30 @@ class FakeWsClient implements WsClient {
   }
 }
 
+class FakeAttentionNotifier extends StateNotifier<AttentionState>
+    implements AttentionNotifier {
+  FakeAttentionNotifier() : super(const AttentionState(pendingCount: 0));
+
+  @override
+  Future<void> load() async {}
+
+  @override
+  Future<bool> respondToApproval(
+    String id, {
+    required bool approved,
+    Map<String, dynamic>? payload,
+  }) async =>
+      true;
+
+  @override
+  Future<bool> respondToQuestion(
+    String id, {
+    List<String>? selectedOptions,
+    String? customAnswer,
+  }) async =>
+      true;
+}
+
 class TestAuthNotifier extends AuthNotifier {
   TestAuthNotifier(AuthRepository repository, AuthState initialState)
       : super(repository: repository) {
@@ -108,9 +137,14 @@ void main() {
   late FakeAuthRepository fakeRepository;
   late FakeDashboardRepository fakeDashboardRepo;
   late FakeWsClient fakeWsClient;
+  late AppStorage fakeStorage;
 
-  setUp(() {
+  setUp(() async {
     SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final fakeSecure = FakeSecureStorage();
+    fakeStorage = AppStorage(secureStorage: fakeSecure, prefs: prefs);
+
     fakeRepository = FakeAuthRepository();
     fakeDashboardRepo = FakeDashboardRepository();
     fakeWsClient = FakeWsClient();
@@ -123,10 +157,12 @@ void main() {
   Widget buildApp(AuthState initialState) {
     return ProviderScope(
       overrides: [
+        appStorageProvider.overrideWithValue(fakeStorage),
         authRepositoryProvider.overrideWithValue(fakeRepository),
         dashboardRepositoryProvider.overrideWithValue(fakeDashboardRepo),
         wsClientProvider.overrideWithValue(fakeWsClient),
         authNotifierProvider.overrideWith((ref) => TestAuthNotifier(fakeRepository, initialState)),
+        attentionNotifierProvider.overrideWith((ref) => FakeAttentionNotifier()),
       ],
       child: Consumer(
         builder: (context, ref, _) {

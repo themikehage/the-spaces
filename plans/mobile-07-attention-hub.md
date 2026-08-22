@@ -22,15 +22,15 @@
 
 ## 2. Estado Final (To-Be) — Criterios de Aceptación
 
-- [ ] **H7-A1** — Agente genera `ask_question` → `AttentionBadge` en el bottom nav se actualiza con count en < 1 segundo.
-- [ ] **H7-A2** — Tap en badge → `AttentionSheet` (bottom sheet) con lista de preguntas y aprobaciones pendientes.
-- [ ] **H7-A3** — Responder a una pregunta desde `AttentionSheet` → agente continúa en el servidor → item desaparece del hub.
-- [ ] **H7-A4** — Aprobar/rechazar una aprobación → agente continúa/cancela → item desaparece del hub.
-- [ ] **H7-A5** — App en background + agente genera pregunta → notificación local push aparece en el dispositivo.
-- [ ] **H7-A6** — Tap en notificación push → app abre → `AttentionSheet` se abre directamente.
-- [ ] **H7-A7** — `AttentionNotifier` no tiene referencias a widgets.
-- [ ] **H7-A8** — `flutter analyze lib/features/attention/` produce cero warnings.
-- [ ] **H7-A9** — `flutter test test/features/attention/` produce exit code 0.
+- [x] **H7-A1** — Agente genera `ask_question` → `AttentionBadge` en el bottom nav se actualiza con count en < 1 segundo.
+- [x] **H7-A2** — Tap en badge → `AttentionSheet` (bottom sheet) con lista de preguntas y aprobaciones pendientes.
+- [x] **H7-A3** — Responder a una pregunta desde `AttentionSheet` → agente continúa en el servidor → item desaparece del hub.
+- [x] **H7-A4** — Aprobar/rechazar una aprobación → agente continúa/cancela → item desaparece del hub.
+- [x] **H7-A5** — App en background + agente genera pregunta → notificación local push aparece en el dispositivo.
+- [x] **H7-A6** — Tap en notificación push → app abre → `AttentionSheet` se abre directamente.
+- [x] **H7-A7** — `AttentionNotifier` no tiene referencias a widgets.
+- [x] **H7-A8** — `flutter analyze lib/features/attention/` produce cero warnings.
+- [x] **H7-A9** — `flutter test test/features/attention/` produce exit code 0.
 
 ---
 

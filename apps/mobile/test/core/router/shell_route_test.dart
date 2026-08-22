@@ -8,6 +8,7 @@ import 'package:spaces_mobile/core/theme/app_theme.dart';
 import 'package:spaces_mobile/core/ws/ws_client.dart';
 import '../../helpers/fake_secure_storage.dart';
 import 'package:spaces_mobile/features/attention/ui/attention_notifier.dart';
+import 'package:spaces_mobile/features/attention/ui/attention_state.dart';
 import 'package:spaces_mobile/features/auth/data/auth_repository.dart';
 import 'package:spaces_mobile/features/auth/data/models/auth_response.dart';
 import 'package:spaces_mobile/features/auth/ui/auth_notifier.dart';
@@ -104,14 +105,29 @@ class TestAuthNotifier extends AuthNotifier {
   }
 }
 
-class TestAttentionNotifier extends AttentionNotifier {
-  final int count;
-  TestAttentionNotifier(this.count);
+class TestAttentionNotifier extends StateNotifier<AttentionState>
+    implements AttentionNotifier {
+  TestAttentionNotifier(int count)
+      : super(AttentionState(pendingCount: count));
 
   @override
-  build() {
-    return super.build().copyWith(pendingCount: count);
-  }
+  Future<void> load() async {}
+
+  @override
+  Future<bool> respondToApproval(
+    String id, {
+    required bool approved,
+    Map<String, dynamic>? payload,
+  }) async =>
+      true;
+
+  @override
+  Future<bool> respondToQuestion(
+    String id, {
+    List<String>? selectedOptions,
+    String? customAnswer,
+  }) async =>
+      true;
 }
 
 void main() {
@@ -147,7 +163,7 @@ void main() {
           ),
         ),
         attentionNotifierProvider.overrideWith(
-          () => TestAttentionNotifier(attentionCount),
+          (ref) => TestAttentionNotifier(attentionCount),
         ),
       ],
       child: Consumer(

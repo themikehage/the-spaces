@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/agents/ui/agent_detail_screen.dart';
 import '../../features/agents/ui/agents_screen.dart';
+import '../../features/attention/ui/attention_screen.dart';
 import '../../features/auth/ui/auth_notifier.dart';
 import '../../features/auth/ui/auth_state.dart';
 import '../../features/auth/ui/login_screen.dart';
@@ -143,6 +144,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'logs',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const PlaceholderScreen(title: 'Logs'),
+      ),
+      GoRoute(
+        path: '/attention',
+        name: 'attention',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const AttentionScreen(),
       ),
 
       // Stateful Shell Route for Bottom Navigation Tabs

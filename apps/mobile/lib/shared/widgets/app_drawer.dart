@@ -4,7 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/router/navigation_notifier.dart';
 import '../../core/theme/app_theme.dart';
+import '../../features/attention/ui/attention_notifier.dart';
+import '../../features/attention/ui/attention_sheet.dart';
 import '../../features/auth/ui/auth_notifier.dart';
+import 'attention_badge.dart';
 
 class AppDrawer extends ConsumerWidget {
   const AppDrawer({super.key});
@@ -18,6 +21,7 @@ class AppDrawer extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authNotifierProvider);
+    final attentionState = ref.watch(attentionNotifierProvider);
 
     return Drawer(
       backgroundColor: AppColors.darkBackground,
@@ -81,6 +85,33 @@ class AppDrawer extends ConsumerWidget {
                   vertical: AppSpacing.md,
                 ),
                 children: [
+                  _DrawerItem(
+                    key: const Key('drawer_attention_item'),
+                    icon: Icons.notifications_active_outlined,
+                    label: 'Attention Hub',
+                    trailing: attentionState.pendingCount > 0
+                        ? Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.destructive,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              '${attentionState.pendingCount}',
+                              style: const TextStyle(
+                                color: AppColors.destructiveForeground,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          )
+                        : null,
+                    onTap: () {
+                      ref.read(navigationNotifierProvider.notifier).closeDrawer();
+                      Scaffold.maybeOf(context)?.closeDrawer();
+                      AttentionSheet.show(context);
+                    },
+                  ),
                   _DrawerItem(
                     key: const Key('drawer_teams_item'),
                     icon: Icons.groups_outlined,
@@ -159,12 +190,14 @@ class _DrawerItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final Widget? trailing;
 
   const _DrawerItem({
     super.key,
     required this.icon,
     required this.label,
     required this.onTap,
+    this.trailing,
   });
 
   @override
@@ -181,6 +214,7 @@ class _DrawerItem extends StatelessWidget {
           color: AppColors.darkForeground,
         ),
       ),
+      trailing: trailing,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       ),
