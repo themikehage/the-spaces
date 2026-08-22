@@ -3,22 +3,34 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/skeletons/skeleton_list.dart';
+import '../../agents/data/agents_repository.dart';
+import '../../agents/data/models/agent.dart';
+import '../../auth/ui/auth_notifier.dart';
+import '../../projects/data/models/project.dart';
+import '../../projects/data/projects_repository.dart';
+import '../controllers/autocomplete_controller.dart';
 import 'chat_notifier.dart';
 import 'widgets/chat_input_bar.dart';
 import 'widgets/message_bubble.dart';
 import 'widgets/model_selector_sheet.dart';
+import 'widgets/skills_selector_sheet.dart';
 import 'widgets/streaming_bubble.dart';
+import 'widgets/tools_selector_sheet.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   final String sessionId;
   final String? initialTitle;
   final bool showAppBar;
+  final String? entityType;
+  final String? entityId;
 
   const ChatScreen({
     super.key,
     required this.sessionId,
     this.initialTitle,
     this.showAppBar = true,
+    this.entityType,
+    this.entityId,
   });
 
   @override
@@ -27,18 +39,68 @@ class ChatScreen extends ConsumerStatefulWidget {
 
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _inputController = TextEditingController();
+  final AutocompleteController _autocompleteController = AutocompleteController();
   bool _autoScrollEnabled = true;
+  List<String> _activeTools = [];
+
+  static const List<String> _defaultAvailableTools = [
+    'read_file',
+    'write_to_file',
+    'edit_file',
+    'list_dir',
+    'grep_search',
+    'find_by_name',
+    'run_command',
+    'web_search',
+  ];
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    _loadAutocompleteData();
+  }
+
+  Future<void> _loadAutocompleteData() async {
+    try {
+      final agentsRepo = ref.read(agentsRepositoryProvider);
+      final projectsRepo = ref.read(projectsRepositoryProvider);
+
+      final skillsFuture = agentsRepo.getAvailableSkills(
+        entityType: widget.entityType,
+        entityId: widget.entityId,
+      );
+      final agentsFuture = agentsRepo.getAgents();
+      final projectsFuture = projectsRepo.getProjects();
+
+      final results = await Future.wait<dynamic>([
+        skillsFuture.catchError((_) => <Map<String, dynamic>>[]),
+        agentsFuture.catchError((_) => <Agent>[]),
+        projectsFuture.catchError((_) => <Project>[]),
+      ]);
+
+      final skills = results[0] as List<Map<String, dynamic>>;
+      final agents = (results[1] as List).map((a) => {'id': a.id, 'name': a.name, 'description': a.description}).toList();
+      final projects = (results[2] as List).map((p) => {'id': p.id, 'name': p.name, 'description': p.description}).toList();
+
+      if (mounted) {
+        _autocompleteController.updateDataSources(
+          tools: _defaultAvailableTools,
+          skills: skills,
+          agents: agents,
+          projects: projects,
+        );
+      }
+    } catch (_) {}
   }
 
   @override
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
+    _inputController.dispose();
+    _autocompleteController.dispose();
     super.dispose();
   }
 
@@ -88,10 +150,42 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
+  void _openSkillsSelector() {
+    SkillsSelectorSheet.show(
+      context,
+      entityType: widget.entityType,
+      entityId: widget.entityId,
+      onSelectSkillCommand: (cmd) {
+        final currentText = _inputController.text;
+        final newText = currentText.isEmpty
+            ? cmd
+            : '$currentText $cmd';
+        _inputController.text = newText;
+        _inputController.selection = TextSelection.fromPosition(
+          TextPosition(offset: newText.length),
+        );
+      },
+    );
+  }
+
+  void _openToolsSelector() {
+    ToolsSelectorSheet.show(
+      context,
+      availableTools: _defaultAvailableTools,
+      activeTools: _activeTools,
+      onToolsChanged: (tools) {
+        setState(() {
+          _activeTools = tools;
+        });
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(chatNotifierProvider(widget.sessionId));
     final notifier = ref.read(chatNotifierProvider(widget.sessionId).notifier);
+    final authToken = ref.watch(authTokenProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Reactively trigger auto-scroll during streaming or on new messages
@@ -107,7 +201,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         ? state.currentModel!.name
         : (state.currentModel?.id ?? 'Default');
 
-    final title = widget.initialTitle ?? 'Session ${widget.sessionId.substring(0, widget.sessionId.length > 8 ? 8 : widget.sessionId.length)}';
+    final title = widget.initialTitle ??
+        'Session ${widget.sessionId.substring(0, widget.sessionId.length > 8 ? 8 : widget.sessionId.length)}';
 
     return Scaffold(
       appBar: widget.showAppBar
@@ -230,6 +325,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             return MessageBubble(
                               key: Key('msg_${msg.id}_$index'),
                               message: msg,
+                              authToken: authToken,
                               onResolveApproval: (approved) => notifier.resolveApproval(
                                 toolCallId: msg.approvalRequest?.toolCallId ?? msg.id,
                                 approved: approved,
@@ -239,12 +335,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                 selectedOptions: selected,
                                 customAnswer: custom,
                               ),
+                              onNavigateBranch: (targetId) => notifier.navigateBranch(targetId),
                             );
                           }
                           return StreamingBubble(
                             key: const Key('streaming_bubble_widget'),
                             content: state.streamingContent,
                             toolCalls: state.activeToolCalls,
+                            authToken: authToken,
                           );
                         },
                       ),
@@ -252,6 +350,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ChatInputBar(
             isStreaming: state.isStreaming,
             attachments: state.selectedAttachments,
+            pendingAttachments: state.pendingAttachments,
             currentModelName: state.currentModel?.name,
             contextUsed: state.contextUsed,
             contextLimit: state.contextLimit,
@@ -261,11 +360,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             onInputModeChanged: (mode) => notifier.setInputMode(mode),
             sentHistory: state.sentHistory,
             onNavigateHistory: (delta) => notifier.navigateHistory(delta),
-            onSend: (text) => notifier.sendMessage(text),
+            onSend: (text) => notifier.sendMessage(
+              text,
+              tools: _activeTools.isNotEmpty ? _activeTools : null,
+            ),
             onStop: () => notifier.stopStreaming(),
             onPickAttachment: () => notifier.pickAttachment(),
             onRemoveAttachment: (i) => notifier.removeAttachment(i),
             onOpenModelSelector: _openModelSelector,
+            onOpenSkillsSelector: _openSkillsSelector,
+            onOpenToolsSelector: _openToolsSelector,
+            controller: _inputController,
+            autocompleteController: _autocompleteController,
           ),
         ],
       ),

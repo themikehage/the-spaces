@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../controllers/autocomplete_controller.dart';
+import '../../data/models/chat_attachment.dart';
+import '../../models/autocomplete_item.dart';
 import '../chat_state.dart';
 import 'attachment_preview.dart';
-import 'compact_button.dart';
-import 'context_ring.dart';
-import 'input_mode_toggle.dart';
+import 'attachment_preview_bar.dart';
+import 'autocomplete_popover.dart';
+import 'chat_input_header_row.dart';
 
 class ChatInputBar extends StatefulWidget {
   final bool isStreaming;
   final List<String> attachments;
+  final List<ChatAttachment>? pendingAttachments;
   final String? currentModelName;
   final int contextUsed;
   final int contextLimit;
@@ -24,11 +29,16 @@ class ChatInputBar extends StatefulWidget {
   final VoidCallback onPickAttachment;
   final ValueChanged<int> onRemoveAttachment;
   final VoidCallback onOpenModelSelector;
+  final VoidCallback? onOpenSkillsSelector;
+  final VoidCallback? onOpenToolsSelector;
+  final TextEditingController? controller;
+  final AutocompleteController? autocompleteController;
 
   const ChatInputBar({
     super.key,
     required this.isStreaming,
     this.attachments = const [],
+    this.pendingAttachments,
     this.currentModelName,
     this.contextUsed = 0,
     this.contextLimit = 0,
@@ -43,6 +53,10 @@ class ChatInputBar extends StatefulWidget {
     required this.onPickAttachment,
     required this.onRemoveAttachment,
     required this.onOpenModelSelector,
+    this.onOpenSkillsSelector,
+    this.onOpenToolsSelector,
+    this.controller,
+    this.autocompleteController,
   });
 
   @override
@@ -51,13 +65,23 @@ class ChatInputBar extends StatefulWidget {
 
 class _ChatInputBarState extends State<ChatInputBar> {
   late final TextEditingController _controller;
+  late final AutocompleteController _autocomplete;
+  late final bool _isExternalController;
+  late final bool _isExternalAutocomplete;
+  final FocusNode _focusNode = FocusNode();
   bool _hasText = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController();
+    _isExternalController = widget.controller != null;
+    _controller = widget.controller ?? TextEditingController();
     _controller.addListener(_handleTextChange);
+
+    _isExternalAutocomplete = widget.autocompleteController != null;
+    _autocomplete = widget.autocompleteController ?? AutocompleteController();
+
+    _hasText = _controller.text.trim().isNotEmpty;
   }
 
   void _handleTextChange() {
@@ -67,20 +91,47 @@ class _ChatInputBarState extends State<ChatInputBar> {
         _hasText = hasContent;
       });
     }
+
+    final selection = _controller.selection;
+    final cursor = selection.isValid ? selection.baseOffset : _controller.text.length;
+    _autocomplete.onTextChanged(_controller.text, cursor);
   }
 
   @override
   void dispose() {
     _controller.removeListener(_handleTextChange);
-    _controller.dispose();
+    _focusNode.dispose();
+    if (!_isExternalController) {
+      _controller.dispose();
+    }
+    if (!_isExternalAutocomplete) {
+      _autocomplete.dispose();
+    }
     super.dispose();
   }
 
-  void _handleSend() {
+  void _handleSend([bool? forceFollowUp]) {
     final text = _controller.text.trim();
     if (text.isEmpty && widget.attachments.isEmpty) return;
+
+    if (forceFollowUp == true && widget.onInputModeChanged != null) {
+      widget.onInputModeChanged!(InputMode.followup);
+    }
+
     widget.onSend(text);
     _controller.clear();
+    _autocomplete.dismiss();
+  }
+
+  void _onSelectAutocompleteItem(AutocompleteItem item) {
+    final selection = _controller.selection;
+    final cursor = selection.isValid ? selection.baseOffset : _controller.text.length;
+    final result = _autocomplete.selectItem(item, _controller.text, cursor);
+
+    _controller.value = TextEditingValue(
+      text: result.text,
+      selection: TextSelection.collapsed(offset: result.selectionOffset),
+    );
   }
 
   void _navigateHistory(int delta) {
@@ -95,25 +146,60 @@ class _ChatInputBarState extends State<ChatInputBar> {
     }
   }
 
+  KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent) return KeyEventResult.ignored;
+
+    final isAlt = HardwareKeyboard.instance.isAltPressed;
+    final isEnter = event.logicalKey == LogicalKeyboardKey.enter ||
+        event.logicalKey == LogicalKeyboardKey.numpadEnter;
+    final isEscape = event.logicalKey == LogicalKeyboardKey.escape;
+    final isArrowUp = event.logicalKey == LogicalKeyboardKey.arrowUp;
+    final isArrowDown = event.logicalKey == LogicalKeyboardKey.arrowDown;
+
+    if (_autocomplete.isVisible) {
+      if (isEscape) {
+        _autocomplete.dismiss();
+        return KeyEventResult.handled;
+      }
+      if (isArrowUp) {
+        _autocomplete.moveSelection(-1);
+        return KeyEventResult.handled;
+      }
+      if (isArrowDown) {
+        _autocomplete.moveSelection(1);
+        return KeyEventResult.handled;
+      }
+      if (isEnter && !isAlt) {
+        final item = _autocomplete.selectedItem;
+        if (item != null) {
+          _onSelectAutocompleteItem(item);
+          return KeyEventResult.handled;
+        }
+      }
+    }
+
+    if (isEnter && isAlt) {
+      _handleSend(true);
+      return KeyEventResult.handled;
+    }
+
+    return KeyEventResult.ignored;
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? AppColors.darkCard : AppColors.lightCard;
     final inputBg = isDark ? AppColors.darkSurface : AppColors.lightSurface;
     final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
-
-    final canSend = _hasText || widget.attachments.isNotEmpty;
-    final usedRatio = widget.contextLimit > 0
-        ? (widget.contextUsed / widget.contextLimit)
-        : 0.0;
-    final showCompact = usedRatio > 0.85 && widget.onCompact != null;
+    final hasAttachments = (widget.pendingAttachments != null && widget.pendingAttachments!.isNotEmpty) ||
+        widget.attachments.isNotEmpty;
+    final canSend = _hasText || hasAttachments;
 
     return Container(
       decoration: BoxDecoration(
         color: bg,
-        border: Border(
-          top: BorderSide(color: borderColor),
-        ),
+        border: Border(top: BorderSide(color: borderColor)),
       ),
       child: SafeArea(
         top: false,
@@ -121,81 +207,30 @@ class _ChatInputBarState extends State<ChatInputBar> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (widget.attachments.isNotEmpty)
+            AutocompletePopover(
+              controller: _autocomplete,
+              onSelectItem: _onSelectAutocompleteItem,
+              onDismiss: () => _autocomplete.dismiss(),
+            ),
+            if (widget.pendingAttachments != null && widget.pendingAttachments!.isNotEmpty)
+              AttachmentPreviewBar(
+                attachments: widget.pendingAttachments!,
+                onRemove: widget.onRemoveAttachment,
+              )
+            else if (widget.attachments.isNotEmpty)
               AttachmentPreview(
                 imagePaths: widget.attachments,
                 onRemove: widget.onRemoveAttachment,
               ),
-            // Header bar with InputMode, History navigators, ContextRing & CompactButton
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.xs,
-                AppSpacing.md,
-                0,
-              ),
-              child: Row(
-                children: [
-                  if (widget.onInputModeChanged != null)
-                    InputModeToggle(
-                      currentMode: widget.inputMode,
-                      onModeChanged: widget.onInputModeChanged!,
-                    ),
-                  if (widget.sentHistory.isNotEmpty && widget.onNavigateHistory != null) ...[
-                    const SizedBox(width: AppSpacing.sm),
-                    Tooltip(
-                      message: 'Previous message (history)',
-                      child: InkWell(
-                        key: const Key('history_up_button'),
-                        onTap: () => _navigateHistory(1),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                        child: Padding(
-                          padding: const EdgeInsets.all(3.0),
-                          child: Icon(
-                            Icons.arrow_upward,
-                            size: 14,
-                            color: isDark
-                                ? AppColors.mutedForeground
-                                : AppColors.textSecondaryLight,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 2),
-                    Tooltip(
-                      message: 'Next message (history)',
-                      child: InkWell(
-                        key: const Key('history_down_button'),
-                        onTap: () => _navigateHistory(-1),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                        child: Padding(
-                          padding: const EdgeInsets.all(3.0),
-                          child: Icon(
-                            Icons.arrow_downward,
-                            size: 14,
-                            color: isDark
-                                ? AppColors.mutedForeground
-                                : AppColors.textSecondaryLight,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                  const Spacer(),
-                  if (showCompact) ...[
-                    CompactButton(
-                      onCompact: widget.onCompact!,
-                      isLoading: widget.isCompacting,
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                  ],
-                  if (widget.contextLimit > 0 || widget.contextUsed > 0)
-                    ContextRing(
-                      used: widget.contextUsed,
-                      limit: widget.contextLimit > 0 ? widget.contextLimit : 1,
-                    ),
-                ],
-              ),
+            ChatInputHeaderRow(
+              inputMode: widget.inputMode,
+              onInputModeChanged: widget.onInputModeChanged,
+              sentHistory: widget.sentHistory,
+              onNavigateHistory: (delta) => _navigateHistory(delta),
+              contextUsed: widget.contextUsed,
+              contextLimit: widget.contextLimit,
+              isCompacting: widget.isCompacting,
+              onCompact: widget.onCompact,
             ),
             Padding(
               padding: const EdgeInsets.symmetric(
@@ -206,15 +241,35 @@ class _ChatInputBarState extends State<ChatInputBar> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   IconButton(
+                    key: const Key('chat_model_selector_button'),
                     icon: const Icon(Icons.psychology_outlined),
                     tooltip: 'Select model (${widget.currentModelName ?? "Default"})',
                     iconSize: 22,
                     color: isDark ? AppColors.mutedForeground : AppColors.textSecondaryLight,
                     onPressed: widget.onOpenModelSelector,
                   ),
+                  if (widget.onOpenSkillsSelector != null)
+                    IconButton(
+                      key: const Key('chat_skills_selector_button'),
+                      icon: const Icon(Icons.bolt_outlined),
+                      tooltip: 'Workspace skills',
+                      iconSize: 22,
+                      color: isDark ? AppColors.mutedForeground : AppColors.textSecondaryLight,
+                      onPressed: widget.onOpenSkillsSelector,
+                    ),
+                  if (widget.onOpenToolsSelector != null)
+                    IconButton(
+                      key: const Key('chat_tools_selector_button'),
+                      icon: const Icon(Icons.build_outlined),
+                      tooltip: 'Tools configuration',
+                      iconSize: 22,
+                      color: isDark ? AppColors.mutedForeground : AppColors.textSecondaryLight,
+                      onPressed: widget.onOpenToolsSelector,
+                    ),
                   IconButton(
+                    key: const Key('chat_attachment_button'),
                     icon: const Icon(Icons.attach_file),
-                    tooltip: 'Attach image',
+                    tooltip: 'Attach file or image',
                     iconSize: 22,
                     color: isDark ? AppColors.mutedForeground : AppColors.textSecondaryLight,
                     onPressed: widget.onPickAttachment,
@@ -231,28 +286,34 @@ class _ChatInputBarState extends State<ChatInputBar> {
                         borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
                         border: Border.all(color: borderColor),
                       ),
-                      child: TextField(
-                        controller: _controller,
-                        minLines: 1,
-                        maxLines: 6,
-                        keyboardType: TextInputType.multiline,
-                        textInputAction: TextInputAction.newline,
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: isDark ? AppColors.darkForeground : AppColors.lightForeground,
-                        ),
-                        decoration: InputDecoration(
-                          hintText: widget.inputMode == InputMode.followup
-                              ? 'Send follow-up comment...'
-                              : 'Message Spaces...',
-                          hintStyle: AppTypography.bodyMedium.copyWith(
+                      child: Focus(
+                        focusNode: _focusNode,
+                        onKeyEvent: _handleKeyEvent,
+                        child: TextField(
+                          controller: _controller,
+                          minLines: 1,
+                          maxLines: 6,
+                          keyboardType: TextInputType.multiline,
+                          textInputAction: TextInputAction.newline,
+                          style: AppTypography.bodyMedium.copyWith(
                             color: isDark
-                                ? AppColors.mutedForeground
-                                : AppColors.textSecondaryLight,
+                                ? AppColors.darkForeground
+                                : AppColors.lightForeground,
                           ),
-                          border: InputBorder.none,
-                          isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(
-                            vertical: AppSpacing.sm,
+                          decoration: InputDecoration(
+                            hintText: widget.inputMode == InputMode.followup
+                                ? 'Send follow-up comment...'
+                                : 'Message Spaces... (/ for tools, @ for mentions)',
+                            hintStyle: AppTypography.bodyMedium.copyWith(
+                              color: isDark
+                                  ? AppColors.mutedForeground
+                                  : AppColors.textSecondaryLight,
+                            ),
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: AppSpacing.sm,
+                            ),
                           ),
                         ),
                       ),
@@ -309,7 +370,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                       tooltip: widget.inputMode == InputMode.followup
                           ? 'Send follow-up'
                           : 'Send message',
-                      onPressed: canSend ? _handleSend : null,
+                      onPressed: canSend ? () => _handleSend() : null,
                     ),
                 ],
               ),
