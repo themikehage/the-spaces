@@ -321,6 +321,8 @@ class _WorkspaceFilesPanelState extends ConsumerState<WorkspaceFilesPanel> {
           return WorkspaceFileItem(
             key: ValueKey('workspace_file_${file.path}'),
             file: file,
+            entityType: widget.entityType,
+            entityId: widget.entityId,
             onTap: widget.onFileTap != null ? () => widget.onFileTap!(file) : null,
           );
         },

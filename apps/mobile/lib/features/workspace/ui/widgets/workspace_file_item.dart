@@ -1,15 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../data/models/workspace_file.dart';
+import '../../data/workspace_repository.dart';
+import 'file_preview_sheet.dart';
+import 'image_lightbox.dart';
 
-class WorkspaceFileItem extends StatelessWidget {
+class WorkspaceFileItem extends ConsumerWidget {
   final WorkspaceFile file;
+  final String? entityType;
+  final String? entityId;
   final VoidCallback? onTap;
 
   const WorkspaceFileItem({
     super.key,
     required this.file,
+    this.entityType,
+    this.entityId,
     this.onTap,
   });
 
@@ -49,15 +57,50 @@ class WorkspaceFileItem extends StatelessWidget {
     return '$month ${dt.day}';
   }
 
+  Future<void> _handleTap(BuildContext context, WidgetRef ref) async {
+    if (onTap != null) {
+      onTap!();
+      return;
+    }
+
+    if (entityType == null || entityId == null) return;
+
+    if (file.isText) {
+      await FilePreviewSheet.show(
+        context,
+        file: file,
+        entityType: entityType!,
+        entityId: entityId!,
+      );
+    } else if (file.isImage) {
+      final repository = ref.read(workspaceRepositoryProvider);
+      final imageUrl = repository.getImageUrl(
+        entityType: entityType!,
+        entityId: entityId!,
+        path: file.path,
+      );
+      final token = await repository.getAuthToken();
+
+      if (context.mounted) {
+        await ImageLightbox.show(
+          context,
+          imageUrl: imageUrl,
+          fileName: file.name,
+          authToken: token,
+        );
+      }
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final icon = _getIcon();
     final iconColor = _getIconColor(isDark);
     final dateStr = _formatDate(file.modifiedAt);
 
     return InkWell(
-      onTap: onTap,
+      onTap: () => _handleTap(context, ref),
       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       child: Container(
         padding: const EdgeInsets.symmetric(
