@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/models/chat_message.dart';
 import 'markdown_block.dart';
+import 'thinking_block.dart';
 import 'tool_call_card.dart';
 
 class StreamingBubble extends StatefulWidget {
@@ -43,6 +44,27 @@ class _StreamingBubbleState extends State<StreamingBubble>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bubbleBg = isDark ? AppColors.darkCard : AppColors.lightCard;
     final bubbleBorder = isDark ? AppColors.darkBorder : AppColors.lightBorder;
+
+    final rawContent = widget.content;
+    String? thinkingContent;
+    String? mainContent;
+    bool isThinkingStreaming = false;
+
+    if (rawContent.contains('<thinking>')) {
+      final thinkingEndIdx = rawContent.indexOf('</thinking>');
+      final thinkingStartIdx = rawContent.indexOf('<thinking>') + 10;
+      if (thinkingEndIdx != -1) {
+        thinkingContent = rawContent.substring(thinkingStartIdx, thinkingEndIdx).trim();
+        final after = rawContent.substring(thinkingEndIdx + 11).trim();
+        mainContent = after.isNotEmpty ? after : null;
+        isThinkingStreaming = false;
+      } else {
+        thinkingContent = rawContent.substring(thinkingStartIdx).trim();
+        isThinkingStreaming = true;
+      }
+    } else {
+      mainContent = rawContent.isNotEmpty ? rawContent : null;
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -91,41 +113,52 @@ class _StreamingBubbleState extends State<StreamingBubble>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (widget.content.isNotEmpty) ...[
+                  if (thinkingContent != null) ...[
+                    ThinkingBlock(
+                      content: thinkingContent,
+                      isStreaming: isThinkingStreaming,
+                      initiallyExpanded: true,
+                    ),
+                    if (mainContent != null && mainContent.isNotEmpty)
+                      const SizedBox(height: AppSpacing.sm),
+                  ],
+                  if (mainContent != null && mainContent.isNotEmpty) ...[
                     MarkdownBlock(
-                      data: widget.content,
+                      data: mainContent,
                       isUser: false,
                     ),
                     const SizedBox(height: 4),
                   ],
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (widget.content.isEmpty) ...[
-                        Text(
-                          'Thinking...',
-                          style: AppTypography.bodySmall.copyWith(
-                            fontStyle: FontStyle.italic,
-                            color: isDark
-                                ? AppColors.mutedForeground
-                                : AppColors.textSecondaryLight,
+                  if (!isThinkingStreaming) ...[
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (thinkingContent == null && (mainContent == null || mainContent.isEmpty)) ...[
+                          Text(
+                            'Thinking...',
+                            style: AppTypography.bodySmall.copyWith(
+                              fontStyle: FontStyle.italic,
+                              color: isDark
+                                  ? AppColors.mutedForeground
+                                  : AppColors.textSecondaryLight,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                        ],
+                        FadeTransition(
+                          opacity: _cursorController,
+                          child: Container(
+                            width: 8,
+                            height: 15,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(1),
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 6),
                       ],
-                      FadeTransition(
-                        opacity: _cursorController,
-                        child: Container(
-                          width: 8,
-                          height: 15,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(1),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                   if (widget.toolCalls.isNotEmpty) ...[
                     const SizedBox(height: AppSpacing.sm),
                     ...widget.toolCalls.map(

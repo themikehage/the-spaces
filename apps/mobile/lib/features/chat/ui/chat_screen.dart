@@ -12,11 +12,13 @@ import 'widgets/streaming_bubble.dart';
 class ChatScreen extends ConsumerStatefulWidget {
   final String sessionId;
   final String? initialTitle;
+  final bool showAppBar;
 
   const ChatScreen({
     super.key,
     required this.sessionId,
     this.initialTitle,
+    this.showAppBar = true,
   });
 
   @override
@@ -108,53 +110,55 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final title = widget.initialTitle ?? 'Session ${widget.sessionId.substring(0, widget.sessionId.length > 8 ? 8 : widget.sessionId.length)}';
 
     return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              title,
-              style: AppTypography.titleMedium.copyWith(
-                fontWeight: FontWeight.w600,
+      appBar: widget.showAppBar
+          ? AppBar(
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    style: AppTypography.titleMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: state.isStreaming ? AppColors.warning : AppColors.success,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        state.isStreaming ? 'Streaming...' : currentModelName,
+                        style: AppTypography.labelSmall.copyWith(
+                          color: isDark ? AppColors.mutedForeground : AppColors.textSecondaryLight,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              overflow: TextOverflow.ellipsis,
-            ),
-            Row(
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: state.isStreaming ? AppColors.warning : AppColors.success,
-                  ),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.psychology_outlined),
+                  tooltip: 'Change Model',
+                  onPressed: _openModelSelector,
                 ),
-                const SizedBox(width: 6),
-                Text(
-                  state.isStreaming ? 'Streaming...' : currentModelName,
-                  style: AppTypography.labelSmall.copyWith(
-                    color: isDark ? AppColors.mutedForeground : AppColors.textSecondaryLight,
-                    fontSize: 11,
-                  ),
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  tooltip: 'Reload History',
+                  onPressed: () => notifier.loadHistory(),
                 ),
               ],
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.psychology_outlined),
-            tooltip: 'Change Model',
-            onPressed: _openModelSelector,
-          ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Reload History',
-            onPressed: () => notifier.loadHistory(),
-          ),
-        ],
-      ),
+            )
+          : null,
       body: Column(
         children: [
           if (state.error != null)

@@ -4,6 +4,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../data/models/chat_message.dart';
 import 'markdown_block.dart';
 import 'system_message_card.dart';
+import 'thinking_block.dart';
 import 'tool_call_card.dart';
 
 class MessageBubble extends StatelessWidget {
@@ -102,13 +103,21 @@ class MessageBubble extends StatelessWidget {
                 crossAxisAlignment:
                     isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                 children: [
+                  if (message.thinking.isNotEmpty) ...[
+                    ThinkingBlock(
+                      content: message.thinking,
+                      isStreaming: message.isStreaming,
+                    ),
+                    if (message.content.isNotEmpty)
+                      const SizedBox(height: AppSpacing.sm),
+                  ],
                   if (message.content.isNotEmpty)
                     MarkdownBlock(
                       data: message.content,
                       isUser: isUser,
                     ),
                   if (message.toolCalls.isNotEmpty) ...[
-                    if (message.content.isNotEmpty)
+                    if (message.content.isNotEmpty || message.thinking.isNotEmpty)
                       const SizedBox(height: AppSpacing.sm),
                     ...message.toolCalls.map(
                       (tc) => ToolCallCard(toolCall: tc),
