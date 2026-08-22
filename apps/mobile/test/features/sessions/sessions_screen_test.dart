@@ -30,8 +30,9 @@ class MockSessionsRepository implements SessionsRepository {
     String? search,
     String? agentId,
     String? projectId,
+    bool archived = false,
   }) async {
-    var list = sessions;
+    var list = sessions.where((s) => s.archived == archived).toList();
     if (status != null && status.isNotEmpty && status.toLowerCase() != 'all') {
       if (status.toLowerCase() == 'active') {
         list = list.where((s) => s.isRunning).toList();
@@ -61,6 +62,22 @@ class MockSessionsRepository implements SessionsRepository {
     );
     sessions.insert(0, created);
     return created;
+  }
+
+  @override
+  Future<void> archiveSession(String id) async {
+    final index = sessions.indexWhere((s) => s.id == id);
+    if (index != -1) {
+      sessions[index] = sessions[index].copyWith(archived: true);
+    }
+  }
+
+  @override
+  Future<void> unarchiveSession(String id) async {
+    final index = sessions.indexWhere((s) => s.id == id);
+    if (index != -1) {
+      sessions[index] = sessions[index].copyWith(archived: false);
+    }
   }
 
   @override

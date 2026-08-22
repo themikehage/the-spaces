@@ -18,6 +18,9 @@ class FakeSessionsRepository implements SessionsRepository {
   bool shouldThrow = false;
   CreateSessionInput? lastCreatedInput;
   String? lastDeletedId;
+  String? lastArchivedId;
+  String? lastUnarchivedId;
+  bool lastGetSessionsArchived = false;
 
   @override
   Future<PaginatedSessions> getSessions({
@@ -27,10 +30,12 @@ class FakeSessionsRepository implements SessionsRepository {
     String? search,
     String? agentId,
     String? projectId,
+    bool archived = false,
   }) async {
     if (shouldThrow) {
       throw Exception('Failed to fetch sessions');
     }
+    lastGetSessionsArchived = archived;
     return PaginatedSessions(
       items: mockSessions,
       total: total,
@@ -56,6 +61,24 @@ class FakeSessionsRepository implements SessionsRepository {
     );
     mockSessions.insert(0, created);
     return created;
+  }
+
+  @override
+  Future<void> archiveSession(String id) async {
+    if (shouldThrow) {
+      throw Exception('Failed to archive session');
+    }
+    lastArchivedId = id;
+    mockSessions.removeWhere((s) => s.id == id);
+  }
+
+  @override
+  Future<void> unarchiveSession(String id) async {
+    if (shouldThrow) {
+      throw Exception('Failed to unarchive session');
+    }
+    lastUnarchivedId = id;
+    mockSessions.removeWhere((s) => s.id == id);
   }
 
   @override
@@ -230,6 +253,65 @@ void main() {
 
       expect(notifier.state.sessions.isEmpty, isTrue);
       expect(repository.lastDeletedId, equals('sess-del-1'));
+    });
+
+    test('archiveSession calls repository and removes from active sessions', () async {
+      repository.mockSessions = [
+        const Session(id: 'sess-arch-1', title: 'To Archive', status: 'idle'),
+      ];
+      repository.total = 1;
+
+      final notifier = SessionsNotifier(
+        repository: repository,
+        storage: storage,
+        wsClient: wsClient,
+      );
+
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      expect(notifier.state.sessions.length, equals(1));
+
+      await notifier.archiveSession('sess-arch-1');
+
+      expect(notifier.state.sessions.isEmpty, isTrue);
+      expect(repository.lastArchivedId, equals('sess-arch-1'));
+    });
+
+    test('unarchiveSession calls repository and re-fetches', () async {
+      repository.mockSessions = [
+        const Session(id: 'sess-unarch-1', title: 'Archived Sess', status: 'idle', archived: true),
+      ];
+      repository.total = 1;
+
+      final notifier = SessionsNotifier(
+        repository: repository,
+        storage: storage,
+        wsClient: wsClient,
+      );
+
+      await notifier.toggleShowArchived();
+      expect(notifier.state.showArchived, isTrue);
+
+      await notifier.unarchiveSession('sess-unarch-1');
+      expect(repository.lastUnarchivedId, equals('sess-unarch-1'));
+    });
+
+    test('toggleShowArchived flips flag and queries repository with archived boolean', () async {
+      final notifier = SessionsNotifier(
+        repository: repository,
+        storage: storage,
+        wsClient: wsClient,
+      );
+
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      expect(notifier.state.showArchived, isFalse);
+
+      await notifier.toggleShowArchived();
+      expect(notifier.state.showArchived, isTrue);
+      expect(repository.lastGetSessionsArchived, isTrue);
+
+      await notifier.toggleShowArchived();
+      expect(notifier.state.showArchived, isFalse);
+      expect(repository.lastGetSessionsArchived, isFalse);
     });
 
     test('WS session_created event prepends session to state', () async {

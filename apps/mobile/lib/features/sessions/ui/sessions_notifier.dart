@@ -128,6 +128,7 @@ class SessionsNotifier extends StateNotifier<SessionsState> {
         page: 1,
         limit: _pageSize,
         status: state.filter,
+        archived: state.showArchived,
       );
 
       state = state.copyWith(
@@ -157,6 +158,7 @@ class SessionsNotifier extends StateNotifier<SessionsState> {
         page: nextPage,
         limit: _pageSize,
         status: state.filter,
+        archived: state.showArchived,
       );
 
       final existingIds = state.sessions.map((s) => s.id).toSet();
@@ -174,6 +176,11 @@ class SessionsNotifier extends StateNotifier<SessionsState> {
         error: e.toString(),
       );
     }
+  }
+
+  Future<void> toggleShowArchived() async {
+    state = state.copyWith(showArchived: !state.showArchived);
+    await load();
   }
 
   Future<void> setFilter(String status) async {
@@ -204,12 +211,45 @@ class SessionsNotifier extends StateNotifier<SessionsState> {
     }
   }
 
+  Future<void> archiveSession(String id) async {
+    try {
+      if (!state.showArchived) {
+        state = state.copyWith(
+          sessions: state.sessions.where((s) => s.id != id).toList(),
+        );
+      }
+      await _repository.archiveSession(id);
+      await load();
+    } catch (e) {
+      state = state.copyWith(error: e.toString());
+      await load();
+      rethrow;
+    }
+  }
+
+  Future<void> unarchiveSession(String id) async {
+    try {
+      if (state.showArchived) {
+        state = state.copyWith(
+          sessions: state.sessions.where((s) => s.id != id).toList(),
+        );
+      }
+      await _repository.unarchiveSession(id);
+      await load();
+    } catch (e) {
+      state = state.copyWith(error: e.toString());
+      await load();
+      rethrow;
+    }
+  }
+
   Future<void> deleteSession(String id) async {
     try {
       state = state.copyWith(
         sessions: state.sessions.where((s) => s.id != id).toList(),
       );
       await _repository.deleteSession(id);
+      EntityEventBus.emit('session_deleted');
       await load();
     } catch (e) {
       state = state.copyWith(error: e.toString());

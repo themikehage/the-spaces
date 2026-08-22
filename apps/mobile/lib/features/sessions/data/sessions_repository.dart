@@ -17,11 +17,16 @@ class SessionsRepository {
     String? search,
     String? agentId,
     String? projectId,
+    bool archived = false,
   }) async {
     final queryParams = <String, dynamic>{
       'page': page,
       'perPage': limit,
     };
+
+    if (archived) {
+      queryParams['archived'] = true;
+    }
 
     if (status != null && status.isNotEmpty && status.toLowerCase() != 'all') {
       queryParams['status'] = status.toLowerCase();
@@ -64,6 +69,20 @@ class SessionsRepository {
     }
 
     throw StateError('Unexpected response format when creating session');
+  }
+
+  Future<void> archiveSession(String id) async {
+    await _apiClient.patch<dynamic>(
+      '/api/sessions/$id',
+      data: {'archived': true},
+    );
+  }
+
+  Future<void> unarchiveSession(String id) async {
+    await _apiClient.patch<dynamic>(
+      '/api/sessions/$id',
+      data: {'archived': false},
+    );
   }
 
   Future<void> deleteSession(String id) async {

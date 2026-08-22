@@ -26,6 +26,7 @@ mixin _$Session {
   String get updatedAt => throw _privateConstructorUsedError;
   int get messageCount => throw _privateConstructorUsedError;
   bool get isExecution => throw _privateConstructorUsedError;
+  bool get archived => throw _privateConstructorUsedError;
 
   /// Create a copy of Session
   /// with the given fields replaced by the non-null parameter values.
@@ -48,7 +49,8 @@ abstract class $SessionCopyWith<$Res> {
       String createdAt,
       String updatedAt,
       int messageCount,
-      bool isExecution});
+      bool isExecution,
+      bool archived});
 }
 
 /// @nodoc
@@ -76,6 +78,7 @@ class _$SessionCopyWithImpl<$Res, $Val extends Session>
     Object? updatedAt = null,
     Object? messageCount = null,
     Object? isExecution = null,
+    Object? archived = null,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -118,6 +121,10 @@ class _$SessionCopyWithImpl<$Res, $Val extends Session>
           ? _value.isExecution
           : isExecution // ignore: cast_nullable_to_non_nullable
               as bool,
+      archived: null == archived
+          ? _value.archived
+          : archived // ignore: cast_nullable_to_non_nullable
+              as bool,
     ) as $Val);
   }
 }
@@ -139,7 +146,8 @@ abstract class _$$SessionImplCopyWith<$Res> implements $SessionCopyWith<$Res> {
       String createdAt,
       String updatedAt,
       int messageCount,
-      bool isExecution});
+      bool isExecution,
+      bool archived});
 }
 
 /// @nodoc
@@ -165,6 +173,7 @@ class __$$SessionImplCopyWithImpl<$Res>
     Object? updatedAt = null,
     Object? messageCount = null,
     Object? isExecution = null,
+    Object? archived = null,
   }) {
     return _then(_$SessionImpl(
       id: null == id
@@ -207,6 +216,10 @@ class __$$SessionImplCopyWithImpl<$Res>
           ? _value.isExecution
           : isExecution // ignore: cast_nullable_to_non_nullable
               as bool,
+      archived: null == archived
+          ? _value.archived
+          : archived // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -224,7 +237,8 @@ class _$SessionImpl extends _Session {
       this.createdAt = '',
       this.updatedAt = '',
       this.messageCount = 0,
-      this.isExecution = false})
+      this.isExecution = false,
+      this.archived = false})
       : super._();
 
   @override
@@ -253,10 +267,13 @@ class _$SessionImpl extends _Session {
   @override
   @JsonKey()
   final bool isExecution;
+  @override
+  @JsonKey()
+  final bool archived;
 
   @override
   String toString() {
-    return 'Session(id: $id, title: $title, status: $status, agentId: $agentId, projectId: $projectId, teamId: $teamId, createdAt: $createdAt, updatedAt: $updatedAt, messageCount: $messageCount, isExecution: $isExecution)';
+    return 'Session(id: $id, title: $title, status: $status, agentId: $agentId, projectId: $projectId, teamId: $teamId, createdAt: $createdAt, updatedAt: $updatedAt, messageCount: $messageCount, isExecution: $isExecution, archived: $archived)';
   }
 
   @override
@@ -278,12 +295,25 @@ class _$SessionImpl extends _Session {
             (identical(other.messageCount, messageCount) ||
                 other.messageCount == messageCount) &&
             (identical(other.isExecution, isExecution) ||
-                other.isExecution == isExecution));
+                other.isExecution == isExecution) &&
+            (identical(other.archived, archived) ||
+                other.archived == archived));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, id, title, status, agentId,
-      projectId, teamId, createdAt, updatedAt, messageCount, isExecution);
+  int get hashCode => Object.hash(
+      runtimeType,
+      id,
+      title,
+      status,
+      agentId,
+      projectId,
+      teamId,
+      createdAt,
+      updatedAt,
+      messageCount,
+      isExecution,
+      archived);
 
   /// Create a copy of Session
   /// with the given fields replaced by the non-null parameter values.
@@ -305,7 +335,8 @@ abstract class _Session extends Session {
       final String createdAt,
       final String updatedAt,
       final int messageCount,
-      final bool isExecution}) = _$SessionImpl;
+      final bool isExecution,
+      final bool archived}) = _$SessionImpl;
   const _Session._() : super._();
 
   @override
@@ -328,6 +359,8 @@ abstract class _Session extends Session {
   int get messageCount;
   @override
   bool get isExecution;
+  @override
+  bool get archived;
 
   /// Create a copy of Session
   /// with the given fields replaced by the non-null parameter values.

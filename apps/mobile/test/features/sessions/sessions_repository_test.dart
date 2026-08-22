@@ -159,5 +159,56 @@ void main() {
       expect(mockAdapter.lastRequestOptions?.method, equals('DELETE'));
       expect(mockAdapter.lastRequestOptions?.path, equals('/api/sessions/sess-to-delete'));
     });
+
+    test('archiveSession sends PATCH request with archived: true', () async {
+      mockAdapter.responseBody = ResponseBody.fromString(
+        jsonEncode({'success': true}),
+        200,
+        headers: {
+          Headers.contentTypeHeader: [Headers.jsonContentType],
+        },
+      );
+
+      await repository.archiveSession('sess-to-archive');
+
+      expect(mockAdapter.lastRequestOptions?.method, equals('PATCH'));
+      expect(mockAdapter.lastRequestOptions?.path, equals('/api/sessions/sess-to-archive'));
+      expect(mockAdapter.lastRequestOptions?.data, equals({'archived': true}));
+    });
+
+    test('unarchiveSession sends PATCH request with archived: false', () async {
+      mockAdapter.responseBody = ResponseBody.fromString(
+        jsonEncode({'success': true}),
+        200,
+        headers: {
+          Headers.contentTypeHeader: [Headers.jsonContentType],
+        },
+      );
+
+      await repository.unarchiveSession('sess-to-unarchive');
+
+      expect(mockAdapter.lastRequestOptions?.method, equals('PATCH'));
+      expect(mockAdapter.lastRequestOptions?.path, equals('/api/sessions/sess-to-unarchive'));
+      expect(mockAdapter.lastRequestOptions?.data, equals({'archived': false}));
+    });
+
+    test('getSessions with archived: true sets query parameter', () async {
+      mockAdapter.responseBody = ResponseBody.fromString(
+        jsonEncode({
+          'sessions': [],
+          'total': 0,
+          'page': 1,
+          'perPage': 20,
+        }),
+        200,
+        headers: {
+          Headers.contentTypeHeader: [Headers.jsonContentType],
+        },
+      );
+
+      await repository.getSessions(archived: true);
+
+      expect(mockAdapter.lastRequestOptions?.queryParameters['archived'], equals(true));
+    });
   });
 }

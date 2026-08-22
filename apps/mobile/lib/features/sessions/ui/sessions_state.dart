@@ -16,6 +16,7 @@ class SessionsState with _$SessionsState {
     @Default('all') String filter,
     @Default('') String searchQuery,
     @Default(1) int page,
+    @Default(false) bool showArchived,
     String? error,
   }) = _SessionsState;
 

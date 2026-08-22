@@ -23,6 +23,7 @@ mixin _$SessionsState {
   String get filter => throw _privateConstructorUsedError;
   String get searchQuery => throw _privateConstructorUsedError;
   int get page => throw _privateConstructorUsedError;
+  bool get showArchived => throw _privateConstructorUsedError;
   String? get error => throw _privateConstructorUsedError;
 
   /// Create a copy of SessionsState
@@ -46,6 +47,7 @@ abstract class $SessionsStateCopyWith<$Res> {
       String filter,
       String searchQuery,
       int page,
+      bool showArchived,
       String? error});
 }
 
@@ -71,6 +73,7 @@ class _$SessionsStateCopyWithImpl<$Res, $Val extends SessionsState>
     Object? filter = null,
     Object? searchQuery = null,
     Object? page = null,
+    Object? showArchived = null,
     Object? error = freezed,
   }) {
     return _then(_value.copyWith(
@@ -102,6 +105,10 @@ class _$SessionsStateCopyWithImpl<$Res, $Val extends SessionsState>
           ? _value.page
           : page // ignore: cast_nullable_to_non_nullable
               as int,
+      showArchived: null == showArchived
+          ? _value.showArchived
+          : showArchived // ignore: cast_nullable_to_non_nullable
+              as bool,
       error: freezed == error
           ? _value.error
           : error // ignore: cast_nullable_to_non_nullable
@@ -126,6 +133,7 @@ abstract class _$$SessionsStateImplCopyWith<$Res>
       String filter,
       String searchQuery,
       int page,
+      bool showArchived,
       String? error});
 }
 
@@ -149,6 +157,7 @@ class __$$SessionsStateImplCopyWithImpl<$Res>
     Object? filter = null,
     Object? searchQuery = null,
     Object? page = null,
+    Object? showArchived = null,
     Object? error = freezed,
   }) {
     return _then(_$SessionsStateImpl(
@@ -180,6 +189,10 @@ class __$$SessionsStateImplCopyWithImpl<$Res>
           ? _value.page
           : page // ignore: cast_nullable_to_non_nullable
               as int,
+      showArchived: null == showArchived
+          ? _value.showArchived
+          : showArchived // ignore: cast_nullable_to_non_nullable
+              as bool,
       error: freezed == error
           ? _value.error
           : error // ignore: cast_nullable_to_non_nullable
@@ -199,6 +212,7 @@ class _$SessionsStateImpl extends _SessionsState {
       this.filter = 'all',
       this.searchQuery = '',
       this.page = 1,
+      this.showArchived = false,
       this.error})
       : _sessions = sessions,
         super._();
@@ -231,11 +245,14 @@ class _$SessionsStateImpl extends _SessionsState {
   @JsonKey()
   final int page;
   @override
+  @JsonKey()
+  final bool showArchived;
+  @override
   final String? error;
 
   @override
   String toString() {
-    return 'SessionsState(sessions: $sessions, isLoading: $isLoading, isLoadingMore: $isLoadingMore, hasMore: $hasMore, filter: $filter, searchQuery: $searchQuery, page: $page, error: $error)';
+    return 'SessionsState(sessions: $sessions, isLoading: $isLoading, isLoadingMore: $isLoadingMore, hasMore: $hasMore, filter: $filter, searchQuery: $searchQuery, page: $page, showArchived: $showArchived, error: $error)';
   }
 
   @override
@@ -253,6 +270,8 @@ class _$SessionsStateImpl extends _SessionsState {
             (identical(other.searchQuery, searchQuery) ||
                 other.searchQuery == searchQuery) &&
             (identical(other.page, page) || other.page == page) &&
+            (identical(other.showArchived, showArchived) ||
+                other.showArchived == showArchived) &&
             (identical(other.error, error) || other.error == error));
   }
 
@@ -266,6 +285,7 @@ class _$SessionsStateImpl extends _SessionsState {
       filter,
       searchQuery,
       page,
+      showArchived,
       error);
 
   /// Create a copy of SessionsState
@@ -286,6 +306,7 @@ abstract class _SessionsState extends SessionsState {
       final String filter,
       final String searchQuery,
       final int page,
+      final bool showArchived,
       final String? error}) = _$SessionsStateImpl;
   const _SessionsState._() : super._();
 
@@ -303,6 +324,8 @@ abstract class _SessionsState extends SessionsState {
   String get searchQuery;
   @override
   int get page;
+  @override
+  bool get showArchived;
   @override
   String? get error;
 

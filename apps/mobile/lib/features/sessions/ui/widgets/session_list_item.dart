@@ -3,16 +3,25 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../data/models/session.dart';
+import 'session_popover.dart';
 import 'session_status_dot.dart';
 
 class SessionListItem extends StatelessWidget {
   final Session session;
   final VoidCallback? onTap;
+  final VoidCallback? onArchive;
+  final VoidCallback? onUnarchive;
+  final VoidCallback? onDelete;
+  final VoidCallback? onMoreTap;
 
   const SessionListItem({
     super.key,
     required this.session,
     this.onTap,
+    this.onArchive,
+    this.onUnarchive,
+    this.onDelete,
+    this.onMoreTap,
   });
 
   Color _getStatusColor() {
@@ -107,6 +116,26 @@ class SessionListItem extends StatelessWidget {
                       color: AppColors.mutedForeground,
                     ),
                   ),
+                const SizedBox(width: AppSpacing.xs),
+                IconButton(
+                  key: Key('session_more_button_${session.id}'),
+                  icon: const Icon(
+                    Icons.more_vert,
+                    size: 18,
+                    color: AppColors.mutedForeground,
+                  ),
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  onPressed: onMoreTap ??
+                      () => SessionPopover.show(
+                            context,
+                            session: session,
+                            onArchive: onArchive,
+                            onUnarchive: onUnarchive,
+                            onDelete: onDelete,
+                          ),
+                ),
               ],
             ),
             const SizedBox(height: AppSpacing.sm),

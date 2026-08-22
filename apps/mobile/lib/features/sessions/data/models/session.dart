@@ -17,6 +17,7 @@ class Session with _$Session {
     @Default('') String updatedAt,
     @Default(0) int messageCount,
     @Default(false) bool isExecution,
+    @Default(false) bool archived,
   }) = _Session;
 
   factory Session.fromJson(Map<String, dynamic> json) {
@@ -26,6 +27,7 @@ class Session with _$Session {
     final updatedAt = (json['updatedAt'] ?? json['lastModified'] ?? createdAt) as String;
     final messageCount = json['messageCount'] is num ? (json['messageCount'] as num).toInt() : 0;
     final isExecution = json['isExecution'] is bool ? json['isExecution'] as bool : false;
+    final archived = json['archived'] is bool ? json['archived'] as bool : false;
 
     return Session(
       id: (json['id'] ?? json['sessionId'] ?? '') as String,
@@ -38,6 +40,7 @@ class Session with _$Session {
       updatedAt: updatedAt,
       messageCount: messageCount,
       isExecution: isExecution,
+      archived: archived,
     );
   }
 
@@ -54,6 +57,7 @@ class Session with _$Session {
       'updatedAt': updatedAt,
       'messageCount': messageCount,
       'isExecution': isExecution,
+      'archived': archived,
     };
   }
 
