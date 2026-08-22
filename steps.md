@@ -237,9 +237,41 @@
   - [x] Sub-hito 16.4: MCP Tab Raw (`DefaultTabController` en `McpScreen`, editor multilínea monospace, botón Save en AppBar actions y validación estricta de JSON en UI antes de POST).
   - [x] Verificación final: `flutter analyze` con 0 issues, 303 tests en verde (`flutter test`), enmascaramiento por defecto y `jsonDecode` restringido a la capa de UI.
 
+- [x] Implementar Hito M02 — Custom UI Renderer (21 Componentes Declarativos en Mobile) (`plans/completed/mobile-M02-custom-ui-renderer.md`):
+  - [x] Sub-hito 2.A: Scaffold y dispatcher central `CustomUiRenderer` (`apps/mobile/lib/features/chat/ui/widgets/tools/custom_ui/custom_ui_renderer.dart`), despacho integrado en `ToolResultRouter` con extracción resiliente de payloads UI y propagación de `authToken`.
+  - [x] Sub-hito 2.B: Componentes de contenido (`cu_badge.dart`, `cu_markdown.dart`, `cu_code.dart`, `cu_table.dart`, `cu_metric.dart`, `cu_stats.dart`, `cu_progress.dart`).
+  - [x] Sub-hito 2.C: Componentes de layout (`cu_card.dart`, `cu_section.dart`, `cu_tabs.dart`, `cu_accordion.dart`, `cu_card_list.dart`, `cu_steps.dart`, `cu_timeline.dart`).
+  - [x] Sub-hito 2.D: Componentes de media y herramientas enriquecidas (`cu_image_grid.dart` con `AuthenticatedImageProvider` y lightbox, `cu_diff.dart`, `cu_audio.dart`, `cu_video.dart`, `cu_pdf.dart`, `cu_html.dart`).
+  - [x] Sub-hito 2.E: Verificación completa: `flutter analyze` con 0 warnings/issues y 332 tests en verde (`flutter test`).
+- [x] Implementar Hito M06 — Media Inline en Mensajes de Chat (HTML, PDF, Audio, Video, Code) (`plans/completed/mobile-M06-media-inline.md`):
+  - [x] Sub-hito 6.A: Modelos tipados `MessageBlock` (`MarkdownBlockData`, `AudioBlockData`, `VideoBlockData`, `PdfBlockData`, `HtmlBlockData`, `CodeBlockData`) y parser determinista `MessageBlockParser.parseBlocks(content)` con 7 tests unitarios en verde.
+  - [x] Sub-hito 6.B: Componentes de UI modulares (`AudioBlockWidget`, `VideoBlockWidget`, `PdfBlockWidget`, `HtmlBlockWidget`, `CodeBlockWidget`) con tokens de diseño, apertura segura vía `url_launcher` y botones de copia al portapapeles.
+  - [x] Sub-hito 6.C: Integración en `MessageBubble` sustituyendo el bloque monolítico de markdown por renderizado secuencial de bloques tipados con propagación de `authToken`.
+  - [x] Verificación completa: `flutter analyze` con 0 warnings/issues y suite de pruebas en verde (`flutter test`).
+- [x] Implementar Hito M07 — Footer de Costo/Tokens + BranchNav + DelegationNotification (`plans/completed/mobile-M07-message-footer-branch.md`):
+  - [x] Sub-hito 7.A: Modelo `ChatMessage` enriquecido con `provider`, `model`, tokens (`inputTokens`/`outputTokens`), `costUsd`, `steerMode`, `siblings` y `details`. Procesamiento reactivo en `ChatNotifier` para eventos de stream y delegación.
+  - [x] Sub-hito 7.B: Widget `MessageFooter` colapsable con chip de provider, modelo, tokens formateados, costo en USD con 4 decimales y botón de copia con SnackBar; más badge STEERING / FOLLOW-UP en mensajes de usuario.
+  - [x] Sub-hito 7.C: Widget `BranchNav` con control `< 1 / N >` integrado con `POST /api/sessions/:id/navigate` vía `ChatRepository` y `ChatNotifier.navigateBranch()`.
+  - [x] Sub-hito 7.D: Widget `DelegationNotification` con borde visual por severidad/estado (Completed/Error/Blocked/Partial), executive summary colapsable, chip de artifacts y visualizador de salida cruda.
+  - [x] Verificación completa: `flutter analyze` con 0 issues/warnings, 392 tests en verde (`flutter test`) y suite dedicada `message_footer_branch_test.dart`.
+- [x] Implementar Hito M08 — Streaming Parcial de Tools (`tool_execution_update` + `subagent_event`) (`plans/completed/mobile-M08-streaming-partial.md`):
+  - [x] Sub-hito 8.A: Modelos inmutables `SubagentSession`, `SubagentEvent` y `SubagentStatus`, extensión de `ToolCall` con `liveOutput`, `subagentEvents` y `subagentSession`, y extensión de `ChatMessage` con `subagentSessions`.
+  - [x] Sub-hito 8.B: Manejo en tiempo real de WebSocket `tool_execution_update` y `subagent_event` en `ChatNotifier` con compactación inteligente de fragmentos de token/pensamiento y actualización granular de estado sin rebuild destructivo.
+  - [x] Sub-hito 8.C: `ToolCallCard` actualizado con contenedor monospaciado de salida en vivo (`LIVE OUTPUT`), límite de 20 líneas con toggle "Ver más / Ver menos" y badge semántico pulsante.
+  - [x] Sub-hito 8.D: Componente `SubagentLiveView` con lista virtualizada (`ListView.builder`), timeline con formato horario, iconos semánticos según tipo de evento y colapso automático al completarse. Integración completa en `ToolResultRouter` y `MessageBubble`.
+  - [x] Verificación completa: `flutter analyze` con 0 issues/warnings, 403 tests totales en verde (`flutter test`) y suite de pruebas unitarias y de widgets dedicada `streaming_partial_test.dart`.
+- [x] Implementar Hito M09 — Adjuntos de Archivos en Mobile (File Upload, Text Inline & Preview Bar) (`plans/completed/mobile-M09-file-attachments.md`):
+  - [x] Sub-hito 9.A: Modelos `UploadedFile` y repositorio `FileUploadRepository` para subir archivos multipart a `POST /api/workspace/assets/uploads` con `Dio`, query params (`project`, `agentId`, `teamId`, `channelId`), timeout de 30s y mapeo de `ApiException`. Suite de tests unitarios en verde.
+  - [x] Sub-hito 9.B: Utilidad pura `FileClassifier` (clasificación determinista en `inlineImage`, `inlineText`, `uploadRequired` con límite de 100 KB), modelo inmutable `ChatAttachment`, integración de `file_picker` en `ChatNotifier` con fallback a imágenes y embedding de archivos en prompt con `[Attached File: path]`. Suite de pruebas unitarias en verde.
+  - [x] Sub-hito 9.C: Widget `AttachmentPreviewBar` con chips de preview para imágenes, código y documentos, nombre truncado, tamaño formateado, indicador de progreso de subida y eliminación de adjuntos. Integración completa en `ChatInputBar` y `ChatScreen`. Suite de tests de widgets en verde.
+  - [x] Sub-hito 9.D: Widget `AttachedFileCard` con badge de extensión, nombre de archivo y botón de descarga con token, integrado en `MessageBubble` de usuario mediante parser de `[Attached File: path]` que limpia el markdown crudo. Suite de tests unitarios y de widgets en verde.
+  - [x] Verificación completa: `flutter analyze` con 0 issues/warnings y 152 tests de chat en verde.
+
 ## Próximos pasos
 
 - [ ] Implementar el Plan 40 — Arquitectura de Sandboxing Productivo (`plans/40-production-sandbox-architecture.md`).
+
+
 
 
 
