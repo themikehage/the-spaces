@@ -224,10 +224,16 @@
   - [x] Sub-hito 14.3: Previsualización inline de archivos con modal `FilePreviewSheet` (texto/código en monospace con copia rápida al portapapeles) e `ImageLightbox` modal interactivo con zoom (InteractiveViewer).
   - [x] Verificación final: `flutter analyze` con 0 warnings/issues, 270 tests en verde (`flutter test`), cero dependencias a `ChatNotifier` y cero referencias a placeholders.
 
+- [x] Implementar Hito 15 — Sessions Hub Completo: Kanban + Archive (`plans/mobile-15-sessions-hub-kanban.md`):
+  - [x] Sub-hito 15.1: Archive + SessionPopover con campo `archived` en `Session`, endpoints `archiveSession` y `unarchiveSession` en `SessionsRepository`, métodos reactivos en `SessionsNotifier`, emisión de `EntityEventBus.emit('session_deleted')`, componente desacoplado `SessionPopover` y botón de menú contextual en `SessionListItem`.
+  - [x] Sub-hito 15.2: Tab toggle "Active | Archived" en la cabecera de la lista con filtrado según `showArchived`, empty states diferenciados ("No Sessions Found" / "No Archived Sessions") y gestión de FAB condicional.
+  - [x] Sub-hito 15.3: Tab Kanban con 3 columnas (`Idle`, `Working`, `Done`), widgets presentacionales `KanbanColumn` y `KanbanSessionCard` con navegación directa a la sesión, vista `SessionsKanbanView` y `TabBar` de 3 pestañas (**Sessions**, **Kanban**, **Console**) en `SessionsScreen`.
+  - [x] Verificación final: `flutter analyze` con 0 warnings/issues, suite de tests en verde (`flutter test`), 3 pestañas en `SessionsScreen`, cero dependencias de `SessionsNotifier` en `SessionPopover` y sin swipe extra para archive.
+
 ## Próximos pasos
 
-- [ ] Implementar Hito 15 — Sessions Hub Completo: Kanban + Archive (`plans/mobile-15-sessions-hub-kanban.md`).
 - [ ] Implementar Hito 16 — Admin: Env Vars + MCP Marketplace (`plans/mobile-16-admin-env-mcp.md`).
 - [ ] Implementar el Plan 40 — Arquitectura de Sandboxing Productivo (`plans/40-production-sandbox-architecture.md`).
+
 
 
