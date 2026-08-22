@@ -1,4 +1,4 @@
-package com.spaces.spaces_mobile
+package com.spaces.mobile
 
 import io.flutter.embedding.android.FlutterActivity
 
