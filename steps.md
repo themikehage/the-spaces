@@ -230,10 +230,17 @@
   - [x] Sub-hito 15.3: Tab Kanban con 3 columnas (`Idle`, `Working`, `Done`), widgets presentacionales `KanbanColumn` y `KanbanSessionCard` con navegación directa a la sesión, vista `SessionsKanbanView` y `TabBar` de 3 pestañas (**Sessions**, **Kanban**, **Console**) en `SessionsScreen`.
   - [x] Verificación final: `flutter analyze` con 0 warnings/issues, suite de tests en verde (`flutter test`), 3 pestañas en `SessionsScreen`, cero dependencias de `SessionsNotifier` en `SessionPopover` y sin swipe extra para archive.
 
+- [x] Implementar Hito 16 — Admin: Env Vars + MCP Marketplace (`plans/mobile-16-admin-env-mcp.md`):
+  - [x] Sub-hito 16.1: Rutas y scaffolding (`/env-vars` y `/mcp` registradas en `app_router.dart`, items integrados en `app_drawer.dart`, `EnvVarsScreen` y `McpScreen`).
+  - [x] Sub-hito 16.2: Env Vars completo (modelo `EnvVar`, `EnvVarsRepository`, `EnvVarsNotifier`, `EnvVarsScreen`, `EnvVarListItem` con reveal bajo demanda y swipe-to-delete, `AddEnvVarSheet` con enforcement uppercase y `BulkEnvEditorSheet`).
+  - [x] Sub-hito 16.3: MCP Tab Servers (modelo `McpServer`, `McpRepository`, `McpNotifier`, `McpServerListItem` con badges de estado/transporte y reconexión, `AddMcpServerSheet` modal).
+  - [x] Sub-hito 16.4: MCP Tab Raw (`DefaultTabController` en `McpScreen`, editor multilínea monospace, botón Save en AppBar actions y validación estricta de JSON en UI antes de POST).
+  - [x] Verificación final: `flutter analyze` con 0 issues, 303 tests en verde (`flutter test`), enmascaramiento por defecto y `jsonDecode` restringido a la capa de UI.
+
 ## Próximos pasos
 
-- [ ] Implementar Hito 16 — Admin: Env Vars + MCP Marketplace (`plans/mobile-16-admin-env-mcp.md`).
 - [ ] Implementar el Plan 40 — Arquitectura de Sandboxing Productivo (`plans/40-production-sandbox-architecture.md`).
+
 
 
 
