@@ -1,8 +1,34 @@
-// SPDX-License-Identifier: MIT
 import { getMigrations } from "better-auth/db/migration";
+import { getDb } from "./db";
 import { auth } from "./index";
 
 export async function ensureAuthTables(): Promise<void> {
+  try {
+    const db = getDb();
+    const tables = db
+      .query("SELECT name FROM sqlite_master WHERE type='table'")
+      .all() as Array<{ name: string }>;
+    const tableNames = tables.map((t) => t.name);
+
+    if (tableNames.includes("account")) {
+      const accountCols = db
+        .query("PRAGMA table_info(account)")
+        .all() as Array<{ name: string }>;
+      const colNames = accountCols.map((c) => c.name);
+
+      if (!colNames.includes("issuer")) {
+        console.log("[Auth] Backfilling missing 'issuer' column to account table...");
+        db.exec("ALTER TABLE account ADD COLUMN issuer TEXT;");
+      }
+      if (!colNames.includes("displayId")) {
+        console.log("[Auth] Backfilling missing 'displayId' column to account table...");
+        db.exec("ALTER TABLE account ADD COLUMN displayId TEXT;");
+      }
+    }
+  } catch (err) {
+    console.warn("[Auth] Schema pre-check warning:", err);
+  }
+
   try {
     const { toBeCreated, toBeAdded, runMigrations } = await getMigrations(auth.options);
     if (toBeCreated.length > 0 || toBeAdded.length > 0) {
