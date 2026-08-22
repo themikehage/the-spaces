@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../data/models/chat_message.dart';
+import 'approval_form.dart';
+import 'ask_question_form.dart';
 import 'markdown_block.dart';
 import 'system_message_card.dart';
 import 'thinking_block.dart';
@@ -9,16 +11,46 @@ import 'tool_call_card.dart';
 
 class MessageBubble extends StatelessWidget {
   final ChatMessage message;
+  final void Function(bool approved)? onResolveApproval;
+  final void Function(List<String> selectedOptions, String? customAnswer)? onAnswerQuestion;
 
   const MessageBubble({
     super.key,
     required this.message,
+    this.onResolveApproval,
+    this.onAnswerQuestion,
   });
 
   @override
   Widget build(BuildContext context) {
     if (message.isSystem) {
       return SystemMessageCard(message: message);
+    }
+
+    if (message.isApprovalRequest && message.approvalRequest != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.xs,
+        ),
+        child: ApprovalForm(
+          request: message.approvalRequest!,
+          onResolve: onResolveApproval,
+        ),
+      );
+    }
+
+    if (message.isQuestionRequest && message.questionRequest != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.xs,
+        ),
+        child: AskQuestionForm(
+          request: message.questionRequest!,
+          onAnswer: onAnswerQuestion,
+        ),
+      );
     }
 
     if (message.isTool) {

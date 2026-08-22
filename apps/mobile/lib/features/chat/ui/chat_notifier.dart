@@ -140,6 +140,36 @@ class ChatNotifier extends StateNotifier<ChatState> {
         }
         state = state.copyWith(activeToolCalls: currentCalls);
       }
+    } else if (type == 'tool_approval_required' ||
+        type == 'tool_approval_request' ||
+        type == 'request_approval') {
+      final rawReq = event['request'] ?? event['approval'] ?? event;
+      if (rawReq is Map<String, dynamic>) {
+        final approval = ApprovalRequest.fromJson(rawReq);
+        final approvalMsg = ChatMessage(
+          id: 'approval_${approval.toolCallId.isNotEmpty ? approval.toolCallId : DateTime.now().millisecondsSinceEpoch}',
+          role: 'tool_approval_request',
+          approvalRequest: approval,
+          createdAt: DateTime.now().toIso8601String(),
+        );
+        state = state.copyWith(
+          messages: [...state.messages, approvalMsg],
+        );
+      }
+    } else if (type == 'ask_question' || type == 'question_request') {
+      final rawReq = event['request'] ?? event['question'] ?? event;
+      if (rawReq is Map<String, dynamic>) {
+        final question = QuestionRequest.fromJson(rawReq);
+        final questionMsg = ChatMessage(
+          id: 'question_${question.questionId.isNotEmpty ? question.questionId : DateTime.now().millisecondsSinceEpoch}',
+          role: 'ask_question',
+          questionRequest: question,
+          createdAt: DateTime.now().toIso8601String(),
+        );
+        state = state.copyWith(
+          messages: [...state.messages, questionMsg],
+        );
+      }
     } else if (type == 'message_end' || type == 'agent_end' || type == 'stream_end') {
       if (state.streamingContent.isNotEmpty || state.activeToolCalls.isNotEmpty) {
         final completedMessage = ChatMessage(
@@ -182,6 +212,61 @@ class ChatNotifier extends StateNotifier<ChatState> {
         state = state.copyWith(isStreaming: false);
       }
     }
+  }
+
+  void resolveApproval({
+    required String toolCallId,
+    required bool approved,
+  }) {
+    _repository.sendApprovalResponse(
+      sessionId: _sessionId,
+      toolCallId: toolCallId,
+      approved: approved,
+    );
+
+    final updated = state.messages.map((msg) {
+      if (msg.approvalRequest != null &&
+          (msg.approvalRequest!.toolCallId == toolCallId || msg.id.contains(toolCallId))) {
+        return msg.copyWith(
+          approvalRequest: msg.approvalRequest!.copyWith(
+            resolved: true,
+            approvedResult: approved,
+          ),
+        );
+      }
+      return msg;
+    }).toList();
+
+    state = state.copyWith(messages: updated);
+  }
+
+  void answerQuestion({
+    required String questionId,
+    required List<String> selectedOptions,
+    String? customAnswer,
+  }) {
+    _repository.sendQuestionResponse(
+      sessionId: _sessionId,
+      questionId: questionId,
+      selectedOptions: selectedOptions,
+      customAnswer: customAnswer,
+    );
+
+    final updated = state.messages.map((msg) {
+      if (msg.questionRequest != null &&
+          (msg.questionRequest!.questionId == questionId || msg.id.contains(questionId))) {
+        return msg.copyWith(
+          questionRequest: msg.questionRequest!.copyWith(
+            resolved: true,
+            selectedOptions: selectedOptions,
+            customAnswer: customAnswer,
+          ),
+        );
+      }
+      return msg;
+    }).toList();
+
+    state = state.copyWith(messages: updated);
   }
 
   Future<void> sendMessage(String text, {List<String>? attachmentPaths}) async {

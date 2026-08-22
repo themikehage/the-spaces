@@ -114,6 +114,50 @@ class ChatRepository {
     );
   }
 
+  void sendApprovalResponse({
+    required String sessionId,
+    required String toolCallId,
+    required bool approved,
+  }) {
+    _wsClient.send({
+      'type': 'tool_approval',
+      'sessionId': sessionId,
+      'toolCallId': toolCallId,
+      'approved': approved,
+    });
+    _wsClient.send({
+      'type': 'ui_action',
+      'sessionId': sessionId,
+      'componentId': toolCallId,
+      'action': approved ? 'confirm' : 'cancel',
+    });
+  }
+
+  void sendQuestionResponse({
+    required String sessionId,
+    required String questionId,
+    required List<String> selectedOptions,
+    String? customAnswer,
+  }) {
+    _wsClient.send({
+      'type': 'ask_question_response',
+      'sessionId': sessionId,
+      'questionId': questionId,
+      'selectedOptions': selectedOptions,
+      if (customAnswer != null) 'customAnswer': customAnswer,
+    });
+    _wsClient.send({
+      'type': 'ui_action',
+      'sessionId': sessionId,
+      'componentId': questionId,
+      'action': 'submit',
+      'payload': {
+        'selectedOptions': selectedOptions,
+        if (customAnswer != null) 'customAnswer': customAnswer,
+      },
+    });
+  }
+
   Stream<Map<String, dynamic>> get events => _wsClient.events;
 
   Stream<Map<String, dynamic>> sessionEvents(String sessionId) {

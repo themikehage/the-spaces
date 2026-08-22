@@ -226,10 +226,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         itemCount: state.messages.length + (state.isStreaming ? 1 : 0),
                         itemBuilder: (context, index) {
                           if (index < state.messages.length) {
-                            final msg = state.messages[index];
                             return MessageBubble(
                               key: Key('msg_${msg.id}_$index'),
                               message: msg,
+                              onResolveApproval: (approved) => notifier.resolveApproval(
+                                toolCallId: msg.approvalRequest?.toolCallId ?? msg.id,
+                                approved: approved,
+                              ),
+                              onAnswerQuestion: (selected, custom) => notifier.answerQuestion(
+                                questionId: msg.questionRequest?.questionId ?? msg.id,
+                                selectedOptions: selected,
+                                customAnswer: custom,
+                              ),
                             );
                           }
                           return StreamingBubble(
