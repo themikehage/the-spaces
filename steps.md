@@ -178,7 +178,16 @@
   - [x] Sub-hito 6.1: Modelos `Project` y `Agent` con Freezed, `ProjectsRepository` y `AgentsRepository` desacoplados.
   - [x] Sub-hito 6.2: State machines `ProjectsNotifier` y `AgentsNotifier` con búsqueda reactiva, filtros y recarga vía eventos de entidad.
   - [x] Sub-hito 6.3: UI `ProjectsScreen`, `ProjectDetailScreen`, `AgentsScreen`, `AgentDetailScreen` y componente reutilizable `EntityConfigEditor`.
-  - [x] Verificación completa: 120 tests totales en verde (`flutter test`), `flutter analyze` con 0 issues y rutas conectadas en `AppRouter`.
+- [x] Implementar Hito 7 — Mobile Attention Hub & Approval Overlays (`plans/mobile-07-attention-hub.md`):
+  - [x] Sub-hito 7.1: Modelos `AttentionItem`, repositorios y servicio de notificaciones locales.
+  - [x] Sub-hito 7.2: State machine `AttentionNotifier` y reactividad WebSocket en tiempo real.
+  - [x] Sub-hito 7.3: UI `AttentionSheet`, `AttentionBadge` e items interactivos de aprobación y preguntas.
+  - [x] Verificación completa: 141 tests totales en verde (`flutter test`) y `flutter analyze` con 0 issues.
+- [x] Implementar Hito 8 — Mobile Settings & Config (`plans/mobile-08-settings.md`):
+  - [x] Sub-hito 8.1: Modelos `AppSettings` y `ProviderConfig` con Freezed, `SettingsRepository` sobre `ApiClient` y persistencia de credenciales exclusivamente en `FlutterSecureStorage` (`AppStorage`).
+  - [x] Sub-hito 8.2: State machine `SettingsState` y `SettingsNotifier` con auto-guardado reactivo (debounce de 500ms), gestión de API keys por proveedor y logout.
+  - [x] Sub-hito 8.3: UI `SettingsScreen` (cero `setState`), `ProviderListItem`, modal `ProviderCredentialsSheet` con toggle de visibilidad y conexión de rutas en `AppRouter`.
+  - [x] Verificación completa: 157 tests totales en verde (`flutter test`), `flutter analyze` con 0 issues y validación estática de patrones de seguridad.
 
 ## Próximos pasos
 

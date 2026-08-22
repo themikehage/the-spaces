@@ -21,16 +21,16 @@
 
 ## 2. Estado Final (To-Be) — Criterios de Aceptación
 
-- [ ] **H8-A1** — `SettingsScreen` muestra secciones: General, Providers, Security.
-- [ ] **H8-A2** — Sección General: idioma de respuesta, preferencias de UI. Cambios persisten en backend.
-- [ ] **H8-A3** — Sección Providers: lista de 9 proveedores con su estado (configurado/no configurado).
-- [ ] **H8-A4** — Tap en proveedor → `ProviderCredentialsSheet` con campos de API key.
-- [ ] **H8-A5** — Guardar API key → almacenada en secure storage local Y enviada al backend encriptada.
-- [ ] **H8-A6** — API key guardada → icono de "configurado" aparece en la lista de proveedores.
-- [ ] **H8-A7** — Sección Security: botón de logout, opción de borrar datos locales.
-- [ ] **H8-A8** — `SettingsRepository` no tiene referencias a widgets ni a `BuildContext`.
-- [ ] **H8-A9** — `flutter analyze lib/features/settings/` produce cero warnings.
-- [ ] **H8-A10** — `flutter test test/features/settings/` produce exit code 0.
+- [x] **H8-A1** — `SettingsScreen` muestra secciones: General, Providers, Security.
+- [x] **H8-A2** — Sección General: idioma de respuesta, preferencias de UI. Cambios persisten en backend.
+- [x] **H8-A3** — Sección Providers: lista de 9 proveedores con su estado (configurado/no configurado).
+- [x] **H8-A4** — Tap en proveedor → `ProviderCredentialsSheet` con campos de API key.
+- [x] **H8-A5** — Guardar API key → almacenada en secure storage local Y enviada al backend encriptada.
+- [x] **H8-A6** — API key guardada → icono de "configurado" aparece en la lista de proveedores.
+- [x] **H8-A7** — Sección Security: botón de logout, opción de borrar datos locales.
+- [x] **H8-A8** — `SettingsRepository` no tiene referencias a widgets ni a `BuildContext`.
+- [x] **H8-A9** — `flutter analyze lib/features/settings/` produce cero warnings.
+- [x] **H8-A10** — `flutter test test/features/settings/` produce exit code 0.
 
 ---
 
