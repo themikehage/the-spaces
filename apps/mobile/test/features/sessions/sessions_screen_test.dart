@@ -396,5 +396,32 @@ void main() {
       expect(find.text('Sessions you archive will appear here.'), findsOneWidget);
       expect(find.byKey(const Key('empty_state_create_button')), findsNothing);
     });
+
+    testWidgets('SessionsScreen renders 3 tabs and switches to Kanban tab', (tester) async {
+      repository.sessions = [
+        const Session(id: 'sess-k-1', title: 'Kanban Session One', status: 'idle'),
+      ];
+
+      await tester.pumpWidget(createTestableWidget(
+        child: const SessionsScreen(),
+        repository: repository,
+        storage: storage,
+        wsClient: wsClient,
+      ));
+
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('sessions_tab_list')), findsOneWidget);
+      expect(find.byKey(const Key('sessions_tab_kanban')), findsOneWidget);
+      expect(find.byKey(const Key('sessions_tab_console')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('sessions_tab_kanban')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('kanban_column_idle')), findsOneWidget);
+      expect(find.byKey(const Key('kanban_column_working')), findsOneWidget);
+      expect(find.byKey(const Key('kanban_column_done')), findsOneWidget);
+      expect(find.text('Kanban Session One'), findsOneWidget);
+    });
   });
 }

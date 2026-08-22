@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../data/models/session.dart';
 import 'sessions_console_screen.dart';
+import 'sessions_kanban_view.dart';
 import 'sessions_notifier.dart';
 import 'sessions_state.dart';
 import 'widgets/new_session_sheet.dart';
@@ -471,7 +472,7 @@ class _SessionsScreenState extends ConsumerState<SessionsScreen> {
     final displayedSessions = state.filteredSessions;
 
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
           leading: IconButton(
@@ -491,6 +492,11 @@ class _SessionsScreenState extends ConsumerState<SessionsScreen> {
                 icon: Icon(Icons.chat_bubble_outline, size: 18),
               ),
               Tab(
+                key: Key('sessions_tab_kanban'),
+                text: 'Kanban',
+                icon: Icon(Icons.view_week_outlined, size: 18),
+              ),
+              Tab(
                 key: Key('sessions_tab_console'),
                 text: 'Console',
                 icon: Icon(Icons.terminal, size: 18),
@@ -504,6 +510,7 @@ class _SessionsScreenState extends ConsumerState<SessionsScreen> {
         body: TabBarView(
           children: [
             _buildSessionsListView(state, displayedSessions),
+            const SessionsKanbanView(),
             const SessionsConsoleScreen(),
           ],
         ),
