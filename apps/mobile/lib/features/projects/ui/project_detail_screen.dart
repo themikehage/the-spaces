@@ -89,7 +89,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen>
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.destructive,
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.destructiveForeground,
             ),
             child: const Text('Delete'),
           ),

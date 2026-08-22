@@ -129,7 +129,7 @@ class SessionCard extends StatelessWidget {
               Row(
                 children: [
                   if (session.agentId != null) ...[
-                    Icon(
+                    const Icon(
                       Icons.smart_toy_outlined,
                       size: 14,
                       color: AppColors.mutedForeground,
@@ -144,7 +144,7 @@ class SessionCard extends StatelessWidget {
                     const SizedBox(width: AppSpacing.md),
                   ],
                   if (session.messageCount > 0) ...[
-                    Icon(
+                    const Icon(
                       Icons.chat_bubble_outline,
                       size: 14,
                       color: AppColors.mutedForeground,

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/skeletons/skeleton_list.dart';
 import 'workflows_notifier.dart';
 
 class WorkflowsScreen extends ConsumerStatefulWidget {
@@ -104,7 +105,7 @@ class _WorkflowsScreenState extends ConsumerState<WorkflowsScreen> {
           // Content Area
           Expanded(
             child: state.isLoading && workflows.isEmpty
-                ? const Center(child: CircularProgressIndicator())
+                ? const SkeletonList()
                 : state.error != null && workflows.isEmpty
                     ? Center(
                         child: Column(

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../features/agents/data/agents_repository.dart';
 import '../../features/agents/data/models/agent.dart';
+import 'skeletons/skeleton_card.dart';
 
 class EntityConfigEditor extends ConsumerStatefulWidget {
   final String entityType;
@@ -209,21 +210,7 @@ class _EntityConfigEditorState extends ConsumerState<EntityConfigEditor> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Container(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        decoration: BoxDecoration(
-          color: AppColors.darkCard,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-          border: Border.all(color: AppColors.darkBorder),
-        ),
-        child: const Center(
-          child: SizedBox(
-            width: 24,
-            height: 24,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        ),
-      );
+      return const SkeletonCard();
     }
 
     if (_error != null) {
@@ -278,13 +265,17 @@ class _EntityConfigEditorState extends ConsumerState<EntityConfigEditor> {
                     ? const SizedBox(
                         width: 14,
                         height: 14,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.primaryForeground,
+                          semanticsLabel: 'Saving entity configuration',
+                        ),
                       )
                     : const Icon(Icons.save_outlined, size: 16),
                 label: Text(_isSaving ? 'Saving...' : 'Save'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.primaryForeground,
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.md,
                     vertical: AppSpacing.xs,

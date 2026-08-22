@@ -87,14 +87,14 @@ class _SessionsScreenState extends ConsumerState<SessionsScreen> {
             key: const Key('confirm_delete_button'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.destructive,
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.destructiveForeground,
             ),
             onPressed: () => Navigator.of(ctx).pop(true),
             child: Text(
               'Delete',
               style: AppTypography.bodyMedium.copyWith(
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: AppColors.destructiveForeground,
               ),
             ),
           ),
@@ -293,6 +293,7 @@ class _SessionsScreenState extends ConsumerState<SessionsScreen> {
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
                                       color: AppColors.primary,
+                                      semanticsLabel: 'Loading more sessions',
                                     ),
                                   ),
                                 ),
@@ -324,7 +325,7 @@ class _SessionsScreenState extends ConsumerState<SessionsScreen> {
                                 ),
                                 child: const Icon(
                                   Icons.delete_outline,
-                                  color: Colors.white,
+                                  color: AppColors.destructiveForeground,
                                 ),
                               ),
                               child: SessionListItem(session: session),

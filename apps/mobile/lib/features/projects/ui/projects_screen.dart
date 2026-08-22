@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/skeletons/skeleton_list.dart';
 import 'projects_notifier.dart';
 
 class ProjectsScreen extends ConsumerStatefulWidget {
@@ -120,7 +121,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.primaryForeground,
             ),
             child: const Text('Create'),
           ),
@@ -188,7 +189,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
           // Content
           Expanded(
             child: state.isLoading && projects.isEmpty
-                ? const Center(child: CircularProgressIndicator())
+                ? const SkeletonList()
                 : state.error != null && projects.isEmpty
                     ? Center(
                         child: Column(
@@ -405,7 +406,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
         key: const Key('create_project_fab'),
         onPressed: _showCreateProjectDialog,
         backgroundColor: AppColors.primary,
-        child: const Icon(Icons.add, color: Colors.white),
+        child: const Icon(Icons.add, color: AppColors.primaryForeground),
       ),
     );
   }

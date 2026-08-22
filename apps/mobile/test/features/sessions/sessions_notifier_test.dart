@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:spaces_mobile/core/api/api_client.dart';
 import 'package:spaces_mobile/core/storage/app_storage.dart';
 import 'package:spaces_mobile/core/ws/ws_client.dart';
 import 'package:spaces_mobile/features/sessions/data/models/create_session_input.dart';

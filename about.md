@@ -48,7 +48,7 @@ El repositorio es un monorepo con workspaces de `pnpm`:
 - Previsualización en vivo de proyectos HTML con herramientas nativas (`manage_preview`).
 - Integración con skills y servidores MCP.
 - Backups, logs, galería de imágenes generadas y factory de agentes/proyectos/equipos.
-- Aplicación Móvil Spaces (`apps/mobile`): Cliente nativo multiplataforma en Flutter (Dart 3) y Riverpod, con arquitectura desacoplada por features (Auth, Dashboard, Sessions, Chat en streaming con rendering Markdown, Projects & Agents, Attention Hub, Settings & Config, Teams & Workflows), navegación reactiva mediante GoRouter, persistencia segura de credenciales en FlutterSecureStorage y suite completa de tests automatizados (193 pruebas en verde).
+- Aplicación Móvil Spaces (`apps/mobile`): Cliente nativo multiplataforma en Flutter (Dart 3) y Riverpod, con arquitectura desacoplada por features (Auth, Dashboard, Sessions, Chat en streaming con rendering Markdown, Projects & Agents, Attention Hub, Settings & Config, Teams & Workflows), navegación reactiva mediante GoRouter, persistencia segura de credenciales en FlutterSecureStorage, ErrorBoundary global con retry, banner offline reactivo (`connectivity_plus`), Skeleton Loaders con animación shimmer en todas las vistas, dark mode completo con tokens de diseño unificados, CI/CD en GitHub Actions y suite completa de tests automatizados (196 pruebas en verde con `flutter analyze` en 0 issues).
 - Comunicación en tiempo real mediante WebSocket en `/ws`.
 
 ## Backend

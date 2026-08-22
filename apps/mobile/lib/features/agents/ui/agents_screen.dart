@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/skeletons/skeleton_list.dart';
 import 'agents_notifier.dart';
 
 class AgentsScreen extends ConsumerStatefulWidget {
@@ -138,7 +139,7 @@ class _AgentsScreenState extends ConsumerState<AgentsScreen> {
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.primaryForeground,
             ),
             child: const Text('Register'),
           ),
@@ -206,7 +207,7 @@ class _AgentsScreenState extends ConsumerState<AgentsScreen> {
           // Content
           Expanded(
             child: state.isLoading && agents.isEmpty
-                ? const Center(child: CircularProgressIndicator())
+                ? const SkeletonList()
                 : state.error != null && agents.isEmpty
                     ? Center(
                         child: Column(
@@ -438,7 +439,7 @@ class _AgentsScreenState extends ConsumerState<AgentsScreen> {
         key: const Key('create_agent_fab'),
         onPressed: _showCreateAgentDialog,
         backgroundColor: AppColors.primary,
-        child: const Icon(Icons.add, color: Colors.white),
+        child: const Icon(Icons.add, color: AppColors.primaryForeground),
       ),
     );
   }

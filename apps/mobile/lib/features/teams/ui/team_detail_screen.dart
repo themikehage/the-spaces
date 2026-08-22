@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/entity_config_editor.dart';
+import '../../../shared/widgets/skeletons/skeleton_list.dart';
 import '../../agents/ui/agents_notifier.dart';
 import '../../sessions/data/models/session.dart';
 import '../data/models/team.dart';
@@ -99,7 +100,7 @@ class _TeamDetailScreenState extends ConsumerState<TeamDetailScreen>
             key: const Key('delete_team_confirm_button'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.destructive,
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.destructiveForeground,
             ),
             onPressed: () async {
               Navigator.of(dialogCtx).pop();
@@ -140,7 +141,7 @@ class _TeamDetailScreenState extends ConsumerState<TeamDetailScreen>
         appBar: AppBar(
           title: Text(_team?.name ?? 'Team Details'),
         ),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const SkeletonList(itemCount: 4),
       );
     }
 

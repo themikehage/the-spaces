@@ -11,7 +11,6 @@ import 'package:spaces_mobile/features/sessions/data/models/create_session_input
 import 'package:spaces_mobile/features/sessions/data/models/paginated_sessions.dart';
 import 'package:spaces_mobile/features/sessions/data/models/session.dart';
 import 'package:spaces_mobile/features/sessions/data/sessions_repository.dart';
-import 'package:spaces_mobile/features/sessions/ui/sessions_notifier.dart';
 import 'package:spaces_mobile/features/sessions/ui/sessions_screen.dart';
 import 'package:spaces_mobile/features/sessions/ui/widgets/session_list_item.dart';
 

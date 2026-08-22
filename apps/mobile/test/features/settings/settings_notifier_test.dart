@@ -1,11 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:spaces_mobile/core/api/api_client.dart';
 import 'package:spaces_mobile/core/storage/app_storage.dart';
 import 'package:spaces_mobile/features/auth/data/auth_repository.dart';
 import 'package:spaces_mobile/features/auth/data/models/auth_response.dart';
-import 'package:spaces_mobile/features/auth/ui/auth_notifier.dart';
 import 'package:spaces_mobile/features/settings/data/models/app_settings.dart';
 import 'package:spaces_mobile/features/settings/data/models/provider_config.dart';
 import 'package:spaces_mobile/features/settings/data/settings_repository.dart';

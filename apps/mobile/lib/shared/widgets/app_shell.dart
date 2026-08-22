@@ -42,7 +42,7 @@ class AppShell extends ConsumerWidget {
           onDestinationSelected: (index) => _onDestinationSelected(ref, index),
           backgroundColor: AppColors.darkBackground,
           indicatorColor: AppColors.primary.withValues(alpha: 0.2),
-          surfaceTintColor: Colors.transparent,
+          surfaceTintColor: AppColors.transparent,
           elevation: 0,
           labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
           destinations: [

@@ -241,6 +241,7 @@ class _NewSessionSheetState extends ConsumerState<NewSessionSheet> {
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           color: AppColors.primaryForeground,
+                          semanticsLabel: 'Creating session',
                         ),
                       )
                     : Text(

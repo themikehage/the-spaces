@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/skeletons/skeleton_list.dart';
 import '../data/models/workflow.dart';
 import '../data/models/workflow_run.dart';
 import '../data/workflows_repository.dart';
@@ -99,7 +100,7 @@ class _WorkflowRunDetailScreenState
             key: const Key('abort_workflow_confirm_button'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.destructive,
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.destructiveForeground,
             ),
             onPressed: () async {
               Navigator.of(dialogCtx).pop();
@@ -170,6 +171,7 @@ class _WorkflowRunDetailScreenState
           child: CircularProgressIndicator(
             strokeWidth: 2,
             color: AppColors.primary,
+            semanticsLabel: 'Step running',
           ),
         );
       case 'error':
@@ -196,7 +198,7 @@ class _WorkflowRunDetailScreenState
         appBar: AppBar(
           title: const Text('Run Details'),
         ),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const SkeletonList(itemCount: 4),
       );
     }
 
@@ -252,6 +254,7 @@ class _WorkflowRunDetailScreenState
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         color: AppColors.destructive,
+                        semanticsLabel: 'Aborting workflow',
                       ),
                     )
                   : const Icon(
@@ -432,7 +435,7 @@ class _WorkflowRunDetailScreenState
                             width: 24,
                             height: 24,
                             alignment: Alignment.center,
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               color: AppColors.darkSurfaceHover,
                               shape: BoxShape.circle,
                             ),

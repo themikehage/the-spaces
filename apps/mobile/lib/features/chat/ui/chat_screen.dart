@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/skeletons/skeleton_list.dart';
 import 'chat_notifier.dart';
 import 'widgets/chat_input_bar.dart';
 import 'widgets/message_bubble.dart';
@@ -181,9 +182,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
           Expanded(
             child: state.isLoading && state.messages.isEmpty
-                ? const Center(
-                    child: CircularProgressIndicator(color: AppColors.primary),
-                  )
+                ? const SkeletonList(itemCount: 6)
                 : state.messages.isEmpty && !state.isStreaming
                     ? Center(
                         child: Column(

@@ -188,6 +188,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   valueColor: AlwaysStoppedAnimation<Color>(
                                     AppColors.primaryForeground,
                                   ),
+                                  semanticsLabel: 'Signing in',
                                 ),
                               )
                             : const Text(

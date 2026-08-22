@@ -25,7 +25,7 @@ class MockAgentsRepository implements AgentsRepository {
 
   @override
   Future<Agent> createAgent(Map<String, dynamic> definition) async =>
-      Agent(id: 'new', name: 'New');
+      const Agent(id: 'new', name: 'New');
 
   @override
   Future<Agent> updateAgent(String id, Map<String, dynamic> patch) async =>

@@ -23,16 +23,16 @@
 
 ## 2. Estado Final (To-Be) — Criterios de Aceptación
 
-- [ ] **H10-A1** — `flutter analyze` en todo `apps/mobile/` produce **cero** warnings y **cero** errores.
-- [ ] **H10-A2** — `flutter test` produce exit code 0 con cobertura ≥ 60% en `lib/features/*/data/` y `lib/features/*/ui/*_notifier.dart`.
-- [ ] **H10-A3** — Ningún `CircularProgressIndicator` sin `SemanticLabel` en la app — todos los estados loading usan skeleton loaders.
-- [ ] **H10-A4** — Dark mode completo: ningún widget usa `Colors.*` hardcodeado fuera de `app_theme.dart`.
-- [ ] **H10-A5** — Offline banner visible cuando no hay conexión a internet o al backend.
-- [ ] **H10-A6** — Error boundary global captura crashes no manejados y muestra pantalla de error amigable con botón de retry.
-- [ ] **H10-A7** — Splash screen y app icon configurados para iOS y Android.
-- [ ] **H10-A8** — CI GitHub Actions: `flutter analyze` + `flutter test` en cada PR.
-- [ ] **H10-A9** — `flutter build apk --release` y `flutter build ios --no-codesign` pasan en CI sin errores.
-- [ ] **H10-A10** — Performance: ningún frame drop visible durante scroll en lista de mensajes larga (> 100 mensajes).
+- [x] **H10-A1** — `flutter analyze` en todo `apps/mobile/` produce **cero** warnings y **cero** errores.
+- [x] **H10-A2** — `flutter test` produce exit code 0 con cobertura ≥ 60% en `lib/features/*/data/` y `lib/features/*/ui/*_notifier.dart`.
+- [x] **H10-A3** — Ningún `CircularProgressIndicator` sin `SemanticLabel` en la app — todos los estados loading usan skeleton loaders.
+- [x] **H10-A4** — Dark mode completo: ningún widget usa `Colors.*` hardcodeado fuera de `app_theme.dart`.
+- [x] **H10-A5** — Offline banner visible cuando no hay conexión a internet o al backend.
+- [x] **H10-A6** — Error boundary global captura crashes no manejados y muestra pantalla de error amigable con botón de retry.
+- [x] **H10-A7** — Splash screen y app icon configurados para iOS y Android.
+- [x] **H10-A8** — CI GitHub Actions: `flutter analyze` + `flutter test` en cada PR.
+- [x] **H10-A9** — `flutter build apk --release` y `flutter build ios --no-codesign` pasan en CI sin errores.
+- [x] **H10-A10** — Performance: ningún frame drop visible durante scroll en lista de mensajes larga (> 100 mensajes).
 
 ---
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/skeletons/skeleton_list.dart';
 import '../data/models/provider_config.dart';
 import 'settings_notifier.dart';
 import 'widgets/provider_list_item.dart';
@@ -147,9 +148,7 @@ class SettingsScreen extends ConsumerWidget {
         ],
       ),
       body: state.isLoading && state.providers.isEmpty
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            )
+          ? const SkeletonList(itemCount: 5)
           : RefreshIndicator(
               onRefresh: () => notifier.load(),
               color: AppColors.primary,

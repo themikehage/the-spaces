@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/skeletons/skeleton_list.dart';
 import '../../agents/ui/agents_notifier.dart';
 import 'teams_notifier.dart';
 
@@ -222,7 +223,7 @@ class _TeamsScreenState extends ConsumerState<TeamsScreen> {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
+                foregroundColor: AppColors.primaryForeground,
               ),
               child: const Text('Create Team'),
             ),
@@ -294,7 +295,7 @@ class _TeamsScreenState extends ConsumerState<TeamsScreen> {
           // Content Area
           Expanded(
             child: state.isLoading && teams.isEmpty
-                ? const Center(child: CircularProgressIndicator())
+                ? const SkeletonList()
                 : state.error != null && teams.isEmpty
                     ? Center(
                         child: Column(
@@ -536,7 +537,7 @@ class _TeamsScreenState extends ConsumerState<TeamsScreen> {
         key: const Key('create_team_fab'),
         onPressed: _showCreateTeamDialog,
         backgroundColor: AppColors.primary,
-        child: const Icon(Icons.add, color: Colors.white),
+        child: const Icon(Icons.add, color: AppColors.primaryForeground),
       ),
     );
   }

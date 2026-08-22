@@ -61,6 +61,7 @@ class _ToolCallCardState extends State<ToolCallCard> {
         child: CircularProgressIndicator(
           strokeWidth: 2,
           valueColor: AlwaysStoppedAnimation<Color>(AppColors.warning),
+          semanticsLabel: 'Tool executing',
         ),
       );
       statusLabel = 'Running';
@@ -173,7 +174,7 @@ class _ToolCallCardState extends State<ToolCallCard> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(AppSpacing.sm),
                       decoration: BoxDecoration(
-                        color: isDark ? Colors.black.withValues(alpha: 0.3) : Colors.white,
+                        color: isDark ? AppColors.black.withValues(alpha: 0.3) : AppColors.white,
                         borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                       ),
                       child: SelectableText(
@@ -199,7 +200,7 @@ class _ToolCallCardState extends State<ToolCallCard> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(AppSpacing.sm),
                       decoration: BoxDecoration(
-                        color: isDark ? Colors.black.withValues(alpha: 0.3) : Colors.white,
+                        color: isDark ? AppColors.black.withValues(alpha: 0.3) : AppColors.white,
                         borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                       ),
                       child: SelectableText(

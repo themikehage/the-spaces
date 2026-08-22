@@ -21,11 +21,11 @@ class MarkdownBlock extends StatelessWidget {
         : (isDark ? AppColors.darkForeground : AppColors.lightForeground);
 
     final codeBgColor = isUser
-        ? Colors.black.withValues(alpha: 0.15)
+        ? AppColors.black.withValues(alpha: 0.15)
         : (isDark ? const Color(0xFF1E1E22) : const Color(0xFFEAEAEE));
 
     final codeBorderColor = isUser
-        ? Colors.white.withValues(alpha: 0.2)
+        ? AppColors.white.withValues(alpha: 0.2)
         : (isDark ? AppColors.darkBorder : AppColors.lightBorder);
 
     final markdownStyleSheet = MarkdownStyleSheet(
@@ -52,7 +52,7 @@ class MarkdownBlock extends StatelessWidget {
       blockquoteDecoration: BoxDecoration(
         border: Border(
           left: BorderSide(
-            color: isUser ? Colors.white.withValues(alpha: 0.5) : AppColors.primary,
+            color: isUser ? AppColors.white.withValues(alpha: 0.5) : AppColors.primary,
             width: 3.0,
           ),
         ),
@@ -61,7 +61,7 @@ class MarkdownBlock extends StatelessWidget {
         color: isUser
             ? AppColors.primaryForeground
             : (isDark ? const Color(0xFF86E1FC) : const Color(0xFF0070F3)),
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.transparent,
       ),
       codeblockDecoration: BoxDecoration(
         color: codeBgColor,

@@ -24,7 +24,7 @@ class ModelSelectorSheet extends StatelessWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       builder: (context) => ModelSelectorSheet(
         models: models,
         currentModelId: currentModelId,

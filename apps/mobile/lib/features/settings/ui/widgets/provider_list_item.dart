@@ -141,7 +141,7 @@ class ProviderListItem extends StatelessWidget {
           showModalBottomSheet(
             context: context,
             isScrollControlled: true,
-            backgroundColor: Colors.transparent,
+            backgroundColor: AppColors.transparent,
             builder: (_) => ProviderCredentialsSheet(provider: provider),
           );
         },

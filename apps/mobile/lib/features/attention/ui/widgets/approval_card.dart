@@ -102,7 +102,7 @@ class _ApprovalCardState extends State<ApprovalCard> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.amber.withValues(alpha: 0.15),
+                        color: AppColors.warning.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
@@ -111,13 +111,13 @@ class _ApprovalCardState extends State<ApprovalCard> {
                           const Icon(
                             Icons.shield_outlined,
                             size: 14,
-                            color: Colors.amber,
+                            color: AppColors.warning,
                           ),
                           const SizedBox(width: 4),
                           Text(
                             item.toolName.isNotEmpty ? item.toolName : 'Approval',
                             style: AppTypography.bodySmall.copyWith(
-                              color: Colors.amber,
+                              color: AppColors.warning,
                               fontWeight: FontWeight.w600,
                               fontSize: 11,
                             ),
@@ -226,7 +226,10 @@ class _ApprovalCardState extends State<ApprovalCard> {
                         ? const SizedBox(
                             width: 14,
                             height: 14,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              semanticsLabel: 'Denying approval',
+                            ),
                           )
                         : const Text(
                             'Deny',
@@ -258,6 +261,7 @@ class _ApprovalCardState extends State<ApprovalCard> {
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               color: AppColors.darkBackground,
+                              semanticsLabel: 'Submitting approval',
                             ),
                           )
                         : const Text(

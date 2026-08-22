@@ -44,7 +44,7 @@ class MessageBubble extends StatelessWidget {
         : (isDark ? AppColors.darkCard : AppColors.lightCard);
 
     final bubbleBorder = isUser
-        ? Colors.transparent
+        ? AppColors.transparent
         : (isDark ? AppColors.darkBorder : AppColors.lightBorder);
 
     return Padding(

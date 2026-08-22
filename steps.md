@@ -192,6 +192,14 @@
   - [x] Sub-hito 9.2: Modelos `Workflow`, `WorkflowStep`, `WorkflowRun` y `WorkflowStepState` con Freezed, `WorkflowsRepository` sobre `ApiClient` (`/api/workflows`, `/api/workflows/:id/run`, `/api/workflows/runs/:runId`), y state machine `WorkflowsNotifier` con reactividad WS para eventos de ejecución.
   - [x] Sub-hito 9.3: UI `WorkflowsScreen` con badges de estado, `WorkflowDetailScreen` (con historial de ejecuciones, banner read-only de web client y botón "Run"), `WorkflowRunDetailScreen` (con timeline en tiempo real de pasos y abort button), y conexión de rutas en `AppRouter`.
   - [x] Verificación completa: 193 tests totales en verde (`flutter test`), `flutter analyze` con 0 issues y resolución de colisión de Hero tags en FABs.
+- [x] Implementar Hito 10 — Mobile Polish & Release (`plans/mobile-10-polish-release.md`):
+  - [x] Sub-hito 10.1: `analysis_options.yaml` estricto, eliminación de unused imports y limpieza de static analysis (`flutter analyze` con 0 warnings y 0 issues).
+  - [x] Sub-hito 10.2: Skeleton loaders universales (`SkeletonList`, `SkeletonCard`) con animación shimmer y sustitución total de spinners genéricos en pantallas (`TeamsScreen`, `WorkflowsScreen`, `AgentsScreen`, `ProjectsScreen`, `SettingsScreen`, `ChatScreen`, `EntityConfigEditor`).
+  - [x] Sub-hito 10.3: Dark mode completo y auditoría estricta de tokens (`AppColors.transparent`, `AppColors.white`, `AppColors.black`, `AppColors.primaryForeground`, `AppColors.destructiveForeground`), eliminando todas las referencias directas a `Colors.*` fuera de temas.
+  - [x] Sub-hito 10.4: `ErrorBoundary` global con interfaz limpia y botón retry, y `OfflineBanner` reactivo a conectividad con `connectivity_plus` y auto-dismiss.
+  - [x] Sub-hito 10.5: Splash screen (`flutter_native_splash.yaml`), app icons (`flutter_launcher_icons.yaml`) y bundle ID unificado `com.spaces.mobile` en iOS y Android.
+  - [x] Sub-hito 10.6: CI/CD GitHub Actions en `.github/workflows/mobile-ci.yml` con pipeline automatizado de análisis estático, suite de pruebas y build de release.
+  - [x] Verificación final: 196 tests en verde (`flutter test`), `flutter analyze` con 0 issues y monorepo íntegro con `pnpm build`.
 
 ## Próximos pasos
 

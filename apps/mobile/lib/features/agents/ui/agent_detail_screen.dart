@@ -73,7 +73,7 @@ class _AgentDetailScreenState extends ConsumerState<AgentDetailScreen> {
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.destructive,
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.destructiveForeground,
             ),
             child: const Text('Delete'),
           ),

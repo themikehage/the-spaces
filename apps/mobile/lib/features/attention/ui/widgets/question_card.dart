@@ -96,7 +96,7 @@ class _QuestionCardState extends State<QuestionCard> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.lightBlue.withValues(alpha: 0.15),
+                    color: AppColors.fileTs.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -105,13 +105,13 @@ class _QuestionCardState extends State<QuestionCard> {
                       const Icon(
                         Icons.help_outline_rounded,
                         size: 14,
-                        color: Colors.lightBlueAccent,
+                        color: AppColors.fileTs,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         'Question',
                         style: AppTypography.bodySmall.copyWith(
-                          color: Colors.lightBlueAccent,
+                          color: AppColors.fileTs,
                           fontWeight: FontWeight.w600,
                           fontSize: 11,
                         ),
@@ -222,7 +222,7 @@ class _QuestionCardState extends State<QuestionCard> {
                 TextButton(
                   key: Key('question_skip_btn_${item.approvalId}'),
                   onPressed: _isSubmitting ? null : () => _submit(skip: true),
-                  child: Text(
+                  child: const Text(
                     'Skip',
                     style: TextStyle(
                       color: AppColors.mutedForeground,
@@ -250,6 +250,7 @@ class _QuestionCardState extends State<QuestionCard> {
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
                             color: AppColors.darkBackground,
+                            semanticsLabel: 'Submitting response',
                           ),
                         )
                       : const Text(

@@ -249,6 +249,7 @@ class _ProviderCredentialsSheetState
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               color: AppColors.primaryForeground,
+                              semanticsLabel: 'Saving provider credentials',
                             ),
                           )
                         : const Text('Save Key'),

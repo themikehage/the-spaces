@@ -136,7 +136,7 @@ class SessionListItem extends StatelessWidget {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.smart_toy_outlined,
                           size: 14,
                           color: AppColors.mutedForeground,
@@ -154,7 +154,7 @@ class SessionListItem extends StatelessWidget {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.folder_outlined,
                           size: 14,
                           color: AppColors.mutedForeground,
@@ -172,7 +172,7 @@ class SessionListItem extends StatelessWidget {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.chat_bubble_outline,
                           size: 14,
                           color: AppColors.mutedForeground,

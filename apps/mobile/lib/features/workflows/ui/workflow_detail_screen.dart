@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/skeletons/skeleton_list.dart';
 import '../data/models/workflow.dart';
 import '../data/models/workflow_run.dart';
 import '../data/workflows_repository.dart';
@@ -142,7 +143,7 @@ class _WorkflowDetailScreenState extends ConsumerState<WorkflowDetailScreen> {
         appBar: AppBar(
           title: Text(_workflow?.name ?? 'Workflow Details'),
         ),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const SkeletonList(itemCount: 4),
       );
     }
 
@@ -515,13 +516,14 @@ class _WorkflowDetailScreenState extends ConsumerState<WorkflowDetailScreen> {
                 height: 18,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: Colors.white,
+                  color: AppColors.primaryForeground,
+                  semanticsLabel: 'Running workflow',
                 ),
               )
-            : const Icon(Icons.play_arrow, color: Colors.white),
+            : const Icon(Icons.play_arrow, color: AppColors.primaryForeground),
         label: Text(
           _isRunning ? 'Starting...' : 'Run Workflow',
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: const TextStyle(color: AppColors.primaryForeground, fontWeight: FontWeight.bold),
         ),
       ),
     );
