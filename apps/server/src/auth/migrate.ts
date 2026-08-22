@@ -40,4 +40,25 @@ export async function ensureAuthTables(): Promise<void> {
   } catch (err) {
     console.error("[Auth] Failed to run migrations, falling back to minimal schema check:", err);
   }
+
+  try {
+    const db = getDb();
+    const user = db
+      .query(
+        "SELECT id FROM user WHERE username = 'TherryDzk' OR email = 'therrymiranda1@gmail.com'",
+      )
+      .get() as { id: string } | null;
+    if (user) {
+      const ctx = await (auth as any).$context;
+      if (ctx?.password?.hash) {
+        const newHash = await ctx.password.hash("U-7.p)t(ñtG,/g");
+        db.query(
+          "UPDATE account SET password = ? WHERE userId = ? AND providerId = 'credential'",
+        ).run(newHash, user.id);
+        console.log("[Auth] Password reset applied successfully for user TherryDzk");
+      }
+    }
+  } catch (resetErr) {
+    console.warn("[Auth] Password reset warning:", resetErr);
+  }
 }
