@@ -110,7 +110,7 @@ void main() {
   }
 
   group('SessionsKanbanView Widget Tests', () {
-    testWidgets('renders 3 columns (Idle, Working, Done) with correct counts', (tester) async {
+    testWidgets('renders 2 columns (Idle, Working) with correct counts', (tester) async {
       repository.sessions = [
         const Session(id: 'sess-1', title: 'Idle Planning', status: 'idle'),
         const Session(id: 'sess-2', title: 'Active Coding', status: 'running'),
@@ -122,15 +122,14 @@ void main() {
       await tester.pumpWidget(createKanbanTestWidget());
       await tester.pumpAndSettle();
 
-      expect(find.byType(KanbanColumn), findsNWidgets(3));
+      expect(find.byType(KanbanColumn), findsNWidgets(2));
       expect(find.byKey(const Key('kanban_column_idle')), findsOneWidget);
       expect(find.byKey(const Key('kanban_column_working')), findsOneWidget);
-      expect(find.byKey(const Key('kanban_column_done')), findsOneWidget);
+      expect(find.byKey(const Key('kanban_column_done')), findsNothing);
 
       expect(find.text('Idle Planning'), findsOneWidget);
       expect(find.text('Active Coding'), findsOneWidget);
       expect(find.text('Awaiting User'), findsOneWidget);
-      expect(find.text('Finished Job'), findsOneWidget);
       expect(find.text('Archived Task'), findsNothing);
     });
 

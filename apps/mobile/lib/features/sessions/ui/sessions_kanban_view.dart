@@ -39,7 +39,6 @@ class SessionsKanbanView extends ConsumerWidget {
 
     final idleSessions = activeSessions.where(_isIdle).toList();
     final workingSessions = activeSessions.where(_isWorking).toList();
-    final doneSessions = activeSessions.where(_isDone).toList();
 
     return RefreshIndicator(
       onRefresh: () => ref.read(sessionsNotifierProvider.notifier).load(),
@@ -58,22 +57,13 @@ class SessionsKanbanView extends ConsumerWidget {
                 color: AppColors.mutedForeground,
               ),
             ),
-            const SizedBox(width: AppSpacing.xs + 2),
+            const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: KanbanColumn(
                 key: const Key('kanban_column_working'),
                 title: 'Working',
                 sessions: workingSessions,
                 color: AppColors.warning,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.xs + 2),
-            Expanded(
-              child: KanbanColumn(
-                key: const Key('kanban_column_done'),
-                title: 'Done',
-                sessions: doneSessions,
-                color: AppColors.success,
               ),
             ),
           ],

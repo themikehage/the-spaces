@@ -420,7 +420,6 @@ void main() {
 
       expect(find.byKey(const Key('kanban_column_idle')), findsOneWidget);
       expect(find.byKey(const Key('kanban_column_working')), findsOneWidget);
-      expect(find.byKey(const Key('kanban_column_done')), findsOneWidget);
       expect(find.text('Kanban Session One'), findsOneWidget);
     });
   });
