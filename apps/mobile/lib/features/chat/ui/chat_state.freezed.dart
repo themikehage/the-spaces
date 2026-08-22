@@ -26,6 +26,8 @@ mixin _$ChatState {
   AiModel? get currentModel => throw _privateConstructorUsedError;
   List<AiModel> get availableModels => throw _privateConstructorUsedError;
   List<String> get selectedAttachments => throw _privateConstructorUsedError;
+  List<ChatAttachment> get pendingAttachments =>
+      throw _privateConstructorUsedError;
   int get contextUsed => throw _privateConstructorUsedError;
   int get contextLimit => throw _privateConstructorUsedError;
   InputMode get inputMode => throw _privateConstructorUsedError;
@@ -55,6 +57,7 @@ abstract class $ChatStateCopyWith<$Res> {
       AiModel? currentModel,
       List<AiModel> availableModels,
       List<String> selectedAttachments,
+      List<ChatAttachment> pendingAttachments,
       int contextUsed,
       int contextLimit,
       InputMode inputMode,
@@ -89,6 +92,7 @@ class _$ChatStateCopyWithImpl<$Res, $Val extends ChatState>
     Object? currentModel = freezed,
     Object? availableModels = null,
     Object? selectedAttachments = null,
+    Object? pendingAttachments = null,
     Object? contextUsed = null,
     Object? contextLimit = null,
     Object? inputMode = null,
@@ -136,6 +140,10 @@ class _$ChatStateCopyWithImpl<$Res, $Val extends ChatState>
           ? _value.selectedAttachments
           : selectedAttachments // ignore: cast_nullable_to_non_nullable
               as List<String>,
+      pendingAttachments: null == pendingAttachments
+          ? _value.pendingAttachments
+          : pendingAttachments // ignore: cast_nullable_to_non_nullable
+              as List<ChatAttachment>,
       contextUsed: null == contextUsed
           ? _value.contextUsed
           : contextUsed // ignore: cast_nullable_to_non_nullable
@@ -193,6 +201,7 @@ abstract class _$$ChatStateImplCopyWith<$Res>
       AiModel? currentModel,
       List<AiModel> availableModels,
       List<String> selectedAttachments,
+      List<ChatAttachment> pendingAttachments,
       int contextUsed,
       int contextLimit,
       InputMode inputMode,
@@ -226,6 +235,7 @@ class __$$ChatStateImplCopyWithImpl<$Res>
     Object? currentModel = freezed,
     Object? availableModels = null,
     Object? selectedAttachments = null,
+    Object? pendingAttachments = null,
     Object? contextUsed = null,
     Object? contextLimit = null,
     Object? inputMode = null,
@@ -273,6 +283,10 @@ class __$$ChatStateImplCopyWithImpl<$Res>
           ? _value._selectedAttachments
           : selectedAttachments // ignore: cast_nullable_to_non_nullable
               as List<String>,
+      pendingAttachments: null == pendingAttachments
+          ? _value._pendingAttachments
+          : pendingAttachments // ignore: cast_nullable_to_non_nullable
+              as List<ChatAttachment>,
       contextUsed: null == contextUsed
           ? _value.contextUsed
           : contextUsed // ignore: cast_nullable_to_non_nullable
@@ -311,6 +325,7 @@ class _$ChatStateImpl extends _ChatState {
       this.currentModel,
       final List<AiModel> availableModels = const <AiModel>[],
       final List<String> selectedAttachments = const <String>[],
+      final List<ChatAttachment> pendingAttachments = const <ChatAttachment>[],
       this.contextUsed = 0,
       this.contextLimit = 0,
       this.inputMode = InputMode.steer,
@@ -320,6 +335,7 @@ class _$ChatStateImpl extends _ChatState {
         _activeToolCalls = activeToolCalls,
         _availableModels = availableModels,
         _selectedAttachments = selectedAttachments,
+        _pendingAttachments = pendingAttachments,
         _sentHistory = sentHistory,
         super._();
 
@@ -376,6 +392,16 @@ class _$ChatStateImpl extends _ChatState {
     return EqualUnmodifiableListView(_selectedAttachments);
   }
 
+  final List<ChatAttachment> _pendingAttachments;
+  @override
+  @JsonKey()
+  List<ChatAttachment> get pendingAttachments {
+    if (_pendingAttachments is EqualUnmodifiableListView)
+      return _pendingAttachments;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_pendingAttachments);
+  }
+
   @override
   @JsonKey()
   final int contextUsed;
@@ -400,7 +426,7 @@ class _$ChatStateImpl extends _ChatState {
 
   @override
   String toString() {
-    return 'ChatState(messages: $messages, streamingContent: $streamingContent, activeToolCalls: $activeToolCalls, isStreaming: $isStreaming, isLoading: $isLoading, isCompacting: $isCompacting, error: $error, currentModel: $currentModel, availableModels: $availableModels, selectedAttachments: $selectedAttachments, contextUsed: $contextUsed, contextLimit: $contextLimit, inputMode: $inputMode, sentHistory: $sentHistory, historyIndex: $historyIndex)';
+    return 'ChatState(messages: $messages, streamingContent: $streamingContent, activeToolCalls: $activeToolCalls, isStreaming: $isStreaming, isLoading: $isLoading, isCompacting: $isCompacting, error: $error, currentModel: $currentModel, availableModels: $availableModels, selectedAttachments: $selectedAttachments, pendingAttachments: $pendingAttachments, contextUsed: $contextUsed, contextLimit: $contextLimit, inputMode: $inputMode, sentHistory: $sentHistory, historyIndex: $historyIndex)';
   }
 
   @override
@@ -426,6 +452,8 @@ class _$ChatStateImpl extends _ChatState {
                 .equals(other._availableModels, _availableModels) &&
             const DeepCollectionEquality()
                 .equals(other._selectedAttachments, _selectedAttachments) &&
+            const DeepCollectionEquality()
+                .equals(other._pendingAttachments, _pendingAttachments) &&
             (identical(other.contextUsed, contextUsed) ||
                 other.contextUsed == contextUsed) &&
             (identical(other.contextLimit, contextLimit) ||
@@ -451,6 +479,7 @@ class _$ChatStateImpl extends _ChatState {
       currentModel,
       const DeepCollectionEquality().hash(_availableModels),
       const DeepCollectionEquality().hash(_selectedAttachments),
+      const DeepCollectionEquality().hash(_pendingAttachments),
       contextUsed,
       contextLimit,
       inputMode,
@@ -478,6 +507,7 @@ abstract class _ChatState extends ChatState {
       final AiModel? currentModel,
       final List<AiModel> availableModels,
       final List<String> selectedAttachments,
+      final List<ChatAttachment> pendingAttachments,
       final int contextUsed,
       final int contextLimit,
       final InputMode inputMode,
@@ -505,6 +535,8 @@ abstract class _ChatState extends ChatState {
   List<AiModel> get availableModels;
   @override
   List<String> get selectedAttachments;
+  @override
+  List<ChatAttachment> get pendingAttachments;
   @override
   int get contextUsed;
   @override

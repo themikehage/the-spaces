@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:spaces_mobile/core/api/api_client.dart';
 import 'package:spaces_mobile/core/events/entity_event_bus.dart';
 import 'package:spaces_mobile/features/chat/data/chat_repository.dart';
 import 'package:spaces_mobile/features/chat/data/models/ai_model.dart';
@@ -14,6 +15,9 @@ class FakeChatRepository implements ChatRepository {
   String? lastUpdatedSessionId;
   String? lastUpdatedTitle;
   int updateTitleCount = 0;
+
+  @override
+  ApiClient? get apiClient => null;
 
   @override
   Future<void> connectToSession(String sessionId) async {}
@@ -41,6 +45,9 @@ class FakeChatRepository implements ChatRepository {
   Future<void> compactSession(String sessionId) async {}
 
   @override
+  Future<void> navigateBranch(String sessionId, String targetId) async {}
+
+  @override
   Future<void> updateSessionTitle(String sessionId, String title) async {
     lastUpdatedSessionId = sessionId;
     lastUpdatedTitle = title;
@@ -59,6 +66,7 @@ class FakeChatRepository implements ChatRepository {
     required String message,
     List<Map<String, dynamic>>? images,
     bool? followUp,
+    List<String>? tools,
   }) {}
 
   @override

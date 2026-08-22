@@ -15,6 +15,8 @@ class ChatRepository {
   })  : _apiClient = apiClient,
         _wsClient = wsClient;
 
+  ApiClient? get apiClient => _apiClient;
+
   Future<List<ChatMessage>> getMessages(String sessionId) async {
     final response = await _apiClient.get<dynamic>('/api/sessions/$sessionId/messages');
 
@@ -82,6 +84,13 @@ class ChatRepository {
     await _apiClient.post<dynamic>('/api/sessions/$sessionId/compact');
   }
 
+  Future<void> navigateBranch(String sessionId, String targetId) async {
+    await _apiClient.post<dynamic>(
+      '/api/sessions/$sessionId/navigate',
+      data: {'targetId': targetId},
+    );
+  }
+
   Future<void> updateSessionTitle(String sessionId, String title) async {
     await _apiClient.patch<dynamic>(
       '/api/sessions/$sessionId',
@@ -107,6 +116,7 @@ class ChatRepository {
     required String message,
     List<Map<String, dynamic>>? images,
     bool? followUp,
+    List<String>? tools,
   }) {
     _wsClient.send({
       'type': 'prompt',
@@ -114,6 +124,7 @@ class ChatRepository {
       'message': message,
       if (images != null && images.isNotEmpty) 'images': images,
       if (followUp == true) 'followUp': true,
+      if (tools != null && tools.isNotEmpty) 'tools': tools,
     });
   }
 

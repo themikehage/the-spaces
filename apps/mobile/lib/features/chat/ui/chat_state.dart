@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../data/models/ai_model.dart';
+import '../data/models/chat_attachment.dart';
 import '../data/models/chat_message.dart';
 
 part 'chat_state.freezed.dart';
@@ -25,6 +26,7 @@ class ChatState with _$ChatState {
     AiModel? currentModel,
     @Default(<AiModel>[]) List<AiModel> availableModels,
     @Default(<String>[]) List<String> selectedAttachments,
+    @Default(<ChatAttachment>[]) List<ChatAttachment> pendingAttachments,
     @Default(0) int contextUsed,
     @Default(0) int contextLimit,
     @Default(InputMode.steer) InputMode inputMode,
